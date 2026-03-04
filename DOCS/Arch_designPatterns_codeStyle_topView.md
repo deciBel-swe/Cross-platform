@@ -1,5 +1,4 @@
-Architecture  
-
+## Architecture
 
 The project is built on **Clean Architecture** utilizing a feature-first folder structure. The codebase is primarily split into a `core/` directory for shared infrastructure and a `features/` directory for feature modules.
 
@@ -39,7 +38,6 @@ Each feature contains three distinct layers with strict dependency rules:
 - **Type Parameters**: `UPPERCASE` (e.g., `T`, `E`).
 - **Providers**: Must have descriptive names ending with `Provider` (e.g., `currentTrackProvider`).
 
-
 ---
 
 ## Core Principles
@@ -60,7 +58,7 @@ Note: we are thinking on making the project test oriented too.
 ## Organization & Structure
 
 - **Utility Classes**: Constants and utility classes should use a private constructor with `static const` members to prevent instantiation. (stated in the design pattern)
-- **Import Order**: Group imports in this strict order: Dart SDK → Flutter SDK → Third-party packages → Project imports. 
+- **Import Order**: Group imports in this strict order: Dart SDK → Flutter SDK → Third-party packages → Project imports.
 - **Internal Imports**: Always use relative imports for files within the project; reserve `package:` imports exclusively for external dependencies.
 
 ## Documentation
@@ -73,6 +71,3 @@ Note: we are thinking on making the project test oriented too.
 - No `print()` statements in production code; use proper logging.
 - No hardcoded strings, colors, or magic numbers; define them in constants or theme files.
 - No unused imports or dead code left in the project.
-
-
- 
