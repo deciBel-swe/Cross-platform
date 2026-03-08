@@ -3,6 +3,9 @@ library;
 
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/start_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
@@ -12,8 +15,23 @@ import 'main_shell.dart';
 import 'route_paths.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: RoutePaths.home,
+  initialLocation: RoutePaths.splash,
   routes: [
+    // ---- Auth flow (outside the main shell) ----
+    GoRoute(
+      path: RoutePaths.splash,
+      builder: (context, state) => const StartScreen(),
+    ),
+    GoRoute(
+      path: RoutePaths.login,
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: RoutePaths.register,
+      builder: (context, state) => const RegisterScreen(),
+    ),
+
+    // ---- Main app shell (bottom navigation) ----
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainShell(navigationShell: navigationShell),
