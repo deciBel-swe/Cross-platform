@@ -73,6 +73,7 @@ flutter:
 
   assets:
     - assets/icon/app_icon.png
+    - assets/icon/white_app_icon_trans.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
