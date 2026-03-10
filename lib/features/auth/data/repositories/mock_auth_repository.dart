@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
+import '../models/login_response_model.dart';
 import '../datasources/auth_mock_fixtures.dart';
 
 /// Mock implementation of [IAuthRepository] for testing and development.
@@ -16,13 +17,9 @@ class MockAuthRepository implements IAuthRepository {
     await Future.delayed(AuthMockFixtures.delay);
 
     final mockResponse = AuthMockFixtures.mockLoginResponse;
-    final userMap = mockResponse['user'] as Map<String, dynamic>;
+    final model = LoginResponseModel.fromJson(mockResponse);
 
-    return AuthUser(
-      id: userMap['id'] as int,
-      username: userMap['username'] as String,
-      tier: _parseTier(userMap['tier'] as String),
-    );
+    return model.user.toDomain();
   }
 
   @override
@@ -30,22 +27,8 @@ class MockAuthRepository implements IAuthRepository {
     // Simulate reading from local storage without delay
     // Note: In Phase 4, this will be tied to SecureStorageService.
     final mockResponse = AuthMockFixtures.mockLoginResponse;
-    final userMap = mockResponse['user'] as Map<String, dynamic>;
+    final model = LoginResponseModel.fromJson(mockResponse);
 
-    return AuthUser(
-      id: userMap['id'] as int,
-      username: userMap['username'] as String,
-      tier: _parseTier(userMap['tier'] as String),
-    );
-  }
-
-  UserTier _parseTier(String tierString) {
-    if (tierString == 'artist') {
-      return UserTier.artist;
-    } else if (tierString == 'artistPro') {
-      return UserTier.artistPro;
-    } else {
-      return UserTier.free;
-    }
+    return model.user.toDomain();
   }
 }
