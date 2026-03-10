@@ -1,4 +1,4 @@
-import 'auth_user.dart';
+import '../entities/auth_user.dart';
 
 /// Abstract contract for the authentication repository.
 abstract class IAuthRepository {
