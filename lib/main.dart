@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
 import 'core/di/injection.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Dependency injection
-  await configureDependencies();
+  configureDependencies();
 
   runApp(const ProviderScope(child: DecibelApp()));
 }
