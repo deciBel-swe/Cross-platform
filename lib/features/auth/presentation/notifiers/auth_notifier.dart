@@ -80,7 +80,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       }
     });
 
-    debugPrint('[AuthNotifier] State is now: \$state');
+    debugPrint('[AuthNotifier] State is now: $state');
   }
 
   Future<void> logout() async {
