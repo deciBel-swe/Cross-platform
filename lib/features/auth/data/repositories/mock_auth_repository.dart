@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
 import 'package:injectable/injectable.dart';
@@ -8,6 +9,7 @@ import 'package:injectable/injectable.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../models/login_response_model.dart';
@@ -18,7 +20,7 @@ import '../datasources/auth_mock_fixtures.dart';
 @LazySingleton(as: IAuthRepository)
 class MockAuthRepository implements IAuthRepository {
   @override
-  Future<AuthUser> loginWithGoogle() async {
+  Future<Either<Failure, AuthUser>> loginWithGoogle() async {
     // Launch the REAL Google Auth URL directly to test the consent screen
     final bool isMobile =
         !kIsWeb &&
@@ -40,7 +42,8 @@ class MockAuthRepository implements IAuthRepository {
         scopeHint: ['email', 'profile'],
       );
 
-      if (account != null) {
+      // wow so this is a flag to run only in debug mode very USEFUL
+      if (kDebugMode) {
         debugPrint('=== GOOGLE LOGIN SUCCESS ===');
         debugPrint('Email: ${account.email}');
         debugPrint('Display Name: ${account.displayName}');
@@ -54,7 +57,7 @@ class MockAuthRepository implements IAuthRepository {
       final mockResponse = AuthMockFixtures.mockLoginResponse;
       final model = LoginResponseModel.fromJson(mockResponse);
 
-      return model.user.toDomain();
+      return Right(model.user.toDomain());
     } else {
       // --- DESKTOP: Use local HTTP server loopback
       final String clientId = ApiConstants.googleDesktopClientId;
@@ -68,7 +71,7 @@ class MockAuthRepository implements IAuthRepository {
         '&scope=email%20profile',
       );
 
-      final completer = Completer<AuthUser>();
+      final completer = Completer<Either<Failure, AuthUser>>();
 
       // Prepare the success response
       void completeSuccess() {
@@ -76,7 +79,7 @@ class MockAuthRepository implements IAuthRepository {
           final mockResponse = AuthMockFixtures.mockLoginResponse;
           final model = LoginResponseModel.fromJson(mockResponse);
           if (!completer.isCompleted) {
-            completer.complete(model.user.toDomain());
+            completer.complete(Right(model.user.toDomain()));
           }
         });
       }
@@ -121,12 +124,12 @@ class MockAuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<AuthUser?> getCurrentUser() async {
+  Future<Either<Failure, AuthUser?>> getCurrentUser() async {
     // Simulate reading from local storage without delay
     // this will be tied to SecureStorageService.
     final mockResponse = AuthMockFixtures.mockLoginResponse;
     final model = LoginResponseModel.fromJson(mockResponse);
 
-    return model.user.toDomain();
+    return Right(model.user.toDomain());
   }
 }

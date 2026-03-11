@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:decibel/features/auth/data/repositories/auth_repository.dart';
@@ -66,7 +67,7 @@ void main() {
         final result = await repository.getCurrentUser();
 
         // Assert
-        expect(result, isNull);
+        expect(result, const Right(null));
         verify(() => mockSecureStorageService.isAccessTokenExpired()).called(1);
       },
     );
@@ -83,7 +84,7 @@ void main() {
         final result = await repository.getCurrentUser();
 
         // Assert
-        expect(result, isNull);
+        expect(result, const Right(null));
         verify(() => mockSecureStorageService.isAccessTokenExpired()).called(1);
       },
     );
@@ -103,9 +104,12 @@ void main() {
         final result = await repository.loginWithGoogle();
 
         // Assert
-        expect(result.id, tAuthUser.id);
-        expect(result.username, tAuthUser.username);
-        expect(result.tier, tAuthUser.tier);
+        expect(result.isRight(), true);
+        result.fold((failure) => fail('Should return Right'), (user) {
+          expect(user.id, tAuthUser.id);
+          expect(user.username, tAuthUser.username);
+          expect(user.tier, tAuthUser.tier);
+        });
         verify(() => mockRemoteDataSource.loginWithGoogle(any())).called(1);
         verify(
           () => mockSecureStorageService.saveTokenPair(tLoginResponseModel),
@@ -122,10 +126,13 @@ void main() {
         ).thenThrow(const ServerException('Server error'));
 
         // Act
-        final call = repository.loginWithGoogle;
+        final result = await repository.loginWithGoogle();
 
         // Assert
-        expect(() => call(), throwsA(isA<ServerFailure>()));
+        expect(
+          result,
+          const Left<Failure, AuthUser>(ServerFailure('Server error')),
+        );
       },
     );
 
@@ -136,10 +143,10 @@ void main() {
       ).thenThrow(const AuthException('Auth error'));
 
       // Act
-      final call = repository.loginWithGoogle;
+      final result = await repository.loginWithGoogle();
 
       // Assert
-      expect(() => call(), throwsA(isA<AuthFailure>()));
+      expect(result, const Left<Failure, AuthUser>(AuthFailure('Auth error')));
     });
   });
 }

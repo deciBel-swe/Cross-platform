@@ -33,10 +33,13 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
 
     try {
-      final user = await repo.getCurrentUser();
-      if (user != null) {
-        return AuthAuthenticated(user: user);
-      }
+      final userEither = await repo.getCurrentUser();
+      return userEither.fold((failure) => const AuthUnauthenticated(), (user) {
+        if (user != null) {
+          return AuthAuthenticated(user: user);
+        }
+        return const AuthUnauthenticated();
+      });
     } catch (_) {
       // Ignore errors during check, fallback to unauthenticated state.
     }
@@ -53,12 +56,20 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
       try {
         debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
-        final user = await repo.loginWithGoogle();
-        debugPrint(
-          '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
-        );
+        final userEither = await repo.loginWithGoogle();
 
-        return AuthAuthenticated(user: user);
+        return userEither.fold(
+          (failure) {
+            debugPrint('[AuthNotifier] Failure: ${failure.message}');
+            throw Exception(failure.message);
+          },
+          (user) {
+            debugPrint(
+              '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
+            );
+            return AuthAuthenticated(user: user);
+          },
+        );
       } on AppException catch (e) {
         debugPrint('[AuthNotifier] AppException: ${e.message}');
         // Will be caught by UI async guard

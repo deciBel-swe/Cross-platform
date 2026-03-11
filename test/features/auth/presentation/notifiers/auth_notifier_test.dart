@@ -5,6 +5,7 @@ import 'package:decibel/features/auth/domain/entities/auth_state.dart';
 import 'package:decibel/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:decibel/core/storage/secure_storage_service.dart';
 import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
+import 'package:dartz/dartz.dart';
 import 'package:decibel/features/auth/domain/entities/auth_user.dart';
 import 'package:decibel/core/errors/failures.dart';
 
@@ -71,7 +72,7 @@ void main() {
         ).thenAnswer((_) async => false);
         when(
           () => mockAuthRepository.getCurrentUser(),
-        ).thenAnswer((_) async => null);
+        ).thenAnswer((_) async => const Right(null));
 
         final state = await container.read(authStateProvider.future);
 
@@ -89,7 +90,7 @@ void main() {
         ).thenAnswer((_) async => false);
         when(
           () => mockAuthRepository.getCurrentUser(),
-        ).thenAnswer((_) async => tUser);
+        ).thenAnswer((_) async => const Right(tUser));
 
         final state = await container.read(authStateProvider.future);
 
@@ -112,7 +113,7 @@ void main() {
         ).thenAnswer((_) async => true); // Initial state
         when(
           () => mockAuthRepository.loginWithGoogle(),
-        ).thenAnswer((_) async => tUser);
+        ).thenAnswer((_) async => const Right(tUser));
 
         final listener = Listener<AsyncValue<AuthState>>();
         container.listen(
@@ -149,7 +150,7 @@ void main() {
       ).thenAnswer((_) async => true); // Initial state
       when(
         () => mockAuthRepository.loginWithGoogle(),
-      ).thenThrow(const AuthFailure('Login failed'));
+      ).thenAnswer((_) async => const Left(AuthFailure('Login failed')));
 
       final listener = Listener<AsyncValue<AuthState>>();
       container.listen(authStateProvider, listener.call, fireImmediately: true);

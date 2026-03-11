@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/exceptions.dart';
@@ -17,25 +18,27 @@ class AuthRepository implements IAuthRepository {
   final SecureStorageService _secureStorageService;
 
   @override
-  Future<AuthUser?> getCurrentUser() async {
+  Future<Either<Failure, AuthUser?>> getCurrentUser() async {
     try {
       final isExpired = await _secureStorageService.isAccessTokenExpired();
       if (isExpired) {
-        return null; // A refresh logic would go here initially, but for now just logout.
+        return const Right(
+          null,
+        ); // A refresh logic would go here initially, but for now just logout.
       }
 
       // Because we don't have a /me endpoint or local user db mapped right now,
       // getting the current user purely relies on valid tokens.
       // we'd fetch the user's profile info when backend is ready.
       // Returning null requires them to login again
-      return null;
+      return const Right(null);
     } catch (e) {
-      return null;
+      return const Right(null);
     }
   }
 
   @override
-  Future<AuthUser> loginWithGoogle() async {
+  Future<Either<Failure, AuthUser>> loginWithGoogle() async {
     try {
       // Create DeviceInfoModel (hardcoded for now, I will do it in the next commit)
       final deviceInfo = const DeviceInfoModel(
@@ -49,13 +52,13 @@ class AuthRepository implements IAuthRepository {
       // Save tokens securely
       await _secureStorageService.saveTokenPair(responseModel);
 
-      return responseModel.user.toDomain();
+      return Right(responseModel.user.toDomain());
     } on ServerException catch (e) {
-      throw ServerFailure(e.message);
+      return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
-      throw AuthFailure(e.message);
+      return Left(AuthFailure(e.message));
     } catch (e) {
-      throw const AuthFailure('An unexpected error occurred.');
+      return const Left(AuthFailure('An unexpected error occurred.'));
     }
   }
 }
