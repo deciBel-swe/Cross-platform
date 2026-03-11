@@ -11,6 +11,8 @@ class AuthUserModel with _$AuthUserModel {
     required int id,
     required String username,
     required String tier,
+    String? profileUrl,
+    String? avatarUrl,
   }) = _AuthUserModel;
 
   const AuthUserModel._();
@@ -19,7 +21,13 @@ class AuthUserModel with _$AuthUserModel {
       _$AuthUserModelFromJson(json);
 
   AuthUser toDomain() {
-    return AuthUser(id: id, username: username, tier: _parseTier(tier));
+    return AuthUser(
+      id: id,
+      username: username,
+      tier: _parseTier(tier),
+      profileUrl: profileUrl,
+      avatarUrl: avatarUrl,
+    );
   }
 
   UserTier _parseTier(String tierString) {

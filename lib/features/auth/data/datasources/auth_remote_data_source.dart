@@ -194,6 +194,8 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   ///   or an unknown client-side error occurs.
   Future<LoginResponseModel> _exchangeCodeWithBackend(String authCode) async {
     try {
+      //here I send the auth code to the backend to exchange it for tokens as JSON
+      // BUT in the documentation it asks for only a string I will check with them about this
       final response = await _dio.post(
         ApiConstants.googleTokenExchangeEndpoint,
         data: {'code': authCode},

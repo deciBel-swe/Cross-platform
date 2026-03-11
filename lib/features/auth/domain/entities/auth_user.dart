@@ -16,6 +16,8 @@ class AuthUser {
     required this.id,
     required this.username,
     required this.tier,
+    this.profileUrl,
+    this.avatarUrl,
   });
 
   /// The unique identifier of the user.
@@ -26,4 +28,10 @@ class AuthUser {
 
   /// The user's membership tier.
   final UserTier tier;
+
+  /// The user's profile URL.
+  final String? profileUrl;
+
+  /// The user's avatar image URL.
+  final String? avatarUrl;
 }
