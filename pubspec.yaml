@@ -29,6 +29,7 @@ dependencies:
   # ---------- Data Modeling ----------
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
+  dartz: ^0.10.1
 
   # ---------- Secure Storage (JWT / OAuth tokens) ----------
   flutter_secure_storage: ^9.2.4
