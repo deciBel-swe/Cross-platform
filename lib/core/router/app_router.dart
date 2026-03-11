@@ -2,6 +2,7 @@
 library;
 
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/domain/entities/auth_state.dart';
@@ -26,21 +27,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: RoutePaths.splash,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
-      final authState = ref.read(authStateProvider);
+      final authStateAsync = ref.read(authStateProvider);
+
+      debugPrint(
+        '[AppRouter] redirect run! matchedLocation: \${state.matchedLocation}',
+      );
+      debugPrint('[AppRouter] authStateAsync: \$authStateAsync');
 
       final isAuthRoute =
           state.matchedLocation == RoutePaths.login ||
           state.matchedLocation == RoutePaths.register ||
           state.matchedLocation == RoutePaths.splash;
 
+      // Extract the actual AuthState from the AsyncValue
+      final authState = authStateAsync.valueOrNull;
+
       if (authState is AuthUnauthenticated) {
+        debugPrint(
+          '[AppRouter] -> Handling as AuthUnauthenticated. Redirecting to login? \${isAuthRoute ? "No" : "Yes"}',
+        );
         return isAuthRoute ? null : RoutePaths.login;
       }
 
       if (authState is AuthAuthenticated) {
+        debugPrint(
+          '[AppRouter] -> Handling as AuthAuthenticated. Redirecting to home? \${isAuthRoute ? "Yes" : "No"}',
+        );
         return isAuthRoute ? RoutePaths.home : null;
       }
 
+      debugPrint(
+        '[AppRouter] -> State is likely Loading or Error. Not redirecting (returning null).',
+      );
       return null;
     },
     routes: [

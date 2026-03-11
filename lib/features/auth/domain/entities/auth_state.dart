@@ -1,5 +1,6 @@
 import 'auth_user.dart';
 
+//I used those states for the UI/routing to react to the authentication state
 /// Represents the various states of authentication in the application.
 sealed class AuthState {
   const AuthState();

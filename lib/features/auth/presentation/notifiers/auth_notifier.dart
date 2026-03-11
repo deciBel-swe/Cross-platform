@@ -1,11 +1,26 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
 
+/// Manages the authentication state of the application.
+///
+/// This notifier acts as the central hub for all authentication related
+/// business logic. It communicates with the [IAuthRepository] to perform
+/// network operations (like Google Sign-In) and the [SecureStorageService]
+/// to manage local session tokens.
+///
+/// **Responsibilities:**
+/// * **Initialization:** During [build], it checks for an existing, unexpired
+///   session in secure storage and automatically logs the user in if valid.
+/// * **Authentication:** Provides [loginWithGoogle] to initiate the OAuth flow
+///   and securely update the state upon success or failure.
+/// * **Session Management:** Provides [logout] to clear local tokens and
+///   return the user to an unauthenticated state.
 class AuthNotifier extends AsyncNotifier<AuthState> {
   @override
   FutureOr<AuthState> build() async {
@@ -30,20 +45,31 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   Future<void> loginWithGoogle() async {
+    debugPrint('[AuthNotifier] loginWithGoogle() started.');
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
       final repo = ref.read(authRepositoryProvider);
 
       try {
+        debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
         final user = await repo.loginWithGoogle();
+        debugPrint(
+          '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
+        );
 
         return AuthAuthenticated(user: user);
       } on AppException catch (e) {
+        debugPrint('[AuthNotifier] AppException: ${e.message}');
         // Will be caught by UI async guard
         throw Exception(e.message);
+      } catch (e, st) {
+        debugPrint('[AuthNotifier] Unexpected Exception: $e\n$st');
+        throw Exception(e.toString());
       }
     });
+
+    debugPrint('[AuthNotifier] State is now: \$state');
   }
 
   Future<void> logout() async {
