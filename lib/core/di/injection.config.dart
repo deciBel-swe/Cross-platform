@@ -21,6 +21,7 @@ import '../../features/auth/data/repositories/mock_auth_repository.dart'
     as _i703;
 import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
+import '../network/dio_client.dart' as _i667;
 import '../storage/secure_storage_service.dart' as _i666;
 import 'register_module.dart' as _i291;
 
@@ -43,8 +44,9 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i703.MockAuthRepository(),
       registerFor: {_mock},
     );
+    gh.lazySingleton<_i667.DioClient>(() => _i667.DioClient(gh<_i361.Dio>()));
     gh.lazySingleton<_i107.IAuthRemoteDataSource>(
-      () => _i107.AuthRemoteDataSource(gh<_i361.Dio>()),
+      () => _i107.AuthRemoteDataSource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
 import 'package:injectable/injectable.dart';
@@ -9,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/network/dio_client.dart';
 import '../models/device_info_model.dart';
 import '../models/login_response_model.dart';
 
@@ -18,9 +18,9 @@ abstract class IAuthRemoteDataSource {
 
 @LazySingleton(as: IAuthRemoteDataSource)
 class AuthRemoteDataSource implements IAuthRemoteDataSource {
-  AuthRemoteDataSource(this._dio);
+  AuthRemoteDataSource(this._dioClient);
 
-  final Dio _dio;
+  final DioClient _dioClient;
 
   @override
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo) async {
@@ -33,13 +33,12 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // MOBILE: Use official Google Sign In SDK (In-App Popup) // why I used this instead of browser google is very strict I couldn't redirect to the app
       // It wasted alot of time so I decided to do this approach
       // This completely bypasses all the manual "Custom URI Scheme" redirect errors
-      final String clientId =
-          '767709617177-l61vbedk9lanvrgirt6e0840a4kijs6u.apps.googleusercontent.com';
+      final String clientId = ApiConstants.googleMobileClientId;
 
       await g_sign_in.GoogleSignIn.instance.initialize(
         clientId: clientId,
-        serverClientId:
-            '767709617177-ljng08734ds2qv9m7qcrpccpe6igu9if.apps.googleusercontent.com', // Needed for backend code exchange
+        serverClientId: ApiConstants
+            .googleDesktopClientId, // Needed for backend code exchange
       );
 
       // Force interactive consent so we always get the serverAuthCode
@@ -71,13 +70,11 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // I was trying to do the same for the android but google restricting opeing apps from links not easy
       final completer = Completer<LoginResponseModel>();
 
-      final String clientId =
-          '767709617177-ljng08734ds2qv9m7qcrpccpe6igu9if.apps.googleusercontent.com';
-      final String redirectUri =
-          'http://localhost:3000/login/oauth2/code/google';
+      final String clientId = ApiConstants.googleDesktopClientId;
+      final String redirectUri = ApiConstants.googleDesktopRedirectUri;
 
       final authUrl = Uri.parse(
-        'https://accounts.google.com/o/oauth2/v2/auth'
+        '${ApiConstants.googleAuthUrl}'
         '?client_id=$clientId'
         '&redirect_uri=$redirectUri'
         '&response_type=code'
@@ -196,7 +193,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     try {
       //here I send the auth code to the backend to exchange it for tokens as JSON
       // BUT in the documentation it asks for only a string I will check with them about this
-      final response = await _dio.post(
+      final response = await _dioClient.post(
         ApiConstants.googleTokenExchangeEndpoint,
         data: {'code': authCode},
       );
@@ -213,17 +210,10 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
           'Backend returned an error. Status Code: ${response.statusCode}',
         );
       }
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      final message = data is Map<String, dynamic>
-          ? data['message'] as String?
-          : null;
-
-      throw ServerException(
-        message ??
-            'A network error occurred during login. Status code: ${e.response?.statusCode}',
-      );
     } catch (e) {
+      if (e.toString().contains('DioException')) {
+        throw ServerException('A network error occurred during login.');
+      }
       throw AuthException(
         'An unexpected error occurred during Google Sign In verify: $e',
       );

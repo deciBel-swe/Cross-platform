@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../models/login_response_model.dart';
@@ -26,13 +27,11 @@ class MockAuthRepository implements IAuthRepository {
 
     if (isMobile) {
       // --- MOBILE: Use official Google Sign In SDK (In-App Popup)
-      final String clientId =
-          '767709617177-l61vbedk9lanvrgirt6e0840a4kijs6u.apps.googleusercontent.com';
+      final String clientId = ApiConstants.googleMobileClientId;
 
       await g_sign_in.GoogleSignIn.instance.initialize(
         clientId: clientId,
-        serverClientId:
-            '767709617177-ljng08734ds2qv9m7qcrpccpe6igu9if.apps.googleusercontent.com',
+        serverClientId: ApiConstants.googleDesktopClientId,
       );
 
       await g_sign_in.GoogleSignIn.instance.signOut();
@@ -58,13 +57,11 @@ class MockAuthRepository implements IAuthRepository {
       return model.user.toDomain();
     } else {
       // --- DESKTOP: Use local HTTP server loopback
-      final String clientId =
-          '767709617177-ljng08734ds2qv9m7qcrpccpe6igu9if.apps.googleusercontent.com';
-      final String redirectUri =
-          'http://localhost:3000/login/oauth2/code/google';
+      final String clientId = ApiConstants.googleDesktopClientId;
+      final String redirectUri = ApiConstants.googleDesktopRedirectUri;
 
       final authUrl = Uri.parse(
-        'https://accounts.google.com/o/oauth2/v2/auth'
+        '${ApiConstants.googleAuthUrl}'
         '?client_id=$clientId'
         '&redirect_uri=$redirectUri'
         '&response_type=code'

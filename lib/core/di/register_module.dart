@@ -10,10 +10,5 @@ abstract class RegisterModule {
   );
 
   @lazySingleton
-  Dio get dio => Dio(
-    BaseOptions(
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-    ),
-  );
+  Dio get dio => Dio();
 }
