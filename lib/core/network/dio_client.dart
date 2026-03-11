@@ -26,7 +26,7 @@ class DioClient {
     return _dio.get(path, queryParameters: queryParams);
   }
 
-  // Helper method for POST requests
+  // Helper method for POST requestsD
   Future<Response<T>> post<T>(String path, {Object? data}){
     return _dio.post(path, data: data);
   }
