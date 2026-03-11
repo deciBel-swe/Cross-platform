@@ -7,11 +7,13 @@ abstract class Failure {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is Failure && other.message == message;
+    return other.runtimeType == runtimeType &&
+        other is Failure &&
+        other.message == message;
   }
 
   @override
-  int get hashCode => message.hashCode;
+  int get hashCode => Object.hash(runtimeType, message);
 }
 
 class ServerFailure extends Failure {
