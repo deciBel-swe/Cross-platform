@@ -1,7 +1,9 @@
 /// Decibel start/welcome screen — first screen users see.
 ///
-/// Responsive: mobile uses the layered background/foreground artwork stack;
-/// desktop mirrors the same layered approach with landscape-oriented artwork.
+/// Responsive: uses [AnimatedSwitcher] for a fluid crossfade between the
+/// mobile (portrait artwork) and desktop (landscape artwork) layouts.
+/// Both layouts share the same [_BrandingPanel] with the logo, tagline,
+/// and auth actions.
 library;
 
 import 'package:flutter/material.dart';
@@ -21,21 +23,30 @@ class StartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: LayoutBuilder(
         builder: (context, constraints) {
           void goToRegister() => context.push(RoutePaths.register);
           void goToLogin() => context.push(RoutePaths.login);
 
-          if (constraints.maxWidth >= _desktopBreakpoint) {
-            return _DesktopLayout(
-              onCreateAccount: goToRegister,
-              onLogIn: goToLogin,
-            );
-          }
+          final isDesktop = constraints.maxWidth >= _desktopBreakpoint;
 
-          return _MobileLayout(
-            onCreateAccount: goToRegister,
-            onLogIn: goToLogin,
+          // AnimatedSwitcher crossfades between layouts
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            switchInCurve: Curves.easeInOut,
+            switchOutCurve: Curves.easeInOut,
+            child: isDesktop
+                ? _DesktopLayout(
+                    key: const ValueKey('desktop'),
+                    onCreateAccount: goToRegister,
+                    onLogIn: goToLogin,
+                  )
+                : _MobileLayout(
+                    key: const ValueKey('mobile'),
+                    onCreateAccount: goToRegister,
+                    onLogIn: goToLogin,
+                  ),
           );
         },
       ),
@@ -43,17 +54,22 @@ class StartScreen extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
 // Mobile layout — stacked artwork design
 
 class _MobileLayout extends StatelessWidget {
-  const _MobileLayout({required this.onCreateAccount, required this.onLogIn});
+  const _MobileLayout({
+    super.key,
+    required this.onCreateAccount,
+    required this.onLogIn,
+  });
 
   final VoidCallback onCreateAccount;
   final VoidCallback onLogIn;
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Stack(
       fit: StackFit.expand,
@@ -61,7 +77,7 @@ class _MobileLayout extends StatelessWidget {
         // Layer 1: geometric artwork on black (full screen)
         Image.asset(AppAssets.startBg, fit: BoxFit.cover),
 
-        // orange panel
+        // Layer 2: orange panel
         Positioned(
           left: 0,
           right: 0,
@@ -82,25 +98,12 @@ class _MobileLayout extends StatelessWidget {
           child: SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Where artists & fans\nconnect.',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 28),
-                  _AuthActions(
-                    onCreateAccount: onCreateAccount,
-                    onLogIn: onLogIn,
-                  ),
-                ],
+              padding: const EdgeInsets.fromLTRB(32, 0, 32, 35),
+              child: _BrandingPanel(
+                logoHeight: 80,
+                taglineFontSize: 22,
+                onCreateAccount: onCreateAccount,
+                onLogIn: onLogIn,
               ),
             ),
           ),
@@ -110,17 +113,22 @@ class _MobileLayout extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
 // Desktop layout
 
 class _DesktopLayout extends StatelessWidget {
-  const _DesktopLayout({required this.onCreateAccount, required this.onLogIn});
+  const _DesktopLayout({
+    super.key,
+    required this.onCreateAccount,
+    required this.onLogIn,
+  });
 
   final VoidCallback onCreateAccount;
   final VoidCallback onLogIn;
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Stack(
       fit: StackFit.expand,
@@ -137,39 +145,22 @@ class _DesktopLayout extends StatelessWidget {
           ),
         ),
 
-        // positioned below the logo
+        // Layer 3: branding + auth actions
         Positioned(
-          left: 0,
+          left: -65,
           right: 0,
-          top: screenHeight * 0.52,
+          top: screenHeight * 0.42,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Tagline
-                  const Text(
-                    'Where artists & fans\nconnect.',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // Auth buttons
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: _AuthActions(
-                      onCreateAccount: onCreateAccount,
-                      onLogIn: onLogIn,
-                    ),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _BrandingPanel(
+                  logoHeight: 80,
+                  taglineFontSize: 24,
+                  onCreateAccount: onCreateAccount,
+                  onLogIn: onLogIn,
+                ),
               ),
             ),
           ),
@@ -179,6 +170,55 @@ class _DesktopLayout extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Shared branding panel — logo, tagline, auth buttons
+
+/// Displays the Decibel logo, tagline, and auth action buttons.
+///
+/// Shared between mobile and desktop layouts. [logoHeight] and
+/// [taglineFontSize] allow each layout to tune sizing.
+class _BrandingPanel extends StatelessWidget {
+  const _BrandingPanel({
+    required this.logoHeight,
+    required this.taglineFontSize,
+    required this.onCreateAccount,
+    required this.onLogIn,
+  });
+
+  final double logoHeight;
+  final double taglineFontSize;
+  final VoidCallback onCreateAccount;
+  final VoidCallback onLogIn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Logo
+        Image.asset(AppAssets.blackLogo, height: logoHeight),
+        const SizedBox(height: 0),
+
+        // Tagline
+        Text(
+          'Where artists & fans\nconnect.',
+          style: TextStyle(
+            fontSize: taglineFontSize + 5,
+            fontWeight: FontWeight.w700,
+            color: Colors.black,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 19),
+
+        // Auth buttons
+        _AuthActions(onCreateAccount: onCreateAccount, onLogIn: onLogIn),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Shared auth action buttons
 
 /// "Create an account" and "Log in" buttons.

@@ -53,8 +53,8 @@ class _BottomNavBar extends StatelessWidget {
                 onTap: () => onTap(0),
               ),
               _NavItem(
-                icon: Icons.bolt_outlined,
-                activeIcon: Icons.bolt,
+                icon: Icons.video_library_outlined,
+                activeIcon: Icons.video_library,
                 label: 'Feed',
                 isSelected: currentIndex == 1,
                 onTap: () => onTap(1),
@@ -67,8 +67,8 @@ class _BottomNavBar extends StatelessWidget {
                 onTap: () => onTap(2),
               ),
               _NavItem(
-                icon: Icons.library_music_outlined,
-                activeIcon: Icons.library_music,
+                icon: Icons.library_books_outlined,
+                activeIcon: Icons.library_books,
                 label: 'Library',
                 isSelected: currentIndex == 3,
                 onTap: () => onTap(3),
@@ -138,12 +138,15 @@ class _UpgradeNavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/icon/app_icon.png',
-              width: 24,
-              height: 24,
-              color: color,
-              colorBlendMode: BlendMode.srcIn,
+            Transform.scale(
+              scale: 1.45,
+              child: Image.asset(
+                'assets/icon/white_app_icon_trans.png',
+                width: 24,
+                height: 24,
+                color: color,
+                colorBlendMode: BlendMode.srcIn,
+              ),
             ),
             const SizedBox(height: 2),
             Text('Upgrade', style: TextStyle(fontSize: 10, color: color)),
