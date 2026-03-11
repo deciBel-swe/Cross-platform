@@ -57,9 +57,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       debugPrint(
-        '[AppRouter] -> State is likely Loading or Error. Not redirecting (returning null).',
+        '[AppRouter] -> State is Loading or Error. Redirecting to splash? ${isAuthRoute ? "No (already auth route)" : "Yes"}',
       );
-      return null;
+      // authState is null -> AsyncLoading or AsyncError.
+      // Block protected routes until auth is definitively resolved.
+      return isAuthRoute ? null : RoutePaths.splash;
     },
     routes: [
       // ---- Auth flow (outside the main shell) ----
