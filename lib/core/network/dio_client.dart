@@ -27,12 +27,12 @@ class DioClient {
   }
 
   // Helper method for POST requests
-  Future<Response<T>> post<T>(String path, {dynamic data}){
+  Future<Response<T>> post<T>(String path, {Object? data}){
     return _dio.post(path, data: data);
   }
 
   // Helper method for PUT requests
-  Future<Response<T>> put<T>(String path,{dynamic data}){
+  Future<Response<T>> put<T>(String path,{Object? data}){
     return _dio.put(path, data: data);
   }
 
