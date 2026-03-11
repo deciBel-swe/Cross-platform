@@ -1,2 +1,2 @@
-/// SharedPreferences wrapper for simple key-value local storage.
+// SharedPreferences wrapper for simple key-value local storage.
 // TODO: Implement SharedPrefsService.

@@ -1,0 +1,152 @@
+import 'package:dartz/dartz.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:decibel/features/auth/data/repositories/auth_repository.dart';
+import 'package:decibel/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:decibel/core/storage/secure_storage_service.dart';
+import 'package:decibel/features/auth/data/models/device_info_model.dart';
+import 'package:decibel/features/auth/data/models/login_response_model.dart';
+import 'package:decibel/features/auth/data/models/auth_user_model.dart';
+import 'package:decibel/features/auth/domain/entities/auth_user.dart';
+import 'package:decibel/core/errors/exceptions.dart';
+import 'package:decibel/core/errors/failures.dart';
+
+class MockAuthRemoteDataSource extends Mock implements IAuthRemoteDataSource {}
+
+class MockSecureStorageService extends Mock implements SecureStorageService {}
+
+void main() {
+  late AuthRepository repository;
+  late MockAuthRemoteDataSource mockRemoteDataSource;
+  late MockSecureStorageService mockSecureStorageService;
+
+  setUp(() {
+    mockRemoteDataSource = MockAuthRemoteDataSource();
+    mockSecureStorageService = MockSecureStorageService();
+    repository = AuthRepository(mockRemoteDataSource, mockSecureStorageService);
+
+    registerFallbackValue(
+      const DeviceInfoModel(
+        deviceName: 'unknown_device',
+        deviceType: 'flutter_app',
+        fingerPrint: 'unknown',
+      ),
+    );
+  });
+
+  group('AuthRepository', () {
+    const tAuthUser = AuthUser(
+      id: 1,
+      username: 'test_user',
+      tier: UserTier.free,
+      profileUrl: 'test_url',
+      avatarUrl: 'test_avatar',
+    );
+
+    const tLoginResponseModel = LoginResponseModel(
+      accessToken: 'access_token',
+      refreshToken: 'refresh_token',
+      user: AuthUserModel(
+        id: 1,
+        username: 'test_user',
+        tier: 'free',
+        profileUrl: 'test_url',
+        avatarUrl: 'test_avatar',
+      ),
+    );
+
+    test(
+      'getCurrentUser should return null if access token is expired',
+      () async {
+        // Arrange
+        when(
+          () => mockSecureStorageService.isAccessTokenExpired(),
+        ).thenAnswer((_) async => true);
+
+        // Act
+        final result = await repository.getCurrentUser();
+
+        // Assert
+        expect(result, const Right(null));
+        verify(() => mockSecureStorageService.isAccessTokenExpired()).called(1);
+      },
+    );
+
+    test(
+      'getCurrentUser should return null if access token is not expired (until backend is ready)',
+      () async {
+        // Arrange
+        when(
+          () => mockSecureStorageService.isAccessTokenExpired(),
+        ).thenAnswer((_) async => false);
+
+        // Act
+        final result = await repository.getCurrentUser();
+
+        // Assert
+        expect(result, const Right(null));
+        verify(() => mockSecureStorageService.isAccessTokenExpired()).called(1);
+      },
+    );
+
+    test(
+      'loginWithGoogle should return AuthUser on successful login and save tokens',
+      () async {
+        // Arrange
+        when(
+          () => mockRemoteDataSource.loginWithGoogle(any()),
+        ).thenAnswer((_) async => tLoginResponseModel);
+        when(
+          () => mockSecureStorageService.saveTokenPair(tLoginResponseModel),
+        ).thenAnswer((_) async => {});
+
+        // Act
+        final result = await repository.loginWithGoogle();
+
+        // Assert
+        expect(result.isRight(), true);
+        result.fold((failure) => fail('Should return Right'), (user) {
+          expect(user.id, tAuthUser.id);
+          expect(user.username, tAuthUser.username);
+          expect(user.tier, tAuthUser.tier);
+        });
+        verify(() => mockRemoteDataSource.loginWithGoogle(any())).called(1);
+        verify(
+          () => mockSecureStorageService.saveTokenPair(tLoginResponseModel),
+        ).called(1);
+      },
+    );
+
+    test(
+      'loginWithGoogle should throw ServerFailure on ServerException',
+      () async {
+        // Arrange
+        when(
+          () => mockRemoteDataSource.loginWithGoogle(any()),
+        ).thenThrow(const ServerException('Server error'));
+
+        // Act
+        final result = await repository.loginWithGoogle();
+
+        // Assert
+        expect(
+          result,
+          const Left<Failure, AuthUser>(ServerFailure('Server error')),
+        );
+      },
+    );
+
+    test('loginWithGoogle should throw AuthFailure on AuthException', () async {
+      // Arrange
+      when(
+        () => mockRemoteDataSource.loginWithGoogle(any()),
+      ).thenThrow(const AuthException('Auth error'));
+
+      // Act
+      final result = await repository.loginWithGoogle();
+
+      // Assert
+      expect(result, const Left<Failure, AuthUser>(AuthFailure('Auth error')));
+    });
+  });
+}

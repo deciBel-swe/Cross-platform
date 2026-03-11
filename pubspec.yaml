@@ -48,6 +48,12 @@ dependencies:
   # ---------- Media & File Selection ----------
   image_picker: ^1.1.2
   file_picker: ^8.1.7
+  url_launcher: ^6.3.2
+  app_links: ^7.0.0
+  desktop_webview_auth: ^0.0.16
+  google_sign_in: ^7.2.0
+
+  # ---------- Google Sign In ----------
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +70,7 @@ dev_dependencies:
 
   # ---------- App Icon Generator ----------
   flutter_launcher_icons: ^0.14.3
+  mocktail: ^1.0.4
 
 # The following section is specific to Flutter packages.
 flutter:

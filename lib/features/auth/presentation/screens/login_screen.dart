@@ -2,20 +2,24 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
+import '../../../../core/router/route_paths.dart';
 
 /// Sign-in screen: OAuth buttons, divider, email + password fields,
 /// and a white Continue button.
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -74,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 size: 24,
               ),
               onPressed: () {
-                // TODO(auth): implement Google sign-in
+                ref.read(authStateProvider.notifier).loginWithGoogle();
               },
             ),
             const SizedBox(height: 12),
@@ -144,6 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ElevatedButton(
               onPressed: () {
                 // TODO(auth): implement email sign-in
+                context.go(RoutePaths.home);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,

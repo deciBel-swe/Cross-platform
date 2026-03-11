@@ -18,3 +18,7 @@ class CacheException extends AppException {
 class NetworkException extends AppException {
   const NetworkException([super.message = 'No internet connection']);
 }
+
+class AuthException extends AppException {
+  const AuthException([super.message = 'Authentication failed']);
+}
