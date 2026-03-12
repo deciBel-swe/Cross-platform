@@ -2,8 +2,7 @@
 ///
 /// Responsive: background images always fill the screen via [BoxFit.cover].
 /// The content (logo, tagline, buttons) is wrapped in [ResponsiveScaledBox]
-/// so it scales uniformly from a fixed reference width. This combines
-///
+/// so it scales uniformly from a fixed reference width.
 /// Switches between a mobile artwork layout and a desktop artwork layout
 /// at the 800 px breakpoint with a crossfade animation.
 library;
