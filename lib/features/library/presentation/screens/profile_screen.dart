@@ -1,13 +1,15 @@
-import 'package:decibel/core/theme/app_colors.dart';
-import 'package:decibel/features/library/presentation/widgets/action_buttons.dart';
-import 'package:decibel/features/library/presentation/widgets/button.dart';
-import 'package:decibel/features/library/presentation/widgets/media_collection.dart';
-import 'package:decibel/features/library/presentation/widgets/profile_icon.dart';
-import 'package:decibel/features/library/presentation/widgets/tile.dart';
 import 'package:flutter/material.dart';
+
 import 'package:go_router/go_router.dart';
 
-// 1. Create a simple data model (usually this lives in a separate file)
+import '../../../../core/theme/app_colors.dart';
+
+import '../widgets/action_buttons.dart';
+import '../widgets/button.dart';
+import '../widgets/media_collection.dart';
+import '../widgets/profile_icon.dart';
+import '../widgets/tile.dart';
+
 class UserProfile {
   final String name;
   final String location;
@@ -23,7 +25,6 @@ class UserProfile {
     required this.bio,
   });
 }
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -32,27 +33,24 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // 2. Add a ScrollController and a boolean state variable
   late ScrollController _scrollController;
   bool _showAppBarIcon = false;
+  
   final user = const UserProfile(
     name: 'Ziad Abdelraouf',
     location: 'Cairo, Egypt',
     followers: 1200,
     following: 300,
-    bio:
-        'Music l over and audio enthusiast. Sharing my favorite tracks and playlists.',
+    bio: 'Music lover and audio enthusiast. Sharing my favorite tracks and playlists.',
   );
+  // TODO: Replace with ref.watch() using Riverpod
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
 
-    // 3. Add a listener to check the scroll position
     _scrollController.addListener(() {
-      // 80 is the scroll offset (in pixels) where the icon will trigger.
-      // You can adjust this number up or down!
       if (_scrollController.offset > 80 && !_showAppBarIcon) {
         setState(() => _showAppBarIcon = true);
       } else if (_scrollController.offset <= 80 && _showAppBarIcon) {
@@ -63,71 +61,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    // Always dispose controllers to prevent memory leaks
     _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leadingWidth: 38,
-        leading: Button(
-          icon: Icons.arrow_back_rounded,
-          onPressed: () => context.pop(),
-        ),
-
-        // 4. Add the AnimatedOpacity to the title property
-        centerTitle: true,
-        // The title now contains a Row with a small circle and the name
-        title: AnimatedOpacity(
-          opacity: _showAppBarIcon ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 200),
-          child: Row(
-            // mainAxisSize is crucial here so it stays perfectly centered!
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Small Profile Circle
-              Container(
-                width: 32,
-                height: 32,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.grey, // TODO: Replace with your image/color
-                ),
-                // If your ProfileIcon() takes a size parameter, you can use it here instead!
-                child: const ProfileIcon(),
-              ),
-              const SizedBox(width: 10), // Space between circle and name
-              // The Name
-              Text(
-                user.name,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white, // Or AppColors.textPrimary
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        actions: [
-          Button(icon: Icons.share, onPressed: () {}),
-          Button(icon: Icons.cast, onPressed: () {}),
-        ],
-      ),
-
-      // 5. IMPORTANT: Attach the controller to your scrollable view
+      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         controller: _scrollController,
-        // Added to prevent overflow on smaller screens
         padding: const EdgeInsets.symmetric(horizontal: 14.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,45 +79,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 16),
             const ProfileIcon(),
             const SizedBox(height: 14),
-
-            // Dynamic Data using Theme styles
-            Text(
-              user.name,
-              style: textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            Text(
-              user.location,
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${user.followers} followers - ${user.following} following',
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
+            
+            _UserProfileHeader(user: user),
+            
             const SizedBox(height: 16),
-
-            // Action Buttons Row
-            const SizedBox(height: 16),
-            ActionButtons(),
+            const ActionButtons(),
+            
             // Dynamic Bio
             Text(
               user.bio,
-              style: textTheme.bodyLarge?.copyWith(
-                color: AppColors.textPrimary,
-              ),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.onPrimary, 
+                  ),
             ),
             const SizedBox(height: 8),
 
-            // Show More Button
             Align(
-              // Aligning to the left
               alignment: Alignment.centerLeft,
               child: TextButton(
                 style: TextButton.styleFrom(
@@ -182,9 +103,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () {},
-                child: const Text(
+                child: Text(
                   'Show more',
-                  style: TextStyle(fontSize: 16, color: Colors.blue),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.google, // Replaced Colors.blue
+                      ),
                 ),
               ),
             ),
@@ -196,11 +119,93 @@ class _ProfileScreenState extends State<ProfileScreen> {
               buttonText: "Edit",
               onButtonPressed: () => {/* TODO: Handle edit spotlight action */},
             ),
-            SizedBox(height: 20),
-            MediaCollection(),
+            const SizedBox(height: 20),
+            const MediaCollection(),
           ],
         ),
       ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: AppColors.background,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent, 
+      leadingWidth: 38,
+      leading: Button(
+        icon: Icons.arrow_back_rounded,
+        onPressed: () => context.pop(),
+      ),
+      centerTitle: true,
+      title: AnimatedOpacity(
+        opacity: _showAppBarIcon ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 200),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.surface, 
+              ),
+              child: const ProfileIcon(),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              user.name,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.onPrimary, 
+                  ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        Button(icon: Icons.share, onPressed: () {}),
+        Button(icon: Icons.cast, onPressed: () {}),
+      ],
+    );
+  }
+}
+
+/// Extracted private widget to keep the main build method clean
+class _UserProfileHeader extends StatelessWidget {
+  const _UserProfileHeader({required this.user});
+
+  final UserProfile user;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          user.name,
+          style: textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.onPrimary,
+          ),
+        ),
+        Text(
+          user.location,
+          style: textTheme.bodyMedium?.copyWith(
+            color: AppColors.onPrimary, 
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '${user.followers} followers - ${user.following} following',
+          style: textTheme.bodyMedium?.copyWith(
+            color: AppColors.onPrimary,
+          ),
+        ),
+      ],
     );
   }
 }
