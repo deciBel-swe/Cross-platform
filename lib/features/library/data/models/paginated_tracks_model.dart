@@ -1,3 +1,4 @@
+import 'package:decibel/features/library/domain/entities/paginated_tracks.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'track_model.dart';
@@ -18,4 +19,17 @@ class PaginatedTracksModel with _$PaginatedTracksModel {
 
   factory PaginatedTracksModel.fromJson(Map<String, dynamic> json) =>
       _$PaginatedTracksModelFromJson(json);
+}
+
+extension PaginatedTracksModelX on PaginatedTracksModel {
+  PaginatedTracks toEntity() {
+    return PaginatedTracks(
+      content: content.map((trackModel) => trackModel.toEntity()).toList(),
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+      totalElements: totalElements,
+      totalPages: totalPages,
+      isLast: isLast,
+    );
+  }
 }

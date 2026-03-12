@@ -1,3 +1,4 @@
+import 'package:decibel/features/library/domain/entities/track_peaks.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'track_peaks_model.freezed.dart';
@@ -13,4 +14,10 @@ class TrackPeaksModel with _$TrackPeaksModel {
 
   factory TrackPeaksModel.fromJson(Map<String, dynamic> json) =>
       _$TrackPeaksModelFromJson(json);
+}
+
+extension TrackPeaksModelX on TrackPeaksModel {
+  TrackPeaks toEntity() {
+    return TrackPeaks(trackId: trackId, duration: duration, peaks: peaks);
+  }
 }

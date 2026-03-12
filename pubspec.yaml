@@ -47,6 +47,7 @@ dependencies:
   # ---------- Media & File Selection ----------
   image_picker: ^1.1.2
   file_picker: ^8.1.7
+  dartz: ^0.10.1
 
 dev_dependencies:
   flutter_test:
