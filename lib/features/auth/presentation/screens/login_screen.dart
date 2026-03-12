@@ -64,101 +64,110 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 24),
-
-            // ---- Social login buttons ----
-            SocialLoginButton(
-              label: 'Continue with Google',
-              icon: const Icon(
-                Icons.g_mobiledata,
-                color: AppColors.google,
-                size: 24,
-              ),
-              onPressed: () {
-                ref.read(authStateProvider.notifier).loginWithGoogle();
-              },
-            ),
-            const SizedBox(height: 12),
-            SocialLoginButton(
-              label: 'Continue with Facebook',
-              icon: const Icon(
-                Icons.facebook,
-                color: AppColors.facebook,
-                size: 24,
-              ),
-              onPressed: () {
-                // TODO(auth): implement Facebook sign-in
-              },
-            ),
-            const SizedBox(height: 12),
-            SocialLoginButton(
-              label: 'Continue with Apple',
-              icon: const Icon(Icons.apple, color: AppColors.apple, size: 24),
-              onPressed: () {
-                // TODO(auth): implement Apple sign-in
-              },
-            ),
-
-            const SizedBox(height: 28),
-
-            // ---- Divider ----
-            Row(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Expanded(child: Divider()),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('or', style: theme.textTheme.bodySmall),
+                const SizedBox(height: 24),
+
+                // ---- Social login buttons ----
+                SocialLoginButton(
+                  label: 'Continue with Google',
+                  icon: const Icon(
+                    Icons.g_mobiledata,
+                    color: AppColors.google,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    ref.read(authStateProvider.notifier).loginWithGoogle();
+                  },
                 ),
-                const Expanded(child: Divider()),
+                const SizedBox(height: 12),
+                SocialLoginButton(
+                  label: 'Continue with Facebook',
+                  icon: const Icon(
+                    Icons.facebook,
+                    color: AppColors.facebook,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    // TODO(auth): implement Facebook sign-in
+                  },
+                ),
+                const SizedBox(height: 12),
+                SocialLoginButton(
+                  label: 'Continue with Apple',
+                  icon: const Icon(
+                    Icons.apple,
+                    color: AppColors.apple,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    // TODO(auth): implement Apple sign-in
+                  },
+                ),
+
+                const SizedBox(height: 28),
+
+                // ---- Divider ----
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('or', style: theme.textTheme.bodySmall),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+
+                const SizedBox(height: 28),
+
+                // ---- Email field ----
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Email'),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ---- Password field ----
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Password'),
+                ),
+
+                const SizedBox(height: 32),
+
+                // ---- Continue button (white) ----
+                ElevatedButton(
+                  onPressed: () {
+                    // TODO(auth): implement email sign-in
+                    context.go(RoutePaths.home);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('Continue'),
+                ),
+
+                const SizedBox(height: 32),
               ],
             ),
-
-            const SizedBox(height: 28),
-
-            // ---- Email field ----
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-              ),
-              decoration: _inputDecoration('Email'),
-            ),
-
-            const SizedBox(height: 16),
-
-            // ---- Password field ----
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-              ),
-              decoration: _inputDecoration('Password'),
-            ),
-
-            const SizedBox(height: 32),
-
-            // ---- Continue button (white) ----
-            ElevatedButton(
-              onPressed: () {
-                // TODO(auth): implement email sign-in
-                context.go(RoutePaths.home);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-              ),
-              child: const Text('Continue'),
-            ),
-
-            const SizedBox(height: 32),
-          ],
+          ),
         ),
       ),
     );
