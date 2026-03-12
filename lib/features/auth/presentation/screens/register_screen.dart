@@ -77,137 +77,149 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 24),
-
-            // ---- Social login buttons ----
-            SocialLoginButton(
-              label: 'Continue with Google',
-              icon: const Icon(
-                Icons.g_mobiledata,
-                color: AppColors.google,
-                size: 24,
-              ),
-              onPressed: () {
-                // TODO(auth): implement Google sign-in
-              },
-            ),
-            const SizedBox(height: 12),
-            SocialLoginButton(
-              label: 'Continue with Facebook',
-              icon: const Icon(
-                Icons.facebook,
-                color: AppColors.facebook,
-                size: 24,
-              ),
-              onPressed: () {
-                // TODO(auth): implement Facebook sign-in
-              },
-            ),
-            const SizedBox(height: 12),
-            SocialLoginButton(
-              label: 'Continue with Apple',
-              icon: const Icon(Icons.apple, color: AppColors.apple, size: 24),
-              onPressed: () {
-                // TODO(auth): implement Apple sign-in
-              },
-            ),
-
-            const SizedBox(height: 28),
-
-            // ---- Divider ----
-            Row(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Expanded(child: Divider()),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('or', style: theme.textTheme.bodySmall),
+                const SizedBox(height: 24),
+
+                // ---- Social login buttons ----
+                SocialLoginButton(
+                  label: 'Continue with Google',
+                  icon: const Icon(
+                    Icons.g_mobiledata,
+                    color: AppColors.google,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    // TODO(auth): implement Google sign-in
+                  },
                 ),
-                const Expanded(child: Divider()),
+                const SizedBox(height: 12),
+                SocialLoginButton(
+                  label: 'Continue with Facebook',
+                  icon: const Icon(
+                    Icons.facebook,
+                    color: AppColors.facebook,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    // TODO(auth): implement Facebook sign-in
+                  },
+                ),
+                const SizedBox(height: 12),
+                SocialLoginButton(
+                  label: 'Continue with Apple',
+                  icon: const Icon(
+                    Icons.apple,
+                    color: AppColors.apple,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    // TODO(auth): implement Apple sign-in
+                  },
+                ),
+
+                const SizedBox(height: 28),
+
+                // ---- Divider ----
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('or', style: theme.textTheme.bodySmall),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+
+                const SizedBox(height: 28),
+
+                // ---- Email field ----
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Email'),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ---- Date of birth field ----
+                TextField(
+                  controller: _dateController,
+                  readOnly: true,
+                  onTap: _pickDate,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Date of birth').copyWith(
+                    suffixIcon: const Icon(
+                      Icons.calendar_today,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ---- Gender dropdown ----
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedGender,
+                  hint: const Text(
+                    'Gender',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  dropdownColor: AppColors.surface,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration(),
+                  items: const [
+                    DropdownMenuItem(value: 'male', child: Text('Male')),
+                    DropdownMenuItem(value: 'female', child: Text('Female')),
+                    DropdownMenuItem(
+                      value: 'non_binary',
+                      child: Text('Non-binary'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'prefer_not_to_say',
+                      child: Text('Prefer not to say'),
+                    ),
+                  ],
+                  onChanged: (value) => setState(() => _selectedGender = value),
+                ),
+
+                const SizedBox(height: 32),
+
+                // ---- Continue button (white) ----
+                ElevatedButton(
+                  onPressed: () {
+                    // TODO(auth): implement account creation
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('Continue'),
+                ),
+
+                const SizedBox(height: 32),
               ],
             ),
-
-            const SizedBox(height: 28),
-
-            // ---- Email field ----
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-              ),
-              decoration: _inputDecoration('Email'),
-            ),
-
-            const SizedBox(height: 16),
-
-            // ---- Date of birth field ----
-            TextField(
-              controller: _dateController,
-              readOnly: true,
-              onTap: _pickDate,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-              ),
-              decoration: _inputDecoration('Date of birth').copyWith(
-                suffixIcon: const Icon(
-                  Icons.calendar_today,
-                  color: AppColors.textSecondary,
-                  size: 20,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // ---- Gender dropdown ----
-            DropdownButtonFormField<String>(
-              initialValue: _selectedGender,
-              hint: const Text(
-                'Gender',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-              ),
-              dropdownColor: AppColors.surface,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-              ),
-              decoration: _inputDecoration(),
-              items: const [
-                DropdownMenuItem(value: 'male', child: Text('Male')),
-                DropdownMenuItem(value: 'female', child: Text('Female')),
-                DropdownMenuItem(
-                  value: 'non_binary',
-                  child: Text('Non-binary'),
-                ),
-                DropdownMenuItem(
-                  value: 'prefer_not_to_say',
-                  child: Text('Prefer not to say'),
-                ),
-              ],
-              onChanged: (value) => setState(() => _selectedGender = value),
-            ),
-
-            const SizedBox(height: 32),
-
-            // ---- Continue button (white) ----
-            ElevatedButton(
-              onPressed: () {
-                // TODO(auth): implement account creation
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-              ),
-              child: const Text('Continue'),
-            ),
-
-            const SizedBox(height: 32),
-          ],
+          ),
         ),
       ),
     );
