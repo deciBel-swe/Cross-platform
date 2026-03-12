@@ -13,10 +13,8 @@ void main() async {
   // Configure desktop window constraints.
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
     await windowManager.ensureInitialized();
-    const minSize = Size(400, 600);
-    const maxSize = Size(1920, 1080);
+    const minSize = Size(1024, 600);
     await windowManager.setMinimumSize(minSize);
-    await windowManager.setMaximumSize(maxSize);
   }
 
   // Dependency injection

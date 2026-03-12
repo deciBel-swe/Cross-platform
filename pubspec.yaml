@@ -53,6 +53,7 @@ dependencies:
   desktop_webview_auth: ^0.0.16
   google_sign_in: ^7.2.0
   window_manager: ^0.5.1
+  responsive_framework: ^1.5.1
 
   # ---------- Google Sign In ----------
 

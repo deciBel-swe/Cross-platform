@@ -1,16 +1,16 @@
 /// Decibel start/welcome screen — first screen users see.
 ///
-/// Responsive: uses [AnimatedSwitcher] for a fluid crossfade between the
-/// mobile (portrait artwork) and desktop (landscape artwork) layouts.
-/// Both layouts share the same [_BrandingPanel] with the logo, tagline,
-/// and auth actions.
+/// Responsive: background images always fill the screen via [BoxFit.cover].
+/// The content (logo, tagline, buttons) is wrapped in [ResponsiveScaledBox]
+/// so it scales uniformly from a fixed reference width. This combines
 ///
-/// Font sizes, logo height, and button dimensions scale proportionally with
-/// the available screen dimensions, clamped to sensible min/max bounds.
+/// Switches between a mobile artwork layout and a desktop artwork layout
+/// at the 800 px breakpoint with a crossfade animation.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/router/route_paths.dart';
@@ -42,13 +42,11 @@ class StartScreen extends StatelessWidget {
             child: isDesktop
                 ? _DesktopLayout(
                     key: const ValueKey('desktop'),
-                    constraints: constraints,
                     onCreateAccount: goToRegister,
                     onLogIn: goToLogin,
                   )
                 : _MobileLayout(
                     key: const ValueKey('mobile'),
-                    constraints: constraints,
                     onCreateAccount: goToRegister,
                     onLogIn: goToLogin,
                   ),
@@ -61,52 +59,36 @@ class StartScreen extends StatelessWidget {
 
 // ---------------------------------------------------------------------------
 // Mobile layout — stacked artwork design
+//
+// Background images fill the entire screen (outside ResponsiveScaledBox).
+// Only the content layer is wrapped in ResponsiveScaledBox for uniform scaling.
 
 class _MobileLayout extends StatelessWidget {
   const _MobileLayout({
     super.key,
-    required this.constraints,
     required this.onCreateAccount,
     required this.onLogIn,
   });
 
-  final BoxConstraints constraints;
   final VoidCallback onCreateAccount;
   final VoidCallback onLogIn;
 
-  /// Fraction of total height the foreground IMAGE occupies.
-  static const double _fgFraction = 0.416;
-
-  /// The visible orange area starts roughly 40% down the foreground image,
-  /// so the usable content area is about 60% of fgHeight.
-  static const double _orangeUsableFraction = 0.5;
+  /// Reference width the mobile content is designed for.
+  static const double _referenceWidth = 450;
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = constraints.maxHeight;
-    final fgHeight = screenHeight * _fgFraction;
-    final contentHeight = fgHeight * _orangeUsableFraction;
-
-    // Derive ALL sizes from the content area height so they scale in
-    // lockstep with the foreground image.
-    final logoHeight = (contentHeight * 0.22).clamp(24.0, 70.0);
-    final taglineFontSize = (contentHeight * 0.10).clamp(12.0, 24.0);
-    final buttonFontSize = (contentHeight * 0.065).clamp(11.0, 15.0);
-    final horizontalPadding = (contentHeight * 0.14).clamp(16.0, 40.0);
-    final bottomPadding = (contentHeight * 0.10).clamp(8.0, 30.0);
-
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Layer 1: geometric artwork on black (full screen)
+        // Layer 1: background artwork — always fills the entire screen
         Image.asset(AppAssets.startBg, fit: BoxFit.cover),
 
-        // Layer 2: orange panel image
+        // Layer 2: foreground orange panel — fills width, anchored to bottom
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          height: fgHeight,
           child: Image.asset(
             AppAssets.startFg,
             fit: BoxFit.fitWidth,
@@ -114,31 +96,32 @@ class _MobileLayout extends StatelessWidget {
           ),
         ),
 
-        // Layer 3: content — confined to the visible orange portion only
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: contentHeight,
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                contentHeight * 0.08,
-                horizontalPadding,
-                bottomPadding,
-              ),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: _BrandingPanel(
-                  logoHeight: logoHeight,
-                  taglineFontSize: taglineFontSize,
-                  buttonFontSize: buttonFontSize,
-                  onCreateAccount: onCreateAccount,
-                  onLogIn: onLogIn,
+        // Layer 3: content — scaled uniformly via ResponsiveScaledBox
+        Positioned.fill(
+          child: ResponsiveScaledBox(
+            width: _referenceWidth,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(32, 0, 32, 80),
+                      child: _BrandingPanel(
+                        logoHeight: 65,
+                        taglineFontSize: 30,
+                        buttonFontSize: 16,
+                        buttonTopSpacing: 55,
+                        onCreateAccount: onCreateAccount,
+                        onLogIn: onLogIn,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -149,41 +132,32 @@ class _MobileLayout extends StatelessWidget {
 
 // ---------------------------------------------------------------------------
 // Desktop layout
+//
+// Background images fill the entire screen (outside ResponsiveScaledBox).
+// Only the content layer is wrapped in ResponsiveScaledBox for uniform scaling.
 
 class _DesktopLayout extends StatelessWidget {
   const _DesktopLayout({
     super.key,
-    required this.constraints,
     required this.onCreateAccount,
     required this.onLogIn,
   });
 
-  final BoxConstraints constraints;
   final VoidCallback onCreateAccount;
   final VoidCallback onLogIn;
 
+  /// Reference width the desktop content is designed for.
+  static const double _referenceWidth = 1200;
+
   @override
   Widget build(BuildContext context) {
-    final screenHeight = constraints.maxHeight;
-    final screenWidth = constraints.maxWidth;
-
-    // The desktop foreground blob is roughly the bottom 50% of the screen.
-    // Fit the content into the centre of that area.
-    final contentHeight = screenHeight * 0.5;
-
-    // Derive sizes from available content height.
-    final logoHeight = (contentHeight * 0.18).clamp(24.0, 70.0);
-    final taglineFontSize = (contentHeight * 0.075).clamp(12.0, 24.0);
-    final buttonFontSize = (contentHeight * 0.05).clamp(11.0, 15.0);
-    final panelMaxWidth = (screenWidth * 0.35).clamp(250.0, 420.0);
-
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Layer 1: desktop geometric artwork (full screen)
+        // Layer 1: background artwork — always fills the entire screen
         Image.asset(AppAssets.desktopStartBg, fit: BoxFit.cover),
 
-        // Layer 2: desktop orange foreground
+        // Layer 2: foreground orange shape — fills width, anchored to bottom
         Positioned.fill(
           child: Image.asset(
             AppAssets.desktopStartFg,
@@ -192,29 +166,34 @@ class _DesktopLayout extends StatelessWidget {
           ),
         ),
 
-        // Layer 3: branding + auth actions — top of the bottom portion
-        Positioned(
-          left: -65,
-          right: 0,
-          bottom: 0,
-          height: contentHeight,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: EdgeInsets.only(top: contentHeight * 0),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: panelMaxWidth),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _BrandingPanel(
-                    logoHeight: logoHeight,
-                    taglineFontSize: taglineFontSize,
-                    buttonFontSize: buttonFontSize,
-                    onCreateAccount: onCreateAccount,
-                    onLogIn: onLogIn,
+        // Layer 3: content — scaled uniformly via ResponsiveScaledBox
+        Positioned.fill(
+          child: ResponsiveScaledBox(
+            width: _referenceWidth,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: -50,
+                  right: 0,
+                  bottom: 110,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 380),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: _BrandingPanel(
+                          logoHeight: 65,
+                          taglineFontSize: 24,
+                          buttonFontSize: 14,
+                          buttonTopSpacing: 75,
+                          onCreateAccount: onCreateAccount,
+                          onLogIn: onLogIn,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -228,14 +207,13 @@ class _DesktopLayout extends StatelessWidget {
 
 /// Displays the Decibel logo, tagline, and auth action buttons.
 ///
-/// Shared between mobile and desktop layouts. [logoHeight],
-/// [taglineFontSize], and [buttonFontSize] allow each layout to tune sizing
-/// proportionally to the available screen space.
+/// Uses fixed pixel sizes because [ResponsiveScaledBox] handles all scaling.
 class _BrandingPanel extends StatelessWidget {
   const _BrandingPanel({
     required this.logoHeight,
     required this.taglineFontSize,
     required this.buttonFontSize,
+    this.buttonTopSpacing = 19,
     required this.onCreateAccount,
     required this.onLogIn,
   });
@@ -243,6 +221,7 @@ class _BrandingPanel extends StatelessWidget {
   final double logoHeight;
   final double taglineFontSize;
   final double buttonFontSize;
+  final double buttonTopSpacing;
   final VoidCallback onCreateAccount;
   final VoidCallback onLogIn;
 
@@ -253,7 +232,6 @@ class _BrandingPanel extends StatelessWidget {
       children: [
         // Logo
         Image.asset(AppAssets.blackLogo, height: logoHeight),
-        const SizedBox(height: 0),
 
         // Tagline
         Text(
@@ -265,7 +243,7 @@ class _BrandingPanel extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: taglineFontSize * 0.85),
+        SizedBox(height: buttonTopSpacing),
 
         // Auth buttons
         _AuthActions(
@@ -295,9 +273,6 @@ class _AuthActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final verticalPad = (buttonFontSize * 0.7).clamp(8.0, 18.0);
-    final horizontalPad = (buttonFontSize * 1.5).clamp(16.0, 36.0);
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -306,24 +281,18 @@ class _AuthActions extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
-            padding: EdgeInsets.symmetric(
-              vertical: verticalPad,
-              horizontal: horizontalPad,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             textStyle: TextStyle(fontSize: buttonFontSize),
           ),
           child: const Text('Create an account'),
         ),
-        SizedBox(height: buttonFontSize * 0.75),
+        const SizedBox(height: 12),
         ElevatedButton(
           onPressed: onLogIn,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0x4DFFFFFF),
             foregroundColor: Colors.black,
-            padding: EdgeInsets.symmetric(
-              vertical: verticalPad,
-              horizontal: horizontalPad,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             textStyle: TextStyle(fontSize: buttonFontSize),
           ),
           child: const Text('Log in'),
