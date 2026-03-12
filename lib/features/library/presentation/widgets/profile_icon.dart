@@ -28,20 +28,19 @@ class _ProfileIconState extends State<ProfileIcon> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        CircleAvatar(
-          radius: 64,
-          backgroundColor: Colors.grey[200],
-          // Logic to switch between selected image and default icon
-          backgroundImage: _selectedImage != null
-              ? FileImage(_selectedImage!)
-              : null, // Ensure this asset exists
-          child: _selectedImage == null
-              ? const Icon(Icons.person, size: 64, color: Colors.grey)
-              : null,
-        ),
-      ],
+    // FittedBox scales the child to perfectly fit the parent container
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: CircleAvatar(
+        radius: 64, // This now acts as your "base" size ratio
+        backgroundColor: Colors.grey[200],
+        backgroundImage: _selectedImage != null
+            ? FileImage(_selectedImage!)
+            : null,
+        child: _selectedImage == null
+            ? const Icon(Icons.person, size: 64, color: Colors.grey)
+            : null,
+      ),
     );
   }
 }
