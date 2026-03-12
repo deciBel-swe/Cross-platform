@@ -48,6 +48,15 @@ dependencies:
   image_picker: ^1.1.2
   file_picker: ^8.1.7
 
+  # ---------- WebView ----------
+  webview_flutter: ^4.0.7
+
+  # ---------- External Links ----------
+  url_launcher: ^6.2.5
+
+  # ---------- Social Icons ----------
+  font_awesome_flutter: ^10.7.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
