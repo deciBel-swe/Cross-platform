@@ -1,3 +1,4 @@
+import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'artist_model.freezed.dart';
@@ -10,4 +11,10 @@ class ArtistModel with _$ArtistModel {
 
   factory ArtistModel.fromJson(Map<String, dynamic> json) =>
       _$ArtistModelFromJson(json);
+}
+
+extension ArtistModelX on ArtistModel {
+  Artist toEntity() {
+    return Artist(id: id, username: username);
+  }
 }

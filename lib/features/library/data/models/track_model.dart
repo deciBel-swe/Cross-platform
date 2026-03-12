@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:decibel/features/library/data/models/artist_model.dart';
 import 'package:decibel/features/library/data/models/track_status_model.dart';
+import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -32,4 +33,25 @@ class TrackModel with _$TrackModel {
 
   factory TrackModel.fromJsonString(String jsonString) =>
       TrackModel.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
+}
+
+extension TrackModelX on TrackModel {
+  Track toEntity() {
+    return Track(
+      id: id,
+      title: title,
+      artist: artist.toEntity(),
+      trackUrl: trackUrl,
+      coverUrl: coverUrl,
+      waveformUrl: waveformUrl,
+      genre: genre,
+      tags: tags,
+      state: state.toEntity(),
+      releaseDate: releaseDate,
+      playCount: playCount,
+      likeCount: likeCount,
+      repostCount: repostCount,
+      createdAt: createdAt,
+    );
+  }
 }
