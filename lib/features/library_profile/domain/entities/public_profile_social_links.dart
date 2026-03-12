@@ -10,5 +10,11 @@ class PublicProfileSocialLinks {
   });
 
   bool get isEmpty =>
-      instagram == null && twitter == null && website == null;
+      _isNullOrEmpty(instagram) &&
+      _isNullOrEmpty(twitter) &&
+      _isNullOrEmpty(website);
+
+  bool _isNullOrEmpty(String? value) {
+    return value == null || value.trim().isEmpty;
+  }
 }

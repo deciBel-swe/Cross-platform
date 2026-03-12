@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:decibel/features/library_profile/models/public_profile_social_links.dart';
+import 'package:decibel/features/library_profile/domain/entities/public_profile_social_links.dart';
 import 'package:decibel/features/library_profile/presentation/widgets/social_links_widget.dart';
 
 void main() {

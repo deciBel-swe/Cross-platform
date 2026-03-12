@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../models/public_profile_social_links.dart';
+import '../../domain/entities/public_profile_social_links.dart';
 
 typedef LinkLauncher = Future<bool> Function(Uri uri);
 
@@ -20,13 +20,21 @@ class SocialLinksWidget extends StatelessWidget {
     return launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  Future<void> _openLink(String url) async {
-    final uri = Uri.parse(url);
+Future<void> _openLink(BuildContext context, String url) async {
+  final uri = Uri.tryParse(url);
 
-    if (!await launcher(uri)) {
-      throw Exception('Could not open $url');
-    }
+  if (uri == null) return;
+
+  final launched = await launcher(uri);
+
+  if (!launched && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Could not open link'),
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -41,19 +49,19 @@ class SocialLinksWidget extends StatelessWidget {
           IconButton(
             icon: const FaIcon(FontAwesomeIcons.instagram),
             tooltip: 'Instagram',
-            onPressed: () => _openLink(socialLinks.instagram!),
+            onPressed: () => _openLink(context, socialLinks.instagram!),
           ),
         if (socialLinks.twitter != null)
           IconButton(
             icon: const FaIcon(FontAwesomeIcons.xTwitter),
             tooltip: 'Twitter/X',
-            onPressed: () => _openLink(socialLinks.twitter!),
+            onPressed: () => _openLink(context, socialLinks.twitter!),
           ),
         if (socialLinks.website != null)
           IconButton(
             icon: const Icon(Icons.public),
             tooltip: 'Website',
-            onPressed: () => _openLink(socialLinks.website!),
+            onPressed: () => _openLink(context, socialLinks.website!),
           ),
       ],
     );
