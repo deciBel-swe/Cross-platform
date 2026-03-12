@@ -13,8 +13,8 @@ class HomeScreen extends StatelessWidget {
       body: Center(
         child: SocialLinksWidget(
           socialLinks: const PublicProfileSocialLinks(
-            instagram: 'https://instagram.com/flutter',
-            twitter: 'https://x.com/flutterdev',
+            instagram: 'https://instagram.com',
+            twitter: 'https://x.com',
             website: 'https://flutter.dev',
           ),
         ),
