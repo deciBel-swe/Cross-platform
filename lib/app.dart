@@ -19,7 +19,7 @@ class DecibelApp extends ConsumerWidget {
       theme: AppTheme.darkTheme,
       routerConfig: goRouter,
       builder: (context, child) => ResponsiveBreakpoints.builder(
-        child: child!,
+        child: child ?? const SizedBox.shrink(),
         breakpoints: [
           const Breakpoint(start: 0, end: 450, name: MOBILE),
           const Breakpoint(start: 451, end: 800, name: TABLET),
