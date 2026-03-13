@@ -1,6 +1,7 @@
 /// GoRouter configuration – all app routes defined here.
 library;
 
+import '../../features/upload/presentation/screens/upload_screen.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/feed/presentation/screens/feed_screen.dart';
@@ -25,6 +26,11 @@ final GoRouter appRouter = GoRouter(
               path: RoutePaths.home,
               pageBuilder: (context, state) =>
                   const NoTransitionPage(child: HomeScreen()),
+            ),
+            GoRoute(
+              path: RoutePaths.upload,
+              builder: (context, state) => 
+                  const UploadScreen(),
             ),
           ],
         ),
