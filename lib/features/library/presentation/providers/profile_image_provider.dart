@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/di/injection.dart';
 import '../../domain/repositories/image_repository.dart';
-import '../../data/repositories/image_repository_impl.dart';
 
 final imageRepositoryProvider = Provider<ImageRepository>((ref) {
-  return ImageRepositoryImpl();
+  return getIt<ImageRepository>();
 });
 
 class ProfileImageNotifier extends Notifier<File?> {

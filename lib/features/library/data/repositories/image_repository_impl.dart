@@ -1,9 +1,13 @@
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:injectable/injectable.dart';
 import '../../domain/repositories/image_repository.dart';
 
+@Injectable(as: ImageRepository)
 class ImageRepositoryImpl implements ImageRepository {
-  final ImagePicker _picker = ImagePicker();
+  final ImagePicker _picker;
+
+  ImageRepositoryImpl(this._picker);
 
   @override
   Future<File?> pickProfileImage() async {
