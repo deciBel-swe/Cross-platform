@@ -11,6 +11,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/device_info_model.dart';
 import '../models/login_response_model.dart';
+import '../models/oauth_exchange_request_dto.dart';
 
 abstract class IAuthRemoteDataSource {
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
@@ -62,7 +63,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         throw const AuthException('Failed to obtain Google Server Auth Code');
       }
 
-      return _exchangeCodeWithBackend(authCode);
+      return _exchangeCodeWithBackend(authCode, deviceInfo);
     } else {
       // DESKTOP: Use local HTTP server loopback
       // so for desktop I am making a local server that listens to the redirect uri
@@ -107,7 +108,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
               // Exchange the code with our backend
               try {
-                final model = await _exchangeCodeWithBackend(authCode);
+                final model = await _exchangeCodeWithBackend(authCode, deviceInfo);
                 if (!completer.isCompleted) {
                   completer.complete(model);
                 }
@@ -189,13 +190,16 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   ///   or if there is a network connectivity issue.
   /// - Throws [AuthException] if the server returns an unexpected response format
   ///   or an unknown client-side error occurs.
-  Future<LoginResponseModel> _exchangeCodeWithBackend(String authCode) async {
+  Future<LoginResponseModel> _exchangeCodeWithBackend(String authCode, DeviceInfoModel deviceInfo) async {
     try {
-      //here I send the auth code to the backend to exchange it for tokens as JSON
-      // BUT in the documentation it asks for only a string I will check with them about this
+      final dto = OauthExchangeRequestDto(
+        code: authCode,
+        deviceInfo: deviceInfo,
+      );
+
       final response = await _dioClient.post(
-        ApiConstants.googleTokenExchangeEndpoint,
-        data: {'code': authCode},
+        '/auth/oauth/google', // Path defined in API docs
+        data: dto.toJson(),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
