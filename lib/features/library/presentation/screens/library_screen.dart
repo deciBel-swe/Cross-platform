@@ -12,13 +12,16 @@ class LibraryScreen extends StatelessWidget {
     void goToProfile() {
       context.push(RoutePaths.profile);
     }
-    return  Scaffold(
-      body: Scaffold(
-        appBar: AppBar(
-          title: Text('Library'),
-          actions: [IconButton(onPressed: goToProfile, icon: Icon(Icons.person))],
-        ),
+
+    //I removed the nested scaffold here
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Library'),
+        actions: [
+          IconButton(onPressed: goToProfile, icon: const Icon(Icons.person)),
+        ],
       ),
+      body: const SizedBox.shrink(),
     );
   }
 }
