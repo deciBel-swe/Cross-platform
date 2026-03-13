@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/storage/shared_prefs_service.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 import '../../domain/repositories/i_upload_repository.dart';
 import '../../../../core/di/injection.dart';
@@ -24,11 +25,13 @@ final uploadNotifierProvider = AsyncNotifierProvider<UploadNotifier, TrackUpload
 class UploadNotifier extends AsyncNotifier<TrackUploadMetadata>{
   @override
   FutureOr<TrackUploadMetadata> build() async {
-    // 1. Load the user's last saved privacy preference
-    final pref = await SharedPreferences.getInstance();
-    final savedIsPrivate = pref.getBool('privacy_settings') ?? false;
+    // 1. Read the service via Riverpod
+    final prefsService = ref.read(sharedPrefsServiceProvider);
+    
+    // 2. Fetch the saved setting
+    final savedIsPrivate = await prefsService.getLastPrivacySettings(); 
 
-    return  TrackUploadMetadata(
+    return TrackUploadMetadata(
       audioFile: null,
       title: '',
       genre: '',
@@ -45,15 +48,15 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata>{
   void updateGenre(String genre) => _updateState((state) => state.copyWith(genre: genre));
   void updateDescription(String desc) => _updateState((state) => state.copyWith(description: desc));
   void togglePrivacy(bool isPrivate) async {
-    // 1. Update State
+    // 1. Update the UI state instantly
     final currentState = state.value;
-    if(currentState != null){
+    if (currentState != null) {
       state = AsyncData(currentState.copyWith(isPrivate: isPrivate));
     }
-
-    // 2.saved locally for the next time
-    final pref = await SharedPreferences.getInstance();
-    await pref.setBool('privacy_settings', isPrivate);
+    
+    // 2. Save it to local storage cleanly in the background
+    final prefsService = ref.read(sharedPrefsServiceProvider);
+    await prefsService.saveLastPrivacySettings(isPrivate);
   }
   void updateReleaseDate(DateTime date) => _updateState((state) => state.copyWith(releaseDate: date));
   void clearReleaseDate() {
