@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
@@ -13,6 +13,7 @@ import '../../../../core/network/dio_client.dart';
 import '../models/device_info_model.dart';
 import '../models/login_response_model.dart';
 import '../models/oauth_exchange_request_dto.dart';
+import '../utils/auth_success_page.dart';
 
 abstract class IAuthRemoteDataSource {
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
@@ -97,13 +98,13 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
             final error = uri.queryParameters['error'];
 
             if (authCode != null) {
-              // Serve a success page and close
+              // Serve a branded success page and close
+              final html = await buildAuthSuccessHtml();
+
               request.response
                 ..statusCode = 200
                 ..headers.contentType = ContentType.html
-                ..write(
-                  '<html><body><h2>Authentication complete! You can close this tab and return to Decibel.</h2></body></html>',
-                );
+                ..write(html);
               await request.response.close();
               await localServer?.close(force: true);
 

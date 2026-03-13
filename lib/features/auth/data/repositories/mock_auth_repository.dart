@@ -12,8 +12,9 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
-import '../models/login_response_model.dart';
 import '../datasources/auth_mock_fixtures.dart';
+import '../models/login_response_model.dart';
+import '../utils/auth_success_page.dart';
 
 /// Mock implementation of [IAuthRepository] for testing and development.
 @Environment('mock')
@@ -99,12 +100,12 @@ class MockAuthRepository implements IAuthRepository {
             }
           }
 
+          final html = await buildAuthSuccessHtml();
+
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
-            ..write(
-              '<html><body><h2>Mock Authentication complete! You can close this tab and return to Decibel.</h2></body></html>',
-            );
+            ..write(html);
           await request.response.close();
           await localServer?.close(force: true);
           completeSuccess();

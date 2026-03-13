@@ -86,6 +86,7 @@ flutter:
     - assets/icon/app_icon.png
     - assets/icon/black_app_icon_trans.png
     - assets/icon/white_app_icon_trans.png
+    - assets/html/auth_complete.html
     - assets/background/background_startscreen.png
     - assets/background/foreground_startscreen.png
     - assets/background/desktop/background_startscreen.png
