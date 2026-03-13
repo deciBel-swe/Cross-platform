@@ -72,7 +72,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create account'),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -200,8 +200,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // TODO(auth): implement account creation
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                backgroundColor: AppColors.onPrimary,
+                foregroundColor: AppColors.onBackground,
               ),
               child: const Text('Continue'),
             ),

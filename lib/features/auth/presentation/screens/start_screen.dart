@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/router/route_paths.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Entry-point screen presenting branding over layered artwork images
 /// and primary auth actions on the orange panel.
@@ -91,11 +92,11 @@ class _MobileLayout extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                      color: AppColors.onBackground,
                     ),
                     textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 28),
+                   ),
+                   const SizedBox(height: 28),
                   _AuthActions(
                     onCreateAccount: onCreateAccount,
                     onLogIn: onLogIn,
@@ -154,7 +155,7 @@ class _DesktopLayout extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                      color: AppColors.onBackground,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -196,8 +197,8 @@ class _AuthActions extends StatelessWidget {
         ElevatedButton(
           onPressed: onCreateAccount,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
+            backgroundColor: AppColors.onPrimary,
+            foregroundColor: AppColors.onBackground,
           ),
           child: const Text('Create an account'),
         ),
@@ -206,7 +207,7 @@ class _AuthActions extends StatelessWidget {
           onPressed: onLogIn,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0x4DFFFFFF),
-            foregroundColor: Colors.black,
+            foregroundColor: AppColors.onBackground,
           ),
           child: const Text('Log in'),
         ),

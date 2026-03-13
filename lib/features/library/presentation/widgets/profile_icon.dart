@@ -17,7 +17,7 @@ class ProfileIcon extends ConsumerWidget {
         fit: BoxFit.contain,
         child: CircleAvatar(
           radius: 64,
-          backgroundColor: Colors.grey[200],
+          backgroundColor: AppColors.surface,
           backgroundImage: selectedImage != null 
               ? FileImage(selectedImage) 
               : null,

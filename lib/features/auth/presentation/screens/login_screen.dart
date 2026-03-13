@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign in'),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -146,8 +146,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 // TODO(auth): implement email sign-in
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                backgroundColor: AppColors.onPrimary,
+                foregroundColor: AppColors.onBackground,
               ),
               child: const Text('Continue'),
             ),

@@ -1,2 +1,2 @@
-/// Hive local database initialization and box management.
+// Hive local database initialization and box management.
 // TODO: Implement HiveService.

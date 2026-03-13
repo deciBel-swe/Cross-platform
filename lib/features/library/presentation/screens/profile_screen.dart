@@ -117,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return AppBar(
       backgroundColor: AppColors.background,
       scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent, 
+      surfaceTintColor: AppColors.transparent, 
       leadingWidth: 38,
       leading: Button(
         icon: Icons.arrow_back_rounded,
