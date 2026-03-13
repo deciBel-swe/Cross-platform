@@ -9,8 +9,10 @@ class AppColors {
   // ---- Brand ----
   static const Color primary = Color(0xFFFF5500);
   static const Color background = Color(0xFF121212);
+  static const Color onBackground = Colors.black;
   static const Color surface = Color(0xFF1E1E1E);
   static const Color onPrimary = Colors.white;
+  static const Color transparent = Colors.transparent;
 
   // ---- Text hierarchy ----
   static const Color textPrimary = Colors.white;

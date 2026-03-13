@@ -15,6 +15,7 @@ import '../../features/auth/presentation/screens/start_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
+import '../../features/library/presentation/screens/profile_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import 'main_shell.dart';
@@ -130,6 +131,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: RoutePaths.upgrade,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: UpgradeScreen()),
+              ),
+            ],
+          ),
+          // 5-Profile
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RoutePaths.profile,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: ProfileScreen()),
               ),
             ],
           ),

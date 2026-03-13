@@ -76,7 +76,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign in'),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -176,8 +176,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     context.go(RoutePaths.home);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    backgroundColor: AppColors.onPrimary,
+                    foregroundColor: AppColors.onBackground,
                   ),
                   child: const Text('Continue'),
                 ),

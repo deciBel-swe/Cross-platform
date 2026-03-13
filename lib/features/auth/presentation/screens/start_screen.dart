@@ -13,6 +13,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/router/route_paths.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Entry-point screen presenting branding over layered artwork images
 /// and primary auth actions on the orange panel.
