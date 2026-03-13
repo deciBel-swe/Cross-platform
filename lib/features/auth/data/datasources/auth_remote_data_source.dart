@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
@@ -108,7 +109,10 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
               // Exchange the code with our backend
               try {
-                final model = await _exchangeCodeWithBackend(authCode, deviceInfo);
+                final model = await _exchangeCodeWithBackend(
+                  authCode,
+                  deviceInfo,
+                );
                 if (!completer.isCompleted) {
                   completer.complete(model);
                 }
@@ -190,12 +194,23 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   ///   or if there is a network connectivity issue.
   /// - Throws [AuthException] if the server returns an unexpected response format
   ///   or an unknown client-side error occurs.
-  Future<LoginResponseModel> _exchangeCodeWithBackend(String authCode, DeviceInfoModel deviceInfo) async {
+  Future<LoginResponseModel> _exchangeCodeWithBackend(
+    String authCode,
+    DeviceInfoModel deviceInfo,
+  ) async {
     try {
       final dto = OauthExchangeRequestDto(
         code: authCode,
         deviceInfo: deviceInfo,
       );
+      //testing
+      if (kDebugMode) {
+        final payload = dto.toJson();
+
+        debugPrint('=== OAUTH BACKEND PAYLOAD ===');
+        debugPrint(jsonEncode(payload));
+        debugPrint('=============================');
+      }
 
       final response = await _dioClient.post(
         '/auth/oauth/google', // Path defined in API docs
