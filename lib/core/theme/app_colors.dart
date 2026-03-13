@@ -10,7 +10,12 @@ class AppColors {
   static const Color primary = Color(0xFFFF5500);
   static const Color background = Color(0xFF121212);
   static const Color surface = Color(0xFF1E1E1E);
+  static const Color surfaceLight = Color(0xFF282828);
+  static const Color surfaceContainer = Color(0xFF1A1A1A);
   static const Color onPrimary = Colors.white;
+
+  // ---- Brand variants ----
+  static const Color primaryDark = Color(0xFFCC4400);
 
   // ---- Text hierarchy ----
   static const Color textPrimary = Colors.white;

@@ -48,4 +48,34 @@ class AppTextStyles {
     fontWeight: FontWeight.w400,
     color: Color(0xFF666666),
   );
+
+  // ---- Desktop-specific ----
+
+  /// Sidebar navigation item label (13sp medium).
+  static const TextStyle sidebarItem = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    color: Color(0xFFB3B3B3),
+  );
+
+  /// Desktop section heading (20sp bold).
+  static const TextStyle sectionTitle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    color: Colors.white,
+  );
+
+  /// Track / playlist card title (14sp semibold).
+  static const TextStyle cardTitle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: Colors.white,
+  );
+
+  /// Card subtitle – artist name, metadata (12sp regular).
+  static const TextStyle cardSubtitle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: Color(0xFFB3B3B3),
+  );
 }
