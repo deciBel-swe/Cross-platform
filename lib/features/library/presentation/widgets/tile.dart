@@ -1,5 +1,6 @@
 import 'package:decibel/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:decibel/core/constants/app_constants.dart';
 class Tile extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -26,18 +27,17 @@ class Tile extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: AppConstants.fontSizeLarge,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary, // Updated to AppColors
+                  color: AppColors.textPrimary, 
                 ),
               ),
               if (subtitle != null) ...[
-                const SizedBox(height: 4),
                 Text(
                   subtitle!,
                   style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary, // Updated to AppColors
+                    fontSize: AppConstants.fontSizeSmall,
+                    color: AppColors.textSecondary, 
                   ),
                 ),
               ],
@@ -49,9 +49,8 @@ class Tile extends StatelessWidget {
           height: 32,
           child: FilledButton(
             style: FilledButton.styleFrom(
-              // Replace 'surface' with whatever you call your dark grey/card color
               backgroundColor: AppColors.surface, 
-              foregroundColor: AppColors.textPrimary, // Updated to AppColors
+              foregroundColor: AppColors.textPrimary, 
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
               shape: const StadiumBorder(),
             ),
@@ -59,7 +58,7 @@ class Tile extends StatelessWidget {
             child: Text(
               buttonText,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: AppConstants.fontSizeSmall,
                 fontWeight: FontWeight.w600,
               ),
             ),

@@ -4,27 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
+import '../../domain/entities/user_profile.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
 import '../widgets/profile_icon.dart';
 import '../widgets/tile.dart';
 
-class UserProfile {
-  final String name;
-  final String location;
-  final int followers;
-  final int following;
-  final String bio;
-
-  const UserProfile({
-    required this.name,
-    required this.location,
-    required this.followers,
-    required this.following,
-    required this.bio,
-  });
-}
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -106,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Text(
                   'Show more',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.google, // Replaced Colors.blue
+                        color: AppColors.google, 
                       ),
                 ),
               ),
@@ -172,7 +158,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-/// Extracted private widget to keep the main build method clean
 class _UserProfileHeader extends StatelessWidget {
   const _UserProfileHeader({required this.user});
 
