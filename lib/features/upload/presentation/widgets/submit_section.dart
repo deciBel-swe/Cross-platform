@@ -12,62 +12,89 @@ class SubmitSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(uploadNotifierProvider);
-    final isLoading = state is AsyncLoading;
-    final metadata = state.value!;
+    final asyncState = ref.watch(uploadNotifierProvider);
+    final isLoading = asyncState is AsyncLoading;
 
     return SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary, 
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          backgroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
         ),
-        onPressed: isLoading ? null : () async {
-          // 1. Frontend Checks
-          final isFormValid = formKey.currentState!.validate();
-          final hasAudioFile = metadata.audioFile != null;
+        onPressed: isLoading
+            ? null
+            : () async {
+                // Read the latest state/metadata at the time of the button press
+                final currentState = ref.read(uploadNotifierProvider);
+                //using **state.value!;** is a big NO NO
+                // it will crash the app if the state is null
+                // instead use **state.valueOrNull**
+                final metadata = currentState.valueOrNull;
 
-          if (!hasAudioFile) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please select an audio file to upload.'),
-                backgroundColor: AppColors.errors, 
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-            return; // Stop right here if there's no file
-          }
+                // 1. Frontend Checks
+                final isFormValid = formKey.currentState!.validate();
+                final hasAudioFile = metadata?.audioFile != null;
 
-          // 2. Trigger the upload API call
-          if (isFormValid && hasAudioFile) {
-            final success = await ref.read(uploadNotifierProvider.notifier).submitTrack();
-            
-            // Best Practice: safety check after an 'await'
-            if (!context.mounted) return; 
+                if (!hasAudioFile) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select an audio file to upload.'),
+                      backgroundColor: AppColors.errors,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return; // Stop right here if there's no file
+                }
 
-            // 3. Handle the Backend Result
-            if (success) {
-               context.go(RoutePaths.uploadLibrary);
-            } else {
-              // If Failed, Grab the exact error from Riverpod and show it.
-              final errorState = ref.read(uploadNotifierProvider).error;
-              final errorMessage = errorState?.toString() ?? 'Failed to upload track. Please try again.';
+                // 2. Trigger the upload API call
+                if (isFormValid && hasAudioFile) {
+                  final success = await ref
+                      .read(uploadNotifierProvider.notifier)
+                      .submitTrack();
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(errorMessage, style: const TextStyle(color: Colors.white)),
-                  backgroundColor: AppColors.errors,
-                  behavior: SnackBarBehavior.floating,
+                  // Best Practice: safety check after an 'await'
+                  if (!context.mounted) return;
+
+                  // 3. Handle the Backend Result
+                  if (success) {
+                    context.go(RoutePaths.uploadLibrary);
+                  } else {
+                    // If Failed, Grab the exact error from the latest AsyncValue and show it.
+                    final latestState = ref.read(uploadNotifierProvider);
+                    String errorMessage;
+                    if (latestState is AsyncError) {
+                      errorMessage = latestState.error.toString();
+                    } else {
+                      errorMessage =
+                          'Failed to upload track. Please try again.';
+                    }
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          errorMessage,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: AppColors.errors,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              },
+        child: isLoading
+            ? const CircularProgressIndicator(color: AppColors.onPrimary)
+            : const Text(
+                'Save',
+                style: TextStyle(
+                  color: AppColors.onPrimary,
+                  fontWeight: FontWeight.bold,
                 ),
-              );
-            }
-          }
-        },
-        child: isLoading 
-            ? const CircularProgressIndicator(color: AppColors.onPrimary) 
-            : const Text('Save', style: TextStyle(color: AppColors.onPrimary, fontWeight: FontWeight.bold)),
+              ),
       ),
     );
   }
