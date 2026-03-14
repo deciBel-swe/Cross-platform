@@ -10,7 +10,9 @@ import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
 import '../widgets/profile_icon.dart';
 import '../widgets/tile.dart';
-
+import '../../../../core/router/route_paths.dart';
+import '../providers/web_profiles_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -63,13 +65,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            const ProfileIcon(),
+            
+            GestureDetector(
+              onTap: () {
+                context.push(RoutePaths.editWebLink);
+              },
+              child: const ProfileIcon(),
+            ),
             const SizedBox(height: 14),
             
             _UserProfileHeader(user: user),
             
             const SizedBox(height: 16),
-            const ActionButtons(),
+            Consumer(
+  builder: (context, ref, child) {
+    final socialLinks = ref.watch(webProfilesProvider);
+    return ActionButtons(socialLinks: socialLinks);
+  },
+),
             
             // Dynamic Bio
             Text(

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/profile_image_provider.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/router/route_paths.dart';
 
 class ProfileIcon extends ConsumerWidget {
   const ProfileIcon({super.key});
@@ -12,7 +14,6 @@ class ProfileIcon extends ConsumerWidget {
     final selectedImage = ref.watch(profileImageProvider);
 
     return GestureDetector(
-      onTap: () => ref.read(profileImageProvider.notifier).pickImage(),
       child: FittedBox(
         fit: BoxFit.contain,
         child: CircleAvatar(

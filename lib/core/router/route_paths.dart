@@ -14,4 +14,5 @@ class RoutePaths {
   static const String player = '/player';
   static const String profile = '/profile';
   static const String upload = '/upload';
+  static const String editWebLink = '/profile/edit-web-link';
 }
