@@ -22,14 +22,36 @@ void main() {
       expect(find.byTooltip('Website'), findsNothing);
     });
 
-    testWidgets('renders instagram button when instagram exists',
+    testWidgets('renders nothing when all links are empty strings',
         (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: SocialLinksWidget(
               socialLinks: PublicProfileSocialLinks(
-                instagram: 'https://instagram.com/test_user',
+                instagram: '',
+                twitter: '   ',
+                website: '',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(IconButton), findsNothing);
+      expect(find.byTooltip('Instagram'), findsNothing);
+      expect(find.byTooltip('Twitter/X'), findsNothing);
+      expect(find.byTooltip('Website'), findsNothing);
+    });
+
+    testWidgets('renders only instagram icon when instagram exists',
+        (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SocialLinksWidget(
+              socialLinks: PublicProfileSocialLinks(
+                instagram: 'https://instagram.com/test',
               ),
             ),
           ),
@@ -41,13 +63,14 @@ void main() {
       expect(find.byTooltip('Website'), findsNothing);
     });
 
-    testWidgets('renders twitter button when twitter exists', (tester) async {
+    testWidgets('renders only twitter icon when twitter exists',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: SocialLinksWidget(
               socialLinks: PublicProfileSocialLinks(
-                twitter: 'https://x.com/test_user',
+                twitter: 'https://x.com/test',
               ),
             ),
           ),
@@ -59,7 +82,8 @@ void main() {
       expect(find.byTooltip('Website'), findsNothing);
     });
 
-    testWidgets('renders website button when website exists', (tester) async {
+    testWidgets('renders only website icon when website exists',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -77,14 +101,14 @@ void main() {
       expect(find.byTooltip('Website'), findsOneWidget);
     });
 
-    testWidgets('renders all buttons when all links exist', (tester) async {
+    testWidgets('renders all icons when all links exist', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: SocialLinksWidget(
               socialLinks: PublicProfileSocialLinks(
-                instagram: 'https://instagram.com/test_user',
-                twitter: 'https://x.com/test_user',
+                instagram: 'https://instagram.com/test',
+                twitter: 'https://x.com/test',
                 website: 'https://example.com',
               ),
             ),

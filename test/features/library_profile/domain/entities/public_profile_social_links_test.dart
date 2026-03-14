@@ -9,25 +9,19 @@ void main() {
       expect(socialLinks.isEmpty, true);
     });
 
-    test('isEmpty returns false when instagram is not null', () {
+    test('isEmpty returns true when all links are empty strings', () {
       const socialLinks = PublicProfileSocialLinks(
-        instagram: 'https://instagram.com/test_user',
+        instagram: '',
+        twitter: '   ',
+        website: '',
       );
 
-      expect(socialLinks.isEmpty, false);
+      expect(socialLinks.isEmpty, true);
     });
 
-    test('isEmpty returns false when twitter is not null', () {
+    test('isEmpty returns false when instagram exists', () {
       const socialLinks = PublicProfileSocialLinks(
-        twitter: 'https://x.com/test_user',
-      );
-
-      expect(socialLinks.isEmpty, false);
-    });
-
-    test('isEmpty returns false when website is not null', () {
-      const socialLinks = PublicProfileSocialLinks(
-        website: 'https://example.com',
+        instagram: 'https://instagram.com/test',
       );
 
       expect(socialLinks.isEmpty, false);
@@ -35,16 +29,30 @@ void main() {
 
     test('copyWith updates only instagram', () {
       const socialLinks = PublicProfileSocialLinks(
-        twitter: 'https://x.com/test_user',
+        twitter: 'https://x.com/test',
       );
 
       final updated = socialLinks.copyWith(
-        instagram: 'https://instagram.com/test_user',
+        instagram: 'https://instagram.com/test',
       );
 
-      expect(updated.instagram, 'https://instagram.com/test_user');
-      expect(updated.twitter, 'https://x.com/test_user');
+      expect(updated.instagram, 'https://instagram.com/test');
+      expect(updated.twitter, 'https://x.com/test');
       expect(updated.website, null);
+    });
+
+    test('copyWith updates website only', () {
+      const socialLinks = PublicProfileSocialLinks(
+        instagram: 'https://instagram.com/test',
+      );
+
+      final updated = socialLinks.copyWith(
+        website: 'https://example.com',
+      );
+
+      expect(updated.instagram, 'https://instagram.com/test');
+      expect(updated.website, 'https://example.com');
+      expect(updated.twitter, null);
     });
   });
 }
