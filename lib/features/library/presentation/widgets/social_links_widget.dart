@@ -20,29 +20,36 @@ class SocialLinksWidget extends StatelessWidget {
     }
   }
 
+  bool _hasValue(String? value) {
+    return value != null && value.trim().isNotEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (socialLinks.isEmpty) {
+    final hasInstagram = _hasValue(socialLinks.instagram);
+    final hasTwitter = _hasValue(socialLinks.twitter);
+    final hasWebsite = _hasValue(socialLinks.website);
+
+    if (!hasInstagram && !hasTwitter && !hasWebsite) {
       return const SizedBox.shrink();
     }
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (socialLinks.instagram != null)
+        if (hasInstagram)
           IconButton(
             icon: const FaIcon(FontAwesomeIcons.instagram),
             tooltip: 'Instagram',
             onPressed: () => _openLink(socialLinks.instagram!),
           ),
-
-        if (socialLinks.twitter != null)
+        if (hasTwitter)
           IconButton(
             icon: const FaIcon(FontAwesomeIcons.xTwitter),
             tooltip: 'Twitter/X',
             onPressed: () => _openLink(socialLinks.twitter!),
           ),
-
-        if (socialLinks.website != null)
+        if (hasWebsite)
           IconButton(
             icon: const Icon(Icons.public),
             tooltip: 'Website',
