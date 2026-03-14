@@ -38,6 +38,6 @@ class DioClient {
 
   // Helper method for DELETE requests
   Future<Response<T>> delete<T>(String path, {Map<String, dynamic>? queryParams}){
-    return _dio.delete(path);
+    return _dio.delete(path, queryParameters: queryParams);
   }
 }
