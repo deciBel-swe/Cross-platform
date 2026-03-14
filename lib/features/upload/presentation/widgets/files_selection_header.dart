@@ -57,6 +57,13 @@ class FileSelectionHeader extends ConsumerWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (metadata.audioFile != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '${metadata.audioFile!.path.split('.').last.toUpperCase()} • ${(metadata.audioFile!.lengthSync() / (1024 * 1024)).toStringAsFixed(2)} MB',
+                  style: const TextStyle(color: AppColors.textHint, fontSize: 12),
+                ),
+              ],
               const SizedBox(height: 8),
               OutlinedButton(
                 onPressed: isLoading ? null : () => ref.read(uploadNotifierProvider.notifier).pickAudioFile(),
