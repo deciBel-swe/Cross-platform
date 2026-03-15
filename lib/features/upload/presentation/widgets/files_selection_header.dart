@@ -17,6 +17,16 @@ class FileSelectionHeader extends ConsumerWidget {
     final isLoading = state is AsyncLoading;
     final metadata = state.value!;
 
+    String fileDetails = '';
+    if (metadata.audioFile != null){
+      final file = metadata.audioFile!;
+      final fileName = file.path.split('/').last;
+      final extension = fileName.split('.').last.toUpperCase();
+      final sizeInMB = (file.lengthSync() / (1024 * 1024)).toStringAsFixed(2);
+
+      fileDetails = '$extension - $sizeInMB(MB)';
+    }
+
     return Row(
       children: [
         // Cover Art Picker
@@ -57,6 +67,15 @@ class FileSelectionHeader extends ConsumerWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+
+              // Display the formatted size and extention here
+              if(fileDetails.isNotEmpty)...[
+                const SizedBox(height: 4),
+                Text(
+                  fileDetails,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                ),
+              ],
               const SizedBox(height: 8),
               OutlinedButton(
                 onPressed: isLoading ? null : () => ref.read(uploadNotifierProvider.notifier).pickAudioFile(),
