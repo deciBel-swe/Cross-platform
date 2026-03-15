@@ -2,101 +2,85 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:decibel/features/library/presentation/providers/web_profiles_provider.dart';
 
 void main() {
+  group('WebProfilesNotifier Tests', () {
+    late WebProfilesNotifier notifier;
 
-  group('WebProfilesNotifier - Save', () {
+    setUp(() {
+      notifier = WebProfilesNotifier();
+    });
 
-    test('save instagram link', () {
-      final notifier = WebProfilesNotifier();
+    test('Initial state should have all links null', () {
+      final state = notifier.state;
 
+      expect(state.instagram, isNull);
+      expect(state.twitter, isNull);
+      expect(state.youtube, isNull);
+      expect(state.tiktok, isNull);
+      expect(state.linkedin, isNull);
+      expect(state.snapchat, isNull);
+      expect(state.facebook, isNull);
+      expect(state.website, isNull);
+    });
+
+    test('Save Instagram link', () {
       notifier.saveLink('https://instagram.com/test');
-
       expect(notifier.state.instagram, 'https://instagram.com/test');
     });
 
-    test('save twitter link', () {
-      final notifier = WebProfilesNotifier();
-
+    test('Save Twitter/X link', () {
       notifier.saveLink('https://x.com/test');
-
       expect(notifier.state.twitter, 'https://x.com/test');
     });
 
-    test('save website link', () {
-      final notifier = WebProfilesNotifier();
-
-      notifier.saveLink('https://example.com');
-
-      expect(notifier.state.website, 'https://example.com');
+    test('Save YouTube link', () {
+      notifier.saveLink('https://youtube.com/@test');
+      expect(notifier.state.youtube, 'https://youtube.com/@test');
     });
 
-  });
-
-  group('WebProfilesNotifier - Edit', () {
-
-    test('edit instagram link', () {
-      final notifier = WebProfilesNotifier();
-
-      notifier.saveLink('https://instagram.com/old');
-      notifier.editLink('https://instagram.com/new');
-
-      expect(notifier.state.instagram, 'https://instagram.com/new');
+    test('Save TikTok link', () {
+      notifier.saveLink('https://tiktok.com/@test');
+      expect(notifier.state.tiktok, 'https://tiktok.com/@test');
     });
 
-    test('edit twitter link', () {
-      final notifier = WebProfilesNotifier();
-
-      notifier.saveLink('https://x.com/old');
-      notifier.editLink('https://x.com/new');
-
-      expect(notifier.state.twitter, 'https://x.com/new');
+    test('Save LinkedIn link', () {
+      notifier.saveLink('https://linkedin.com/in/test');
+      expect(notifier.state.linkedin, 'https://linkedin.com/in/test');
     });
 
-  });
+    test('Save Snapchat link', () {
+      notifier.saveLink('https://snapchat.com/add/test');
+      expect(notifier.state.snapchat, 'https://snapchat.com/add/test');
+    });
 
-  group('WebProfilesNotifier - Delete', () {
+    test('Save Facebook link', () {
+      notifier.saveLink('https://facebook.com/test');
+      expect(notifier.state.facebook, 'https://facebook.com/test');
+    });
 
-    test('delete instagram link', () {
-      final notifier = WebProfilesNotifier();
+    test('Save generic website link', () {
+      notifier.saveLink('https://myportfolio.dev');
+      expect(notifier.state.website, 'https://myportfolio.dev');
+    });
 
+    test('linkAlreadyExists returns true for exact existing link', () {
       notifier.saveLink('https://instagram.com/test');
-      notifier.deleteLink('https://instagram.com/test');
 
-      expect(notifier.state.instagram, '');
+      expect(
+        notifier.linkAlreadyExists('https://instagram.com/test'),
+        true,
+      );
     });
 
-    test('delete twitter link', () {
-      final notifier = WebProfilesNotifier();
+    test('linkAlreadyExists returns false for non-existing link', () {
+      notifier.saveLink('https://instagram.com/test');
 
-      notifier.saveLink('https://x.com/test');
-      notifier.deleteLink('https://x.com/test');
-
-      expect(notifier.state.twitter, '');
+      expect(
+        notifier.linkAlreadyExists('https://instagram.com/other'),
+        false,
+      );
     });
 
-    test('delete website link', () {
-      final notifier = WebProfilesNotifier();
-
-      notifier.saveLink('https://example.com');
-      notifier.deleteLink('https://example.com');
-
-      expect(notifier.state.website, '');
-    });
-
-  });
-
-  group('WebProfilesNotifier - Helpers', () {
-
-    test('linkAlreadyExists returns true for existing link', () {
-      final notifier = WebProfilesNotifier();
-
-      notifier.saveLink('https://example.com');
-
-      expect(notifier.linkAlreadyExists('https://example.com'), true);
-    });
-
-    test('platformAlreadyExists returns true if platform exists', () {
-      final notifier = WebProfilesNotifier();
-
+    test('platformAlreadyExists returns true for same platform', () {
       notifier.saveLink('https://instagram.com/test');
 
       expect(
@@ -105,17 +89,128 @@ void main() {
       );
     });
 
-    test('getExistingLinkForPlatform returns correct link', () {
-      final notifier = WebProfilesNotifier();
-
-      notifier.saveLink('https://x.com/test');
-
+    test('platformAlreadyExists returns false when platform not saved', () {
       expect(
-        notifier.getExistingLinkForPlatform('https://x.com/anything'),
-        'https://x.com/test',
+        notifier.platformAlreadyExists('https://youtube.com/@test'),
+        false,
       );
     });
 
-  });
+    test('getExistingLinkForPlatform returns correct stored instagram link', () {
+      notifier.saveLink('https://instagram.com/test');
 
+      expect(
+        notifier.getExistingLinkForPlatform('https://instagram.com/another'),
+        'https://instagram.com/test',
+      );
+    });
+
+    test('getExistingLinkForPlatform returns correct stored youtube link', () {
+      notifier.saveLink('https://youtube.com/@test');
+
+      expect(
+        notifier.getExistingLinkForPlatform('https://youtube.com/@another'),
+        'https://youtube.com/@test',
+      );
+    });
+
+    test('getPlatformKey returns correct platform for youtube', () {
+      expect(
+        notifier.getPlatformKey('https://youtube.com/@test'),
+        'youtube',
+      );
+    });
+
+    test('getPlatformKey returns website for unknown domain', () {
+      expect(
+        notifier.getPlatformKey('https://unknown-domain.dev'),
+        'website',
+      );
+    });
+
+    test('isSamePlatform returns true for same platform', () {
+      final result = notifier.isSamePlatform(
+        'https://instagram.com/test',
+        'https://instagram.com/new',
+      );
+
+      expect(result, true);
+    });
+
+    test('isSamePlatform returns false for different platforms', () {
+      final result = notifier.isSamePlatform(
+        'https://instagram.com/test',
+        'https://youtube.com/@test',
+      );
+
+      expect(result, false);
+    });
+
+    test('Edit link correctly for Instagram', () {
+      notifier.saveLink('https://instagram.com/test');
+
+      notifier.editLink(
+        'https://instagram.com/test',
+        'https://instagram.com/newtest',
+      );
+
+      expect(notifier.state.instagram, 'https://instagram.com/newtest');
+    });
+
+    test('Edit link correctly for YouTube', () {
+      notifier.saveLink('https://youtube.com/@old');
+
+      notifier.editLink(
+        'https://youtube.com/@old',
+        'https://youtube.com/@new',
+      );
+
+      expect(notifier.state.youtube, 'https://youtube.com/@new');
+    });
+
+    test('Edit link correctly for Website', () {
+      notifier.saveLink('https://example.com');
+
+      notifier.editLink(
+        'https://example.com',
+        'https://newexample.com',
+      );
+
+      expect(notifier.state.website, 'https://newexample.com');
+    });
+
+    test('Delete link correctly for Instagram', () {
+      notifier.saveLink('https://instagram.com/test');
+
+      notifier.deleteLink('https://instagram.com/test');
+
+      expect(notifier.state.instagram, '');
+    });
+
+    test('Delete link correctly for YouTube', () {
+      notifier.saveLink('https://youtube.com/@test');
+
+      notifier.deleteLink('https://youtube.com/@test');
+
+      expect(notifier.state.youtube, '');
+    });
+
+    test('Deleting one platform does not remove another', () {
+      notifier.saveLink('https://instagram.com/test');
+      notifier.saveLink('https://youtube.com/@test');
+
+      notifier.deleteLink('https://instagram.com/test');
+
+      expect(notifier.state.instagram, '');
+      expect(notifier.state.youtube, 'https://youtube.com/@test');
+    });
+
+    test('Deleting non-existing exact link does not change state', () {
+      notifier.saveLink('https://facebook.com/test');
+
+      notifier.deleteLink('https://facebook.com/other');
+
+      expect(notifier.state.facebook, 'https://facebook.com/test');
+    });
+  });
 }

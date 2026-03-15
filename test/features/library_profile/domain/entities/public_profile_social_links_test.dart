@@ -13,15 +13,20 @@ void main() {
       const socialLinks = PublicProfileSocialLinks(
         instagram: '',
         twitter: '   ',
+        youtube: '',
+        tiktok: '',
+        linkedin: '',
+        snapchat: '',
+        facebook: '',
         website: '',
       );
 
       expect(socialLinks.isEmpty, true);
     });
 
-    test('isEmpty returns false when instagram exists', () {
+    test('isEmpty returns false when one platform exists', () {
       const socialLinks = PublicProfileSocialLinks(
-        instagram: 'https://instagram.com/test',
+        youtube: 'https://youtube.com/@test',
       );
 
       expect(socialLinks.isEmpty, false);
@@ -38,21 +43,36 @@ void main() {
 
       expect(updated.instagram, 'https://instagram.com/test');
       expect(updated.twitter, 'https://x.com/test');
-      expect(updated.website, null);
+      expect(updated.youtube, isNull);
+      expect(updated.website, isNull);
+    });
+
+    test('copyWith updates only youtube', () {
+      const socialLinks = PublicProfileSocialLinks(
+        instagram: 'https://instagram.com/test',
+      );
+
+      final updated = socialLinks.copyWith(
+        youtube: 'https://youtube.com/@test',
+      );
+
+      expect(updated.instagram, 'https://instagram.com/test');
+      expect(updated.youtube, 'https://youtube.com/@test');
+      expect(updated.twitter, isNull);
     });
 
     test('copyWith updates website only', () {
       const socialLinks = PublicProfileSocialLinks(
-        instagram: 'https://instagram.com/test',
+        facebook: 'https://facebook.com/test',
       );
 
       final updated = socialLinks.copyWith(
         website: 'https://example.com',
       );
 
-      expect(updated.instagram, 'https://instagram.com/test');
+      expect(updated.facebook, 'https://facebook.com/test');
       expect(updated.website, 'https://example.com');
-      expect(updated.twitter, null);
+      expect(updated.instagram, isNull);
     });
   });
 }
