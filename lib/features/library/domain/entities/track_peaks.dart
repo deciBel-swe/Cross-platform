@@ -9,3 +9,8 @@ class TrackPeaks {
   final int duration;
   final List<int> peaks;
 }
+
+extension TrackPeaksExtension on TrackPeaks {
+  List<double> get waveformData =>
+      peaks.map((peak) => peak.toDouble()).toList(growable: false);
+}

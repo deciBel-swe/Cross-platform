@@ -42,12 +42,13 @@ dependencies:
   just_audio: ^0.9.43
 
   # ---------- Waveform Visualization ----------
-  audio_waveforms: ^1.2.0
+  audio_waveforms: ^2.0.2
 
   # ---------- Media & File Selection ----------
   image_picker: ^1.1.2
   file_picker: ^8.1.7
   dartz: ^0.10.1
+  flutter_audio_waveforms: ^1.2.1+8
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +75,7 @@ flutter:
 
   assets:
     - assets/icon/app_icon.png
+    
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

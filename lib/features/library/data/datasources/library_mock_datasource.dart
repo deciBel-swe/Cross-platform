@@ -4,6 +4,8 @@ import 'package:decibel/features/library/data/models/track_model.dart';
 import 'package:decibel/features/library/data/models/track_peaks_model.dart';
 
 class LibraryMockDatasource {
+  const LibraryMockDatasource();
+
   Future<TrackModel> fetchTrackById(int id) async {
     await Future.delayed(LibraryMockFixtures.mockDelay);
 
@@ -16,14 +18,40 @@ class LibraryMockDatasource {
     return TrackModel.fromJson(data);
   }
 
-  Future<PaginatedTracksModel> fetchTracks() async {
+  Future<PaginatedTracksModel> fetchTracks({
+    required int page,
+    required int size,
+  }) async {
     await Future.delayed(LibraryMockFixtures.mockDelay);
 
-    final data = LibraryMockFixtures.mockTracksResponse;
+    final allTracks =
+        LibraryMockFixtures.mockTracksResponse['content'] as List<dynamic>;
 
-    final tracksJson = data;
+    final startIndex = page * size;
+    if (startIndex >= allTracks.length) {
+      return PaginatedTracksModel.fromJson({
+        'content': const [],
+        'pageNumber': page,
+        'pageSize': size,
+        'totalElements': allTracks.length,
+        'totalPages': (allTracks.length / size).ceil(),
+        'isLast': true,
+      });
+    }
 
-    return PaginatedTracksModel.fromJson(tracksJson);
+    final endIndex = (startIndex + size).clamp(0, allTracks.length);
+    final pageItems = allTracks.sublist(startIndex, endIndex);
+
+    final response = <String, dynamic>{
+      'content': pageItems,
+      'pageNumber': page,
+      'pageSize': size,
+      'totalElements': allTracks.length,
+      'totalPages': (allTracks.length / size).ceil(),
+      'isLast': endIndex >= allTracks.length,
+    };
+
+    return PaginatedTracksModel.fromJson(response);
   }
 
   Future<TrackPeaksModel> fetchTrackPeaks(int id) async {

@@ -33,7 +33,10 @@ class MockTrackRepository implements TrackRepository {
     required int page,
     required int size,
   }) async {
-    final paginatedModel = await LibraryMockDatasource().fetchTracks();
+    final paginatedModel = await LibraryMockDatasource().fetchTracks(
+      size: size,
+      page: page,
+    );
     return Right(paginatedModel.toEntity());
   }
 }

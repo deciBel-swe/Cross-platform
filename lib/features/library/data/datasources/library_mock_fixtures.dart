@@ -137,6 +137,4 @@ class LibraryMockFixtures {
       ],
     },
   };
-
-  static Object? getTrackPeaksById(int id) {}
 }
