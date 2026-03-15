@@ -14,7 +14,7 @@ class SubmitSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(uploadNotifierProvider);
     final isLoading = state is AsyncLoading;
-    final metadata = state.mapOrNull();
+    final metadata = state.valueOrNull;
 
     return SizedBox(
       width: double.infinity,
@@ -25,9 +25,13 @@ class SubmitSection extends ConsumerWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         ),
         onPressed: isLoading ? null : () async {
+          // Safety check to prevent ! error
+          if (metadata == null) return;
+
           // 1. Frontend Checks
           final isFormValid = formKey.currentState!.validate();
           final hasAudioFile = metadata.audioFile != null;
+          final hasGenre = metadata.genre.isNotEmpty;
 
           if (!hasAudioFile) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -38,6 +42,17 @@ class SubmitSection extends ConsumerWidget {
               ),
             );
             return; // Stop right here if there's no file
+          }
+
+          if(!hasGenre){
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please select a genre for your track.'),
+                backgroundColor: AppColors.errors, 
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            return; // Stop right here if there's no genre
           }
 
           // 2. Trigger the upload API call
