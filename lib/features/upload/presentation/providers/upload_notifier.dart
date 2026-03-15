@@ -98,14 +98,30 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata>{
   Future<void> pickAudioFile() async {
     // Opens file explorer allowing only audio files
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.audio,
+      type: FileType.custom,
+      allowedExtensions: ['mp3', 'wav'],
     );
     if(result != null){
       final file = File(result.files.single.path!);
+      final extension = result.files.single.extension?.toLowerCase();
       final sizeInMB = file.lengthSync() / (1024*1024);
+
+      // Fallback in case the OS picker ignores the filter
+      if (extension != 'mp3' && extension != 'wav') {
+        state = AsyncValue<TrackUploadMetadata>.error(
+          "Unsupported format. Please use MP3, WAV.", 
+          StackTrace.current,
+        ).copyWithPrevious(state);
+        return;
+      }
+
       // Check if the user didn't cancel the upload
       if(sizeInMB > 500){
-        state = AsyncError("File exceed 500MB limit.", StackTrace.current);
+        state = AsyncValue<TrackUploadMetadata>.error(
+          "File exceeds 500MB limit.",
+          StackTrace.current,
+          ).copyWithPrevious(state);
+        return;
       }
 
       final metadata = state.value!.copyWith(audioFile: file);
@@ -129,7 +145,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata>{
     if(currentState == null) return false;
 
     // Set the loading state 
-    state = const AsyncLoading();
+    state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
     // Getting the repository instance to the Riverpod
     final repository = ref.read(uploadRepositoryProvider);
@@ -140,9 +156,10 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata>{
     return result.fold(
       // If fail, then update the UI with the error
       (failure) {
-        state = AsyncError(failure.message, StackTrace.current);
-        // Restore the Previous form data, so the user didn't lose its inputs
-        state = AsyncData(currentState);
+        state = AsyncValue<TrackUploadMetadata>.error(
+          failure.message, 
+          StackTrace.current,
+        ).copyWithPrevious(AsyncData(currentState));
         return false;
       },
       // if success, then update the form with a new empty instance
