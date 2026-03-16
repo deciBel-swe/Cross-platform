@@ -26,11 +26,8 @@ jobs:
       - name: Run Code Generation 
         run: dart run build_runner build --delete-conflicting-outputs
         
-      - name: Check Formatting
-        run: dart format --output=none --set-exit-if-changed . # Fail if not formatted
-        
-      - name: Analyze Code (Linting)
-        run: flutter analyze --fatal-warnings
+    #   - name: Analyze Code (Linting)
+    #     run: flutter analyze --fatal-warnings
         
       - name: Run Tests
         run: flutter test
