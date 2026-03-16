@@ -1,14 +1,12 @@
 /// GoRouter configuration – all app routes defined here.
 library;
 
-import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/entities/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
-import 'go_router_refresh_stream.dart';
-
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/start_screen.dart';
@@ -16,12 +14,13 @@ import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/profile_screen.dart';
+import '../../features/library/presentation/screens/web_profiles.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
-import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
 import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
-import '../../features/library/presentation/screens/web_profiles.dart';
+import 'go_router_refresh_stream.dart';
 import 'main_shell.dart';
 import 'route_paths.dart';
 

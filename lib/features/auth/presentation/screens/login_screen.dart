@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
-import '../../../../core/router/route_paths.dart';
-import '../../domain/entities/auth_state.dart';
 
 /// Sign-in screen: OAuth buttons, divider, email + password fields,
 /// and a white Continue button.

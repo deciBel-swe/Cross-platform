@@ -1,7 +1,7 @@
 /// Failure representations for the domain layer.
 abstract class Failure {
-  final String message;
   const Failure(this.message);
+  final String message;
 
   @override
   bool operator ==(Object other) {

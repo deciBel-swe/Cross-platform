@@ -1,13 +1,13 @@
 class PublicProfileSocialLinks {
-  final String? instagram;
-  final String? twitter;
-  final String? website;
-
   const PublicProfileSocialLinks({
     this.instagram,
     this.twitter,
     this.website,
   });
+
+  final String? instagram;
+  final String? twitter;
+  final String? website;
 
   bool get isEmpty =>
       _isNullOrEmpty(instagram) &&

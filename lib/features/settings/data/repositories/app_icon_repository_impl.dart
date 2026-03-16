@@ -1,8 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter/services.dart';
-
 import 'package:dynamic_app_icon_flutter_plus/dynamic_app_icon_flutter_plus.dart';
+import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../../../core/constants/app_assets.dart';

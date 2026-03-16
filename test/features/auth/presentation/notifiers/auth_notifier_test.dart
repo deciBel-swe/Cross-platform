@@ -1,13 +1,13 @@
+import 'package:dartz/dartz.dart';
+import 'package:decibel/core/errors/failures.dart';
+import 'package:decibel/core/storage/secure_storage_service.dart';
+import 'package:decibel/features/auth/domain/entities/auth_state.dart';
+import 'package:decibel/features/auth/domain/entities/auth_user.dart';
+import 'package:decibel/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:decibel/features/auth/domain/entities/auth_state.dart';
-import 'package:decibel/features/auth/domain/repositories/i_auth_repository.dart';
-import 'package:decibel/core/storage/secure_storage_service.dart';
-import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
-import 'package:dartz/dartz.dart';
-import 'package:decibel/features/auth/domain/entities/auth_user.dart';
-import 'package:decibel/core/errors/failures.dart';
 
 class MockAuthRepository extends Mock implements IAuthRepository {}
 

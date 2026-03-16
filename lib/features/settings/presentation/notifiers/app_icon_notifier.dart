@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/app_icon_option.dart';
-import '../../domain/repositories/app_icon_repository.dart';
 import '../providers/app_icon_provider.dart';
 
 class AppIconNotifier extends AsyncNotifier<AppIconOption> {

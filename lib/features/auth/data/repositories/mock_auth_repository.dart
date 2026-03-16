@@ -30,7 +30,7 @@ class MockAuthRepository implements IAuthRepository {
 
     if (isMobile) {
       // --- MOBILE: Use official Google Sign In SDK (In-App Popup)
-      final String clientId = ApiConstants.googleMobileClientId;
+      const String clientId = ApiConstants.googleMobileClientId;
 
       await g_sign_in.GoogleSignIn.instance.initialize(
         clientId: clientId,
@@ -54,15 +54,15 @@ class MockAuthRepository implements IAuthRepository {
       }
 
       // We don't actually need the code for mock, we just wait for delay
-      await Future.delayed(AuthMockFixtures.delay);
-      final mockResponse = AuthMockFixtures.mockLoginResponse;
+      await Future<void>.delayed(AuthMockFixtures.delay);
+      const mockResponse = AuthMockFixtures.mockLoginResponse;
       final model = LoginResponseModel.fromJson(mockResponse);
 
       return Right(model.user.toDomain());
     } else {
       // --- DESKTOP: Use local HTTP server loopback
-      final String clientId = ApiConstants.googleDesktopClientId;
-      final String redirectUri = ApiConstants.googleDesktopRedirectUri;
+      const String clientId = ApiConstants.googleDesktopClientId;
+      const String redirectUri = ApiConstants.googleDesktopRedirectUri;
 
       final authUrl = Uri.parse(
         '${ApiConstants.googleAuthUrl}'
@@ -76,8 +76,8 @@ class MockAuthRepository implements IAuthRepository {
 
       // Prepare the success response
       void completeSuccess() {
-        Future.delayed(AuthMockFixtures.delay, () {
-          final mockResponse = AuthMockFixtures.mockLoginResponse;
+        Future<void>.delayed(AuthMockFixtures.delay, () {
+          const mockResponse = AuthMockFixtures.mockLoginResponse;
           final model = LoginResponseModel.fromJson(mockResponse);
           if (!completer.isCompleted) {
             completer.complete(Right(model.user.toDomain()));
@@ -128,7 +128,7 @@ class MockAuthRepository implements IAuthRepository {
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
     // Simulate reading from local storage without delay
     // this will be tied to SecureStorageService.
-    final mockResponse = AuthMockFixtures.mockLoginResponse;
+    const mockResponse = AuthMockFixtures.mockLoginResponse;
     final model = LoginResponseModel.fromJson(mockResponse);
 
     return Right(model.user.toDomain());
