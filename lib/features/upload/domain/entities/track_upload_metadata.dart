@@ -22,14 +22,6 @@ class TrackUploadMetadata {
     this.isPrivate = false,
     this.waveFormData = const [],
   });
-  final File? audioFile;
-  final File? coverImage;
-  final String title;
-  final String genre;
-  final String description;
-  final List<String> tags;
-  final DateTime? releasedDate;
-  final bool isPrivate;
 
   // Create new instance with updated fields
   TrackUploadMetadata copyWith({
