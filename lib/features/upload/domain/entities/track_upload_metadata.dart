@@ -1,6 +1,6 @@
 import 'dart:io';
 
-class TrackUploadMetadata{
+class TrackUploadMetadata {
   final File? audioFile;
   final File? coverImage;
   final String title;
@@ -39,7 +39,7 @@ class TrackUploadMetadata{
       genre: genre ?? this.genre,
       description: description ?? this.description,
       tags: tags ?? this.tags,
-      releasedDate: releaseDate ?? this.releasedDate,
+      releasedDate: releaseDate ?? releasedDate,
       isPrivate: isPrivate ?? this.isPrivate,
     );
   }
