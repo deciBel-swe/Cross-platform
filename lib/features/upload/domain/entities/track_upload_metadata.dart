@@ -7,8 +7,9 @@ class TrackUploadMetadata{
   final String genre;
   final String description;
   final List<String> tags;
-  final DateTime? releasedDate;
+  final DateTime? releaseDate;
   final bool isPrivate;
+  final List<String> waveFormData;
 
   const TrackUploadMetadata({
     this.audioFile,
@@ -17,8 +18,9 @@ class TrackUploadMetadata{
     this.genre = '',
     this.description = '',
     this.tags = const [],
-    this.releasedDate,
+    this.releaseDate,
     this.isPrivate = false,
+    this.waveFormData = const [],
   });
 
   // Create new instance with updated fields
@@ -31,6 +33,7 @@ class TrackUploadMetadata{
     List<String>? tags,
     DateTime? releaseDate,
     bool? isPrivate,
+    List<String>? waveFormData,
   }) {
     return TrackUploadMetadata(
       audioFile: audioFile ?? this.audioFile,
@@ -39,8 +42,9 @@ class TrackUploadMetadata{
       genre: genre ?? this.genre,
       description: description ?? this.description,
       tags: tags ?? this.tags,
-      releasedDate: releaseDate ?? this.releasedDate,
+      releaseDate: releaseDate ?? this.releaseDate,
       isPrivate: isPrivate ?? this.isPrivate,
+      waveFormData: waveFormData ?? this.waveFormData,
     );
   }
 }

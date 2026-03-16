@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/storage/shared_prefs_service.dart';
 import '../../domain/entities/track_upload_metadata.dart';
@@ -21,8 +20,21 @@ final uploadNotifierProvider = AsyncNotifierProvider<UploadNotifier, TrackUpload
   UploadNotifier.new,
 );
 
+final genreListProvider = StateProvider<List<String>>((ref) {
+  // Mocked backend data
+  return [
+    "Qur'an", 'Alternative Rock', 'Ambient', 'Classical', 'Country', 
+    'Dance & EDM', 'Dancehall', 'Deep House', 'Disco', 
+    'Drum & Bass', 'Dubstep', 'Electronic', 'Folk & Singer-Songwriter', 
+    'Hip-hop & Rap', 'House'
+  ];
+});
+
 // 3. The Notifier which containing the form logic "Upload Form Controller"
 class UploadNotifier extends AsyncNotifier<TrackUploadMetadata>{
+  // Keep Track of 3 genre suggestions.
+  List<String> _genreSuggestions = [];
+
   @override
   FutureOr<TrackUploadMetadata> build() async {
     // 1. Read the service via Riverpod
@@ -30,6 +42,9 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata>{
     
     // 2. Fetch the saved setting
     final savedIsPrivate = await prefsService.getLastPrivacySettings(); 
+
+    final pool = ref.read(genreListProvider);
+    _genreSuggestions = pool.take(3). toList();
 
     return TrackUploadMetadata(
       audioFile: null,
@@ -39,13 +54,37 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata>{
       coverImage: null,
       description: '',
       tags: [],
-      releasedDate: null,
+      releaseDate: null,
     );
   }
 
   // Update the fields of the form. Entity is immutable so use copyWith
   void updateTitle(String title) => _updateState((state) => state.copyWith(title: title));
-  void updateGenre(String genre) => _updateState((state) => state.copyWith(genre: genre));
+
+  // Getter for the UI to see which chips to show
+  List<String> get genreSuggestions => _genreSuggestions;
+  void updateGenre(String genre) {
+    final currentState = state.value;
+    if (currentState == null) return;
+
+    // 1. Update the actual metadata
+    state = AsyncData(currentState.copyWith(genre: genre));
+
+    // 2. Rotation Logic: If the picked genre was a chip, swap it
+    if (genreSuggestions.contains(genre)) {
+      final pool = ref.read(genreListProvider);
+      
+      // Find genres in pool not currently displayed
+      final available = pool.where((g) => !genreSuggestions.contains(g)).toList();
+
+      if (available.isNotEmpty) {
+        final index = genreSuggestions.indexOf(genre);
+        genreSuggestions[index] = available.first;
+        // Trigger a UI refresh by re-emitting the state
+        state = AsyncData(currentState.copyWith(genre: genre));
+      }
+    }
+  }
   void updateDescription(String desc) => _updateState((state) => state.copyWith(description: desc));
   void togglePrivacy(bool isPrivate) async {
     // 1. Update the UI state instantly
@@ -71,7 +110,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata>{
         description: currentState.description,
         tags: currentState.tags,
         isPrivate: currentState.isPrivate,
-        releasedDate: null, 
+        releaseDate: null, 
       ));
     }
   }

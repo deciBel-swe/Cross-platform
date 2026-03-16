@@ -24,8 +24,9 @@ mixin _$TrackMetadataModel {
   String get title => throw _privateConstructorUsedError;
   String get genre => throw _privateConstructorUsedError;
   bool get isPrivate => throw _privateConstructorUsedError;
+  String get releaseDate => throw _privateConstructorUsedError;
+  List<String> get waveFormData => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
-  String? get releasedDate => throw _privateConstructorUsedError;
   List<String>? get tags => throw _privateConstructorUsedError;
 
   /// Serializes this TrackMetadataModel to a JSON map.
@@ -49,8 +50,9 @@ abstract class $TrackMetadataModelCopyWith<$Res> {
     String title,
     String genre,
     bool isPrivate,
+    String releaseDate,
+    List<String> waveFormData,
     String? description,
-    String? releasedDate,
     List<String>? tags,
   });
 }
@@ -73,8 +75,9 @@ class _$TrackMetadataModelCopyWithImpl<$Res, $Val extends TrackMetadataModel>
     Object? title = null,
     Object? genre = null,
     Object? isPrivate = null,
+    Object? releaseDate = null,
+    Object? waveFormData = null,
     Object? description = freezed,
-    Object? releasedDate = freezed,
     Object? tags = freezed,
   }) {
     return _then(
@@ -91,13 +94,17 @@ class _$TrackMetadataModelCopyWithImpl<$Res, $Val extends TrackMetadataModel>
                 ? _value.isPrivate
                 : isPrivate // ignore: cast_nullable_to_non_nullable
                       as bool,
+            releaseDate: null == releaseDate
+                ? _value.releaseDate
+                : releaseDate // ignore: cast_nullable_to_non_nullable
+                      as String,
+            waveFormData: null == waveFormData
+                ? _value.waveFormData
+                : waveFormData // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
             description: freezed == description
                 ? _value.description
                 : description // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            releasedDate: freezed == releasedDate
-                ? _value.releasedDate
-                : releasedDate // ignore: cast_nullable_to_non_nullable
                       as String?,
             tags: freezed == tags
                 ? _value.tags
@@ -122,8 +129,9 @@ abstract class _$$TrackMetadataModelImplCopyWith<$Res>
     String title,
     String genre,
     bool isPrivate,
+    String releaseDate,
+    List<String> waveFormData,
     String? description,
-    String? releasedDate,
     List<String>? tags,
   });
 }
@@ -145,8 +153,9 @@ class __$$TrackMetadataModelImplCopyWithImpl<$Res>
     Object? title = null,
     Object? genre = null,
     Object? isPrivate = null,
+    Object? releaseDate = null,
+    Object? waveFormData = null,
     Object? description = freezed,
-    Object? releasedDate = freezed,
     Object? tags = freezed,
   }) {
     return _then(
@@ -163,13 +172,17 @@ class __$$TrackMetadataModelImplCopyWithImpl<$Res>
             ? _value.isPrivate
             : isPrivate // ignore: cast_nullable_to_non_nullable
                   as bool,
+        releaseDate: null == releaseDate
+            ? _value.releaseDate
+            : releaseDate // ignore: cast_nullable_to_non_nullable
+                  as String,
+        waveFormData: null == waveFormData
+            ? _value._waveFormData
+            : waveFormData // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
         description: freezed == description
             ? _value.description
             : description // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        releasedDate: freezed == releasedDate
-            ? _value.releasedDate
-            : releasedDate // ignore: cast_nullable_to_non_nullable
                   as String?,
         tags: freezed == tags
             ? _value._tags
@@ -189,10 +202,12 @@ class _$TrackMetadataModelImpl
     required this.title,
     required this.genre,
     required this.isPrivate,
+    required this.releaseDate,
+    required final List<String> waveFormData,
     this.description,
-    this.releasedDate,
     final List<String>? tags,
-  }) : _tags = tags;
+  }) : _waveFormData = waveFormData,
+       _tags = tags;
 
   factory _$TrackMetadataModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$TrackMetadataModelImplFromJson(json);
@@ -204,9 +219,17 @@ class _$TrackMetadataModelImpl
   @override
   final bool isPrivate;
   @override
-  final String? description;
+  final String releaseDate;
+  final List<String> _waveFormData;
   @override
-  final String? releasedDate;
+  List<String> get waveFormData {
+    if (_waveFormData is EqualUnmodifiableListView) return _waveFormData;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_waveFormData);
+  }
+
+  @override
+  final String? description;
   final List<String>? _tags;
   @override
   List<String>? get tags {
@@ -219,7 +242,7 @@ class _$TrackMetadataModelImpl
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'TrackMetadataModel(title: $title, genre: $genre, isPrivate: $isPrivate, description: $description, releasedDate: $releasedDate, tags: $tags)';
+    return 'TrackMetadataModel(title: $title, genre: $genre, isPrivate: $isPrivate, releaseDate: $releaseDate, waveFormData: $waveFormData, description: $description, tags: $tags)';
   }
 
   @override
@@ -230,8 +253,9 @@ class _$TrackMetadataModelImpl
       ..add(DiagnosticsProperty('title', title))
       ..add(DiagnosticsProperty('genre', genre))
       ..add(DiagnosticsProperty('isPrivate', isPrivate))
+      ..add(DiagnosticsProperty('releaseDate', releaseDate))
+      ..add(DiagnosticsProperty('waveFormData', waveFormData))
       ..add(DiagnosticsProperty('description', description))
-      ..add(DiagnosticsProperty('releasedDate', releasedDate))
       ..add(DiagnosticsProperty('tags', tags));
   }
 
@@ -244,10 +268,14 @@ class _$TrackMetadataModelImpl
             (identical(other.genre, genre) || other.genre == genre) &&
             (identical(other.isPrivate, isPrivate) ||
                 other.isPrivate == isPrivate) &&
+            (identical(other.releaseDate, releaseDate) ||
+                other.releaseDate == releaseDate) &&
+            const DeepCollectionEquality().equals(
+              other._waveFormData,
+              _waveFormData,
+            ) &&
             (identical(other.description, description) ||
                 other.description == description) &&
-            (identical(other.releasedDate, releasedDate) ||
-                other.releasedDate == releasedDate) &&
             const DeepCollectionEquality().equals(other._tags, _tags));
   }
 
@@ -258,8 +286,9 @@ class _$TrackMetadataModelImpl
     title,
     genre,
     isPrivate,
+    releaseDate,
+    const DeepCollectionEquality().hash(_waveFormData),
     description,
-    releasedDate,
     const DeepCollectionEquality().hash(_tags),
   );
 
@@ -285,8 +314,9 @@ abstract class _TrackMetadataModel implements TrackMetadataModel {
     required final String title,
     required final String genre,
     required final bool isPrivate,
+    required final String releaseDate,
+    required final List<String> waveFormData,
     final String? description,
-    final String? releasedDate,
     final List<String>? tags,
   }) = _$TrackMetadataModelImpl;
 
@@ -300,9 +330,11 @@ abstract class _TrackMetadataModel implements TrackMetadataModel {
   @override
   bool get isPrivate;
   @override
-  String? get description;
+  String get releaseDate;
   @override
-  String? get releasedDate;
+  List<String> get waveFormData;
+  @override
+  String? get description;
   @override
   List<String>? get tags;
 
