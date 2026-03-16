@@ -34,7 +34,7 @@ class UploadRepository implements IUploadRepository {
       return Left(ServerFailure(error.message));
     }
     catch(error){
-      return const Left(ServerFailure('An unexpected error occurred during upload the file'));
+      return const Left(ServerFailure('An unexpected error occurred during file upload'));
     }
   }
 }
