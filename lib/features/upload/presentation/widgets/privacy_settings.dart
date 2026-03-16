@@ -1,4 +1,6 @@
 
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -111,7 +113,7 @@ class PrivacySettings extends ConsumerWidget {
               ),
             ),
             Switch(
-              value: metadata.releasedDate != null,
+              value: metadata.releaseDate != null,
               activeThumbColor: AppColors.accentTeal,
               onChanged: (isLoading || !isArtistPro) ? null : (val) async {
                   if (val) {
@@ -180,9 +182,17 @@ class PrivacySettings extends ConsumerWidget {
               isBoxActive = false; // Keep it looking "locked" but with real data
             } // If the schedule is OFF (for both Free and Pro users), default to TODAY
             else {
-              dateText = DateFormat('dd MMM yyyy').format(now);
-              timeText = DateFormat('HH:mm').format(now);
-              isBoxActive = false; // Keeps the text dimmed so they know it's a default, read-only state
+              if (metadata.releaseDate != null) {
+                dateText = DateFormat('dd MMM yyyy').format(metadata.releaseDate!);
+                timeText = DateFormat('HH:mm').format(metadata.releaseDate!);
+                isBoxActive = true; 
+              } 
+              // Fallback: Show today's date, but make it look disabled/inactive
+              else {
+                dateText = DateFormat('dd MMM yyyy').format(now);
+                timeText = DateFormat('HH:mm').format(now);
+                isBoxActive = false; 
+              }
             }
 
             // 2. Build the UI

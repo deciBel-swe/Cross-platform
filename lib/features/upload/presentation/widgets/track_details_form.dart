@@ -10,6 +10,7 @@ import 'tags_bottom_sheet.dart';
 ///
 /// Handles the Title, scrollable Genre chips,
 /// Tag summary, and the Description text area.
+
 class TrackDetailsForm extends ConsumerWidget {
   const TrackDetailsForm({super.key});
 
@@ -18,6 +19,8 @@ class TrackDetailsForm extends ConsumerWidget {
     final state = ref.watch(uploadNotifierProvider);
     final isLoading = state is AsyncLoading;
     final metadata = state.value!;
+    final notifier = ref.read(uploadNotifierProvider.notifier);
+    final genreSuggestions = notifier.genreSuggestions;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,92 +40,61 @@ class TrackDetailsForm extends ConsumerWidget {
               borderSide: BorderSide(color: AppColors.onPrimary),
             ),
           ),
-          onChanged: ref.read(uploadNotifierProvider.notifier).updateTitle,
+          onChanged: notifier.updateTitle,
           // Fulfills the acceptance criteria for inline required error
           validator: (v) => v == null || v.isEmpty ? 'Required' : null,
         ),
         const SizedBox(height: 16),
 
         // Genre Selection
-        FormField<String>(
-          validator: (_) =>
-              metadata.genre.isEmpty ? 'Please select a genre' : null,
-          builder: (field) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Genre *',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                // Allow horizontal scrolling if genres exceed screen width
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      // Pass 'context' as the first argument to each chip!
-                      _buildGenreChip(
-                        context,
-                        ref,
-                        'PICK GENRE',
-                        Icons.search,
-                        isSelected: false,
-                      ),
-
-                      // If the user picked a custom genre from the bottom sheet, show it here!
-                      if (metadata.genre.isNotEmpty &&
-                          metadata.genre != 'Alternative Rock' &&
-                          metadata.genre != 'Hip-Hop' &&
-                          metadata.genre != "Qur'an")
-                        _buildGenreChip(
-                          context,
-                          ref,
-                          metadata.genre,
-                          null,
-                          isSelected: true,
-                        ),
-                      //  Put some suggestions to the user to pick
-                      _buildGenreChip(
-                        context,
-                        ref,
-                        "Qur'an",
-                        null,
-                        isSelected: metadata.genre == "Qur'an",
-                      ),
-                      _buildGenreChip(
-                        context,
-                        ref,
-                        'HIP-HOP',
-                        null,
-                        isSelected: metadata.genre == 'Hip-Hop',
-                      ),
-                      _buildGenreChip(
-                        context,
-                        ref,
-                        'ALTERNATIVE ROCK',
-                        null,
-                        isSelected: metadata.genre == 'Alternative Rock',
-                      ),
-                    ],
-                  ),
-                ),
-                if (field.hasError)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      field.errorText!,
-                      style: const TextStyle(
-                        color: AppColors.errors,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                const Divider(color: AppColors.borderLight, height: 32),
-              ],
-            );
-          },
+        const Text(
+          'Genre *',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
         ),
+        const SizedBox(height: 8),
+        // Allow horizontal scrolling if genres exceed screen width
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              // Pass 'context' as the first argument to each chip!
+              _buildGenreChip(
+                context,
+                ref,
+                'PICK GENRE',
+                Icons.search,
+                isSelected: false,
+              ),
+
+              if (metadata.genre.isNotEmpty &&
+                  !notifier.genreSuggestions.contains(metadata.genre))
+                _buildGenreChip(
+                  context,
+                  ref,
+                  metadata.genre,
+                  null,
+                  isSelected: true,
+                  onTap: () {},
+                ),
+
+              ...genreSuggestions.map(
+                (genreName) => _buildGenreChip(
+                  context,
+                  ref,
+                  genreName,
+                  null,
+                  isSelected: metadata.genre == genreName,
+                  onTap: () {
+                    ref
+                        .read(uploadNotifierProvider.notifier)
+                        .updateGenre(genreName);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(color: AppColors.borderLight, height: 32),
 
         // Tags Summary
         ListTile(
@@ -171,9 +143,7 @@ class TrackDetailsForm extends ConsumerWidget {
               borderSide: BorderSide(color: AppColors.onPrimary),
             ),
           ),
-          onChanged: ref
-              .read(uploadNotifierProvider.notifier)
-              .updateDescription,
+          onChanged: notifier.updateDescription,
         ),
         const SizedBox(height: 24),
       ],
@@ -187,6 +157,7 @@ class TrackDetailsForm extends ConsumerWidget {
     String label,
     IconData? icon, {
     required bool isSelected,
+    VoidCallback? onTap,
   }) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
@@ -209,28 +180,22 @@ class TrackDetailsForm extends ConsumerWidget {
             fontSize: 12,
           ),
         ),
-        onPressed: () {
-          // If they click 'PICK GENRE', open the bottom sheet
-          if (label == 'PICK GENRE') {
-            showModalBottomSheet<void>(
-              context: context,
-              backgroundColor: Colors.transparent,
-              isScrollControlled: true,
-              builder: (context) => const FractionallySizedBox(
-                heightFactor: 0.7,
-                child: GenreBottomSheet(),
-              ),
-            );
-          }
-          // Otherwise, if they click a quick-pick chip, just update the state instantly
-          else if (label == 'ALL MUSIC GENRES') {
-            ref.read(uploadNotifierProvider.notifier).updateGenre('');
-          }
-          // if they click any other specific genre chip, update it.
-          else {
-            ref.read(uploadNotifierProvider.notifier).updateGenre(label);
-          }
-        },
+        onPressed:
+            onTap ??
+            () {
+              // If they click 'PICK GENRE', open the bottom sheet
+              if (label == 'PICK GENRE') {
+                showModalBottomSheet<void>(
+                  context: context,
+                  backgroundColor: Colors.transparent,
+                  isScrollControlled: true,
+                  builder: (context) => const FractionallySizedBox(
+                    heightFactor: 0.7,
+                    child: GenreBottomSheet(),
+                  ),
+                );
+              }
+            },
       ),
     );
   }

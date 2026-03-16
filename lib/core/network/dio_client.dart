@@ -41,6 +41,6 @@ class DioClient {
     String path, {
     Map<String, dynamic>? queryParams,
   }) {
-    return _dio.delete(path);
+    return _dio.delete(path, queryParameters: queryParams);
   }
 }

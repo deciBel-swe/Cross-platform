@@ -7,18 +7,10 @@ import '../providers/upload_notifier.dart';
 class GenreBottomSheet extends ConsumerWidget {
   const GenreBottomSheet({super.key});
 
-  // The hardcoded list of genres based on your Upload_Genre.jpg mockup
-  static const List<String> _genres = [
-    "Qur'an", 'Alternative Rock', 'Ambient', 'Classical', 'Country', 
-    'Dance & EDM', 'Dancehall', 'Deep House', 'Disco', 
-    'Drum & Bass', 'Dubstep', 'Electronic', 'Folk & Singer-Songwriter', 
-    'Hip-hop & Rap', 'House'
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(uploadNotifierProvider);
-    final currentGenre = state.value?.genre;
+    final allGenres = ref.watch(genreListProvider);
+    final currentGenre = ref.watch(uploadNotifierProvider).value?.genre;
 
     return Container(
       padding: const EdgeInsets.only(top: 16),
@@ -48,9 +40,9 @@ class GenreBottomSheet extends ConsumerWidget {
           // The list of genres
           Expanded(
             child: ListView.builder(
-              itemCount: _genres.length,
+              itemCount: allGenres.length,
               itemBuilder: (context, index) {
-                final genre = _genres[index];
+                final genre = allGenres[index];
                 final isSelected = currentGenre == genre;
 
                 return ListTile(

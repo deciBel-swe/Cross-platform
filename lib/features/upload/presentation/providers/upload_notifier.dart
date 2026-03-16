@@ -22,8 +22,32 @@ final uploadNotifierProvider =
       UploadNotifier.new,
     );
 
+final genreListProvider = StateProvider<List<String>>((ref) {
+  // Mocked backend data
+  return [
+    "Qur'an",
+    'Alternative Rock',
+    'Ambient',
+    'Classical',
+    'Country',
+    'Dance & EDM',
+    'Dancehall',
+    'Deep House',
+    'Disco',
+    'Drum & Bass',
+    'Dubstep',
+    'Electronic',
+    'Folk & Singer-Songwriter',
+    'Hip-hop & Rap',
+    'House',
+  ];
+});
+
 // 3. The Notifier which containing the form logic "Upload Form Controller"
 class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
+  // Keep Track of 3 genre suggestions.
+  List<String> _genreSuggestions = [];
+
   @override
   FutureOr<TrackUploadMetadata> build() async {
     // 1. Read the service via Riverpod
@@ -31,6 +55,9 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     // 2. Fetch the saved setting
     final savedIsPrivate = await prefsService.getLastPrivacySettings();
+
+    final pool = ref.read(genreListProvider);
+    _genreSuggestions = pool.take(3).toList();
 
     return TrackUploadMetadata(
       audioFile: null,
@@ -40,15 +67,41 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       coverImage: null,
       description: '',
       tags: [],
-      releasedDate: null,
+      releaseDate: null,
     );
   }
 
   // Update the fields of the form. Entity is immutable so use copyWith
   void updateTitle(String title) =>
       _updateState((state) => state.copyWith(title: title));
-  void updateGenre(String genre) =>
-      _updateState((state) => state.copyWith(genre: genre));
+
+  // Getter for the UI to see which chips to show
+  List<String> get genreSuggestions => _genreSuggestions;
+  void updateGenre(String genre) {
+    final currentState = state.value;
+    if (currentState == null) return;
+
+    // 1. Update the actual metadata
+    state = AsyncData(currentState.copyWith(genre: genre));
+
+    // 2. Rotation Logic: If the picked genre was a chip, swap it
+    if (genreSuggestions.contains(genre)) {
+      final pool = ref.read(genreListProvider);
+
+      // Find genres in pool not currently displayed
+      final available = pool
+          .where((g) => !genreSuggestions.contains(g))
+          .toList();
+
+      if (available.isNotEmpty) {
+        final index = genreSuggestions.indexOf(genre);
+        genreSuggestions[index] = available.first;
+        // Trigger a UI refresh by re-emitting the state
+        state = AsyncData(currentState.copyWith(genre: genre));
+      }
+    }
+  }
+
   void updateDescription(String desc) =>
       _updateState((state) => state.copyWith(description: desc));
   void togglePrivacy(bool isPrivate) async {
@@ -78,7 +131,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
           description: currentState.description,
           tags: currentState.tags,
           isPrivate: currentState.isPrivate,
-          releasedDate: null,
+          releaseDate: null,
         ),
       );
     }
@@ -114,26 +167,24 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     );
     if (result != null) {
       final file = File(result.files.single.path!);
+      final extension = result.files.single.extension?.toLowerCase();
       final sizeInMB = file.lengthSync() / (1024 * 1024);
-      final extension = file.path.split('.').last.toLowerCase();
 
+      // Fallback in case the OS picker ignores the filter
       if (extension != 'mp3' && extension != 'wav') {
-        if (state.value != null) {
-          state = AsyncValue<TrackUploadMetadata>.error(
-            "Unsupported format. Please use MP3, WAV.",
-            StackTrace.current,
-          ).copyWithPrevious(AsyncData(state.value!));
-        }
+        state = AsyncValue<TrackUploadMetadata>.error(
+          "Unsupported format. Please use MP3, WAV.",
+          StackTrace.current,
+        ).copyWithPrevious(state);
         return;
       }
 
+      // Check if the user didn't cancel the upload
       if (sizeInMB > 500) {
-        if (state.value != null) {
-          state = AsyncValue<TrackUploadMetadata>.error(
-            "File exceed 500MB limit.",
-            StackTrace.current,
-          ).copyWithPrevious(AsyncData(state.value!));
-        }
+        state = AsyncValue<TrackUploadMetadata>.error(
+          "File exceeds 500MB limit.",
+          StackTrace.current,
+        ).copyWithPrevious(state);
         return;
       }
 
@@ -158,7 +209,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     if (currentState == null) return false;
 
     // Set the loading state
-    state = const AsyncLoading();
+    state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
     // Getting the repository instance to the Riverpod
     final repository = ref.read(uploadRepositoryProvider);
@@ -169,11 +220,6 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     return result.fold(
       // If fail, then update the UI with the error
       (failure) {
-        //Why I added this
-        // because in your first code deletes the error immediately to save the data.
-        // so the user will not see the error message.
-        // So I added .copyWithPrevious(AsyncData(currentState)); to preserve the data that was entered in the form before the error occurred.
-        // and also hold the error at same time
         state = AsyncValue<TrackUploadMetadata>.error(
           failure.message,
           StackTrace.current,
