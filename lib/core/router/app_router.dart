@@ -1,6 +1,7 @@
 /// GoRouter configuration – all app routes defined here.
 library;
 
+import '../../features/upload/presentation/screens/upload_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,6 +92,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: RoutePaths.home,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: HomeScreen()),
+              ),
+              GoRoute(
+                path: RoutePaths.upload,
+                builder: (context, state) => const UploadScreen(),
               ),
             ],
           ),
