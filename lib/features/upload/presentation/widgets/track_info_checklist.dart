@@ -1,16 +1,17 @@
-import 'package:decibel/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 
 /// A widget that displays a circular progress indicator for the track completion.
 /// Tapping it reveals a bottom sheet with a detailed split-layout breakdown.
 class TrackInfoChecklist extends StatelessWidget {
-  final TrackUploadMetadata metadata;
 
   const TrackInfoChecklist({
     super.key,
     required this.metadata,
   });
+  final TrackUploadMetadata metadata;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +119,7 @@ class TrackInfoChecklist extends StatelessWidget {
     bool hasGenre, 
     bool hasDescription,
   ) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -260,15 +261,15 @@ class TrackInfoChecklist extends StatelessWidget {
 
 /// Helper widget to draw each row in the new checklist design
 class _ChecklistItem extends StatelessWidget {
-  final String title;
-  final bool isCompleted;
-  final String? subtitle;
 
   const _ChecklistItem({
     required this.title, 
     required this.isCompleted, 
     this.subtitle,
   });
+  final String title;
+  final bool isCompleted;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {

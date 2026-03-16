@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-
 import '../../domain/entities/user_profile.dart';
+import '../providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
 import '../widgets/profile_icon.dart';
 import '../widgets/tile.dart';
-import '../../../../core/router/route_paths.dart';
-import '../providers/web_profiles_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 

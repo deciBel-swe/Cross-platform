@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 import '../../domain/repositories/i_upload_repository.dart';
-import '../../../../core/di/injection.dart';
 
 // 1. Bridge GitIt (Dependency Injection) to Riverpod (State Management)
 final uploadRepositoryProvider = Provider<IUploadRepository>((ref) {

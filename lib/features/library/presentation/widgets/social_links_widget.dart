@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../library_profile/domain/entities/public_profile_social_links.dart';
 
 class SocialLinksWidget extends StatelessWidget {
-  final PublicProfileSocialLinks socialLinks;
 
   const SocialLinksWidget({super.key, required this.socialLinks});
+  final PublicProfileSocialLinks socialLinks;
 
   Future<void> _openLink(String url) async {
     final uri = Uri.parse(url);

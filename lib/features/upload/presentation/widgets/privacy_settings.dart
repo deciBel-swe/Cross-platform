@@ -31,28 +31,34 @@ class PrivacySettings extends ConsumerWidget {
         const Text('Privacy', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
         
         // Public / Private Radio
-        RadioListTile<bool>(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Public', style: TextStyle(color: AppColors.onPrimary)),
-          subtitle: const Text('Anyone can find this', style: TextStyle(color: AppColors.textMuted)),
+        RadioMenuButton<bool>(
           value: false, // false = Public
           groupValue: metadata.isPrivate,
-          activeColor: AppColors.onPrimary,
           onChanged: isLoading ? null : (val) {
             // 1. Set to Public
             ref.read(uploadNotifierProvider.notifier).togglePrivacy(val!);
             // 2. Force the schedule to turn OFF because it is public now!
             ref.read(uploadNotifierProvider.notifier).clearReleaseDate();
           },
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+               Text('Public', style: TextStyle(color: AppColors.onPrimary)),
+               Text('Anyone can find this', style: TextStyle(color: AppColors.textMuted)),
+            ],
+          ),
         ),
-        RadioListTile<bool>(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Unlisted (Private)', style: TextStyle(color: AppColors.onPrimary)),
-          subtitle: const Text('Anyone with private link can access', style: TextStyle(color: AppColors.textMuted)),
+        RadioMenuButton<bool>(
           value: true,
           groupValue: metadata.isPrivate,
-          activeColor: AppColors.onPrimary,
           onChanged: isLoading ? null : (val) => ref.read(uploadNotifierProvider.notifier).togglePrivacy(val!),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+               Text('Unlisted (Private)', style: TextStyle(color: AppColors.onPrimary)),
+               Text('Anyone with private link can access', style: TextStyle(color: AppColors.textMuted)),
+            ],
+          ),
         ),
         
         // Follower Exclusive (Mock)
@@ -64,7 +70,7 @@ class PrivacySettings extends ConsumerWidget {
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: AppColors.proBadge.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                decoration: BoxDecoration(color: AppColors.proBadge.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
                 child: const Text('★ ARTIST PRO', style: TextStyle(color: AppColors.proBadge, fontSize: 10, fontWeight: FontWeight.bold)),
               )
             ],

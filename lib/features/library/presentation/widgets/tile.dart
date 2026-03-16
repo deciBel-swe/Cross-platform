@@ -1,11 +1,8 @@
-import 'package:decibel/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:decibel/core/constants/app_constants.dart';
+
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/app_colors.dart';
 class Tile extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final String buttonText;
-  final VoidCallback onButtonPressed;
 
   const Tile({
     super.key,
@@ -14,6 +11,10 @@ class Tile extends StatelessWidget {
     required this.buttonText,
     required this.onButtonPressed,
   });
+  final String title;
+  final String? subtitle;
+  final String buttonText;
+  final VoidCallback onButtonPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,7 @@ class Tile extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: AppConstants.fontSizeLarge,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary, 
@@ -35,7 +36,7 @@ class Tile extends StatelessWidget {
               if (subtitle != null) ...[
                 Text(
                   subtitle!,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: AppConstants.fontSizeSmall,
                     color: AppColors.textSecondary, 
                   ),

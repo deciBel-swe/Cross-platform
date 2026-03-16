@@ -1,14 +1,14 @@
-import 'package:decibel/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../providers/upload_notifier.dart';
 import '../widgets/files_selection_header.dart';
-import '../widgets/track_info_checklist.dart';
-import '../widgets/track_details_form.dart';
 import '../widgets/privacy_settings.dart';
 import '../widgets/submit_section.dart';
+import '../widgets/track_details_form.dart';
+import '../widgets/track_info_checklist.dart';
 
 /// The root Presentation screen for the Track Upload feature.
 /// 
@@ -69,9 +69,9 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 padding: const EdgeInsets.all(16),
-                child: Column(
+                child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     TrackDetailsForm(),
                     PrivacySettings(),
                   ],

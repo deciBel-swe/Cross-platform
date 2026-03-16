@@ -36,7 +36,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // MOBILE: Use official Google Sign In SDK (In-App Popup) // why I used this instead of browser google is very strict I couldn't redirect to the app
       // It wasted alot of time so I decided to do this approach
       // This completely bypasses all the manual "Custom URI Scheme" redirect errors
-      final String clientId = ApiConstants.googleMobileClientId;
+      const String clientId = ApiConstants.googleMobileClientId;
 
       await g_sign_in.GoogleSignIn.instance.initialize(
         clientId: clientId,
@@ -73,8 +73,8 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // I was trying to do the same for the android but google restricting opeing apps from links not easy
       final completer = Completer<LoginResponseModel>();
 
-      final String clientId = ApiConstants.googleDesktopClientId;
-      final String redirectUri = ApiConstants.googleDesktopRedirectUri;
+      const String clientId = ApiConstants.googleDesktopClientId;
+      const String redirectUri = ApiConstants.googleDesktopRedirectUri;
 
       final authUrl = Uri.parse(
         '${ApiConstants.googleAuthUrl}'
@@ -213,7 +213,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         debugPrint('=============================');
       }
 
-      final response = await _dioClient.post(
+      final response = await _dioClient.post<dynamic>(
         ApiConstants.googleTokenExchangeEndpoint, // Path defined in API docs
         data: dto.toJson(),
       );
@@ -232,7 +232,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       }
     } catch (e) {
       if (e.toString().contains('DioException')) {
-        throw ServerException('A network error occurred during login.');
+        throw const ServerException('A network error occurred during login.');
       }
       throw AuthException(
         'An unexpected error occurred during Google Sign In verify: $e',

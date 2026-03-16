@@ -1,6 +1,7 @@
-import 'package:decibel/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/theme/app_colors.dart';
 import '../providers/upload_notifier.dart';
 
 /// A modal bottom sheet that allows users to add and remove tags.

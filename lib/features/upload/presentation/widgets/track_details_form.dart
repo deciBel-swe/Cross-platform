@@ -1,9 +1,10 @@
-import 'package:decibel/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/theme/app_colors.dart';
 import '../providers/upload_notifier.dart';
-import 'tags_bottom_sheet.dart';
 import 'genre_bottom_sheet.dart';
+import 'tags_bottom_sheet.dart';
 
 /// Contains the text input fields for the track's metadata.
 ///
@@ -143,7 +144,7 @@ class TrackDetailsForm extends ConsumerWidget {
           ),
           onTap: () {
             // Open the BottomSheet
-            showModalBottomSheet(
+            showModalBottomSheet<void>(
               context: context,
               isScrollControlled:
                   true, // Allows the sheet to move up with the keyboard
@@ -211,7 +212,7 @@ class TrackDetailsForm extends ConsumerWidget {
         onPressed: () {
           // If they click 'PICK GENRE', open the bottom sheet
           if (label == 'PICK GENRE') {
-            showModalBottomSheet(
+            showModalBottomSheet<void>(
               context: context,
               backgroundColor: Colors.transparent,
               isScrollControlled: true,

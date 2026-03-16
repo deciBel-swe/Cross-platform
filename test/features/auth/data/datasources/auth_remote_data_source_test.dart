@@ -1,7 +1,7 @@
+import 'package:decibel/core/constants/api_constants.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:dio/dio.dart';
-import 'package:decibel/core/constants/api_constants.dart';
 
 class MockDio extends Mock implements Dio {}
 
@@ -31,7 +31,7 @@ void main() {
       () async {
         // Arrange
         when(
-          () => mockDio.post(
+          () => mockDio.post<dynamic>(
             ApiConstants.googleTokenExchangeEndpoint,
             data: {'code': tAuthCode},
           ),

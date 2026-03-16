@@ -5,9 +5,9 @@ import '../../domain/repositories/image_repository.dart';
 
 @Injectable(as: ImageRepository)
 class ImageRepositoryImpl implements ImageRepository {
-  final ImagePicker _picker;
 
   ImageRepositoryImpl(this._picker);
+  final ImagePicker _picker;
 
   @override
   Future<File?> pickProfileImage() async {

@@ -1,17 +1,17 @@
-import 'package:injectable/injectable.dart';
 import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
 
-import '../../domain/repositories/i_upload_repository.dart';
-import '../../domain/entities/track_upload_metadata.dart';
-import '../datasources/upload_remote_datasource.dart';
-import '../models/track_metadata_model.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
+import '../../domain/entities/track_upload_metadata.dart';
+import '../../domain/repositories/i_upload_repository.dart';
+import '../datasources/upload_remote_datasource.dart';
+import '../models/track_metadata_model.dart';
 
 @LazySingleton(as: IUploadRepository)
 class UploadRepository implements IUploadRepository {
-  final UploadRemoteDatasource _remoteDatasource;
   const UploadRepository(this._remoteDatasource);
+  final UploadRemoteDatasource _remoteDatasource;
 
   @override
   Future<Either<Failure, Unit>> uploadTrack(TrackUploadMetadata metadata) async {

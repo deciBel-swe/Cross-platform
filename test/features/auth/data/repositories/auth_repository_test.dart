@@ -1,15 +1,15 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:decibel/features/auth/data/repositories/auth_repository.dart';
-import 'package:decibel/features/auth/data/datasources/auth_remote_data_source.dart';
-import 'package:decibel/core/storage/secure_storage_service.dart';
-import 'package:decibel/features/auth/data/models/device_info_model.dart';
-import 'package:decibel/features/auth/data/models/login_response_model.dart';
-import 'package:decibel/features/auth/data/models/auth_user_model.dart';
-import 'package:decibel/features/auth/domain/entities/auth_user.dart';
 import 'package:decibel/core/errors/exceptions.dart';
 import 'package:decibel/core/errors/failures.dart';
+import 'package:decibel/core/storage/secure_storage_service.dart';
+import 'package:decibel/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:decibel/features/auth/data/models/auth_user_model.dart';
+import 'package:decibel/features/auth/data/models/device_info_model.dart';
+import 'package:decibel/features/auth/data/models/login_response_model.dart';
+import 'package:decibel/features/auth/data/repositories/auth_repository.dart';
+import 'package:decibel/features/auth/domain/entities/auth_user.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockAuthRemoteDataSource extends Mock implements IAuthRemoteDataSource {}
 
@@ -67,7 +67,7 @@ void main() {
         final result = await repository.getCurrentUser();
 
         // Assert
-        expect(result, const Right(null));
+        expect(result, const Right<Failure, AuthUser?>(null));
         verify(() => mockSecureStorageService.isAccessTokenExpired()).called(1);
       },
     );
@@ -84,7 +84,7 @@ void main() {
         final result = await repository.getCurrentUser();
 
         // Assert
-        expect(result, const Right(null));
+        expect(result, const Right<Failure, AuthUser?>(null));
         verify(() => mockSecureStorageService.isAccessTokenExpired()).called(1);
       },
     );
