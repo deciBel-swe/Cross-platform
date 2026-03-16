@@ -19,6 +19,7 @@ import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/profile_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
+import '../../features/library/presentation/screens/web_profiles.dart';
 import 'main_shell.dart';
 import 'route_paths.dart';
 
@@ -146,9 +147,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: RoutePaths.profile,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: ProfileScreen()),
-              ),
+                routes: [
+                  GoRoute(
+                    path: 'edit-web-link',
+                    builder: (context, state) => const EditProfileLinkScreen(),
+                ),    
             ],
           ),
+        ],
+      ),
         ],
       ),
     ],
