@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/storage/secure_storage_service.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../datasources/auth_mock_fixtures.dart';
@@ -20,6 +21,9 @@ import '../utils/auth_success_page.dart';
 @Environment('mock')
 @LazySingleton(as: IAuthRepository)
 class MockAuthRepository implements IAuthRepository {
+  MockAuthRepository(this._secureStorageService);
+
+  final SecureStorageService _secureStorageService;
   @override
   Future<Either<Failure, AuthUser>> loginWithGoogle() async {
     // Launch the REAL Google Auth URL directly to test the consent screen
@@ -58,6 +62,8 @@ class MockAuthRepository implements IAuthRepository {
       const mockResponse = AuthMockFixtures.mockLoginResponse;
       final model = LoginResponseModel.fromJson(mockResponse);
 
+      await _secureStorageService.saveTokenPair(model);
+
       return Right(model.user.toDomain());
     } else {
       // --- DESKTOP: Use local HTTP server loopback
@@ -80,7 +86,11 @@ class MockAuthRepository implements IAuthRepository {
           const mockResponse = AuthMockFixtures.mockLoginResponse;
           final model = LoginResponseModel.fromJson(mockResponse);
           if (!completer.isCompleted) {
-            completer.complete(Right(model.user.toDomain()));
+            _secureStorageService.saveTokenPair(model).then((_) {
+              if (!completer.isCompleted) {
+                completer.complete(Right(model.user.toDomain()));
+              }
+            });
           }
         });
       }
@@ -126,11 +136,12 @@ class MockAuthRepository implements IAuthRepository {
 
   @override
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
-    // Simulate reading from local storage without delay
-    // this will be tied to SecureStorageService.
-    const mockResponse = AuthMockFixtures.mockLoginResponse;
-    final model = LoginResponseModel.fromJson(mockResponse);
+    final isExpired = await _secureStorageService.isAccessTokenExpired();
+    if (isExpired) {
+      return const Right(null);
+    }
 
-    return Right(model.user.toDomain());
+    final userModel = await _secureStorageService.getUser();
+    return Right(userModel?.toDomain());
   }
 }

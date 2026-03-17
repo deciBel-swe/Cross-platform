@@ -1,9 +1,11 @@
 // Secure storage wrapper (flutter_secure_storage) for tokens.
 
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../features/auth/data/models/login_response_model.dart';
+import '../../features/auth/data/models/auth_user_model.dart';
 
 /// Service responsible for securely storing and retrieving authentication tokens.
 ///
@@ -19,6 +21,7 @@ class SecureStorageService {
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _expiryKey = 'token_expiry';
+  static const String _userKey = 'auth_user';
 
   /// Saves the access token, refresh token, and calculates expiry time
   /// based on a successful login response.
@@ -34,6 +37,10 @@ class SecureStorageService {
       _storage.write(
         key: _expiryKey,
         value: expiryTime.millisecondsSinceEpoch.toString(),
+      ),
+      _storage.write(
+        key: _userKey,
+        value: jsonEncode(response.user.toJson()),
       ),
     ]);
   }
@@ -69,6 +76,18 @@ class SecureStorageService {
 
   /// Retrieves the stored refresh token.
   Future<String?> getRefreshToken() => _storage.read(key: _refreshTokenKey);
+
+  /// Retrieves the stored user model.
+  Future<AuthUserModel?> getUser() async {
+    final userStr = await _storage.read(key: _userKey);
+    if (userStr == null) return null;
+    try {
+      final json = jsonDecode(userStr);
+      return AuthUserModel.fromJson(json as Map<String, dynamic>);
+    } catch (_) {
+      return null; // Handle malformed data gracefully
+    }
+  }
 
   /// Checks if the access token is expired or within 1 minute of expiring.
   Future<bool> isAccessTokenExpired() async {

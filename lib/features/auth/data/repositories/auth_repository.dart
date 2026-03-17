@@ -25,16 +25,11 @@ class AuthRepository implements IAuthRepository {
     try {
       final isExpired = await _secureStorageService.isAccessTokenExpired();
       if (isExpired) {
-        return const Right(
-          null,
-        ); // A refresh logic would go here initially, but for now just logout.
+        return const Right(null);
       }
 
-      // Because we don't have a /me endpoint or local user db mapped right now,
-      // getting the current user purely relies on valid tokens.
-      // we'd fetch the user's profile info when backend is ready.
-      // Returning null requires them to login again
-      return const Right(null);
+      final userModel = await _secureStorageService.getUser();
+      return Right(userModel?.toDomain());
     } catch (e) {
       return const Right(null);
     }

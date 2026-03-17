@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/network/events/auth_event_bus.dart';
 
 /// Manages the authentication state of the application.
 ///
@@ -24,6 +25,16 @@ import '../providers/auth_provider.dart';
 class AuthNotifier extends AsyncNotifier<AuthState> {
   @override
   FutureOr<AuthState> build() async {
+    // Listen for forced logouts from interceptors or other backend-driven events
+    final logoutSub = AuthEventBus().logoutStream.listen((_) {
+      debugPrint('[AuthNotifier] Received forced logout event from AuthEventBus');
+      logout();
+    });
+
+    ref.onDispose(() {
+      logoutSub.cancel();
+    });
+
     final secureStorage = ref.watch(secureStorageServiceProvider);
     final repo = ref.watch(authRepositoryProvider);
 
