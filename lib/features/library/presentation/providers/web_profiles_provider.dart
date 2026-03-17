@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:decibel/features/library/presentation/utils/web_profile_platform_utils.dart';
+
 class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
   WebProfilesNotifier(this._secureStorageService)
       : super(const PublicProfileSocialLinks());
@@ -15,48 +17,8 @@ class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
 
   static const String _baseUrl = 'http://192.168.1.4.nip.io:3000/api';
 
-  String _detectPlatform(String link) {
-    final lower = link.toLowerCase();
-
-    if (lower.contains('instagram.com')) {
-      return 'instagram';
-    }
-
-    if (lower.contains('twitter.com') || lower.contains('x.com')) {
-      return 'twitter';
-    }
-
-    if (lower.contains('youtube.com') || lower.contains('youtu.be')) {
-      return 'youtube';
-    }
-
-    if (lower.contains('tiktok.com')) {
-      return 'tiktok';
-    }
-
-    if (lower.contains('linkedin.com')) {
-      return 'linkedin';
-    }
-
-    if (lower.contains('snapchat.com')) {
-      return 'snapchat';
-    }
-
-    if (lower.contains('facebook.com') || lower.contains('fb.com')) {
-      return 'facebook';
-    }
-
-    if (lower.contains('patreon.com') ||
-        lower.contains('buymeacoffee.com') ||
-        lower.contains('ko-fi.com')) {
-      return 'supportLink';
-    }
-
-    return 'website';
-  }
-
   String getPlatformKey(String link) {
-    return _detectPlatform(link);
+    return WebProfilePlatformUtils.detectPlatform(link);
   }
 
   bool linkAlreadyExists(String link) {
@@ -74,65 +36,18 @@ class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
   }
 
   bool platformAlreadyExists(String link) {
-    final platform = _detectPlatform(link);
-
-    switch (platform) {
-      case 'instagram':
-        return _hasValue(state.instagram);
-      case 'twitter':
-        return _hasValue(state.twitter);
-      case 'youtube':
-        return _hasValue(state.youtube);
-      case 'tiktok':
-        return _hasValue(state.tiktok);
-      case 'linkedin':
-        return _hasValue(state.linkedin);
-      case 'snapchat':
-        return _hasValue(state.snapchat);
-      case 'facebook':
-        return _hasValue(state.facebook);
-      case 'website':
-        return _hasValue(state.website);
-      case 'supportLink':
-        return _hasValue(state.supportLink);
-      default:
-        return false;
-    }
+    final platform = WebProfilePlatformUtils.detectPlatform(link);
+    return state.hasValueForPlatform(platform);
   }
 
   String? getExistingLinkForPlatform(String link) {
-    final platform = _detectPlatform(link);
-
-    switch (platform) {
-      case 'instagram':
-        return state.instagram;
-      case 'twitter':
-        return state.twitter;
-      case 'youtube':
-        return state.youtube;
-      case 'tiktok':
-        return state.tiktok;
-      case 'linkedin':
-        return state.linkedin;
-      case 'snapchat':
-        return state.snapchat;
-      case 'facebook':
-        return state.facebook;
-      case 'website':
-        return state.website;
-      case 'supportLink':
-        return state.supportLink;
-      default:
-        return null;
-    }
+    final platform = WebProfilePlatformUtils.detectPlatform(link);
+    return state.valueForPlatform(platform);
   }
 
   bool isSamePlatform(String oldLink, String newLink) {
-    return _detectPlatform(oldLink) == _detectPlatform(newLink);
-  }
-
-  bool _hasValue(String? value) {
-    return value != null && value.trim().isNotEmpty;
+    return WebProfilePlatformUtils.detectPlatform(oldLink) ==
+        WebProfilePlatformUtils.detectPlatform(newLink);
   }
 
   String? _normalizedOrNull(String? value) {
@@ -169,81 +84,52 @@ class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
     );
   }
 
-Future<void> _patchBackend(PublicProfileSocialLinks nextState) async {
-  final token = await _secureStorageService.getAccessToken();
+  Future<void> _patchBackend(PublicProfileSocialLinks nextState) async {
+    final token = await _secureStorageService.getAccessToken();
 
-  // Temporary mock/dev fallback:
-  // if no token is available, keep feature working locally.
-  if (token == null || token.trim().isEmpty) {
-    if (kDebugMode) {
-      debugPrint(
-        '[WebProfilesNotifier] No access token found. '
-        'Using local mock fallback instead of backend PATCH.',
-      );
-    }
+    // Temporary mock/dev fallback:
+    // if no token is available, keep feature working locally.
+    if (token == null || token.trim().isEmpty) {
+      if (kDebugMode) {
+        debugPrint(
+          '[WebProfilesNotifier] No access token found. '
+          'Using local mock fallback instead of backend PATCH.',
+        );
+      }
 
-    state = nextState;
-    return;
-  }
-
-  final response = await http.patch(
-    Uri.parse('$_baseUrl/users/me/social-links'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode(_backendPayloadFromState(nextState)),
-  );
-
-  if (response.statusCode >= 200 && response.statusCode < 300) {
-    if (response.body.trim().isEmpty) {
       state = nextState;
       return;
     }
 
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-    state = _mergeBackendResponse(nextState, decoded);
-    return;
-  }
+    final response = await http.patch(
+      Uri.parse('$_baseUrl/users/me/social-links'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(_backendPayloadFromState(nextState)),
+    );
 
-  throw Exception('Failed to update social links: ${response.statusCode}');
-}
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.trim().isEmpty) {
+        state = nextState;
+        return;
+      }
 
-  PublicProfileSocialLinks _copyWithPlatform(
-    PublicProfileSocialLinks current,
-    String platform,
-    String? value,
-  ) {
-    switch (platform) {
-      case 'instagram':
-        return current.copyWith(instagram: value);
-      case 'twitter':
-        return current.copyWith(twitter: value);
-      case 'youtube':
-        return current.copyWith(youtube: value);
-      case 'tiktok':
-        return current.copyWith(tiktok: value);
-      case 'linkedin':
-        return current.copyWith(linkedin: value);
-      case 'snapchat':
-        return current.copyWith(snapchat: value);
-      case 'facebook':
-        return current.copyWith(facebook: value);
-      case 'website':
-        return current.copyWith(website: value);
-      case 'supportLink':
-        return current.copyWith(supportLink: value);
-      default:
-        return current;
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      state = _mergeBackendResponse(nextState, decoded);
+      return;
     }
+
+    throw Exception('Failed to update social links: ${response.statusCode}');
   }
 
   Future<void> saveLink(String rawLink) async {
     final link = rawLink.trim();
     if (link.isEmpty) return;
 
-    final platform = _detectPlatform(link);
-    final nextState = _copyWithPlatform(state, platform, link);
+    final platform = WebProfilePlatformUtils.detectPlatform(link);
+    final nextState = state.copyWithPlatform(platform, link);
 
     if (_isBackendSupported(platform)) {
       await _patchBackend(nextState);
@@ -258,11 +144,11 @@ Future<void> _patchBackend(PublicProfileSocialLinks nextState) async {
 
     if (trimmedOld.isEmpty || trimmedNew.isEmpty) return;
 
-    final oldPlatform = _detectPlatform(trimmedOld);
-    final newPlatform = _detectPlatform(trimmedNew);
+    final oldPlatform = WebProfilePlatformUtils.detectPlatform(trimmedOld);
+    final newPlatform = WebProfilePlatformUtils.detectPlatform(trimmedNew);
 
     if (oldPlatform == newPlatform) {
-      final nextState = _copyWithPlatform(state, oldPlatform, trimmedNew);
+      final nextState = state.copyWithPlatform(oldPlatform, trimmedNew);
 
       if (_isBackendSupported(oldPlatform)) {
         await _patchBackend(nextState);
@@ -272,8 +158,8 @@ Future<void> _patchBackend(PublicProfileSocialLinks nextState) async {
       return;
     }
 
-    var nextState = _copyWithPlatform(state, oldPlatform, null);
-    nextState = _copyWithPlatform(nextState, newPlatform, trimmedNew);
+    var nextState = state.copyWithPlatform(oldPlatform, null);
+    nextState = nextState.copyWithPlatform(newPlatform, trimmedNew);
 
     final needsBackend =
         _isBackendSupported(oldPlatform) || _isBackendSupported(newPlatform);
@@ -289,13 +175,13 @@ Future<void> _patchBackend(PublicProfileSocialLinks nextState) async {
     final link = rawLink.trim();
     if (link.isEmpty) return;
 
-    final platform = _detectPlatform(link);
+    final platform = WebProfilePlatformUtils.detectPlatform(link);
 
     if (_isBackendSupported(platform)) {
-      final backendDeleteState = _copyWithPlatform(state, platform, null);
+      final backendDeleteState = state.copyWithPlatform(platform, null);
       await _patchBackend(backendDeleteState);
     } else {
-      final nextState = _copyWithPlatform(state, platform, '');
+      final nextState = state.copyWithPlatform(platform, '');
       state = nextState;
     }
   }

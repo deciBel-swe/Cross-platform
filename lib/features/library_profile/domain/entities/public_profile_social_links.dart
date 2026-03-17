@@ -21,6 +21,29 @@ class PublicProfileSocialLinks {
     this.supportLink,
   });
 
+  static const List<String> displayPlatforms = [
+    'instagram',
+    'twitter',
+    'youtube',
+    'tiktok',
+    'linkedin',
+    'snapchat',
+    'facebook',
+    'website',
+  ];
+
+  static const List<String> allPlatforms = [
+    'instagram',
+    'twitter',
+    'youtube',
+    'tiktok',
+    'linkedin',
+    'snapchat',
+    'facebook',
+    'website',
+    'supportLink',
+  ];
+
   bool get isEmpty =>
       _isNullOrEmpty(instagram) &&
       _isNullOrEmpty(twitter) &&
@@ -34,6 +57,42 @@ class PublicProfileSocialLinks {
 
   bool _isNullOrEmpty(String? value) {
     return value == null || value.trim().isEmpty;
+  }
+
+  bool hasValueForPlatform(String platform) {
+    final value = valueForPlatform(platform);
+    return value != null && value.trim().isNotEmpty;
+  }
+
+  String? valueForPlatform(String platform) {
+    switch (platform) {
+      case 'instagram':
+        return instagram;
+      case 'twitter':
+        return twitter;
+      case 'youtube':
+        return youtube;
+      case 'tiktok':
+        return tiktok;
+      case 'linkedin':
+        return linkedin;
+      case 'snapchat':
+        return snapchat;
+      case 'facebook':
+        return facebook;
+      case 'website':
+        return website;
+      case 'supportLink':
+        return supportLink;
+      default:
+        return null;
+    }
+  }
+
+  List<String> nonEmptyPlatforms({bool includeSupportLink = true}) {
+    final platforms = includeSupportLink ? allPlatforms : displayPlatforms;
+
+    return platforms.where(hasValueForPlatform).toList();
   }
 
   PublicProfileSocialLinks copyWith({
@@ -66,29 +125,33 @@ class PublicProfileSocialLinks {
     );
   }
 
-  PublicProfileSocialLinks clearField(String platform) {
+  PublicProfileSocialLinks copyWithPlatform(String platform, String? value) {
     switch (platform) {
       case 'instagram':
-        return copyWith(instagram: '');
+        return copyWith(instagram: value);
       case 'twitter':
-        return copyWith(twitter: '');
+        return copyWith(twitter: value);
       case 'youtube':
-        return copyWith(youtube: '');
+        return copyWith(youtube: value);
       case 'tiktok':
-        return copyWith(tiktok: '');
+        return copyWith(tiktok: value);
       case 'linkedin':
-        return copyWith(linkedin: '');
+        return copyWith(linkedin: value);
       case 'snapchat':
-        return copyWith(snapchat: '');
+        return copyWith(snapchat: value);
       case 'facebook':
-        return copyWith(facebook: '');
+        return copyWith(facebook: value);
       case 'website':
-        return copyWith(website: '');
+        return copyWith(website: value);
       case 'supportLink':
-        return copyWith(supportLink: '');
+        return copyWith(supportLink: value);
       default:
         return this;
     }
+  }
+
+  PublicProfileSocialLinks clearField(String platform) {
+    return copyWithPlatform(platform, '');
   }
 
   static const Object _unset = Object();

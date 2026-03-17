@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../providers/web_profiles_provider.dart';
 import '../providers/web_profiles_order_provider.dart';
+import '../utils/web_profile_platform_utils.dart';
 
 class EditProfileLinkScreen extends ConsumerStatefulWidget {
   const EditProfileLinkScreen({super.key});
@@ -31,117 +31,75 @@ class _EditProfileLinkScreenState
   }
 
   Widget _platformIcon(String platform) {
-    switch (platform) {
-      case 'instagram':
-        return const FaIcon(FontAwesomeIcons.instagram, size: 20);
-      case 'twitter':
-        return const FaIcon(FontAwesomeIcons.xTwitter, size: 20);
-      case 'youtube':
-        return const FaIcon(FontAwesomeIcons.youtube, size: 20);
-      case 'tiktok':
-        return const FaIcon(FontAwesomeIcons.tiktok, size: 20);
-      case 'linkedin':
-        return const FaIcon(FontAwesomeIcons.linkedin, size: 20);
-      case 'snapchat':
-        return const FaIcon(FontAwesomeIcons.snapchat, size: 20);
-      case 'facebook':
-        return const FaIcon(FontAwesomeIcons.facebook, size: 20);
-      case 'website':
-        return const Icon(Icons.public, size: 20);
-      default:
-        return const Icon(Icons.public, size: 20);
-    }
-  }
-
-  String? _linkForPlatform(String platform, dynamic socialLinks) {
-    switch (platform) {
-      case 'instagram':
-        return socialLinks.instagram;
-      case 'twitter':
-        return socialLinks.twitter;
-      case 'youtube':
-        return socialLinks.youtube;
-      case 'tiktok':
-        return socialLinks.tiktok;
-      case 'linkedin':
-        return socialLinks.linkedin;
-      case 'snapchat':
-        return socialLinks.snapchat;
-      case 'facebook':
-        return socialLinks.facebook;
-      case 'website':
-        return socialLinks.website;
-      default:
-        return null;
-    }
+    return WebProfilePlatformUtils.iconForPlatform(platform);
   }
 
   List<String> _fallbackOrder(dynamic socialLinks) {
-    final result = <String>[];
-
-    bool hasValue(String? value) => value != null && value.trim().isNotEmpty;
-
-    if (hasValue(socialLinks.instagram)) result.add('instagram');
-    if (hasValue(socialLinks.twitter)) result.add('twitter');
-    if (hasValue(socialLinks.youtube)) result.add('youtube');
-    if (hasValue(socialLinks.tiktok)) result.add('tiktok');
-    if (hasValue(socialLinks.linkedin)) result.add('linkedin');
-    if (hasValue(socialLinks.snapchat)) result.add('snapchat');
-    if (hasValue(socialLinks.facebook)) result.add('facebook');
-    if (hasValue(socialLinks.website)) result.add('website');
-
-    return result;
+    return socialLinks.nonEmptyPlatforms(includeSupportLink: false);
   }
 
-  void _saveLink() {
-    final link = _linkController.text.trim();
-    final notifier = ref.read(webProfilesProvider.notifier);
+void _saveLink() {
+  final link = _linkController.text.trim();
+  final notifier = ref.read(webProfilesProvider.notifier);
+  final socialLinks = ref.read(webProfilesProvider);
 
-    if (link.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a link')),
-      );
-      return;
-    }
-
-    if (!_isValidUrl(link)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid URL')),
-      );
-      return;
-    }
-
-    if (notifier.linkAlreadyExists(link)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('This link already exists on your profile'),
-        ),
-      );
-      return;
-    }
-
-    if (notifier.platformAlreadyExists(link)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'A link for this platform already exists. Use Edit instead.',
-          ),
-        ),
-      );
-      return;
-    }
-
-    notifier.saveLink(link);
-
-    final platform = notifier.getPlatformKey(link);
-    ref.read(webProfilesOrderProvider.notifier).addPlatformIfMissing(platform);
-
+  if (link.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Link saved successfully')),
+      const SnackBar(content: Text('Please enter a link')),
     );
-
-    _linkController.clear();
+    return;
   }
+
+  if (!_isValidUrl(link)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please enter a valid URL')),
+    );
+    return;
+  }
+
+  if (notifier.linkAlreadyExists(link)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('This link already exists on your profile'),
+      ),
+    );
+    return;
+  }
+
+  if (notifier.platformAlreadyExists(link)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'A link for this platform already exists. Use Edit instead.',
+        ),
+      ),
+    );
+    return;
+  }
+
+  final currentLinksCount =
+      socialLinks.nonEmptyPlatforms(includeSupportLink: true).length;
+
+  if (currentLinksCount >= 3) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('You can add up to 3 links only'),
+      ),
+    );
+    return;
+  }
+
+  notifier.saveLink(link);
+
+  final platform = notifier.getPlatformKey(link);
+  ref.read(webProfilesOrderProvider.notifier).addPlatformIfMissing(platform);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Link saved successfully')),
+  );
+
+  _linkController.clear();
+}
 
   Future<void> _showDeleteConfirmationDialog(String link) async {
     setState(() {
@@ -220,7 +178,7 @@ class _EditProfileLinkScreenState
 
     final orderedPlatforms = <String>[
       ...savedOrder.where((platform) {
-        final link = _linkForPlatform(platform, socialLinks);
+        final link = socialLinks.valueForPlatform(platform);
         return link != null && link.trim().isNotEmpty;
       }),
       ..._fallbackOrder(socialLinks).where((platform) {
@@ -266,7 +224,7 @@ class _EditProfileLinkScreenState
                 ),
                 const SizedBox(height: 12),
                 ...orderedPlatforms.map((platform) {
-                  final link = _linkForPlatform(platform, socialLinks)!;
+                  final link = socialLinks.valueForPlatform(platform)!;
                   return _buildLinkRow(
                     platform: platform,
                     link: link,
