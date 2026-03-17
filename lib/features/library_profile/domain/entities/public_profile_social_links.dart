@@ -7,6 +7,7 @@ class PublicProfileSocialLinks {
   final String? snapchat;
   final String? facebook;
   final String? website;
+  final String? supportLink;
 
   const PublicProfileSocialLinks({
     this.instagram,
@@ -17,6 +18,7 @@ class PublicProfileSocialLinks {
     this.snapchat,
     this.facebook,
     this.website,
+    this.supportLink,
   });
 
   bool get isEmpty =>
@@ -27,31 +29,67 @@ class PublicProfileSocialLinks {
       _isNullOrEmpty(linkedin) &&
       _isNullOrEmpty(snapchat) &&
       _isNullOrEmpty(facebook) &&
-      _isNullOrEmpty(website);
+      _isNullOrEmpty(website) &&
+      _isNullOrEmpty(supportLink);
 
   bool _isNullOrEmpty(String? value) {
     return value == null || value.trim().isEmpty;
   }
 
   PublicProfileSocialLinks copyWith({
-    String? instagram,
-    String? twitter,
-    String? youtube,
-    String? tiktok,
-    String? linkedin,
-    String? snapchat,
-    String? facebook,
-    String? website,
+    Object? instagram = _unset,
+    Object? twitter = _unset,
+    Object? youtube = _unset,
+    Object? tiktok = _unset,
+    Object? linkedin = _unset,
+    Object? snapchat = _unset,
+    Object? facebook = _unset,
+    Object? website = _unset,
+    Object? supportLink = _unset,
   }) {
     return PublicProfileSocialLinks(
-      instagram: instagram ?? this.instagram,
-      twitter: twitter ?? this.twitter,
-      youtube: youtube ?? this.youtube,
-      tiktok: tiktok ?? this.tiktok,
-      linkedin: linkedin ?? this.linkedin,
-      snapchat: snapchat ?? this.snapchat,
-      facebook: facebook ?? this.facebook,
-      website: website ?? this.website,
+      instagram:
+          identical(instagram, _unset) ? this.instagram : instagram as String?,
+      twitter: identical(twitter, _unset) ? this.twitter : twitter as String?,
+      youtube: identical(youtube, _unset) ? this.youtube : youtube as String?,
+      tiktok: identical(tiktok, _unset) ? this.tiktok : tiktok as String?,
+      linkedin:
+          identical(linkedin, _unset) ? this.linkedin : linkedin as String?,
+      snapchat:
+          identical(snapchat, _unset) ? this.snapchat : snapchat as String?,
+      facebook:
+          identical(facebook, _unset) ? this.facebook : facebook as String?,
+      website: identical(website, _unset) ? this.website : website as String?,
+      supportLink: identical(supportLink, _unset)
+          ? this.supportLink
+          : supportLink as String?,
     );
   }
+
+  PublicProfileSocialLinks clearField(String platform) {
+    switch (platform) {
+      case 'instagram':
+        return copyWith(instagram: '');
+      case 'twitter':
+        return copyWith(twitter: '');
+      case 'youtube':
+        return copyWith(youtube: '');
+      case 'tiktok':
+        return copyWith(tiktok: '');
+      case 'linkedin':
+        return copyWith(linkedin: '');
+      case 'snapchat':
+        return copyWith(snapchat: '');
+      case 'facebook':
+        return copyWith(facebook: '');
+      case 'website':
+        return copyWith(website: '');
+      case 'supportLink':
+        return copyWith(supportLink: '');
+      default:
+        return this;
+    }
+  }
+
+  static const Object _unset = Object();
 }

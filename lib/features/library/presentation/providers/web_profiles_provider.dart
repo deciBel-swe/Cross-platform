@@ -1,8 +1,19 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:convert';
+
+import 'package:decibel/core/storage/secure_storage_service.dart';
+import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
 import 'package:decibel/features/library_profile/domain/entities/public_profile_social_links.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 
 class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
-  WebProfilesNotifier() : super(const PublicProfileSocialLinks());
+  WebProfilesNotifier(this._secureStorageService)
+      : super(const PublicProfileSocialLinks());
+
+  final SecureStorageService _secureStorageService;
+
+  static const String _baseUrl = 'http://192.168.1.4.nip.io:3000/api';
 
   String _detectPlatform(String link) {
     final lower = link.toLowerCase();
@@ -35,6 +46,12 @@ class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
       return 'facebook';
     }
 
+    if (lower.contains('patreon.com') ||
+        lower.contains('buymeacoffee.com') ||
+        lower.contains('ko-fi.com')) {
+      return 'supportLink';
+    }
+
     return 'website';
   }
 
@@ -45,14 +62,15 @@ class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
   bool linkAlreadyExists(String link) {
     final trimmed = link.trim();
 
-    return state.instagram == trimmed ||
-        state.twitter == trimmed ||
-        state.youtube == trimmed ||
-        state.tiktok == trimmed ||
-        state.linkedin == trimmed ||
-        state.snapchat == trimmed ||
-        state.facebook == trimmed ||
-        state.website == trimmed;
+    return _normalizedOrNull(state.instagram) == trimmed ||
+        _normalizedOrNull(state.twitter) == trimmed ||
+        _normalizedOrNull(state.youtube) == trimmed ||
+        _normalizedOrNull(state.tiktok) == trimmed ||
+        _normalizedOrNull(state.linkedin) == trimmed ||
+        _normalizedOrNull(state.snapchat) == trimmed ||
+        _normalizedOrNull(state.facebook) == trimmed ||
+        _normalizedOrNull(state.website) == trimmed ||
+        _normalizedOrNull(state.supportLink) == trimmed;
   }
 
   bool platformAlreadyExists(String link) {
@@ -60,21 +78,23 @@ class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
 
     switch (platform) {
       case 'instagram':
-        return state.instagram != null && state.instagram!.trim().isNotEmpty;
+        return _hasValue(state.instagram);
       case 'twitter':
-        return state.twitter != null && state.twitter!.trim().isNotEmpty;
+        return _hasValue(state.twitter);
       case 'youtube':
-        return state.youtube != null && state.youtube!.trim().isNotEmpty;
+        return _hasValue(state.youtube);
       case 'tiktok':
-        return state.tiktok != null && state.tiktok!.trim().isNotEmpty;
+        return _hasValue(state.tiktok);
       case 'linkedin':
-        return state.linkedin != null && state.linkedin!.trim().isNotEmpty;
+        return _hasValue(state.linkedin);
       case 'snapchat':
-        return state.snapchat != null && state.snapchat!.trim().isNotEmpty;
+        return _hasValue(state.snapchat);
       case 'facebook':
-        return state.facebook != null && state.facebook!.trim().isNotEmpty;
+        return _hasValue(state.facebook);
       case 'website':
-        return state.website != null && state.website!.trim().isNotEmpty;
+        return _hasValue(state.website);
+      case 'supportLink':
+        return _hasValue(state.supportLink);
       default:
         return false;
     }
@@ -100,6 +120,8 @@ class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
         return state.facebook;
       case 'website':
         return state.website;
+      case 'supportLink':
+        return state.supportLink;
       default:
         return null;
     }
@@ -109,134 +131,177 @@ class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
     return _detectPlatform(oldLink) == _detectPlatform(newLink);
   }
 
-  void saveLink(String rawLink) {
+  bool _hasValue(String? value) {
+    return value != null && value.trim().isNotEmpty;
+  }
+
+  String? _normalizedOrNull(String? value) {
+    if (value == null) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  bool _isBackendSupported(String platform) {
+    return platform == 'instagram' ||
+        platform == 'twitter' ||
+        platform == 'website' ||
+        platform == 'supportLink';
+  }
+
+  Map<String, dynamic> _backendPayloadFromState(PublicProfileSocialLinks data) {
+    return {
+      'instagram': _normalizedOrNull(data.instagram),
+      'twitter': _normalizedOrNull(data.twitter),
+      'website': _normalizedOrNull(data.website),
+      'supportLink': _normalizedOrNull(data.supportLink),
+    };
+  }
+
+  PublicProfileSocialLinks _mergeBackendResponse(
+    PublicProfileSocialLinks current,
+    Map<String, dynamic> json,
+  ) {
+    return current.copyWith(
+      instagram: json['instagram'] as String?,
+      twitter: json['twitter'] as String?,
+      website: json['website'] as String?,
+      supportLink: json['supportLink'] as String?,
+    );
+  }
+
+Future<void> _patchBackend(PublicProfileSocialLinks nextState) async {
+  final token = await _secureStorageService.getAccessToken();
+
+  // Temporary mock/dev fallback:
+  // if no token is available, keep feature working locally.
+  if (token == null || token.trim().isEmpty) {
+    if (kDebugMode) {
+      debugPrint(
+        '[WebProfilesNotifier] No access token found. '
+        'Using local mock fallback instead of backend PATCH.',
+      );
+    }
+
+    state = nextState;
+    return;
+  }
+
+  final response = await http.patch(
+    Uri.parse('$_baseUrl/users/me/social-links'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode(_backendPayloadFromState(nextState)),
+  );
+
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+    if (response.body.trim().isEmpty) {
+      state = nextState;
+      return;
+    }
+
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    state = _mergeBackendResponse(nextState, decoded);
+    return;
+  }
+
+  throw Exception('Failed to update social links: ${response.statusCode}');
+}
+
+  PublicProfileSocialLinks _copyWithPlatform(
+    PublicProfileSocialLinks current,
+    String platform,
+    String? value,
+  ) {
+    switch (platform) {
+      case 'instagram':
+        return current.copyWith(instagram: value);
+      case 'twitter':
+        return current.copyWith(twitter: value);
+      case 'youtube':
+        return current.copyWith(youtube: value);
+      case 'tiktok':
+        return current.copyWith(tiktok: value);
+      case 'linkedin':
+        return current.copyWith(linkedin: value);
+      case 'snapchat':
+        return current.copyWith(snapchat: value);
+      case 'facebook':
+        return current.copyWith(facebook: value);
+      case 'website':
+        return current.copyWith(website: value);
+      case 'supportLink':
+        return current.copyWith(supportLink: value);
+      default:
+        return current;
+    }
+  }
+
+  Future<void> saveLink(String rawLink) async {
     final link = rawLink.trim();
     if (link.isEmpty) return;
 
     final platform = _detectPlatform(link);
+    final nextState = _copyWithPlatform(state, platform, link);
 
-    switch (platform) {
-      case 'instagram':
-        state = state.copyWith(instagram: link);
-        break;
-      case 'twitter':
-        state = state.copyWith(twitter: link);
-        break;
-      case 'youtube':
-        state = state.copyWith(youtube: link);
-        break;
-      case 'tiktok':
-        state = state.copyWith(tiktok: link);
-        break;
-      case 'linkedin':
-        state = state.copyWith(linkedin: link);
-        break;
-      case 'snapchat':
-        state = state.copyWith(snapchat: link);
-        break;
-      case 'facebook':
-        state = state.copyWith(facebook: link);
-        break;
-      case 'website':
-        state = state.copyWith(website: link);
-        break;
+    if (_isBackendSupported(platform)) {
+      await _patchBackend(nextState);
+    } else {
+      state = nextState;
     }
   }
 
-  void editLink(String oldLink, String newLink) {
+  Future<void> editLink(String oldLink, String newLink) async {
     final trimmedOld = oldLink.trim();
     final trimmedNew = newLink.trim();
 
     if (trimmedOld.isEmpty || trimmedNew.isEmpty) return;
 
-    if (state.instagram == trimmedOld) {
-      state = state.copyWith(instagram: trimmedNew);
+    final oldPlatform = _detectPlatform(trimmedOld);
+    final newPlatform = _detectPlatform(trimmedNew);
+
+    if (oldPlatform == newPlatform) {
+      final nextState = _copyWithPlatform(state, oldPlatform, trimmedNew);
+
+      if (_isBackendSupported(oldPlatform)) {
+        await _patchBackend(nextState);
+      } else {
+        state = nextState;
+      }
       return;
     }
 
-    if (state.twitter == trimmedOld) {
-      state = state.copyWith(twitter: trimmedNew);
-      return;
-    }
+    var nextState = _copyWithPlatform(state, oldPlatform, null);
+    nextState = _copyWithPlatform(nextState, newPlatform, trimmedNew);
 
-    if (state.youtube == trimmedOld) {
-      state = state.copyWith(youtube: trimmedNew);
-      return;
-    }
+    final needsBackend =
+        _isBackendSupported(oldPlatform) || _isBackendSupported(newPlatform);
 
-    if (state.tiktok == trimmedOld) {
-      state = state.copyWith(tiktok: trimmedNew);
-      return;
-    }
-
-    if (state.linkedin == trimmedOld) {
-      state = state.copyWith(linkedin: trimmedNew);
-      return;
-    }
-
-    if (state.snapchat == trimmedOld) {
-      state = state.copyWith(snapchat: trimmedNew);
-      return;
-    }
-
-    if (state.facebook == trimmedOld) {
-      state = state.copyWith(facebook: trimmedNew);
-      return;
-    }
-
-    if (state.website == trimmedOld) {
-      state = state.copyWith(website: trimmedNew);
-      return;
+    if (needsBackend) {
+      await _patchBackend(nextState);
+    } else {
+      state = nextState;
     }
   }
 
-  void deleteLink(String rawLink) {
+  Future<void> deleteLink(String rawLink) async {
     final link = rawLink.trim();
     if (link.isEmpty) return;
 
-    if (state.instagram == link) {
-      state = state.copyWith(instagram: '');
-      return;
-    }
+    final platform = _detectPlatform(link);
 
-    if (state.twitter == link) {
-      state = state.copyWith(twitter: '');
-      return;
-    }
-
-    if (state.youtube == link) {
-      state = state.copyWith(youtube: '');
-      return;
-    }
-
-    if (state.tiktok == link) {
-      state = state.copyWith(tiktok: '');
-      return;
-    }
-
-    if (state.linkedin == link) {
-      state = state.copyWith(linkedin: '');
-      return;
-    }
-
-    if (state.snapchat == link) {
-      state = state.copyWith(snapchat: '');
-      return;
-    }
-
-    if (state.facebook == link) {
-      state = state.copyWith(facebook: '');
-      return;
-    }
-
-    if (state.website == link) {
-      state = state.copyWith(website: '');
-      return;
+    if (_isBackendSupported(platform)) {
+      final backendDeleteState = _copyWithPlatform(state, platform, null);
+      await _patchBackend(backendDeleteState);
+    } else {
+      final nextState = _copyWithPlatform(state, platform, '');
+      state = nextState;
     }
   }
 }
 
 final webProfilesProvider =
     StateNotifierProvider<WebProfilesNotifier, PublicProfileSocialLinks>(
-  (ref) => WebProfilesNotifier(),
+  (ref) => WebProfilesNotifier(ref.read(secureStorageServiceProvider)),
 );
