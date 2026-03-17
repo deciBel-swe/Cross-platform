@@ -21,8 +21,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -55,13 +55,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final ThemeData theme = Theme.of(context);
 
-    // Watch for the current authentication state to show loading indicators
     final authState = ref.watch(authStateProvider);
-    final isLoading = authState.isLoading;
+    final bool isLoading = authState.isLoading;
 
-    // Listen for errors and show a SnackBar
     ref.listen<AsyncValue<AuthState>>(authStateProvider, (previous, next) {
       if (!next.isLoading && next.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -89,7 +87,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const SizedBox(height: 24),
 
-                // ---- Social login buttons ----
                 SocialLoginButton(
                   label: 'Continue with Google',
                   icon: const Icon(
@@ -110,9 +107,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     color: AppColors.facebook,
                     size: 24,
                   ),
-                  onPressed: () {
-                    // TODO(auth): implement Facebook sign-in
-                  },
+                  onPressed: () {},
                 ),
                 const SizedBox(height: 12),
                 SocialLoginButton(
@@ -122,14 +117,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     color: AppColors.apple,
                     size: 24,
                   ),
-                  onPressed: () {
-                    // TODO(auth): implement Apple sign-in
-                  },
+                  onPressed: () {},
                 ),
 
                 const SizedBox(height: 28),
 
-                // ---- Divider ----
                 Row(
                   children: [
                     const Expanded(child: Divider()),
@@ -143,7 +135,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: 28),
 
-                // ---- Email field ----
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -156,7 +147,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: 16),
 
-                // ---- Password field ----
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
@@ -167,12 +157,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   decoration: _inputDecoration('Password'),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
 
-                // ---- Continue button (white) ----
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      context.push(RoutePaths.forgotPassword);
+                    },
+                    child: const Text('Forgot Password?'),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
                 ElevatedButton(
                   onPressed: () {
-                    // TODO(auth): implement email sign-in
                     context.go(RoutePaths.home);
                   },
                   style: ElevatedButton.styleFrom(

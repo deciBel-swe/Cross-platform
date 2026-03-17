@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/entities/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/start_screen.dart';
@@ -36,9 +37,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       );
       debugPrint('[AppRouter] authStateAsync: \$authStateAsync');
 
-      final isAuthRoute =
+      final bool isAuthRoute =
           state.matchedLocation == RoutePaths.login ||
           state.matchedLocation == RoutePaths.register ||
+          state.matchedLocation == RoutePaths.forgotPassword ||
           state.matchedLocation == RoutePaths.splash;
 
       // Extract the actual AuthState from the AsyncValue
@@ -79,7 +81,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
       ),
-
+      GoRoute(
+        path: RoutePaths.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
       // ---- Main app shell (bottom navigation) ----
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -150,11 +155,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'edit-web-link',
                     builder: (context, state) => const EditProfileLinkScreen(),
-                ),    
+                  ),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
         ],
       ),
     ],

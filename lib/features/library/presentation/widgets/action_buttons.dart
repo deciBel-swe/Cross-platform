@@ -7,14 +7,10 @@ import '../../../library_profile/domain/entities/public_profile_social_links.dar
 import 'social_links_widget.dart';
 
 class ActionButtons extends StatelessWidget {
-
-  const ActionButtons({
-    super.key,
-    required this.socialLinks,
-  });
+  const ActionButtons({super.key, required this.socialLinks});
   final PublicProfileSocialLinks socialLinks;
 
-    @override
+  @override
   Widget build(BuildContext context) {
     return Row(
       children: [

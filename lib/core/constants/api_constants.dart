@@ -24,4 +24,7 @@ class ApiConstants {
       '767709617177-l61vbedk9lanvrgirt6e0840a4kijs6u.apps.googleusercontent.com';
   static const String googleDesktopClientId =
       '767709617177-ljng08734ds2qv9m7qcrpccpe6igu9if.apps.googleusercontent.com';
+  static const String forgotPasswordEndpoint = '/api/auth/forgot-password';
+  static const String resendVerificationEndpoint =
+      '/api/auth/resend-verification';
 }

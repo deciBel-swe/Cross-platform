@@ -23,19 +23,13 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
     try {
-      final isExpired = await _secureStorageService.isAccessTokenExpired();
+      final bool isExpired = await _secureStorageService.isAccessTokenExpired();
       if (isExpired) {
-        return const Right(
-          null,
-        ); // A refresh logic would go here initially, but for now just logout.
+        return const Right(null);
       }
 
-      // Because we don't have a /me endpoint or local user db mapped right now,
-      // getting the current user purely relies on valid tokens.
-      // we'd fetch the user's profile info when backend is ready.
-      // Returning null requires them to login again
       return const Right(null);
-    } catch (e) {
+    } catch (_) {
       return const Right(null);
     }
   }
@@ -43,8 +37,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, AuthUser>> loginWithGoogle() async {
     try {
-      // Create DeviceInfoModel by gathering real device metrics
-      final deviceInfoPlugin = DeviceInfoPlugin();
+      final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
       String deviceName = 'unknown_device';
       String fingerPrint = 'unknown';
       String deviceType = 'DESKTOP';
@@ -77,10 +70,10 @@ class AuthRepository implements IAuthRepository {
           fingerPrint = linuxInfo.machineId ?? 'unknown';
         }
       } catch (_) {
-        // Fallback to defaults if device gathering fails
+        // Keep fallback defaults if device info gathering fails.
       }
 
-      final deviceInfo = DeviceInfoModel(
+      final DeviceInfoModel deviceInfo = DeviceInfoModel(
         deviceName: deviceName,
         deviceType: deviceType,
         fingerPrint: fingerPrint,
@@ -88,7 +81,6 @@ class AuthRepository implements IAuthRepository {
 
       final responseModel = await _remoteDataSource.loginWithGoogle(deviceInfo);
 
-      // Save tokens securely
       await _secureStorageService.saveTokenPair(responseModel);
 
       return Right(responseModel.user.toDomain());
@@ -96,7 +88,35 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e) {
+    } catch (_) {
+      return const Left(AuthFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> forgotPassword(String email) async {
+    try {
+      await _remoteDataSource.forgotPassword(email);
+      return const Right(unit);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (_) {
+      return const Left(AuthFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> resendVerification(String email) async {
+    try {
+      await _remoteDataSource.resendVerification(email);
+      return const Right(unit);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (_) {
       return const Left(AuthFailure('An unexpected error occurred.'));
     }
   }

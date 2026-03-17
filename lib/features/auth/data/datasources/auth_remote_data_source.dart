@@ -17,6 +17,10 @@ import '../utils/auth_success_page.dart';
 
 abstract class IAuthRemoteDataSource {
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
+
+  Future<void> forgotPassword(String email);
+
+  Future<void> resendVerification(String email);
 }
 
 @LazySingleton(as: IAuthRemoteDataSource)
@@ -33,33 +37,24 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
             defaultTargetPlatform == TargetPlatform.iOS);
 
     if (isMobile) {
-      // MOBILE: Use official Google Sign In SDK (In-App Popup) // why I used this instead of browser google is very strict I couldn't redirect to the app
-      // It wasted alot of time so I decided to do this approach
-      // This completely bypasses all the manual "Custom URI Scheme" redirect errors
       const String clientId = ApiConstants.googleMobileClientId;
 
       await g_sign_in.GoogleSignIn.instance.initialize(
         clientId: clientId,
-        serverClientId: ApiConstants
-            .googleDesktopClientId, // Needed for backend code exchange
+        serverClientId: ApiConstants.googleDesktopClientId,
       );
 
-      // Force interactive consent so we always get the serverAuthCode
-      // so here this is done to avoid google from siging user in automatically
-      // we need the auth code to send it to our backend to get the access token and refresh token
-      // yes google knows the user but we don't lol
       await g_sign_in.GoogleSignIn.instance.signOut();
       final account = await g_sign_in.GoogleSignIn.instance.authenticate(
         scopeHint: ['email', 'profile'],
       );
 
-      // The critical Server Auth Code needed for the Spring Boot backend
       final authz = await account.authorizationClient.authorizeServer([
         'email',
         'profile',
       ]);
 
-      final authCode = authz?.serverAuthCode;
+      final String? authCode = authz?.serverAuthCode;
 
       if (authCode == null) {
         throw const AuthException('Failed to obtain Google Server Auth Code');
@@ -67,16 +62,13 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
       return _exchangeCodeWithBackend(authCode, deviceInfo);
     } else {
-      // DESKTOP: Use local HTTP server loopback
-      // so for desktop I am making a local server that listens to the redirect uri
-      // and then exchanges the code with our backend
-      // I was trying to do the same for the android but google restricting opeing apps from links not easy
-      final completer = Completer<LoginResponseModel>();
+      final Completer<LoginResponseModel> completer =
+          Completer<LoginResponseModel>();
 
       const String clientId = ApiConstants.googleDesktopClientId;
       const String redirectUri = ApiConstants.googleDesktopRedirectUri;
 
-      final authUrl = Uri.parse(
+      final Uri authUrl = Uri.parse(
         '${ApiConstants.googleAuthUrl}'
         '?client_id=$clientId'
         '&redirect_uri=$redirectUri'
@@ -88,29 +80,26 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       try {
         localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 3000);
 
-        // Listen to single incoming request on the localhost server
         localServer.listen((HttpRequest request) async {
-          final uri = request.uri;
+          final Uri uri = request.uri;
 
-          // Check if it's the OAuth redirect path
           if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
-            final authCode = uri.queryParameters['code'];
-            final error = uri.queryParameters['error'];
+            final String? authCode = uri.queryParameters['code'];
+            final String? error = uri.queryParameters['error'];
 
             if (authCode != null) {
-              // Serve a branded success page and close
-              final html = await buildAuthSuccessHtml();
+              final String html = await buildAuthSuccessHtml();
 
               request.response
                 ..statusCode = 200
                 ..headers.contentType = ContentType.html
                 ..write(html);
+
               await request.response.close();
               await localServer?.close(force: true);
 
-              // Exchange the code with our backend
               try {
-                final model = await _exchangeCodeWithBackend(
+                final LoginResponseModel model = await _exchangeCodeWithBackend(
                   authCode,
                   deviceInfo,
                 );
@@ -128,6 +117,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
                 ..write('Error: $error');
               await request.response.close();
               await localServer?.close(force: true);
+
               if (!completer.isCompleted) {
                 completer.completeError(
                   AuthException('Google Auth Error: $error'),
@@ -139,6 +129,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
                 ..write('Missing auth code');
               await request.response.close();
               await localServer?.close(force: true);
+
               if (!completer.isCompleted) {
                 completer.completeError(
                   const AuthException('No code returned from redirect'),
@@ -157,7 +148,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       }
 
       try {
-        final launched = await launchUrl(
+        final bool launched = await launchUrl(
           authUrl,
           mode: LaunchMode.externalApplication,
         );
@@ -185,26 +176,82 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     }
   }
 
-  /// Here I communicate with the backend to exchange the auth code for tokens
-  /// - Parameter [authCode]: The one-time server code retrieved from the Google Sign-In SDK.
-  ///
-  /// - Returns: A [LoginResponseModel] containing the newly generated access token,
-  ///   refresh token, and the user's profile data.
-  ///
-  /// - Throws [ServerException] if the backend rejects the request (e.g., code expired)
-  ///   or if there is a network connectivity issue.
-  /// - Throws [AuthException] if the server returns an unexpected response format
-  ///   or an unknown client-side error occurs.
+  @override
+  Future<void> forgotPassword(String email) async {
+    try {
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.forgotPasswordEndpoint,
+        data: <String, dynamic>{'email': email},
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return;
+      }
+
+      throw const AuthException('Failed to send reset link. Please try again.');
+    } catch (e) {
+      if (e.toString().contains('DioException')) {
+        throw const ServerException(
+          'A network error occurred while sending the reset link.',
+        );
+      }
+
+      if (e is AppException) {
+        rethrow;
+      }
+
+      throw AuthException(
+        'An unexpected error occurred while sending the reset link: $e',
+      );
+    }
+  }
+
+  @override
+  Future<void> resendVerification(String email) async {
+    try {
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.resendVerificationEndpoint,
+        data: <String, dynamic>{'email': email},
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return;
+      }
+
+      throw const AuthException(
+        'Failed to resend verification email. Please try again.',
+      );
+    } catch (e) {
+      if (e.toString().contains('DioException')) {
+        throw const ServerException(
+          'A network error occurred while resending verification email.',
+        );
+      }
+
+      if (e is AppException) {
+        rethrow;
+      }
+
+      throw AuthException(
+        'An unexpected error occurred while resending verification email: $e',
+      );
+    }
+  }
+
   Future<LoginResponseModel> _exchangeCodeWithBackend(
     String authCode,
     DeviceInfoModel deviceInfo,
   ) async {
     try {
-      final dto = OauthExchangeRequestDto(
+      final OauthExchangeRequestDto dto = OauthExchangeRequestDto(
         code: authCode,
         deviceInfo: deviceInfo,
       );
-      //testing
+
       if (kDebugMode) {
         final payload = dto.toJson();
 
@@ -214,7 +261,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       }
 
       final response = await _dioClient.post<dynamic>(
-        ApiConstants.googleTokenExchangeEndpoint, // Path defined in API docs
+        ApiConstants.googleTokenExchangeEndpoint,
         data: dto.toJson(),
       );
 
@@ -234,6 +281,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       if (e.toString().contains('DioException')) {
         throw const ServerException('A network error occurred during login.');
       }
+
       throw AuthException(
         'An unexpected error occurred during Google Sign In verify: $e',
       );

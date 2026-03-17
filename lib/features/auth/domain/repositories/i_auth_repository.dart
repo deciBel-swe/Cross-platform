@@ -15,13 +15,9 @@ abstract class IAuthRepository {
   /// Returns null if no user is currently logged in or the session has expired.
   Future<Either<Failure, AuthUser?>> getCurrentUser();
 
-  /// Logs out the current user by clearing authentication tokens.
-  ///
-  /// This method should invalidate any stored tokens (access and refresh)
-  /// and clear any cached user session data.
-  ///
-  /// Returns a [Future<void>] that completes when the logout operation is finished.
-  ///
-  /// Throws [AppException] subclasses on failure, which should be mapped to [Failure] if needed.
-  //Future<void> logout();
+  /// Starts the forgot password flow by requesting a reset email.
+  Future<Either<Failure, Unit>> forgotPassword(String email);
+
+  /// Resends the verification email for the given address.
+  Future<Either<Failure, Unit>> resendVerification(String email);
 }

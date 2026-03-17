@@ -5,7 +5,6 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
 import 'package:injectable/injectable.dart';
-
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/api_constants.dart';
@@ -22,14 +21,12 @@ import '../utils/auth_success_page.dart';
 class MockAuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, AuthUser>> loginWithGoogle() async {
-    // Launch the REAL Google Auth URL directly to test the consent screen
     final bool isMobile =
         !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.android ||
             defaultTargetPlatform == TargetPlatform.iOS);
 
     if (isMobile) {
-      // --- MOBILE: Use official Google Sign In SDK (In-App Popup)
       const String clientId = ApiConstants.googleMobileClientId;
 
       await g_sign_in.GoogleSignIn.instance.initialize(
@@ -38,12 +35,11 @@ class MockAuthRepository implements IAuthRepository {
       );
 
       await g_sign_in.GoogleSignIn.instance.signOut();
-      //this account will be removed when we switch to production
+
       final account = await g_sign_in.GoogleSignIn.instance.authenticate(
         scopeHint: ['email', 'profile'],
       );
 
-      // wow so this is a flag to run only in debug mode very USEFUL
       if (kDebugMode) {
         debugPrint('=== GOOGLE LOGIN SUCCESS ===');
         debugPrint('Email: ${account.email}');
@@ -53,18 +49,18 @@ class MockAuthRepository implements IAuthRepository {
         debugPrint('============================');
       }
 
-      // We don't actually need the code for mock, we just wait for delay
       await Future<void>.delayed(AuthMockFixtures.delay);
       const mockResponse = AuthMockFixtures.mockLoginResponse;
-      final model = LoginResponseModel.fromJson(mockResponse);
+      final LoginResponseModel model = LoginResponseModel.fromJson(
+        mockResponse,
+      );
 
       return Right(model.user.toDomain());
     } else {
-      // --- DESKTOP: Use local HTTP server loopback
       const String clientId = ApiConstants.googleDesktopClientId;
       const String redirectUri = ApiConstants.googleDesktopRedirectUri;
 
-      final authUrl = Uri.parse(
+      final Uri authUrl = Uri.parse(
         '${ApiConstants.googleAuthUrl}'
         '?client_id=$clientId'
         '&redirect_uri=$redirectUri'
@@ -72,13 +68,16 @@ class MockAuthRepository implements IAuthRepository {
         '&scope=email%20profile',
       );
 
-      final completer = Completer<Either<Failure, AuthUser>>();
+      final Completer<Either<Failure, AuthUser>> completer =
+          Completer<Either<Failure, AuthUser>>();
 
-      // Prepare the success response
       void completeSuccess() {
-        Future.delayed(AuthMockFixtures.delay, () {
+        Future<void>.delayed(AuthMockFixtures.delay, () {
           const mockResponse = AuthMockFixtures.mockLoginResponse;
-          final model = LoginResponseModel.fromJson(mockResponse);
+          final LoginResponseModel model = LoginResponseModel.fromJson(
+            mockResponse,
+          );
+
           if (!completer.isCompleted) {
             completer.complete(Right(model.user.toDomain()));
           }
@@ -89,9 +88,9 @@ class MockAuthRepository implements IAuthRepository {
       try {
         localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 3000);
         localServer.listen((HttpRequest request) async {
-          final uri = request.uri;
+          final Uri uri = request.uri;
           if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
-            final authCode = uri.queryParameters['code'];
+            final String? authCode = uri.queryParameters['code'];
 
             if (authCode != null) {
               debugPrint('=== DESKTOP GOOGLE LOGIN SUCCESS ===');
@@ -100,18 +99,19 @@ class MockAuthRepository implements IAuthRepository {
             }
           }
 
-          final html = await buildAuthSuccessHtml();
+          final String html = await buildAuthSuccessHtml();
 
           request.response
             ..statusCode = 200
             ..headers.contentType = ContentType.html
             ..write(html);
+
           await request.response.close();
           await localServer?.close(force: true);
           completeSuccess();
         });
       } catch (_) {
-        // Ignore port binding errors if testing rapidly
+        // Ignore port binding errors if testing rapidly.
       }
 
       try {
@@ -126,11 +126,37 @@ class MockAuthRepository implements IAuthRepository {
 
   @override
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
-    // Simulate reading from local storage without delay
-    // this will be tied to SecureStorageService.
     const mockResponse = AuthMockFixtures.mockLoginResponse;
-    final model = LoginResponseModel.fromJson(mockResponse);
+    final LoginResponseModel model = LoginResponseModel.fromJson(mockResponse);
 
     return Right(model.user.toDomain());
+  }
+
+  @override
+  Future<Either<Failure, Unit>> forgotPassword(String email) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    if (email.toLowerCase().contains('error')) {
+      return const Left(
+        AuthFailure('Unable to send reset link right now. Please try again.'),
+      );
+    }
+
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> resendVerification(String email) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    if (email.toLowerCase().contains('error')) {
+      return const Left(
+        AuthFailure(
+          'Unable to resend verification email right now. Please try again.',
+        ),
+      );
+    }
+
+    return const Right(unit);
   }
 }

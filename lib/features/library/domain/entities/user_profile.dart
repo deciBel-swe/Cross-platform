@@ -1,6 +1,4 @@
-
 class UserProfile {
-
   const UserProfile({
     required this.name,
     required this.location,
