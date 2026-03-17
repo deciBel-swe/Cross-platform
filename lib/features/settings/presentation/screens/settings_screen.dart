@@ -10,7 +10,8 @@ class SettingsScreen extends StatelessWidget {
   static const String _title = 'Settings';
   static const String _basicSettingsTitle = 'Basic Settings';
   static const String _basicSettingsSubtitle = 'Core app preferences';
-
+  static const String _socalSettingsTitle = 'Social Settings';
+  static const String _socalSettingsSubtitle = 'Privacy Settings';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,6 +23,11 @@ class SettingsScreen extends StatelessWidget {
             title: _basicSettingsTitle,
             subtitle: _basicSettingsSubtitle,
             onTap: () => context.push(RoutePaths.basicSettings),
+          ),
+          _SettingsNavigationTile(
+            title: _socalSettingsTitle,
+            subtitle: _socalSettingsSubtitle,
+            onTap: () => context.push(RoutePaths.socialSettings),
           ),
         ],
       ),
