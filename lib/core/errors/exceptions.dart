@@ -1,7 +1,7 @@
 /// Base class for application failures / exceptions.
 abstract class AppException implements Exception {
-  final String message;
   const AppException(this.message);
+  final String message;
 
   @override
   String toString() => message;
@@ -17,4 +17,8 @@ class CacheException extends AppException {
 
 class NetworkException extends AppException {
   const NetworkException([super.message = 'No internet connection']);
+}
+
+class AuthException extends AppException {
+  const AuthException([super.message = 'Authentication failed']);
 }

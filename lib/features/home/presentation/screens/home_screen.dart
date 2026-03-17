@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Empty Home page – placeholder.
 class HomeScreen extends StatelessWidget {
@@ -6,8 +7,19 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Home', style: TextStyle(fontSize: 24))),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.cloud_upload),
+            onPressed: () {
+              context.push('/home/upload');
+            },
+          )
+        ],
+      ),
+      body: const Center(child: Text('Home', style: TextStyle(fontSize: 24))),
     );
   }
 }

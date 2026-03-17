@@ -5,6 +5,7 @@ version: 1.0.0+1
 
 environment:
   sdk: ^3.10.8
+  flutter: 3.38.9
 
 dependencies:
   flutter:
@@ -29,6 +30,10 @@ dependencies:
   # ---------- Data Modeling ----------
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
+  dartz: ^0.10.1
+
+  # ---------- Internationalization ----------
+  intl: ^0.19.0
 
   # ---------- Secure Storage (JWT / OAuth tokens) ----------
   flutter_secure_storage: ^9.2.4
@@ -47,6 +52,18 @@ dependencies:
   # ---------- Media & File Selection ----------
   image_picker: ^1.1.2
   file_picker: ^8.1.7
+  url_launcher: ^6.3.2
+  app_links: ^7.0.0
+  desktop_webview_auth: ^0.0.16
+  google_sign_in: ^7.2.0
+  window_manager: ^0.5.1
+  responsive_framework: ^1.5.1
+  device_info_plus: ^12.3.0
+
+
+  # ---------- Social Icons ----------
+  font_awesome_flutter: ^10.7.0
+  # ---------- Google Sign In ----------
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +80,7 @@ dev_dependencies:
 
   # ---------- App Icon Generator ----------
   flutter_launcher_icons: ^0.14.3
+  mocktail: ^1.0.4
 
 # The following section is specific to Flutter packages.
 flutter:
@@ -73,6 +91,13 @@ flutter:
 
   assets:
     - assets/icon/app_icon.png
+    - assets/icon/black_app_icon_trans.png
+    - assets/icon/white_app_icon_trans.png
+    - assets/html/auth_complete.html
+    - assets/background/background_startscreen.png
+    - assets/background/foreground_startscreen.png
+    - assets/background/desktop/background_startscreen.png
+    - assets/background/desktop/foreground_startscreen.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
