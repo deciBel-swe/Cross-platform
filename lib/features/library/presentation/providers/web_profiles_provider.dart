@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../library_profile/domain/entities/public_profile_social_links.dart';
+import '../../../../features/library_profile/domain/entities/public_profile_social_links.dart';
 
 class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
   WebProfilesNotifier() : super(const PublicProfileSocialLinks());

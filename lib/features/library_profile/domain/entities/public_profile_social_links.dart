@@ -1,10 +1,10 @@
 class PublicProfileSocialLinks {
-
   const PublicProfileSocialLinks({
     this.instagram,
     this.twitter,
     this.website,
   });
+
   final String? instagram;
   final String? twitter;
   final String? website;

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 class Tile extends StatelessWidget {
-
   const Tile({
     super.key,
     required this.title,
@@ -11,6 +10,7 @@ class Tile extends StatelessWidget {
     required this.buttonText,
     required this.onButtonPressed,
   });
+
   final String title;
   final String? subtitle;
   final String buttonText;
@@ -30,15 +30,16 @@ class Tile extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: AppConstants.fontSizeLarge,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary, 
+                  color: AppColors.textPrimary,
                 ),
               ),
               if (subtitle != null) ...[
                 Text(
                   subtitle!,
+                  
                   style: const TextStyle(
                     fontSize: AppConstants.fontSizeSmall,
-                    color: AppColors.textSecondary, 
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],

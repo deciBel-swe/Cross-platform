@@ -213,7 +213,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         debugPrint('=============================');
       }
 
-      final response = await _dioClient.post<dynamic>(
+      final response = await _dioClient.post<Map<String, dynamic>>(
         ApiConstants.googleTokenExchangeEndpoint, // Path defined in API docs
         data: dto.toJson(),
       );
