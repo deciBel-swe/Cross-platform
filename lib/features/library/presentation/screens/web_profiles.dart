@@ -197,131 +197,19 @@ class _EditProfileLinkScreenState
     );
   }
 
-  Future<void> _showEditLinkDialog(String oldLink) async {
-    final controller = TextEditingController(text: oldLink);
-    final notifier = ref.read(webProfilesProvider.notifier);
-
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit link'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Link',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.url,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                controller.dispose();
-                Navigator.pop(context);
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                final newLink = controller.text.trim();
-
-                if (newLink.isEmpty) {
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a link')),
-                  );
-                  return;
-                }
-
-                if (!_isValidUrl(newLink)) {
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a valid URL')),
-                  );
-                  return;
-                }
-
-                if (newLink == oldLink) {
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(content: Text('No changes were made')),
-                  );
-                  return;
-                }
-
-                if (!notifier.isSamePlatform(oldLink, newLink)) {
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Edited link must stay in the same platform. Delete it and add a new one instead.',
-                      ),
-                    ),
-                  );
-                  return;
-                }
-
-                if (notifier.linkAlreadyExists(newLink)) {
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'This link already exists on your profile',
-                      ),
-                    ),
-                  );
-                  return;
-                }
-
-                notifier.editLink(oldLink, newLink);
-
-                controller.dispose();
-                Navigator.pop(context);
-
-                ScaffoldMessenger.of(this.context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Link updated successfully'),
-                  ),
-                );
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Widget _buildLinkRow({
     required String platform,
     required String link,
   }) {
     final isDeletePending = _pendingDeleteLink == link;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _platformIcon(platform),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              link,
-              style: const TextStyle(fontSize: 15),
-            ),
-          ),
-          IconButton(
-            onPressed: () => _showEditLinkDialog(link),
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit',
-          ),
-          IconButton(
-            onPressed: () => _showDeleteConfirmationDialog(link),
-            icon: Icon(
-              Icons.delete_outline,
-              color: isDeletePending ? Colors.red : null,
-            ),
-            tooltip: 'Delete',
-          ),
-        ],
-      ),
+    return _EditableLinkRow(
+      platform: platform,
+      link: link,
+      isDeletePending: isDeletePending,
+      platformIcon: _platformIcon(platform),
+      isValidUrl: _isValidUrl,
+      onDelete: () => _showDeleteConfirmationDialog(link),
     );
   }
 
@@ -388,6 +276,185 @@ class _EditProfileLinkScreenState
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _EditableLinkRow extends ConsumerStatefulWidget {
+  final String platform;
+  final String link;
+  final bool isDeletePending;
+  final Widget platformIcon;
+  final bool Function(String) isValidUrl;
+  final VoidCallback onDelete;
+
+  const _EditableLinkRow({
+    required this.platform,
+    required this.link,
+    required this.isDeletePending,
+    required this.platformIcon,
+    required this.isValidUrl,
+    required this.onDelete,
+  });
+
+  @override
+  ConsumerState<_EditableLinkRow> createState() => _EditableLinkRowState();
+}
+
+class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
+  late TextEditingController _controller;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.link);
+  }
+
+  @override
+  void didUpdateWidget(covariant _EditableLinkRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isEditing && oldWidget.link != widget.link) {
+      _controller.text = widget.link;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _cancelEdit() {
+    setState(() {
+      _isEditing = false;
+      _controller.text = widget.link;
+    });
+  }
+
+  void _saveInlineEdit() {
+    final newLink = _controller.text.trim();
+    final notifier = ref.read(webProfilesProvider.notifier);
+
+    if (newLink.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a link')),
+      );
+      return;
+    }
+
+    if (!widget.isValidUrl(newLink)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid URL')),
+      );
+      return;
+    }
+
+    if (newLink == widget.link) {
+      setState(() {
+        _isEditing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No changes were made')),
+      );
+      return;
+    }
+
+    if (!notifier.isSamePlatform(widget.link, newLink)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Edited link must stay in the same platform. Delete it and add a new one instead.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (notifier.linkAlreadyExists(newLink)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This link already exists on your profile'),
+        ),
+      );
+      return;
+    }
+
+    notifier.editLink(widget.link, newLink);
+
+    setState(() {
+      _isEditing = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Link updated successfully')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          widget.platformIcon,
+          const SizedBox(width: 10),
+          Expanded(
+            child: _isEditing
+                ? TextField(
+                    controller: _controller,
+                    autofocus: true,
+                    keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _saveInlineEdit(),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      widget.link,
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ),
+          ),
+          if (!_isEditing)
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isEditing = true;
+                  _controller.text = widget.link;
+                });
+              },
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit',
+            ),
+          if (_isEditing)
+            IconButton(
+              onPressed: _saveInlineEdit,
+              icon: const Icon(Icons.check, color: Colors.green),
+              tooltip: 'Save',
+            ),
+          if (_isEditing)
+            IconButton(
+              onPressed: _cancelEdit,
+              icon: const Icon(Icons.close),
+              tooltip: 'Cancel',
+            ),
+          if (!_isEditing)
+            IconButton(
+              onPressed: widget.onDelete,
+              icon: Icon(
+                Icons.delete_outline,
+                color: widget.isDeletePending ? Colors.red : null,
+              ),
+              tooltip: 'Delete',
+            ),
+        ],
       ),
     );
   }
