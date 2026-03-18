@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../domain/entities/public_profile_social_links.dart';
 import '../providers/web_profiles_provider.dart';
@@ -121,11 +122,11 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
           content: Text('Are you sure you want to delete:\n\n$link'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => context.pop(false),
               child: const Text('No'),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => context.pop(true),
               child: const Text('Yes', style: TextStyle(color: Colors.red)),
             ),
           ],
