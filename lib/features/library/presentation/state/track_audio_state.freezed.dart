@@ -17,11 +17,15 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$TrackAudioState {
+  bool get isPreparing => throw _privateConstructorUsedError;
+  bool get isPrepared => throw _privateConstructorUsedError;
+  int? get preparedTrackId => throw _privateConstructorUsedError;
+  String? get preparedTrackUrl => throw _privateConstructorUsedError;
   bool get isPlaying => throw _privateConstructorUsedError;
-  Duration get position => throw _privateConstructorUsedError;
-  Duration get duration => throw _privateConstructorUsedError;
   bool get isDragging => throw _privateConstructorUsedError;
   double get progress => throw _privateConstructorUsedError;
+  Duration get position => throw _privateConstructorUsedError;
+  Duration get duration => throw _privateConstructorUsedError;
 
   /// Create a copy of TrackAudioState
   /// with the given fields replaced by the non-null parameter values.
@@ -38,11 +42,15 @@ abstract class $TrackAudioStateCopyWith<$Res> {
   ) = _$TrackAudioStateCopyWithImpl<$Res, TrackAudioState>;
   @useResult
   $Res call({
+    bool isPreparing,
+    bool isPrepared,
+    int? preparedTrackId,
+    String? preparedTrackUrl,
     bool isPlaying,
-    Duration position,
-    Duration duration,
     bool isDragging,
     double progress,
+    Duration position,
+    Duration duration,
   });
 }
 
@@ -61,26 +69,38 @@ class _$TrackAudioStateCopyWithImpl<$Res, $Val extends TrackAudioState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? isPreparing = null,
+    Object? isPrepared = null,
+    Object? preparedTrackId = freezed,
+    Object? preparedTrackUrl = freezed,
     Object? isPlaying = null,
-    Object? position = null,
-    Object? duration = null,
     Object? isDragging = null,
     Object? progress = null,
+    Object? position = null,
+    Object? duration = null,
   }) {
     return _then(
       _value.copyWith(
+            isPreparing: null == isPreparing
+                ? _value.isPreparing
+                : isPreparing // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isPrepared: null == isPrepared
+                ? _value.isPrepared
+                : isPrepared // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            preparedTrackId: freezed == preparedTrackId
+                ? _value.preparedTrackId
+                : preparedTrackId // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            preparedTrackUrl: freezed == preparedTrackUrl
+                ? _value.preparedTrackUrl
+                : preparedTrackUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
             isPlaying: null == isPlaying
                 ? _value.isPlaying
                 : isPlaying // ignore: cast_nullable_to_non_nullable
                       as bool,
-            position: null == position
-                ? _value.position
-                : position // ignore: cast_nullable_to_non_nullable
-                      as Duration,
-            duration: null == duration
-                ? _value.duration
-                : duration // ignore: cast_nullable_to_non_nullable
-                      as Duration,
             isDragging: null == isDragging
                 ? _value.isDragging
                 : isDragging // ignore: cast_nullable_to_non_nullable
@@ -89,6 +109,14 @@ class _$TrackAudioStateCopyWithImpl<$Res, $Val extends TrackAudioState>
                 ? _value.progress
                 : progress // ignore: cast_nullable_to_non_nullable
                       as double,
+            position: null == position
+                ? _value.position
+                : position // ignore: cast_nullable_to_non_nullable
+                      as Duration,
+            duration: null == duration
+                ? _value.duration
+                : duration // ignore: cast_nullable_to_non_nullable
+                      as Duration,
           )
           as $Val,
     );
@@ -105,11 +133,15 @@ abstract class _$$TrackAudioStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
+    bool isPreparing,
+    bool isPrepared,
+    int? preparedTrackId,
+    String? preparedTrackUrl,
     bool isPlaying,
-    Duration position,
-    Duration duration,
     bool isDragging,
     double progress,
+    Duration position,
+    Duration duration,
   });
 }
 
@@ -127,26 +159,38 @@ class __$$TrackAudioStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? isPreparing = null,
+    Object? isPrepared = null,
+    Object? preparedTrackId = freezed,
+    Object? preparedTrackUrl = freezed,
     Object? isPlaying = null,
-    Object? position = null,
-    Object? duration = null,
     Object? isDragging = null,
     Object? progress = null,
+    Object? position = null,
+    Object? duration = null,
   }) {
     return _then(
       _$TrackAudioStateImpl(
+        isPreparing: null == isPreparing
+            ? _value.isPreparing
+            : isPreparing // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isPrepared: null == isPrepared
+            ? _value.isPrepared
+            : isPrepared // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        preparedTrackId: freezed == preparedTrackId
+            ? _value.preparedTrackId
+            : preparedTrackId // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        preparedTrackUrl: freezed == preparedTrackUrl
+            ? _value.preparedTrackUrl
+            : preparedTrackUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
         isPlaying: null == isPlaying
             ? _value.isPlaying
             : isPlaying // ignore: cast_nullable_to_non_nullable
                   as bool,
-        position: null == position
-            ? _value.position
-            : position // ignore: cast_nullable_to_non_nullable
-                  as Duration,
-        duration: null == duration
-            ? _value.duration
-            : duration // ignore: cast_nullable_to_non_nullable
-                  as Duration,
         isDragging: null == isDragging
             ? _value.isDragging
             : isDragging // ignore: cast_nullable_to_non_nullable
@@ -155,6 +199,14 @@ class __$$TrackAudioStateImplCopyWithImpl<$Res>
             ? _value.progress
             : progress // ignore: cast_nullable_to_non_nullable
                   as double,
+        position: null == position
+            ? _value.position
+            : position // ignore: cast_nullable_to_non_nullable
+                  as Duration,
+        duration: null == duration
+            ? _value.duration
+            : duration // ignore: cast_nullable_to_non_nullable
+                  as Duration,
       ),
     );
   }
@@ -164,27 +216,46 @@ class __$$TrackAudioStateImplCopyWithImpl<$Res>
 
 class _$TrackAudioStateImpl implements _TrackAudioState {
   const _$TrackAudioStateImpl({
-    required this.isPlaying,
-    required this.position,
-    required this.duration,
-    required this.isDragging,
-    required this.progress,
+    this.isPreparing = false,
+    this.isPrepared = false,
+    this.preparedTrackId,
+    this.preparedTrackUrl,
+    this.isPlaying = false,
+    this.isDragging = false,
+    this.progress = 0.0,
+    this.position = Duration.zero,
+    this.duration = Duration.zero,
   });
 
   @override
+  @JsonKey()
+  final bool isPreparing;
+  @override
+  @JsonKey()
+  final bool isPrepared;
+  @override
+  final int? preparedTrackId;
+  @override
+  final String? preparedTrackUrl;
+  @override
+  @JsonKey()
   final bool isPlaying;
   @override
-  final Duration position;
-  @override
-  final Duration duration;
-  @override
+  @JsonKey()
   final bool isDragging;
   @override
+  @JsonKey()
   final double progress;
+  @override
+  @JsonKey()
+  final Duration position;
+  @override
+  @JsonKey()
+  final Duration duration;
 
   @override
   String toString() {
-    return 'TrackAudioState(isPlaying: $isPlaying, position: $position, duration: $duration, isDragging: $isDragging, progress: $progress)';
+    return 'TrackAudioState(isPreparing: $isPreparing, isPrepared: $isPrepared, preparedTrackId: $preparedTrackId, preparedTrackUrl: $preparedTrackUrl, isPlaying: $isPlaying, isDragging: $isDragging, progress: $progress, position: $position, duration: $duration)';
   }
 
   @override
@@ -192,26 +263,38 @@ class _$TrackAudioStateImpl implements _TrackAudioState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$TrackAudioStateImpl &&
+            (identical(other.isPreparing, isPreparing) ||
+                other.isPreparing == isPreparing) &&
+            (identical(other.isPrepared, isPrepared) ||
+                other.isPrepared == isPrepared) &&
+            (identical(other.preparedTrackId, preparedTrackId) ||
+                other.preparedTrackId == preparedTrackId) &&
+            (identical(other.preparedTrackUrl, preparedTrackUrl) ||
+                other.preparedTrackUrl == preparedTrackUrl) &&
             (identical(other.isPlaying, isPlaying) ||
                 other.isPlaying == isPlaying) &&
-            (identical(other.position, position) ||
-                other.position == position) &&
-            (identical(other.duration, duration) ||
-                other.duration == duration) &&
             (identical(other.isDragging, isDragging) ||
                 other.isDragging == isDragging) &&
             (identical(other.progress, progress) ||
-                other.progress == progress));
+                other.progress == progress) &&
+            (identical(other.position, position) ||
+                other.position == position) &&
+            (identical(other.duration, duration) ||
+                other.duration == duration));
   }
 
   @override
   int get hashCode => Object.hash(
     runtimeType,
+    isPreparing,
+    isPrepared,
+    preparedTrackId,
+    preparedTrackUrl,
     isPlaying,
-    position,
-    duration,
     isDragging,
     progress,
+    position,
+    duration,
   );
 
   /// Create a copy of TrackAudioState
@@ -228,23 +311,35 @@ class _$TrackAudioStateImpl implements _TrackAudioState {
 
 abstract class _TrackAudioState implements TrackAudioState {
   const factory _TrackAudioState({
-    required final bool isPlaying,
-    required final Duration position,
-    required final Duration duration,
-    required final bool isDragging,
-    required final double progress,
+    final bool isPreparing,
+    final bool isPrepared,
+    final int? preparedTrackId,
+    final String? preparedTrackUrl,
+    final bool isPlaying,
+    final bool isDragging,
+    final double progress,
+    final Duration position,
+    final Duration duration,
   }) = _$TrackAudioStateImpl;
 
   @override
+  bool get isPreparing;
+  @override
+  bool get isPrepared;
+  @override
+  int? get preparedTrackId;
+  @override
+  String? get preparedTrackUrl;
+  @override
   bool get isPlaying;
-  @override
-  Duration get position;
-  @override
-  Duration get duration;
   @override
   bool get isDragging;
   @override
   double get progress;
+  @override
+  Duration get position;
+  @override
+  Duration get duration;
 
   /// Create a copy of TrackAudioState
   /// with the given fields replaced by the non-null parameter values.
