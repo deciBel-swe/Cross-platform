@@ -1,66 +1,44 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/social_settings_repositor_impl.dart';
 
-class SocialSettingsState {
-  final bool showWaveform;
-  final bool showActivities;
-  final bool showTopFan;
+import '../../domain/entities/social_settings.dart';
+import '../providers/social_settings_provider.dart';
 
-  SocialSettingsState({
-    required this.showWaveform,
-    required this.showActivities,
-    required this.showTopFan,
-  });
-
-  SocialSettingsState copyWith({bool? waveform, bool? activities, bool? topFan}) {
-    return SocialSettingsState(
-      showWaveform: waveform ?? showWaveform,
-      showActivities: activities ?? showActivities,
-      showTopFan: topFan ?? showTopFan,
-    );
-  }
+class SocialSettingsNotifier extends AsyncNotifier<SocialSettings> {
+  @override
+  @override
+FutureOr<SocialSettings> build() async {
+  final repo = ref.watch(socialSettingsRepositoryProvider);
+  
+  return repo.getSocialSettings(); 
 }
 
-class SocialSettingsNotifier extends AsyncNotifier<SocialSettingsState> {
-  @override
-  FutureOr<SocialSettingsState> build() async {
-    final repo = ref.watch(socialSettingsRepositoryProvider);
-    final data = await repo.getSettings();
+  Future<void> toggleProfilePrivacy(bool isPrivate) async {
+    final previous = state.value!;
+    final updated = previous.copyWith(isPrivate: isPrivate);
     
-    return SocialSettingsState(
-      showWaveform: data['waveform']!,
-      showActivities: data['activities']!,
-      showTopFan: data['top_fan']!,
-    );
+    await _applyUpdate(updated, previous);
   }
 
-  Future<void> setToggle(String key, bool value) async {
-    final repo = ref.read(socialSettingsRepositoryProvider);
-    final previousState = state.value!;
+  Future<void> toggleHistoryVisibility(bool showHistory) async {
+    final previous = state.value!;
+    final updated = previous.copyWith(showHistory: showHistory);
+    
+    await _applyUpdate(updated, previous);
+  }
 
-    // 1. Optimistic UI Update
-    state = AsyncData(_mapToggleToState(previousState, key, value));
+  Future<void> _applyUpdate(SocialSettings next, SocialSettings prev) async {
+    state = AsyncData(next); 
 
     try {
-      // 2. Persistent Update
-      await repo.updateSetting(key, value);
+      await ref.read(socialSettingsRepositoryProvider).updateSocialSettings(next);
     } catch (e) {
-      // 3. Rollback on failure
-      state = AsyncData(previousState);
-    }
-  }
-
-  SocialSettingsState _mapToggleToState(SocialSettingsState current, String key, bool val) {
-    switch (key) {
-      case 'waveform': return current.copyWith(waveform: val);
-      case 'activities': return current.copyWith(activities: val);
-      case 'top_fan': return current.copyWith(topFan: val);
-      default: return current;
+      state = AsyncData(prev); // Rollback on failure
+      rethrow;
     }
   }
 }
 
-final socialSettingsProvider = AsyncNotifierProvider<SocialSettingsNotifier, SocialSettingsState>(
+final socialSettingsProvider = AsyncNotifierProvider<SocialSettingsNotifier, SocialSettings>(
   SocialSettingsNotifier.new,
 );

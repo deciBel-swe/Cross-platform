@@ -9,88 +9,86 @@ class SocialSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settingsAsync = ref.watch(socialSettingsProvider);
+    final socialState = ref.watch(socialSettingsProvider);
+
+    // Watch for errors to show the rollback notification
+    ref.listen(socialSettingsProvider, (previous, next) {
+      if (next is AsyncError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Update failed. Settings reverted.')),
+        );
+      }
+    });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Social Settings')),
-      body: SafeArea(
-        child: settingsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Center(child: Text('Error loading settings: $err')),
-          data: (state) => ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const _SectionHeader('Social networking'),
-              _SettingTile(
-                title: 'Show comments and reactions on the waveform',
-                subtitle: 'Waveform comments and reactions are visible in the fullscreen player',
-                value: state.showWaveform,
-                onChanged: (val) => ref.read(socialSettingsProvider.notifier).setToggle('waveform', val),
-              ),
-              _SettingTile(
-                title: 'Show my activities in social discovery playlists and modules',
-                subtitle: 'Your Likes, Reactions and other engagement may be shown to other users...',
-                value: state.showActivities,
-                onChanged: (val) => ref.read(socialSettingsProvider.notifier).setToggle('activities', val),
-              ),
-              const SizedBox(height: 24),
-              const _SectionHeader('Insights visibility'),
-              _SettingTile(
-                title: 'Show when I\'m a First or Top Fan',
-                subtitle: 'You will appear in public First Fans and Top Fans lists',
-                value: state.showTopFan,
-                onChanged: (val) => ref.read(socialSettingsProvider.notifier).setToggle('top_fan', val),
-              ),
-            ],
-          ),
+      appBar: AppBar(
+        title: const Text('Social Settings'),
+        leading: const BackButton(),
+      ),
+      body: socialState.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (err, _) => Center(child: Text('Error: $err')),
+        data: (settings) => ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          children: [
+            _SocialToggleTile(
+              title: 'Private Profile',
+              subtitle:
+                  'When enabled, your profile is hidden from discovery and public lists.',
+              value: settings.isPrivate,
+              onChanged: (val) => ref
+                  .read(socialSettingsProvider.notifier)
+                  .toggleProfilePrivacy(val),
+            ),
+            const SizedBox(height: 16),
+            _SocialToggleTile(
+              title: 'Show Listening History',
+              subtitle:
+                  'Allow other users to see what you have been listening to lately.',
+              value: settings.showHistory,
+              onChanged: (val) => ref
+                  .read(socialSettingsProvider.notifier)
+                  .toggleHistoryVisibility(val),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// --- Private Helper Widgets ---
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
+class _SocialToggleTile extends StatelessWidget {
+  const _SocialToggleTile({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
   final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-    );
-  }
-}
-
-class _SettingTile extends StatelessWidget {
-
-  const _SettingTile({required this.title, required this.subtitle, required this.value, required this.onChanged});
-  final String title, subtitle;
+  final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
-              ],
-            ),
-          ),
-          Switch.adaptive(value: value, onChanged: onChanged,activeThumbColor:AppColors.proBadge ,),
-        ],
+    return SwitchListTile.adaptive(
+      contentPadding: EdgeInsets.zero,
+      activeThumbColor: AppColors.primary,
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
       ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Text(
+          subtitle,
+          style: const TextStyle(color: AppColors.primary, height: 1.4),
+        ),
+      ),
+      value: value,
+      onChanged: onChanged,
     );
   }
 }
