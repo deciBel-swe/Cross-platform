@@ -64,7 +64,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // authState is null -> AsyncLoading or AsyncError.
       // Block protected routes until auth is definitively resolved.
       return isAuthRoute ? null : RoutePaths.splash;
-
     },
     routes: [
       // ---- Auth flow (outside the main shell) ----

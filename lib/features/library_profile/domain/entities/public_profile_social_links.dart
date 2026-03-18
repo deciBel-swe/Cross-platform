@@ -1,3 +1,5 @@
+import '../../presentation/utils/web_profile_platform_utils.dart';
+
 class PublicProfileSocialLinks {
   final String? instagram;
   final String? twitter;
@@ -21,28 +23,10 @@ class PublicProfileSocialLinks {
     this.supportLink,
   });
 
-  static const List<String> displayPlatforms = [
-    'instagram',
-    'twitter',
-    'youtube',
-    'tiktok',
-    'linkedin',
-    'snapchat',
-    'facebook',
-    'website',
-  ];
+  static List<String> get displayPlatforms =>
+      WebProfilePlatformUtils.displayPlatforms;
 
-  static const List<String> allPlatforms = [
-    'instagram',
-    'twitter',
-    'youtube',
-    'tiktok',
-    'linkedin',
-    'snapchat',
-    'facebook',
-    'website',
-    'supportLink',
-  ];
+  static List<String> get allPlatforms => WebProfilePlatformUtils.allPlatforms;
 
   bool get isEmpty =>
       _isNullOrEmpty(instagram) &&
@@ -66,23 +50,23 @@ class PublicProfileSocialLinks {
 
   String? valueForPlatform(String platform) {
     switch (platform) {
-      case 'instagram':
+      case WebProfilePlatformUtils.instagram:
         return instagram;
-      case 'twitter':
+      case WebProfilePlatformUtils.twitter:
         return twitter;
-      case 'youtube':
+      case WebProfilePlatformUtils.youtube:
         return youtube;
-      case 'tiktok':
+      case WebProfilePlatformUtils.tiktok:
         return tiktok;
-      case 'linkedin':
+      case WebProfilePlatformUtils.linkedin:
         return linkedin;
-      case 'snapchat':
+      case WebProfilePlatformUtils.snapchat:
         return snapchat;
-      case 'facebook':
+      case WebProfilePlatformUtils.facebook:
         return facebook;
-      case 'website':
+      case WebProfilePlatformUtils.website:
         return website;
-      case 'supportLink':
+      case WebProfilePlatformUtils.supportLink:
         return supportLink;
       default:
         return null;
@@ -127,23 +111,23 @@ class PublicProfileSocialLinks {
 
   PublicProfileSocialLinks copyWithPlatform(String platform, String? value) {
     switch (platform) {
-      case 'instagram':
+      case WebProfilePlatformUtils.instagram:
         return copyWith(instagram: value);
-      case 'twitter':
+      case WebProfilePlatformUtils.twitter:
         return copyWith(twitter: value);
-      case 'youtube':
+      case WebProfilePlatformUtils.youtube:
         return copyWith(youtube: value);
-      case 'tiktok':
+      case WebProfilePlatformUtils.tiktok:
         return copyWith(tiktok: value);
-      case 'linkedin':
+      case WebProfilePlatformUtils.linkedin:
         return copyWith(linkedin: value);
-      case 'snapchat':
+      case WebProfilePlatformUtils.snapchat:
         return copyWith(snapchat: value);
-      case 'facebook':
+      case WebProfilePlatformUtils.facebook:
         return copyWith(facebook: value);
-      case 'website':
+      case WebProfilePlatformUtils.website:
         return copyWith(website: value);
-      case 'supportLink':
+      case WebProfilePlatformUtils.supportLink:
         return copyWith(supportLink: value);
       default:
         return this;
