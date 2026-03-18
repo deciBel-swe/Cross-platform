@@ -26,6 +26,12 @@ import '../../features/library/data/repositories/image_repository_impl.dart'
     as _i989;
 import '../../features/library/domain/repositories/image_repository.dart'
     as _i925;
+import '../../features/library_profile/data/datasources/profile_remote_data_source.dart'
+    as _i364;
+import '../../features/library_profile/data/repositories/profile_repository_impl.dart'
+    as _i997;
+import '../../features/library_profile/domain/repositories/profile_repository.dart'
+    as _i106;
 import '../network/dio_client.dart' as _i667;
 import '../storage/secure_storage_service.dart' as _i666;
 import 'register_module.dart' as _i291;
@@ -51,8 +57,14 @@ extension GetItInjectableX on _i174.GetIt {
       registerFor: {_mock},
     );
     gh.lazySingleton<_i667.DioClient>(() => _i667.DioClient(gh<_i361.Dio>()));
+    gh.lazySingleton<_i364.IProfileRemoteDataSource>(
+      () => _i364.ProfileRemoteDataSource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i107.IAuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i106.ProfileRepository>(
+      () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
     );
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),

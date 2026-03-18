@@ -36,6 +36,10 @@ class DioClient {
     return _dio.put(path, data: data);
   }
 
+  Future<Response<T>> patch<T>(String path, {Object? data}) {
+    return _dio.patch(path, data: data);
+  }
+
   // Helper method for DELETE requests
   Future<Response<T>> delete<T>(
     String path, {

@@ -4,6 +4,9 @@ class ApiConstants {
   //static const String baseUrl = 'http://192.168.1.4:3000/api';
   static const String baseUrl = 'http://192.168.1.4.nip.io:3000/api';
 
+  /// Endpoint for patching the current user's profile
+  static const String updateProfile = '/users/me';
+
   /// Step 1: Triggers Google login in browser
   static const String googleAuthEndpoint = '/oauth2/authorization/google';
 
