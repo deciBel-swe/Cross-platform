@@ -7,9 +7,15 @@ class LibraryMockDatasource {
   const LibraryMockDatasource();
 
   Future<TrackModel> fetchTrackById(int id) async {
-    await Future.delayed(LibraryMockFixtures.mockDelay);
+    await Future<void>.delayed(LibraryMockFixtures.mockDelay);
 
-    final data = LibraryMockFixtures.trackMetaDataById[id];
+    final data =
+        LibraryMockFixtures.trackMetaDataById[id] ??
+        LibraryMockFixtures.allTracks
+            .cast<Map<String, dynamic>>()
+            .where((t) => t['id'] == id)
+            .cast<Map<String, dynamic>>()
+            .firstOrNull;
 
     if (data == null) {
       throw Exception('Track not found');
@@ -22,15 +28,14 @@ class LibraryMockDatasource {
     required int page,
     required int size,
   }) async {
-    await Future.delayed(LibraryMockFixtures.mockDelay);
+    await Future<void>.delayed(LibraryMockFixtures.mockDelay);
 
-    final allTracks =
-        LibraryMockFixtures.mockTracksResponse['content'] as List<dynamic>;
+    final allTracks = LibraryMockFixtures.allTracks;
 
     final startIndex = page * size;
     if (startIndex >= allTracks.length) {
       return PaginatedTracksModel.fromJson({
-        'content': const [],
+        'content': const <Map<String, dynamic>>[],
         'pageNumber': page,
         'pageSize': size,
         'totalElements': allTracks.length,
@@ -55,14 +60,33 @@ class LibraryMockDatasource {
   }
 
   Future<TrackPeaksModel> fetchTrackPeaks(int id) async {
-    await Future.delayed(LibraryMockFixtures.mockDelay);
+    await Future<void>.delayed(LibraryMockFixtures.mockDelay);
 
     final data = LibraryMockFixtures.trackPeaksById[id];
 
     if (data == null) {
-      throw Exception('Track peaks not found');
+      final template = LibraryMockFixtures.trackPeaksById[1];
+      if (template == null) {
+        throw Exception('Track peaks not found');
+      }
+
+      return TrackPeaksModel.fromJson(<String, dynamic>{
+        'trackId': id,
+        'duration': template['duration'],
+        'peaks': template['peaks'],
+      });
     }
 
     return TrackPeaksModel.fromJson(data);
+  }
+}
+
+extension on Iterable<Map<String, dynamic>> {
+  Map<String, dynamic>? get firstOrNull {
+    final iterator = this.iterator;
+    if (!iterator.moveNext()) {
+      return null;
+    }
+    return iterator.current;
   }
 }
