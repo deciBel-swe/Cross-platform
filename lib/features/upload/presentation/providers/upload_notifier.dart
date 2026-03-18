@@ -1,11 +1,8 @@
 import 'dart:async';
-import 'dart:io';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/picker_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 import '../../domain/repositories/i_upload_repository.dart';
@@ -160,14 +157,12 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
   // File picker
   Future<void> pickAudioFile() async {
-    // Opens file explorer allowing only audio files
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['mp3', 'wav'],
-    );
-    if (result != null) {
-      final file = File(result.files.single.path!);
-      final extension = result.files.single.extension?.toLowerCase();
+    // Reading the injected service
+    final pickerService = ref.read(pickerServiceProvider);
+
+    final file = await pickerService.pickAudioFile();
+    if (file != null) {
+      final extension = file.path.split('.').last.toLowerCase();
       final sizeInMB = file.lengthSync() / (1024 * 1024);
 
       // Fallback in case the OS picker ignores the filter
@@ -194,11 +189,12 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
   }
 
   Future<void> pickCoverImage() async {
-    final ImagePicker picker = ImagePicker();
-    // Open the phone gallery to pick the cover image
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    // Reade the injection service
+    final pickerService = ref.read(pickerServiceProvider);
+
+    final image = await pickerService.pickCoverImage();
     if (image != null) {
-      _updateState((state) => state.copyWith(coverImage: File(image.path)));
+      _updateState((state) => state.copyWith(coverImage: image));
     }
   }
 
