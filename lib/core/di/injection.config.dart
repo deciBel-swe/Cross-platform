@@ -26,6 +26,12 @@ import '../../features/library/data/repositories/image_repository_impl.dart'
     as _i989;
 import '../../features/library/domain/repositories/image_repository.dart'
     as _i925;
+import '../../features/upload/data/datasources/upload_remote_datasource.dart'
+    as _i464;
+import '../../features/upload/data/repository/upload_repository_impl.dart'
+    as _i469;
+import '../../features/upload/domain/repositories/i_upload_repository.dart'
+    as _i43;
 import '../network/dio_client.dart' as _i667;
 import '../storage/secure_storage_service.dart' as _i666;
 import 'register_module.dart' as _i291;
@@ -66,6 +72,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i666.SecureStorageService>(),
       ),
       registerFor: {_prod},
+    );
+    gh.factory<_i464.UploadRemoteDatasource>(
+      () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i43.IUploadRepository>(
+      () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
     );
     return this;
   }

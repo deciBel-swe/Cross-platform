@@ -1,6 +1,4 @@
-
 class UserProfile {
-
   const UserProfile({
     required this.name,
     required this.location,
@@ -8,6 +6,7 @@ class UserProfile {
     required this.following,
     required this.bio,
   });
+
   final String name;
   final String location;
   final int followers;

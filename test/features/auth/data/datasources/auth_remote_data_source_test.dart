@@ -31,7 +31,7 @@ void main() {
       () async {
         // Arrange
         when(
-          () => mockDio.post<dynamic>(
+          () => mockDio.post<Map<String, dynamic>>(
             ApiConstants.googleTokenExchangeEndpoint,
             data: {'code': tAuthCode},
           ),
