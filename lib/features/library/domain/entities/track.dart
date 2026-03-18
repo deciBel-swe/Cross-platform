@@ -6,7 +6,7 @@ class Track {
     required this.id,
     required this.title,
     required this.artist,
-    required this.trackUrl,
+    this.trackUrl,
     this.coverUrl,
     this.waveformUrl,
     required this.genre,
@@ -22,7 +22,7 @@ class Track {
   final int id;
   final String title;
   final Artist artist;
-  final String trackUrl;
+  final String? trackUrl;
   final String? coverUrl;
   final String? waveformUrl;
   final String genre;

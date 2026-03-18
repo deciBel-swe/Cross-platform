@@ -6,11 +6,12 @@ import '../../domain/entities/track.dart';
 import '../../domain/entities/track_status.dart';
 import 'track_preview_provider.dart';
 
-final uploadsProvider = AsyncNotifierProvider<UploadsNotifier, List<Track>>(
-  UploadsNotifier.new,
-);
+final uploadsProvider =
+    AsyncNotifierProvider.autoDispose<UploadsNotifier, List<Track>>(
+      UploadsNotifier.new,
+    );
 
-class UploadsNotifier extends AsyncNotifier<List<Track>> {
+class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   static List<Track>? _memoryCache;
 
   Timer? _processingRefreshTimer;
@@ -25,8 +26,6 @@ class UploadsNotifier extends AsyncNotifier<List<Track>> {
 
   @override
   Future<List<Track>> build() async {
-    ref.keepAlive();
-
     ref.onDispose(() {
       _processingRefreshTimer?.cancel();
       _processingRefreshTimer = null;

@@ -11,14 +11,18 @@ _$TrackModelImpl _$$TrackModelImplFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       title: json['title'] as String,
       artist: ArtistModel.fromJson(json['artist'] as Map<String, dynamic>),
-      trackUrl: json['trackUrl'] as String,
+      trackUrl: json['trackUrl'] as String?,
       coverUrl: json['coverUrl'] as String?,
       waveformUrl: json['waveformUrl'] as String?,
       genre: json['genre'] as String,
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           const <String>[],
-      state: $enumDecode(_$TrackStatusModelEnumMap, json['state']),
+      state: $enumDecode(
+        _$TrackStatusModelEnumMap,
+        json['state'],
+        unknownValue: TrackStatusModel.processing,
+      ),
       releaseDate: DateTime.parse(json['releaseDate'] as String),
       playCount: (json['playCount'] as num?)?.toInt() ?? 0,
       likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
@@ -47,5 +51,4 @@ Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
 const _$TrackStatusModelEnumMap = {
   TrackStatusModel.processing: 'PROCESSING',
   TrackStatusModel.finished: 'FINISHED',
-  TrackStatusModel.failed: 'FAILED',
 };

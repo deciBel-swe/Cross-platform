@@ -2,6 +2,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/entities/track_status.dart';
 
+part 'track_status_model.g.dart';
+
 @JsonEnum(alwaysCreate: true)
 enum TrackStatusModel {
   @JsonValue('PROCESSING')
@@ -9,9 +11,6 @@ enum TrackStatusModel {
 
   @JsonValue('FINISHED')
   finished,
-
-  @JsonValue('FAILED')
-  failed,
 }
 
 extension TrackStatusModelX on TrackStatusModel {
@@ -21,8 +20,6 @@ extension TrackStatusModelX on TrackStatusModel {
         return TrackStatus.processing;
       case TrackStatusModel.finished:
         return TrackStatus.finished;
-      case TrackStatusModel.failed:
-        return TrackStatus.failed;
     }
   }
 }

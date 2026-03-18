@@ -16,11 +16,12 @@ class TrackModel with _$TrackModel {
     required int id,
     required String title,
     required ArtistModel artist,
-    required String trackUrl,
+    String? trackUrl,
     String? coverUrl,
     String? waveformUrl,
     required String genre,
     @Default(<String>[]) List<String> tags,
+    @JsonKey(unknownEnumValue: TrackStatusModel.processing)
     required TrackStatusModel state,
     required DateTime releaseDate,
     @Default(0) int playCount,

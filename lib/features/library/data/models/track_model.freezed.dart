@@ -24,11 +24,13 @@ mixin _$TrackModel {
   int get id => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   ArtistModel get artist => throw _privateConstructorUsedError;
-  String get trackUrl => throw _privateConstructorUsedError;
+  String? get trackUrl => throw _privateConstructorUsedError;
   String? get coverUrl => throw _privateConstructorUsedError;
   String? get waveformUrl => throw _privateConstructorUsedError;
   String get genre => throw _privateConstructorUsedError;
-  List<String> get tags => throw _privateConstructorUsedError;
+  List<String> get tags =>
+      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
+  @JsonKey(unknownEnumValue: TrackStatusModel.processing)
   TrackStatusModel get state => throw _privateConstructorUsedError;
   DateTime get releaseDate => throw _privateConstructorUsedError;
   int get playCount => throw _privateConstructorUsedError;
@@ -57,11 +59,12 @@ abstract class $TrackModelCopyWith<$Res> {
     int id,
     String title,
     ArtistModel artist,
-    String trackUrl,
+    String? trackUrl,
     String? coverUrl,
     String? waveformUrl,
     String genre,
     List<String> tags,
+    @JsonKey(unknownEnumValue: TrackStatusModel.processing)
     TrackStatusModel state,
     DateTime releaseDate,
     int playCount,
@@ -91,7 +94,7 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
     Object? id = null,
     Object? title = null,
     Object? artist = null,
-    Object? trackUrl = null,
+    Object? trackUrl = freezed,
     Object? coverUrl = freezed,
     Object? waveformUrl = freezed,
     Object? genre = null,
@@ -117,10 +120,10 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
                 ? _value.artist
                 : artist // ignore: cast_nullable_to_non_nullable
                       as ArtistModel,
-            trackUrl: null == trackUrl
+            trackUrl: freezed == trackUrl
                 ? _value.trackUrl
                 : trackUrl // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
             coverUrl: freezed == coverUrl
                 ? _value.coverUrl
                 : coverUrl // ignore: cast_nullable_to_non_nullable
@@ -190,11 +193,12 @@ abstract class _$$TrackModelImplCopyWith<$Res>
     int id,
     String title,
     ArtistModel artist,
-    String trackUrl,
+    String? trackUrl,
     String? coverUrl,
     String? waveformUrl,
     String genre,
     List<String> tags,
+    @JsonKey(unknownEnumValue: TrackStatusModel.processing)
     TrackStatusModel state,
     DateTime releaseDate,
     int playCount,
@@ -224,7 +228,7 @@ class __$$TrackModelImplCopyWithImpl<$Res>
     Object? id = null,
     Object? title = null,
     Object? artist = null,
-    Object? trackUrl = null,
+    Object? trackUrl = freezed,
     Object? coverUrl = freezed,
     Object? waveformUrl = freezed,
     Object? genre = null,
@@ -250,10 +254,10 @@ class __$$TrackModelImplCopyWithImpl<$Res>
             ? _value.artist
             : artist // ignore: cast_nullable_to_non_nullable
                   as ArtistModel,
-        trackUrl: null == trackUrl
+        trackUrl: freezed == trackUrl
             ? _value.trackUrl
             : trackUrl // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
         coverUrl: freezed == coverUrl
             ? _value.coverUrl
             : coverUrl // ignore: cast_nullable_to_non_nullable
@@ -306,12 +310,12 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
     required this.id,
     required this.title,
     required this.artist,
-    required this.trackUrl,
+    this.trackUrl,
     this.coverUrl,
     this.waveformUrl,
     required this.genre,
     final List<String> tags = const <String>[],
-    required this.state,
+    @JsonKey(unknownEnumValue: TrackStatusModel.processing) required this.state,
     required this.releaseDate,
     this.playCount = 0,
     this.likeCount = 0,
@@ -329,7 +333,7 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
   @override
   final ArtistModel artist;
   @override
-  final String trackUrl;
+  final String? trackUrl;
   @override
   final String? coverUrl;
   @override
@@ -345,7 +349,9 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
     return EqualUnmodifiableListView(_tags);
   }
 
+  // ignore: invalid_annotation_target
   @override
+  @JsonKey(unknownEnumValue: TrackStatusModel.processing)
   final TrackStatusModel state;
   @override
   final DateTime releaseDate;
@@ -455,11 +461,12 @@ abstract class _TrackModel implements TrackModel {
     required final int id,
     required final String title,
     required final ArtistModel artist,
-    required final String trackUrl,
+    final String? trackUrl,
     final String? coverUrl,
     final String? waveformUrl,
     required final String genre,
     final List<String> tags,
+    @JsonKey(unknownEnumValue: TrackStatusModel.processing)
     required final TrackStatusModel state,
     required final DateTime releaseDate,
     final int playCount,
@@ -478,7 +485,7 @@ abstract class _TrackModel implements TrackModel {
   @override
   ArtistModel get artist;
   @override
-  String get trackUrl;
+  String? get trackUrl;
   @override
   String? get coverUrl;
   @override
@@ -486,8 +493,9 @@ abstract class _TrackModel implements TrackModel {
   @override
   String get genre;
   @override
-  List<String> get tags;
+  List<String> get tags; // ignore: invalid_annotation_target
   @override
+  @JsonKey(unknownEnumValue: TrackStatusModel.processing)
   TrackStatusModel get state;
   @override
   DateTime get releaseDate;

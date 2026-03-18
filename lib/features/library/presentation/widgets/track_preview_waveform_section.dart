@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'waveform_painter.dart';
+import 'track_waveform/track_waveform_canvas.dart';
+import 'track_waveform/track_waveform_center_markers.dart';
+import 'track_waveform/track_waveform_time_bubble.dart';
 
 /// Widget to display the track waveform.
 /// Shows:
@@ -47,20 +49,14 @@ class TrackWaveform extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Positioned.fill(
-            child: CustomPaint(
-              painter: WaveformPainter(peaks: peaks, progress: progress),
-            ),
+            child: TrackWaveformCanvas(peaks: peaks, progress: progress),
           ),
 
-          const _CenterProgressLine(),
-
-          const Positioned.fill(
-            child: IgnorePointer(child: _CenterGuideLine()),
-          ),
+          const TrackWaveformCenterMarkers(),
 
           Positioned(
             bottom: 34,
-            child: _TimeBubble(
+            child: TrackWaveformTimeBubble(
               currentPosition: currentPosition,
               totalDuration: totalDuration,
             ),
@@ -68,76 +64,5 @@ class TrackWaveform extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _CenterProgressLine extends StatelessWidget {
-  const _CenterProgressLine();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 2,
-      height: 18,
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
-  }
-}
-
-class _CenterGuideLine extends StatelessWidget {
-  const _CenterGuideLine();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 1.4,
-        margin: const EdgeInsets.symmetric(vertical: 18),
-        color: Colors.black.withValues(alpha: 0.5),
-      ),
-    );
-  }
-}
-
-class _TimeBubble extends StatelessWidget {
-  const _TimeBubble({
-    required this.currentPosition,
-    required this.totalDuration,
-  });
-
-  final Duration currentPosition;
-  final Duration totalDuration;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Text(
-          '${_formatDuration(currentPosition)}  |  ${_formatDuration(totalDuration)}',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11.5,
-            fontWeight: FontWeight.w600,
-            height: 1,
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _formatDuration(Duration duration) {
-    final totalSeconds = duration.inSeconds;
-    final minutes = totalSeconds ~/ 60;
-    final seconds = totalSeconds % 60;
-
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 }

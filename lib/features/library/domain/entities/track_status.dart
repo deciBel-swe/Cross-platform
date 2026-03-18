@@ -1,1 +1,1 @@
-enum TrackStatus { processing, finished, failed }
+enum TrackStatus { processing, finished }

@@ -3,10 +3,19 @@ import 'package:flutter/material.dart';
 /// Paints a mirrored waveform around the horizontal center line.
 /// Played part is orange, unplayed part is light grey.
 class WaveformPainter extends CustomPainter {
-  WaveformPainter({required this.peaks, required this.progress});
+  WaveformPainter({
+    required this.peaks,
+    required this.progress,
+    required this.playedColor,
+    required this.unplayedColor,
+    required this.centerLineColor,
+  });
 
   final List<double> peaks;
   final double progress;
+  final Color playedColor;
+  final Color unplayedColor;
+  final Color centerLineColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -15,15 +24,15 @@ class WaveformPainter extends CustomPainter {
     }
 
     final playedPaint = Paint()
-      ..color = const Color(0xFFFF7A00)
+      ..color = playedColor
       ..style = PaintingStyle.fill;
 
     final unplayedPaint = Paint()
-      ..color = const Color(0xFFD9D9D9)
+      ..color = unplayedColor
       ..style = PaintingStyle.fill;
 
     final centerLinePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.10)
+      ..color = centerLineColor
       ..strokeWidth = 1;
 
     final centerY = size.height / 2;

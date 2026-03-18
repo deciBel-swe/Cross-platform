@@ -36,11 +36,16 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
             return;
           }
 
+          final trackUrl = data.track.trackUrl;
+          if (trackUrl == null || trackUrl.isEmpty) {
+            return;
+          }
+
           await ref
               .read(trackAudioProvider.notifier)
               .initializeForTrack(
                 trackId: data.track.id,
-                trackUrl: data.track.trackUrl,
+                trackUrl: trackUrl,
                 duration: Duration(seconds: trackPeaks.duration),
                 autoPlay: true,
               );
