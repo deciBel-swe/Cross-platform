@@ -9,6 +9,20 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  language:
+    # Enforces strict typing by throwing an error if the compiler has to guess a type.
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+    
+  errors:
+    # Upgrades these specific violations from "warnings" to "errors" so they instantly fail the CI/CD pipeline.
+    missing_return: error
+    avoid_annotating_with_dynamic: error
+    # Ensures no debug print statements make it into production code.
+    avoid_print: error
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`
@@ -23,6 +37,50 @@ linter:
   rules:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+
+    # --- General & Naming ---
+    # Enforces snake_case.dart for all file names, matching your file naming rules.
+    file_names: true
+    # Enforces PascalCase for classes/enums and camelCase for variables/methods.
+    camel_case_types: true
+    non_constant_identifier_names: true
+    constant_identifier_names: true
+    
+    # --- Types & Null Safety ---
+    # Explicitly bans the 'dynamic' keyword to maintain strong typing.
+    # (Use // ignore: avoid_annotating_with_dynamic when it is absolutely justified).
+    avoid_annotating_with_dynamic: true
+    # Prevents uninitialized variables from silently defaulting to dynamic.
+    prefer_typing_uninitialized_variables: true
+    # Stops you from calling methods on dynamic variables, preventing sudden runtime crashes.
+    avoid_dynamic_calls: true
+
+    # --- Const Usage ---
+    # Mandates 'const' constructors and values wherever possible to optimize UI rebuild performance.
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+
+    # --- Imports Organization ---
+    # Groups imports logically (Dart -> Flutter -> Packages -> Project).
+    directives_ordering: true
+    # Mandates relative imports for internal project files rather than package imports.
+    prefer_relative_imports: true
+
+    # --- UI & Async Logic ---
+    # Enforces passing 'super.key' to widget constructors.
+    use_key_in_widget_constructors: true
+    # Recommends using SizedBox instead of Container for pure whitespace (a small performance boost).
+    sized_box_for_whitespace: true
+    # Prevents using BuildContext after an 'await', avoiding crashes if the user navigated away and the widget unmounted.
+    use_build_context_synchronously: true
+
+    # --- Constructors & Classes ---
+    # Keeps classes organized by forcing constructors to be at the very top of the class definition.
+    sort_constructors_first: true
+    sort_unnamed_constructors_first: true
+    empty_constructor_bodies: true
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

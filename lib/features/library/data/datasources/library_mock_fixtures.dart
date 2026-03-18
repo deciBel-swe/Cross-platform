@@ -52,7 +52,8 @@ class LibraryMockFixtures {
       "id": 1,
       "title": "Chill Night Beat",
       "artist": {"id": 10, "username": "karim"},
-      "trackUrl": "http://example.com/audio1.mp3",
+      "trackUrl":
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
       "coverUrl": "http://example.com/cover1.jpg",
       "waveformUrl": null,
       "genre": "Lo-fi",

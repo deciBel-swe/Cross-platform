@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Decibel · Authentication Complete</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: #000000;
+        color: #f5f5f5;
+        overflow: hidden;
+      }
+      .card {
+        text-align: center;
+        padding: 32px 40px;
+        border-radius: 16px;
+        background: radial-gradient(circle at top left, #1a1a1a, #000000);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+        max-width: 440px;
+        position: relative;
+        z-index: 1;
+      }
+      .logo {
+        width: 96px;
+        height: 96px;
+        margin: 0 auto 20px auto;
+        display: block;
+      }
+      h1 {
+        margin: 4px 0 8px 0;
+        font-size: 24px;
+        letter-spacing: 0.04em;
+      }
+      p {
+        margin: 0 0 18px 0;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #c4c4c4;
+      }
+      .sub {
+        font-size: 13px;
+        color: #8c8c8c;
+      }
+
+      .cloud {
+        position: fixed;
+        pointer-events: none;
+      }
+
+      /* Corners — large */
+      .cloud-tl {
+        width: 380px;
+        height: 380px;
+        top: -100px;
+        left: -100px;
+        transform: rotate(0deg);
+        opacity: 0.6;
+        filter: blur(3px);
+      }
+      .cloud-tr {
+        width: 380px;
+        height: 380px;
+        top: -100px;
+        right: -100px;
+        transform: rotate(90deg);
+        opacity: 0.6;
+        filter: blur(3px);
+      }
+      .cloud-bl {
+        width: 380px;
+        height: 380px;
+        bottom: -100px;
+        left: -100px;
+        transform: rotate(270deg);
+        opacity: 0.6;
+        filter: blur(3px);
+      }
+      .cloud-br {
+        width: 380px;
+        height: 380px;
+        bottom: -100px;
+        right: -100px;
+        transform: rotate(180deg);
+        opacity: 0.6;
+        filter: blur(3px);
+      }
+
+      /* Mid-edges — medium */
+      .cloud-tm {
+        width: 260px;
+        height: 220px;
+        top: -80px;
+        left: 50%;
+        transform: translateX(-50%) rotate(135deg);
+        opacity: 0.35;
+        filter: blur(4px);
+      }
+      .cloud-bm {
+        width: 260px;
+        height: 220px;
+        bottom: -80px;
+        left: 50%;
+        transform: translateX(-50%) rotate(315deg);
+        opacity: 0.35;
+        filter: blur(4px);
+      }
+      .cloud-lm {
+        width: 220px;
+        height: 260px;
+        left: -80px;
+        top: 50%;
+        transform: translateY(-50%) rotate(45deg);
+        opacity: 0.35;
+        filter: blur(4px);
+      }
+      .cloud-rm {
+        width: 220px;
+        height: 260px;
+        right: -80px;
+        top: 50%;
+        transform: translateY(-50%) rotate(225deg);
+        opacity: 0.35;
+        filter: blur(4px);
+      }
+
+      /* Inner accents — small, floaty */
+      .cloud-i1 {
+        width: 180px;
+        height: 160px;
+        top: 8%;
+        left: 12%;
+        transform: rotate(20deg);
+        opacity: 0.2;
+        filter: blur(6px);
+      }
+      .cloud-i2 {
+        width: 160px;
+        height: 140px;
+        top: 10%;
+        right: 14%;
+        transform: rotate(160deg);
+        opacity: 0.18;
+        filter: blur(6px);
+      }
+      .cloud-i3 {
+        width: 160px;
+        height: 140px;
+        bottom: 9%;
+        left: 15%;
+        transform: rotate(200deg);
+        opacity: 0.18;
+        filter: blur(6px);
+      }
+      .cloud-i4 {
+        width: 180px;
+        height: 160px;
+        bottom: 7%;
+        right: 12%;
+        transform: rotate(340deg);
+        opacity: 0.2;
+        filter: blur(6px);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ░░ Corner clouds ░░ -->
+    <svg
+      class="cloud cloud-tl"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-tl" cx="30%" cy="70%" r="70%">
+          <stop offset="0%" stop-color="#ff6a00" stop-opacity="1" />
+          <stop offset="55%" stop-color="#ff4500" stop-opacity="0.65" />
+          <stop offset="100%" stop-color="#ff2200" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="55" cy="135" rx="78" ry="58" fill="url(#g-tl)" />
+      <ellipse cx="100" cy="108" rx="58" ry="46" fill="url(#g-tl)" />
+      <ellipse cx="38" cy="108" rx="46" ry="40" fill="url(#g-tl)" />
+      <ellipse cx="128" cy="128" rx="46" ry="36" fill="url(#g-tl)" />
+      <ellipse cx="78" cy="88" rx="38" ry="30" fill="url(#g-tl)" />
+    </svg>
+
+    <svg
+      class="cloud cloud-tr"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-tr" cx="30%" cy="70%" r="70%">
+          <stop offset="0%" stop-color="#ff6a00" stop-opacity="1" />
+          <stop offset="55%" stop-color="#ff4500" stop-opacity="0.65" />
+          <stop offset="100%" stop-color="#ff2200" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="55" cy="135" rx="78" ry="58" fill="url(#g-tr)" />
+      <ellipse cx="100" cy="108" rx="58" ry="46" fill="url(#g-tr)" />
+      <ellipse cx="38" cy="108" rx="46" ry="40" fill="url(#g-tr)" />
+      <ellipse cx="128" cy="128" rx="46" ry="36" fill="url(#g-tr)" />
+      <ellipse cx="78" cy="88" rx="38" ry="30" fill="url(#g-tr)" />
+    </svg>
+
+    <svg
+      class="cloud cloud-bl"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-bl" cx="30%" cy="70%" r="70%">
+          <stop offset="0%" stop-color="#ff6a00" stop-opacity="1" />
+          <stop offset="55%" stop-color="#ff4500" stop-opacity="0.65" />
+          <stop offset="100%" stop-color="#ff2200" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="55" cy="135" rx="78" ry="58" fill="url(#g-bl)" />
+      <ellipse cx="100" cy="108" rx="58" ry="46" fill="url(#g-bl)" />
+      <ellipse cx="38" cy="108" rx="46" ry="40" fill="url(#g-bl)" />
+      <ellipse cx="128" cy="128" rx="46" ry="36" fill="url(#g-bl)" />
+      <ellipse cx="78" cy="88" rx="38" ry="30" fill="url(#g-bl)" />
+    </svg>
+
+    <svg
+      class="cloud cloud-br"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-br" cx="30%" cy="70%" r="70%">
+          <stop offset="0%" stop-color="#ff6a00" stop-opacity="1" />
+          <stop offset="55%" stop-color="#ff4500" stop-opacity="0.65" />
+          <stop offset="100%" stop-color="#ff2200" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="55" cy="135" rx="78" ry="58" fill="url(#g-br)" />
+      <ellipse cx="100" cy="108" rx="58" ry="46" fill="url(#g-br)" />
+      <ellipse cx="38" cy="108" rx="46" ry="40" fill="url(#g-br)" />
+      <ellipse cx="128" cy="128" rx="46" ry="36" fill="url(#g-br)" />
+      <ellipse cx="78" cy="88" rx="38" ry="30" fill="url(#g-br)" />
+    </svg>
+
+    <!-- ░░ Mid-edge clouds ░░ -->
+    <svg
+      class="cloud cloud-tm"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-tm" cx="50%" cy="80%" r="65%">
+          <stop offset="0%" stop-color="#ff5500" stop-opacity="1" />
+          <stop offset="100%" stop-color="#ff2200" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="140" rx="80" ry="50" fill="url(#g-tm)" />
+      <ellipse cx="68" cy="115" rx="52" ry="42" fill="url(#g-tm)" />
+      <ellipse cx="132" cy="115" rx="52" ry="42" fill="url(#g-tm)" />
+      <ellipse cx="100" cy="95" rx="40" ry="32" fill="url(#g-tm)" />
+    </svg>
+
+    <svg
+      class="cloud cloud-bm"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-bm" cx="50%" cy="80%" r="65%">
+          <stop offset="0%" stop-color="#ff5500" stop-opacity="1" />
+          <stop offset="100%" stop-color="#ff2200" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="140" rx="80" ry="50" fill="url(#g-bm)" />
+      <ellipse cx="68" cy="115" rx="52" ry="42" fill="url(#g-bm)" />
+      <ellipse cx="132" cy="115" rx="52" ry="42" fill="url(#g-bm)" />
+      <ellipse cx="100" cy="95" rx="40" ry="32" fill="url(#g-bm)" />
+    </svg>
+
+    <svg
+      class="cloud cloud-lm"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-lm" cx="50%" cy="80%" r="65%">
+          <stop offset="0%" stop-color="#ff5500" stop-opacity="1" />
+          <stop offset="100%" stop-color="#ff2200" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="140" rx="80" ry="50" fill="url(#g-lm)" />
+      <ellipse cx="68" cy="115" rx="52" ry="42" fill="url(#g-lm)" />
+      <ellipse cx="132" cy="115" rx="52" ry="42" fill="url(#g-lm)" />
+      <ellipse cx="100" cy="95" rx="40" ry="32" fill="url(#g-lm)" />
+    </svg>
+
+    <svg
+      class="cloud cloud-rm"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-rm" cx="50%" cy="80%" r="65%">
+          <stop offset="0%" stop-color="#ff5500" stop-opacity="1" />
+          <stop offset="100%" stop-color="#ff2200" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="140" rx="80" ry="50" fill="url(#g-rm)" />
+      <ellipse cx="68" cy="115" rx="52" ry="42" fill="url(#g-rm)" />
+      <ellipse cx="132" cy="115" rx="52" ry="42" fill="url(#g-rm)" />
+      <ellipse cx="100" cy="95" rx="40" ry="32" fill="url(#g-rm)" />
+    </svg>
+
+    <!-- ░░ Inner accent clouds ░░ -->
+    <svg
+      class="cloud cloud-i1"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-i1" cx="50%" cy="60%" r="60%">
+          <stop offset="0%" stop-color="#ff6000" stop-opacity="1" />
+          <stop offset="100%" stop-color="#ff3300" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="120" rx="70" ry="50" fill="url(#g-i1)" />
+      <ellipse cx="70" cy="95" rx="50" ry="40" fill="url(#g-i1)" />
+      <ellipse cx="130" cy="95" rx="50" ry="40" fill="url(#g-i1)" />
+    </svg>
+
+    <svg
+      class="cloud cloud-i2"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-i2" cx="50%" cy="60%" r="60%">
+          <stop offset="0%" stop-color="#ff6000" stop-opacity="1" />
+          <stop offset="100%" stop-color="#ff3300" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="120" rx="70" ry="50" fill="url(#g-i2)" />
+      <ellipse cx="70" cy="95" rx="50" ry="40" fill="url(#g-i2)" />
+      <ellipse cx="130" cy="95" rx="50" ry="40" fill="url(#g-i2)" />
+    </svg>
+
+    <svg
+      class="cloud cloud-i3"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-i3" cx="50%" cy="60%" r="60%">
+          <stop offset="0%" stop-color="#ff6000" stop-opacity="1" />
+          <stop offset="100%" stop-color="#ff3300" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="120" rx="70" ry="50" fill="url(#g-i3)" />
+      <ellipse cx="70" cy="95" rx="50" ry="40" fill="url(#g-i3)" />
+      <ellipse cx="130" cy="95" rx="50" ry="40" fill="url(#g-i3)" />
+    </svg>
+
+    <svg
+      class="cloud cloud-i4"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id="g-i4" cx="50%" cy="60%" r="60%">
+          <stop offset="0%" stop-color="#ff6000" stop-opacity="1" />
+          <stop offset="100%" stop-color="#ff3300" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="120" rx="70" ry="50" fill="url(#g-i4)" />
+      <ellipse cx="70" cy="95" rx="50" ry="40" fill="url(#g-i4)" />
+      <ellipse cx="130" cy="95" rx="50" ry="40" fill="url(#g-i4)" />
+    </svg>
+
+    <main class="card" role="main" aria-label="Decibel authentication status">
+      <img
+        class="logo"
+        src="{{ICON_DATA_URL}}"
+        alt="Decibel logo"
+        width="96"
+        height="96"
+      />
+      <h1>Authentication complete</h1>
+      <p>You can now return to the Decibel app to continue.</p>
+      <p class="sub">This window can be safely closed.</p>
+    </main>
+  </body>
+</html>
