@@ -14,4 +14,5 @@ final GetIt getIt = GetIt.instance;
   preferRelativeImports: true,
   asExtension: true,
 )
-void configureDependencies() => getIt.init(environment: 'mock');
+void configureDependencies() => getIt.init(environment: Environment.prod);
+//void configureDependencies() => getIt.init(environment: 'mock');

@@ -1,11 +1,12 @@
 // Secure storage wrapper (flutter_secure_storage) for tokens.
 
 import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../features/auth/data/models/login_response_model.dart';
 import '../../features/auth/data/models/auth_user_model.dart';
+import '../../features/auth/data/models/login_response_model.dart';
 
 /// Service responsible for securely storing and retrieving authentication tokens.
 ///
@@ -31,18 +32,16 @@ class SecureStorageService {
     // will check with backend about token duration assume 1 hour for now
     final expiryTime = DateTime.now().add(const Duration(hours: 1));
 
-    await Future.wait([
-      _storage.write(key: _accessTokenKey, value: response.accessToken),
-      _storage.write(key: _refreshTokenKey, value: response.refreshToken),
-      _storage.write(
-        key: _expiryKey,
-        value: expiryTime.millisecondsSinceEpoch.toString(),
-      ),
-      _storage.write(
-        key: _userKey,
-        value: jsonEncode(response.user.toJson()),
-      ),
-    ]);
+    await _storage.write(key: _accessTokenKey, value: response.accessToken);
+    await _storage.write(key: _refreshTokenKey, value: response.refreshToken);
+    await _storage.write(
+      key: _expiryKey,
+      value: expiryTime.millisecondsSinceEpoch.toString(),
+    );
+    await _storage.write(
+      key: _userKey,
+      value: jsonEncode(response.user.toJson()),
+    );
   }
 
   /// Saves newly refreshed access token and optionally updates the refresh token.
@@ -56,19 +55,15 @@ class SecureStorageService {
   }) async {
     final expiryTime = DateTime.now().add(Duration(seconds: expiresIn));
 
-    final futures = <Future<void>>[
-      _storage.write(key: _accessTokenKey, value: accessToken),
-      _storage.write(
-        key: _expiryKey,
-        value: expiryTime.millisecondsSinceEpoch.toString(),
-      ),
-    ];
+    await _storage.write(key: _accessTokenKey, value: accessToken);
+    await _storage.write(
+      key: _expiryKey,
+      value: expiryTime.millisecondsSinceEpoch.toString(),
+    );
 
     if (refreshToken != null) {
-      futures.add(_storage.write(key: _refreshTokenKey, value: refreshToken));
+      await _storage.write(key: _refreshTokenKey, value: refreshToken);
     }
-
-    await Future.wait(futures);
   }
 
   /// Retrieves the stored access token.

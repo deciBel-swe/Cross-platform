@@ -219,9 +219,13 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data;
-        if (data is Map<String, dynamic>) {
-          return LoginResponseModel.fromJson(data);
+        final body = response.data;
+        if (body is Map<String, dynamic> && body['data'] != null) {
+          final dataMap = body['data'] as Map<String, dynamic>;
+          return LoginResponseModel.fromJson(dataMap);
+        } else if (body is Map<String, dynamic>) {
+          // Fallback in case the backend doesn't wrap the specific endpoint
+          return LoginResponseModel.fromJson(body);
         } else {
           throw const AuthException('Invalid response format from server.');
         }

@@ -7,14 +7,14 @@ import 'dart:async';
 /// directly to the Presentation layer ([AuthNotifier]) without creating
 /// circular dependencies.
 class AuthEventBus {
-  // Private constructor
+  /// Returns the singleton instance of [AuthEventBus].
+  factory AuthEventBus() => _instance;
+
+  // Private constructor for singleton
   AuthEventBus._internal();
 
   // Singleton instance
   static final AuthEventBus _instance = AuthEventBus._internal();
-
-  /// Returns the singleton instance of [AuthEventBus].
-  factory AuthEventBus() => _instance;
 
   final _logoutController = StreamController<void>.broadcast();
 

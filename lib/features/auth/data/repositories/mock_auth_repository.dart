@@ -43,9 +43,14 @@ class MockAuthRepository implements IAuthRepository {
 
       await g_sign_in.GoogleSignIn.instance.signOut();
       //this account will be removed when we switch to production
-      final account = await g_sign_in.GoogleSignIn.instance.authenticate(
-        scopeHint: ['email', 'profile'],
-      );
+      g_sign_in.GoogleSignInAccount account;
+      try {
+        account = await g_sign_in.GoogleSignIn.instance.authenticate(
+          scopeHint: ['email', 'profile'],
+        );
+      } catch (e) {
+        return Left(AuthFailure('Google Sign-In failed or was cancelled: $e'));
+      }
 
       // wow so this is a flag to run only in debug mode very USEFUL
       if (kDebugMode) {

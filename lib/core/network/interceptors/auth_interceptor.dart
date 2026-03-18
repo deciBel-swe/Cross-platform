@@ -114,16 +114,18 @@ class AuthInterceptor extends Interceptor {
         data: {'refreshToken': refreshToken},
       );
 
-      final newAccessToken = response.data?['accessToken'] as String?;
-      final expiresIn = response.data?['expiresIn'] as int?;
+      final responseBody = response.data;
+      final dataPayload = responseBody?['data'] as Map<String, dynamic>? ?? responseBody;
+
+      final newAccessToken = dataPayload?['accessToken'] as String?;
+      final expiresIn = dataPayload?['expiresIn'] as int?;
 
       if (newAccessToken != null && expiresIn != null) {
          await _secureStorage.saveRefreshTokens(
             accessToken: newAccessToken,
             expiresIn: expiresIn,
-            // Optionally update the refresh token if the backend rotated it. It's not in the 
-            // doc response, but safe to check.
-            refreshToken: response.data?['refreshToken'] as String?,
+            // Optionally update the refresh token if the backend rotated it.
+            refreshToken: dataPayload?['refreshToken'] as String?,
           );
       } else {
          throw Exception('Invalid token response format');

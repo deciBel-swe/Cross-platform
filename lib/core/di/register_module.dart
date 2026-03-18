@@ -11,8 +11,8 @@ import '../storage/secure_storage_service.dart';
 abstract class RegisterModule {
   @lazySingleton
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage(
-        aOptions: AndroidOptions(encryptedSharedPreferences: true),
-      );
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
 
   @lazySingleton
   Dio get dio => Dio();
@@ -31,8 +31,12 @@ abstract class RegisterModule {
     final refreshDio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(milliseconds: ApiConstants.connectTimeout),
-        receiveTimeout: const Duration(milliseconds: ApiConstants.receiveTimeout),
+        connectTimeout: const Duration(
+          milliseconds: ApiConstants.connectTimeout,
+        ),
+        receiveTimeout: const Duration(
+          milliseconds: ApiConstants.receiveTimeout,
+        ),
         contentType: 'application/json',
       ),
     );

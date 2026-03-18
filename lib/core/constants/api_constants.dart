@@ -1,8 +1,9 @@
 class ApiConstants {
   ApiConstants._();
 
-  //static const String baseUrl = 'http://192.168.1.4:3000/api';
-  static const String baseUrl = 'http://192.168.1.4.nip.io:3000/api';
+  //static const String baseUrl = 'http://192.168.1.4.nip.io:3000/api';
+  static const String baseUrl =
+      'https://30d05557-562b-4dbd-ab42-3c3725b209ea.mock.pstmn.io';
 
   /// Step 1: Triggers Google login in browser
   static const String googleAuthEndpoint = '/oauth2/authorization/google';
