@@ -3,49 +3,89 @@ class LibraryMockFixtures {
 
   static const Duration mockDelay = Duration(milliseconds: 800);
 
-  /// Mock response for GET /api/users/{userId}/tracks
-  static const Map<String, dynamic> mockTracksResponse = {
-    "content": [
-      {
-        "id": 1,
-        "title": "Chill Night Beat",
-        "artist": {"id": 10, "username": "karim"},
-        "trackUrl":
-            "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        "coverUrl": "https://picsum.photos/200/300",
-        "waveformUrl": null,
-        "genre": "Lo-fi",
-        "tags": ["chill", "night"],
-        "state": "FINISHED",
-        "releaseDate": "2024-01-01",
-        "playCount": 120,
-        "likeCount": 18,
-        "repostCount": 4,
-        "createdAt": "2024-01-01T10:00:00.000Z",
-      },
-      {
-        "id": 2,
-        "title": "Processing Track",
-        "artist": {"id": 11, "username": "tarek"},
-        "trackUrl": "http://example.com/audio2.mp3",
-        "coverUrl": "http://example.com/cover2.jpg",
-        "waveformUrl": null,
-        "genre": "House",
-        "tags": ["draft"],
-        "state": "PROCESSING",
-        "releaseDate": "2024-01-02",
-        "playCount": 0,
-        "likeCount": 0,
-        "repostCount": 0,
-        "createdAt": "2024-01-02T10:00:00.000Z",
-      },
-    ],
-    "pageNumber": 0,
-    "pageSize": 10,
-    "totalElements": 2,
-    "totalPages": 1,
-    "isLast": true,
-  };
+  /// Full mock dataset backing paginated track fetching.
+  ///
+  /// Kept intentionally large so `/library/uploads` infinite-scroll can be
+  /// verified in the UI without backend.
+  static final List<Map<String, dynamic>> allTracks = <Map<String, dynamic>>[
+    {
+      "id": 1,
+      "title": "Chill Night Beat",
+      "artist": {"id": 10, "username": "karim"},
+      "trackUrl":
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      "coverUrl": "https://picsum.photos/200/300",
+      "waveformUrl":
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      "genre": "Lo-fi",
+      "tags": ["chill", "night"],
+      "state": "FINISHED",
+      "releaseDate": "2024-01-01",
+      "playCount": 120,
+      "likeCount": 18,
+      "repostCount": 4,
+      "createdAt": "2024-01-01T10:00:00.000Z",
+    },
+    {
+      "id": 2,
+      "title": "Processing Track",
+      "artist": {"id": 11, "username": "tarek"},
+      "trackUrl": "http://example.com/audio2.mp3",
+      "coverUrl": "http://example.com/cover2.jpg",
+      "waveformUrl":
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      "genre": "House",
+      "tags": ["draft"],
+      "state": "PROCESSING",
+      "releaseDate": "2024-01-02",
+      "playCount": 0,
+      "likeCount": 0,
+      "repostCount": 0,
+      "createdAt": "2024-01-02T10:00:00.000Z",
+    },
+    {
+      "id": 3,
+      "title": "Finished (No Waveform)",
+      "artist": {"id": 12, "username": "mona"},
+      "trackUrl":
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      "coverUrl": "https://picsum.photos/200/301",
+      "waveformUrl": null,
+      "genre": "Ambient",
+      "tags": ["ambient"],
+      "state": "FINISHED",
+      "releaseDate": "2024-01-03",
+      "playCount": 5,
+      "likeCount": 1,
+      "repostCount": 0,
+      "createdAt": "2024-01-03T10:00:00.000Z",
+    },
+    for (int id = 4; id <= 55; id++) _generatedTrack(id),
+  ];
+
+  static Map<String, dynamic> _generatedTrack(int id) {
+    final isProcessing = id % 7 == 0;
+    final mp3Index = ((id - 1) % 3) + 1;
+    final trackUrl =
+        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-$mp3Index.mp3";
+
+    return <String, dynamic>{
+      "id": id,
+      "title": isProcessing ? "Processing Track #$id" : "Finished Track #$id",
+      "artist": {"id": 100 + id, "username": "user$id"},
+      "trackUrl": trackUrl,
+      "coverUrl": "https://picsum.photos/200/${300 + id}",
+      "waveformUrl": isProcessing ? trackUrl : trackUrl,
+      "genre": isProcessing ? "Draft" : "Electronic",
+      "tags": isProcessing ? ["draft"] : ["mock", "generated"],
+      "state": isProcessing ? "PROCESSING" : "FINISHED",
+      "releaseDate": "2024-02-01",
+      "playCount": isProcessing ? 0 : (id * 3) % 250,
+      "likeCount": isProcessing ? 0 : (id * 2) % 80,
+      "repostCount": isProcessing ? 0 : id % 10,
+      "createdAt": "2024-02-01T10:00:00.000Z",
+    };
+  }
 
   /// Mock responses for GET /tracks/{trackId}
   static const Map<int, Map<String, dynamic>> trackMetaDataById = {
@@ -56,7 +96,8 @@ class LibraryMockFixtures {
       "trackUrl":
           "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
       "coverUrl": "https://picsum.photos/200/300",
-      "waveformUrl": null,
+      "waveformUrl":
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
       "genre": "Lo-fi",
       "tags": ["chill", "night"],
       "state": "FINISHED",
@@ -72,7 +113,8 @@ class LibraryMockFixtures {
       "artist": {"id": 11, "username": "tarek"},
       "trackUrl": "http://example.com/audio2.mp3",
       "coverUrl": "http://example.com/cover2.jpg",
-      "waveformUrl": null,
+      "waveformUrl":
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
       "genre": "House",
       "tags": ["draft"],
       "state": "PROCESSING",
@@ -81,6 +123,23 @@ class LibraryMockFixtures {
       "likeCount": 0,
       "repostCount": 0,
       "createdAt": "2024-01-02T10:00:00.000Z",
+    },
+    3: {
+      "id": 3,
+      "title": "Finished (No Waveform)",
+      "artist": {"id": 12, "username": "mona"},
+      "trackUrl":
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      "coverUrl": "https://picsum.photos/200/301",
+      "waveformUrl": null,
+      "genre": "Ambient",
+      "tags": ["ambient"],
+      "state": "FINISHED",
+      "releaseDate": "2024-01-03",
+      "playCount": 5,
+      "likeCount": 1,
+      "repostCount": 0,
+      "createdAt": "2024-01-03T10:00:00.000Z",
     },
   };
 
