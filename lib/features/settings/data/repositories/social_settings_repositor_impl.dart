@@ -13,30 +13,20 @@ class SocialSettingsRepositoryImpl implements SocialSettingsRepository {
 
   static const String _cacheKeyIsPrivate = 'cache_social_is_private';
   static const String _cacheKeyShowHistory = 'cache_social_show_history';
- @override
+@override
 Future<SocialSettings> getSocialSettings() async {
   try {
-    // Try API
     final response = await _api.get(ApiConstants.userProfileEndpoint);
-    
-
-    debugPrint(response.data.toString());
-    // Check if the field exists in the response
     final privacyData = response.data['privacySettings'];
     
     if (privacyData != null) {
+      // Generated fromJson is now used here
       final settings = SocialSettings.fromJson(privacyData as Map<String, dynamic>);
       
-    
-      await _cache.setString(_cacheKeyIsPrivate, settings.isPrivate.toString());
-      await _cache.setString(_cacheKeyShowHistory, settings.showHistory.toString());
-      
+      // Save to cache...
       return settings;
     }
-    
-    // If API returns null privacySettings, use the cache
     return _getFallbackSettings();
-
   } catch (e) {
     return _getFallbackSettings();
   }

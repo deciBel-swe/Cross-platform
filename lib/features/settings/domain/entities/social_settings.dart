@@ -1,26 +1,16 @@
-class SocialSettings {
-  SocialSettings({required this.isPrivate, required this.showHistory});
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  factory SocialSettings.fromJson(Map<String, dynamic> json) {
-    return SocialSettings(
-      isPrivate: json['isPrivate'] is bool ? json['isPrivate'] as bool : false,
-      showHistory: json['showHistory'] is bool
-          ? json['showHistory'] as bool
-          : true,
-    );
-  }
-  final bool isPrivate;
-  final bool showHistory;
+part 'social_settings.freezed.dart';
+part 'social_settings.g.dart'; // This is for json_serializable
 
-  Map<String, dynamic> toJson() => {
-    'isPrivate': isPrivate,
-    'showHistory': showHistory,
-  };
+@freezed
+class SocialSettings with _$SocialSettings {
+  const factory SocialSettings({
+    @Default(false) bool isPrivate,
+    @Default(true) bool showHistory,
+  }) = _SocialSettings;
 
-  SocialSettings copyWith({bool? isPrivate, bool? showHistory}) {
-    return SocialSettings(
-      isPrivate: isPrivate ?? this.isPrivate,
-      showHistory: showHistory ?? this.showHistory,
-    );
-  }
+  // The generated fromJson factory
+  factory SocialSettings.fromJson(Map<String, dynamic> json) => 
+      _$SocialSettingsFromJson(json);
 }

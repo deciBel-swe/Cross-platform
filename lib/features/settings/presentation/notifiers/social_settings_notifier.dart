@@ -13,12 +13,21 @@ FutureOr<SocialSettings> build() async {
   return repo.getSocialSettings(); 
 }
 
-  Future<void> toggleProfilePrivacy(bool isPrivate) async {
-    final previous = state.value!;
-    final updated = previous.copyWith(isPrivate: isPrivate);
-    
-    await _applyUpdate(updated, previous);
+  // Inside SocialSettingsNotifier
+Future<void> toggleProfilePrivacy(bool isPrivate) async {
+  final previousState = state.value!;
+  
+  // Freezed gives you a built-in copyWith
+  final newState = previousState.copyWith(isPrivate: isPrivate);
+  
+  state = AsyncData(newState);
+
+  try {
+    await ref.read(socialSettingsRepositoryProvider).updateSocialSettings(newState);
+  } catch (e) {
+    state = AsyncData(previousState); 
   }
+}
 
   Future<void> toggleHistoryVisibility(bool showHistory) async {
     final previous = state.value!;
