@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../domain/entities/public_profile_social_links.dart';
 import '../providers/web_profiles_order_provider.dart';
 import '../utils/web_profile_platform_utils.dart';
-import '../../../library_profile/domain/entities/public_profile_social_links.dart';
 
 class SocialLinksWidget extends ConsumerWidget {
   final PublicProfileSocialLinks socialLinks;
 
-  const SocialLinksWidget({
-    super.key,
-    required this.socialLinks,
-  });
+  const SocialLinksWidget({super.key, required this.socialLinks});
 
   Future<void> _openLink(String url) async {
     final uri = Uri.parse(url);
@@ -32,7 +29,9 @@ class SocialLinksWidget extends ConsumerWidget {
     final fallback = _fallbackOrder();
 
     final orderedPlatforms = <String>[
-      ...savedOrder.where((platform) => socialLinks.hasValueForPlatform(platform)),
+      ...savedOrder.where(
+        (platform) => socialLinks.hasValueForPlatform(platform),
+      ),
       ...fallback.where((platform) => !savedOrder.contains(platform)),
     ];
 
@@ -63,10 +62,9 @@ class SocialLinksWidget extends ConsumerWidget {
         scrollDirection: Axis.horizontal,
         buildDefaultDragHandles: false,
         onReorder: (oldIndex, newIndex) {
-          ref.read(webProfilesOrderProvider.notifier).reorder(
-                oldIndex,
-                newIndex,
-              );
+          ref
+              .read(webProfilesOrderProvider.notifier)
+              .reorder(oldIndex, newIndex);
         },
         itemCount: orderedPlatforms.length,
         itemBuilder: (context, index) {

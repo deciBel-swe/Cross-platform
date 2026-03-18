@@ -84,6 +84,7 @@ extension PublicProfileSocialLinksX on PublicProfileSocialLinks {
     return SocialLinksModel(
       instagram: instagram,
       twitter: twitter,
+      x: twitter,
       youtube: youtube,
       tiktok: tiktok,
       linkedin: linkedin,

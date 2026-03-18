@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class WebProfilesOrderNotifier extends StateNotifier<List<String>> {
-  WebProfilesOrderNotifier() : super(const []);
+class WebProfilesOrderNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() => const [];
 
   void addPlatformIfMissing(String platform) {
     if (state.contains(platform)) return;
@@ -25,6 +26,6 @@ class WebProfilesOrderNotifier extends StateNotifier<List<String>> {
 }
 
 final webProfilesOrderProvider =
-    StateNotifierProvider<WebProfilesOrderNotifier, List<String>>(
-  (ref) => WebProfilesOrderNotifier(),
+    NotifierProvider<WebProfilesOrderNotifier, List<String>>(
+  WebProfilesOrderNotifier.new,
 );

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:decibel/features/library/presentation/widgets/social_links_widget.dart';
 import 'package:decibel/features/library_profile/domain/entities/public_profile_social_links.dart';
+import 'package:decibel/features/library_profile/presentation/widgets/social_links_widget.dart';
 
 void main() {
   Widget buildTestWidget(PublicProfileSocialLinks socialLinks) {

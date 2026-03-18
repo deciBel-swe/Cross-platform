@@ -6,7 +6,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 
 import '../../domain/entities/user_profile.dart';
-import '../providers/web_profiles_provider.dart';
+import '../../../library_profile/presentation/providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
@@ -82,9 +82,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             Text(
               user.bio,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.onPrimary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: AppColors.onPrimary),
             ),
             const SizedBox(height: 8),
             Align(
@@ -98,9 +98,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () {},
                 child: Text(
                   'Show more',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.google,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.google),
                 ),
               ),
             ),
@@ -155,9 +155,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(
               user.name,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.onPrimary,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
             ),
           ],
         ),
@@ -191,16 +191,12 @@ class _UserProfileHeader extends StatelessWidget {
         ),
         Text(
           user.location,
-          style: textTheme.bodyMedium?.copyWith(
-            color: AppColors.onPrimary,
-          ),
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
         ),
         const SizedBox(height: 8),
         Text(
           '${user.followers} followers - ${user.following} following',
-          style: textTheme.bodyMedium?.copyWith(
-            color: AppColors.onPrimary,
-          ),
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
         ),
       ],
     );

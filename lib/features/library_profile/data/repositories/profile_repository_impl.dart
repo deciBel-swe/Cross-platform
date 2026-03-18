@@ -4,7 +4,6 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/public_profile_social_links.dart';
-import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';
 import '../models/user_profile_model.dart';
@@ -16,7 +15,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   final IProfileRemoteDataSource _remoteDataSource;
 
   @override
-  Future<Either<Failure, UserProfile>> updateSocialLinks(
+  Future<Either<Failure, PublicProfileSocialLinks>> updateSocialLinks(
     PublicProfileSocialLinks links,
   ) async {
     try {

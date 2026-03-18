@@ -18,7 +18,7 @@ import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/profile_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
-import '../../features/library/presentation/screens/web_profiles.dart';
+import '../../features/library_profile/presentation/screens/web_profiles.dart';
 import 'main_shell.dart';
 import 'route_paths.dart';
 

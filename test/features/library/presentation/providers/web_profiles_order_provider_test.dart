@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:decibel/features/library/presentation/providers/web_profiles_order_provider.dart';
+import 'package:decibel/features/library_profile/presentation/providers/web_profiles_order_provider.dart';
 
 void main() {
   group('WebProfilesOrderNotifier', () {

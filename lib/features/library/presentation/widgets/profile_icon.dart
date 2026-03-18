@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/profile_image_provider.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../core/router/route_paths.dart';
 
 class ProfileIcon extends ConsumerWidget {
   const ProfileIcon({super.key});
@@ -19,8 +17,8 @@ class ProfileIcon extends ConsumerWidget {
         child: CircleAvatar(
           radius: 64,
           backgroundColor: AppColors.surface,
-          backgroundImage: selectedImage != null 
-              ? FileImage(selectedImage) 
+          backgroundImage: selectedImage != null
+              ? FileImage(selectedImage)
               : null,
           child: selectedImage == null
               ? const Icon(Icons.person, size: 64, color: AppColors.outline)

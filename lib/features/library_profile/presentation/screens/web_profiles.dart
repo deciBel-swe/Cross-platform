@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/entities/public_profile_social_links.dart';
 import '../providers/web_profiles_provider.dart';
 import '../providers/web_profiles_order_provider.dart';
 import '../utils/web_profile_platform_utils.dart';
@@ -13,8 +14,7 @@ class EditProfileLinkScreen extends ConsumerStatefulWidget {
       _EditProfileLinkScreenState();
 }
 
-class _EditProfileLinkScreenState
-    extends ConsumerState<EditProfileLinkScreen> {
+class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
   final TextEditingController _linkController = TextEditingController();
 
   String? _pendingDeleteLink;
@@ -38,68 +38,75 @@ class _EditProfileLinkScreenState
     return socialLinks.nonEmptyPlatforms(includeSupportLink: false);
   }
 
-void _saveLink() {
-  final link = _linkController.text.trim();
-  final notifier = ref.read(webProfilesProvider.notifier);
-  final socialLinks = ref.read(webProfilesProvider);
+  Future<void> _saveLink() async {
+    final link = _linkController.text.trim();
+    final notifier = ref.read(webProfilesProvider.notifier);
+    final socialLinks = ref.read(webProfilesProvider);
 
-  if (link.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please enter a link')),
-    );
-    return;
-  }
+    if (link.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a link')));
+      return;
+    }
 
-  if (!_isValidUrl(link)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please enter a valid URL')),
-    );
-    return;
-  }
+    if (!_isValidUrl(link)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a valid URL')));
+      return;
+    }
 
-  if (notifier.linkAlreadyExists(link)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('This link already exists on your profile'),
-      ),
-    );
-    return;
-  }
+    if (notifier.linkAlreadyExists(link)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This link already exists on your profile'),
+        ),
+      );
+      return;
+    }
 
-  if (notifier.platformAlreadyExists(link)) {
+    if (notifier.platformAlreadyExists(link)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'A link for this platform already exists. Use Edit instead.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final currentLinksCount = socialLinks
+        .nonEmptyPlatforms(includeSupportLink: true)
+        .length;
+
+    if (currentLinksCount >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You can add up to 3 links only')),
+      );
+      return;
+    }
+
+    final synced = await notifier.saveLink(link);
+
+    final platform = notifier.getPlatformKey(link);
+    ref.read(webProfilesOrderProvider.notifier).addPlatformIfMissing(platform);
+
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'A link for this platform already exists. Use Edit instead.',
+          synced
+              ? 'Link saved successfully'
+              : 'Failed to save link. Please try again.',
         ),
       ),
     );
-    return;
+
+    _linkController.clear();
   }
-
-  final currentLinksCount =
-      socialLinks.nonEmptyPlatforms(includeSupportLink: true).length;
-
-  if (currentLinksCount >= 3) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('You can add up to 3 links only'),
-      ),
-    );
-    return;
-  }
-
-  notifier.saveLink(link);
-
-  final platform = notifier.getPlatformKey(link);
-  ref.read(webProfilesOrderProvider.notifier).addPlatformIfMissing(platform);
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Link saved successfully')),
-  );
-
-  _linkController.clear();
-}
 
   Future<void> _showDeleteConfirmationDialog(String link) async {
     setState(() {
@@ -119,16 +126,14 @@ void _saveLink() {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                'Yes',
-                style: TextStyle(color: Colors.red),
-              ),
+              child: const Text('Yes', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
       },
     );
 
+    if (!mounted) return;
     setState(() {
       _pendingDeleteLink = null;
     });
@@ -147,18 +152,21 @@ void _saveLink() {
     }
 
     final platform = notifier.getPlatformKey(link);
-    notifier.deleteLink(link);
+    final synced = await notifier.deleteLink(link);
     ref.read(webProfilesOrderProvider.notifier).removePlatform(platform);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Link deleted successfully')),
+      SnackBar(
+        content: Text(
+          synced
+              ? 'Link deleted successfully'
+              : 'Failed to delete link. Please try again.',
+        ),
+      ),
     );
   }
 
-  Widget _buildLinkRow({
-    required String platform,
-    required String link,
-  }) {
+  Widget _buildLinkRow({required String platform, required String link}) {
     final isDeletePending = _pendingDeleteLink == link;
 
     return _EditableLinkRow(
@@ -187,9 +195,7 @@ void _saveLink() {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Web Profiles'),
-      ),
+      appBar: AppBar(title: const Text('Web Profiles')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
@@ -217,18 +223,12 @@ void _saveLink() {
               if (orderedPlatforms.isNotEmpty) ...[
                 const Text(
                   'Current Links',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ...orderedPlatforms.map((platform) {
                   final link = socialLinks.valueForPlatform(platform)!;
-                  return _buildLinkRow(
-                    platform: platform,
-                    link: link,
-                  );
+                  return _buildLinkRow(platform: platform, link: link);
                 }),
               ],
             ],
@@ -291,21 +291,21 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
     });
   }
 
-  void _saveInlineEdit() {
+  Future<void> _saveInlineEdit() async {
     final newLink = _controller.text.trim();
     final notifier = ref.read(webProfilesProvider.notifier);
 
     if (newLink.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a link')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a link')));
       return;
     }
 
     if (!widget.isValidUrl(newLink)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid URL')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a valid URL')));
       return;
     }
 
@@ -313,9 +313,9 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
       setState(() {
         _isEditing = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No changes were made')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No changes were made')));
       return;
     }
 
@@ -339,14 +339,22 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
       return;
     }
 
-    notifier.editLink(widget.link, newLink);
+    final synced = await notifier.editLink(widget.link, newLink);
 
     setState(() {
       _isEditing = false;
     });
 
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Link updated successfully')),
+      SnackBar(
+        content: Text(
+          synced
+              ? 'Link updated successfully'
+              : 'Failed to update link. Please try again.',
+        ),
+      ),
     );
   }
 
