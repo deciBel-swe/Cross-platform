@@ -11,7 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Dependency injection
-  await configureDependencies();
+  await configureDependencies(environment: 'mock'); // Use mock for testing
 
   runApp(const ProviderScope(child: DecibelApp()));
 }

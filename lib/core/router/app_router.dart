@@ -4,7 +4,7 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../features/library/presentation/screens/track_preview_screen.dart';
 import '../../features/auth/domain/entities/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -26,7 +26,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = GoRouterRefreshStream(ref);
 
   return GoRouter(
-    initialLocation: RoutePaths.splash,
+    // initialLocation: RoutePaths.splash,
+    initialLocation: RoutePaths.trackPreview,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authStateAsync = ref.read(authStateProvider);
@@ -48,14 +49,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         debugPrint(
           '[AppRouter] -> Handling as AuthUnauthenticated. Redirecting to login? \${isAuthRoute ? "No" : "Yes"}',
         );
-        return isAuthRoute ? null : RoutePaths.login;
+        // return isAuthRoute ? null : RoutePaths.login;
+        return null;
       }
 
       if (authState is AuthAuthenticated) {
         debugPrint(
           '[AppRouter] -> Handling as AuthAuthenticated. Redirecting to home? \${isAuthRoute ? "Yes" : "No"}',
         );
-        return isAuthRoute ? RoutePaths.home : null;
+        // return isAuthRoute ? RoutePaths.home : null;
+        return null;
       }
 
       debugPrint(
@@ -63,7 +66,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       );
       // authState is null -> AsyncLoading or AsyncError.
       // Block protected routes until auth is definitively resolved.
-      return isAuthRoute ? null : RoutePaths.splash;
+      //return isAuthRoute ? null : RoutePaths.splash;
+      return null;
     },
     routes: [
       // ---- Auth flow (outside the main shell) ----
@@ -126,6 +130,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: RoutePaths.library,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: LibraryScreen()),
+                routes: [
+                  GoRoute(
+                    path: 'track-preview',
+                    builder: (context, state) => const TrackPreviewScreen(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -150,11 +160,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'edit-web-link',
                     builder: (context, state) => const EditProfileLinkScreen(),
-                ),    
+                  ),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
         ],
       ),
     ],

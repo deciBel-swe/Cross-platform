@@ -84,7 +84,9 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/icon/app_icon.png
+    - assets/icon/
+    - assets/background/
+    - assets/html/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

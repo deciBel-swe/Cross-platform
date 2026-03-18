@@ -1,7 +1,7 @@
-import 'package:decibel/features/library/data/datasources/library_mock_fixtures.dart';
-import 'package:decibel/features/library/data/models/paginated_tracks_model.dart';
-import 'package:decibel/features/library/data/models/track_model.dart';
-import 'package:decibel/features/library/data/models/track_peaks_model.dart';
+import '../models/paginated_tracks_model.dart';
+import '../models/track_model.dart';
+import '../models/track_peaks_model.dart';
+import 'library_mock_fixtures.dart';
 
 class LibraryMockDatasource {
   const LibraryMockDatasource();

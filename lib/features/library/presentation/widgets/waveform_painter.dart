@@ -1,34 +1,71 @@
 import 'package:flutter/material.dart';
 
-/// Custom painter to draw the track waveform.
+/// Paints a mirrored waveform around the horizontal center line.
+/// Played part is orange, unplayed part is light grey.
 class WaveformPainter extends CustomPainter {
+  WaveformPainter({required this.peaks, required this.progress});
+
   final List<double> peaks;
   final double progress;
 
-  WaveformPainter({required this.peaks, required this.progress});
-
   @override
   void paint(Canvas canvas, Size size) {
-    final paintPlayed = Paint()..color = Colors.orange;
-    final paintUnplayed = Paint()..color = Colors.grey;
+    if (peaks.isEmpty) {
+      return;
+    }
 
-    final barWidth = size.width / peaks.length;
+    final playedPaint = Paint()
+      ..color = const Color(0xFFFF7A00)
+      ..style = PaintingStyle.fill;
 
+    final unplayedPaint = Paint()
+      ..color = const Color(0xFFD9D9D9)
+      ..style = PaintingStyle.fill;
+
+    final centerLinePaint = Paint()
+      ..color = Colors.white.withOpacity(0.10)
+      ..strokeWidth = 1;
+
+    final centerY = size.height / 2;
+    final halfAvailableHeight = size.height / 2;
+
+    final barSlotWidth = size.width / peaks.length;
+    final barWidth = barSlotWidth * 0.62;
     final playedBars = (peaks.length * progress).floor();
 
-    for (int i = 0; i < peaks.length; i++) {
-      final barHeight = peaks[i] * size.height;
+    canvas.drawLine(
+      Offset(0, centerY),
+      Offset(size.width, centerY),
+      centerLinePaint,
+    );
 
-      final x = i * barWidth;
-      final y = (size.height - barHeight) / 2;
+    for (int index = 0; index < peaks.length; index++) {
+      final normalizedPeak = peaks[index].clamp(0.0, 1.0);
 
-      final rect = Rect.fromLTWH(x, y, barWidth * 0.8, barHeight);
+      final halfBarHeight = _minBarHeight(
+        normalizedPeak * (halfAvailableHeight - 6),
+      );
+
+      final left = index * barSlotWidth + (barSlotWidth - barWidth) / 2;
+
+      final rect = Rect.fromLTWH(
+        left,
+        centerY - halfBarHeight,
+        barWidth,
+        halfBarHeight * 2,
+      );
+
+      final radius = Radius.circular(barWidth);
 
       canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(2)),
-        i < playedBars ? paintPlayed : paintUnplayed,
+        RRect.fromRectAndRadius(rect, radius),
+        index < playedBars ? playedPaint : unplayedPaint,
       );
     }
+  }
+
+  double _minBarHeight(double value) {
+    return value < 3 ? 3 : value;
   }
 
   @override

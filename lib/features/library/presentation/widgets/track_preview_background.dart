@@ -1,10 +1,18 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 /// Background image layer for the track preview screen.
+/// Supports optional blur on the background image only.
 class TrackPreviewBackground extends StatelessWidget {
-  const TrackPreviewBackground({super.key, this.imageUrl});
+  const TrackPreviewBackground({
+    super.key,
+    this.imageUrl,
+    this.isBlurred = false,
+  });
 
   final String? imageUrl;
+  final bool isBlurred;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +31,15 @@ class TrackPreviewBackground extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   Image.network(imageUrl!, fit: BoxFit.cover),
+
+                  if (isBlurred)
+                    Positioned.fill(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Container(color: Colors.black.withOpacity(0.18)),
+                      ),
+                    ),
+
                   const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(

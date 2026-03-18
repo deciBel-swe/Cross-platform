@@ -1,8 +1,8 @@
-import 'package:decibel/features/library/domain/entities/track.dart';
-import 'package:decibel/features/library/domain/entities/track_peaks.dart';
-import 'package:decibel/features/library/domain/entities/track_status.dart';
-import 'package:decibel/features/library/presentation/providers/track_preview_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/entities/track.dart';
+import '../../domain/entities/track_peaks.dart';
+import '../../domain/entities/track_status.dart';
+import '../providers/track_preview_provider.dart';
 
 class TrackPreviewNotifier
     extends AsyncNotifier<({Track track, TrackPeaks? trackPeaks})> {
