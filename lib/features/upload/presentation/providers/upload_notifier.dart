@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
+import '../../../../core/services/waveform_extraction_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 import '../../domain/repositories/i_upload_repository.dart';
@@ -183,7 +185,18 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         return;
       }
 
-      final metadata = state.value!.copyWith(audioFile: file);
+      List<double> waveFormData = [];
+      try {
+        final waveformService = ref.read(waveformExtractionServiceProvider);
+        waveFormData = await waveformService.extractWaveform(file.path);
+      } catch (e) {
+        waveFormData = [];
+      }
+
+      final metadata = state.value!.copyWith(
+        audioFile: file,
+        waveFormData: waveFormData,
+      );
       state = AsyncData(metadata);
     }
   }
