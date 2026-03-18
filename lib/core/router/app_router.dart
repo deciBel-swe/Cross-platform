@@ -19,7 +19,7 @@ import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
 import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
-import '../../features/settings/presentation/screens/social_settings.dart';
+import '../../features/settings/presentation/screens/social_settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/upload/presentation/screens/upload_screen.dart';
 import 'go_router_refresh_stream.dart';
@@ -31,45 +31,44 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: RoutePaths.home,
-    // refreshListenable: refreshNotifier,
-    // redirect: (context, state) {
-    //   final authStateAsync = ref.read(authStateProvider);
+    refreshListenable: refreshNotifier,
+    redirect: (context, state) {
+      final authStateAsync = ref.read(authStateProvider);
 
-    //   debugPrint(
-    //     '[AppRouter] redirect run! matchedLocation: \${state.matchedLocation}',
-    //   );
-    //   debugPrint('[AppRouter] authStateAsync: \$authStateAsync');
+      debugPrint(
+        '[AppRouter] redirect run! matchedLocation: \${state.matchedLocation}',
+      );
+      debugPrint('[AppRouter] authStateAsync: \$authStateAsync');
 
-    //   final isAuthRoute =
-    //       state.matchedLocation == RoutePaths.login ||
-    //       state.matchedLocation == RoutePaths.register ||
-    //       state.matchedLocation == RoutePaths.splash;
+      final isAuthRoute =
+          state.matchedLocation == RoutePaths.login ||
+          state.matchedLocation == RoutePaths.register ||
+          state.matchedLocation == RoutePaths.splash;
 
-    //   // Extract the actual AuthState from the AsyncValue
-    //   final authState = authStateAsync.valueOrNull;
+      // Extract the actual AuthState from the AsyncValue
+      final authState = authStateAsync.valueOrNull;
 
-    //   if (authState is AuthUnauthenticated) {
-    //     debugPrint(
-    //       '[AppRouter] -> Handling as AuthUnauthenticated. Redirecting to login? \${isAuthRoute ? "No" : "Yes"}',
-    //     );
-    //     return isAuthRoute ? null : RoutePaths.login;
-    //   }
+      if (authState is AuthUnauthenticated) {
+        debugPrint(
+          '[AppRouter] -> Handling as AuthUnauthenticated. Redirecting to login? \${isAuthRoute ? "No" : "Yes"}',
+        );
+        return isAuthRoute ? null : RoutePaths.login;
+      }
 
-    //   if (authState is AuthAuthenticated) {
-    //     debugPrint(
-    //       '[AppRouter] -> Handling as AuthAuthenticated. Redirecting to home? \${isAuthRoute ? "Yes" : "No"}',
-    //     );
-    //     return isAuthRoute ? RoutePaths.home : null;
-    //   }
+      if (authState is AuthAuthenticated) {
+        debugPrint(
+          '[AppRouter] -> Handling as AuthAuthenticated. Redirecting to home? \${isAuthRoute ? "Yes" : "No"}',
+        );
+        return isAuthRoute ? RoutePaths.home : null;
+      }
 
-    //   debugPrint(
-    //     '[AppRouter] -> State is Loading or Error. Redirecting to splash? ${isAuthRoute ? "No (already auth route)" : "Yes"}',
-    //   );
-    //   // authState is null -> AsyncLoading or AsyncError.
-    //   // Block protected routes until auth is definitively resolved.
-    //   return isAuthRoute ? null : RoutePaths.splash;
-      // return null;
-    // },
+      debugPrint(
+        '[AppRouter] -> State is Loading or Error. Redirecting to splash? ${isAuthRoute ? "No (already auth route)" : "Yes"}',
+      );
+      // authState is null -> AsyncLoading or AsyncError.
+      // Block protected routes until auth is definitively resolved.
+      return isAuthRoute ? null : RoutePaths.splash;
+    },
     routes: [
       // ---- Auth flow (outside the main shell) ----
       GoRoute(

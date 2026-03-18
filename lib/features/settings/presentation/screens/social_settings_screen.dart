@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../notifiers/social_settings_notifier.dart';
 
@@ -78,13 +79,13 @@ class _SocialToggleTile extends StatelessWidget {
       activeThumbColor: AppColors.primary,
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConstants.fontSizeMedium ),
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 8.0),
         child: Text(
           subtitle,
-          style: const TextStyle(color: AppColors.primary, height: 1.4),
+          style: const TextStyle(color: AppColors.apple, height: 1.4, fontSize: AppConstants.fontSizeSmall ),
         ),
       ),
       value: value,
