@@ -7,7 +7,7 @@ class MediaCollection extends StatelessWidget {
   const MediaCollection({super.key});
   @override
   Widget build(BuildContext context) {
-    final textTheme=Theme.of(context).textTheme;
+    final textTheme = Theme.of(context).textTheme;
     return Column(
       children: [
         Tile(

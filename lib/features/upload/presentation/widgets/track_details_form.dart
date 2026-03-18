@@ -29,6 +29,7 @@ class TrackDetailsForm extends ConsumerWidget {
         TextFormField(
           enabled: !isLoading,
           initialValue: metadata.title,
+          maxLength: 200,
           style: const TextStyle(color: AppColors.onPrimary),
           decoration: const InputDecoration(
             labelText: 'Title *',
@@ -42,7 +43,11 @@ class TrackDetailsForm extends ConsumerWidget {
           ),
           onChanged: notifier.updateTitle,
           // Fulfills the acceptance criteria for inline required error
-          validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return 'Required';
+            if (v.length > 200) return 'Title must be less than 200 characters';
+            return null;
+          },
         ),
         const SizedBox(height: 16),
 
@@ -130,7 +135,7 @@ class TrackDetailsForm extends ConsumerWidget {
         // Description Input
         TextFormField(
           enabled: !isLoading,
-          maxLength: 500,
+          maxLength: 2000,
           maxLines: 4,
           style: const TextStyle(color: AppColors.onPrimary),
           decoration: const InputDecoration(
@@ -144,6 +149,11 @@ class TrackDetailsForm extends ConsumerWidget {
             ),
           ),
           onChanged: notifier.updateDescription,
+          validator: (v) {
+            if (v != null && v.length > 2000)
+              return 'Description must be less than 2000 characters';
+            return null;
+          },
         ),
         const SizedBox(height: 24),
       ],

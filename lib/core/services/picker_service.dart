@@ -33,4 +33,6 @@ class PickerService implements IPickerService {
 }
 
 // Provide it to Riverpod
-final pickerServiceProvider = Provider<IPickerService>((ref) => PickerService());
+final pickerServiceProvider = Provider<IPickerService>(
+  (ref) => PickerService(),
+);

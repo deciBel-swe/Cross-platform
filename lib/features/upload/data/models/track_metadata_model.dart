@@ -20,23 +20,23 @@ class TrackMetadataModel with _$TrackMetadataModel {
   }) = _TrackMetadataModel;
 
   factory TrackMetadataModel.fromJson(Map<String, dynamic> json) =>
-    _$TrackMetadataModelFromJson(json);
+      _$TrackMetadataModelFromJson(json);
 }
 
 extension TrackUploadMetadataX on TrackUploadMetadata {
   TrackMetadataModel toModel() {
-  final dateToUse = releaseDate ?? DateTime.now();
-  final formattedDate = DateFormat('yyyy-MM-dd').format(dateToUse);
+    final dateToUse = releaseDate ?? DateTime.now();
+    final formattedDate = DateFormat('yyyy-MM-dd').format(dateToUse);
 
-   return TrackMetadataModel(
+    return TrackMetadataModel(
       title: title,
       genre: genre,
       isPrivate: isPrivate,
-      
-      description: description.isEmpty? null : description,
+
+      description: description.isEmpty ? null : description,
       releaseDate: formattedDate,
-      tags: tags.isEmpty? null : tags,
+      tags: tags.isEmpty ? null : tags,
       waveFormData: waveFormData,
-  );
+    );
   }
 }

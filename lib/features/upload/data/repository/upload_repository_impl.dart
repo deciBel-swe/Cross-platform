@@ -14,9 +14,11 @@ class UploadRepository implements IUploadRepository {
   final UploadRemoteDatasource _remoteDatasource;
 
   @override
-  Future<Either<Failure, Unit>> uploadTrack(TrackUploadMetadata metadata) async {
+  Future<Either<Failure, Unit>> uploadTrack(
+    TrackUploadMetadata metadata,
+  ) async {
     try {
-      if (metadata.audioFile == null){
+      if (metadata.audioFile == null) {
         return const Left(ServerFailure('Audio file is required'));
       }
 
@@ -26,15 +28,15 @@ class UploadRepository implements IUploadRepository {
         metadata.audioFile!,
         metadata.coverImage,
         model,
-        );
+      );
 
-        return const Right(unit);
-    }
-    on ServerException catch(error){
+      return const Right(unit);
+    } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
-    }
-    catch(error){
-      return const Left(ServerFailure('An unexpected error occurred during file upload'));
+    } catch (error) {
+      return const Left(
+        ServerFailure('An unexpected error occurred during file upload'),
+      );
     }
   }
 }
