@@ -11,8 +11,7 @@ class EditProfileLinkScreen extends ConsumerStatefulWidget {
       _EditProfileLinkScreenState();
 }
 
-class _EditProfileLinkScreenState
-    extends ConsumerState<EditProfileLinkScreen> {
+class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
   final TextEditingController _linkController = TextEditingController();
 
   @override
@@ -25,9 +24,9 @@ class _EditProfileLinkScreenState
     final link = _linkController.text.trim();
 
     if (link.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a link')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a link')));
       return;
     }
 
@@ -38,9 +37,7 @@ class _EditProfileLinkScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Website Link'),
-      ),
+      appBar: AppBar(title: const Text('Add Website Link')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -55,10 +52,7 @@ class _EditProfileLinkScreenState
               keyboardType: TextInputType.url,
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveLink,
-              child: const Text('Save'),
-            ),
+            ElevatedButton(onPressed: _saveLink, child: const Text('Save')),
           ],
         ),
       ),

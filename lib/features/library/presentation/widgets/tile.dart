@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-class Tile extends StatelessWidget {
 
+class Tile extends StatelessWidget {
   const Tile({
     super.key,
     required this.title,
@@ -30,7 +30,7 @@ class Tile extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: AppConstants.fontSizeLarge,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary, 
+                  color: AppColors.textPrimary,
                 ),
               ),
               if (subtitle != null) ...[
@@ -38,7 +38,7 @@ class Tile extends StatelessWidget {
                   subtitle!,
                   style: const TextStyle(
                     fontSize: AppConstants.fontSizeSmall,
-                    color: AppColors.textSecondary, 
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -50,8 +50,8 @@ class Tile extends StatelessWidget {
           height: 32,
           child: FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.surface, 
-              foregroundColor: AppColors.textPrimary, 
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.textPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
               shape: const StadiumBorder(),
             ),

@@ -5,8 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../providers/upload_notifier.dart';
 
 /// A modal bottom sheet that allows users to add and remove tags.
-/// 
-/// Enforces a maximum of 10 tags and uses a text field that listens 
+///
+/// Enforces a maximum of 10 tags and uses a text field that listens
 /// for the "Enter" key (submission) to create new tags.
 class TagsBottomSheet extends ConsumerStatefulWidget {
   const TagsBottomSheet({super.key});
@@ -52,23 +52,31 @@ class _TagsBottomSheetState extends ConsumerState<TagsBottomSheet> {
             children: [
               const Text(
                 'Add Tags',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.onPrimary),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onPrimary,
+                ),
               ),
               Text(
                 '${metadata.tags.length}/10',
-                style: TextStyle(color: isAtLimit ? AppColors.errors : AppColors.textMuted),
+                style: TextStyle(
+                  color: isAtLimit ? AppColors.errors : AppColors.textMuted,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Tag Input Field
           TextField(
             controller: _tagController,
             enabled: !isAtLimit, // Disable input if they hit the 10 limit
             style: const TextStyle(color: AppColors.onPrimary),
             decoration: InputDecoration(
-              hintText: isAtLimit ? 'Maximum tags reached' : 'Type a tag and press Enter',
+              hintText: isAtLimit
+                  ? 'Maximum tags reached'
+                  : 'Type a tag and press Enter',
               hintStyle: const TextStyle(color: AppColors.textHint),
               filled: true,
               fillColor: AppColors.background,
@@ -76,7 +84,10 @@ class _TagsBottomSheetState extends ConsumerState<TagsBottomSheet> {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
             textInputAction: TextInputAction.done,
             onSubmitted: (value) {
@@ -95,15 +106,22 @@ class _TagsBottomSheetState extends ConsumerState<TagsBottomSheet> {
           Wrap(
             spacing: 8.0,
             runSpacing: 4.0,
-            children: metadata.tags.map((tag) => InputChip(
-              label: Text(tag, style: const TextStyle(color: Colors.white)),
-              backgroundColor: AppColors.surfaceVariant,
-              deleteIconColor: AppColors.textMuted,
-              onDeleted: () {
-                // Remove the tag via the Notifier
-                ref.read(uploadNotifierProvider.notifier).removeTag(tag);
-              },
-            )).toList(),
+            children: metadata.tags
+                .map(
+                  (tag) => InputChip(
+                    label: Text(
+                      tag,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: AppColors.surfaceVariant,
+                    deleteIconColor: AppColors.textMuted,
+                    onDeleted: () {
+                      // Remove the tag via the Notifier
+                      ref.read(uploadNotifierProvider.notifier).removeTag(tag);
+                    },
+                  ),
+                )
+                .toList(),
           ),
         ],
       ),

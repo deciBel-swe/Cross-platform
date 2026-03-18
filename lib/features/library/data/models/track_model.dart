@@ -1,10 +1,11 @@
 import 'dart:convert';
 
-import 'package:decibel/features/library/data/models/artist_model.dart';
-import 'package:decibel/features/library/data/models/track_status_model.dart';
-import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../../domain/entities/track.dart';
+import 'artist_model.dart';
+import 'track_status_model.dart';
 
 part 'track_model.freezed.dart';
 part 'track_model.g.dart';

@@ -1,5 +1,6 @@
-import 'package:decibel/features/library/domain/entities/track_peaks.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../../domain/entities/track_peaks.dart';
 
 part 'track_peaks_model.freezed.dart';
 part 'track_peaks_model.g.dart';

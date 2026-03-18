@@ -23,7 +23,7 @@ class WaveformPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final centerLinePaint = Paint()
-      ..color = Colors.white.withOpacity(0.10)
+      ..color = Colors.white.withValues(alpha: 0.10)
       ..strokeWidth = 1;
 
     final centerY = size.height / 2;

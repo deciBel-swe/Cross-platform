@@ -33,10 +33,14 @@ class GenreBottomSheet extends ConsumerWidget {
           const SizedBox(height: 16),
           const Text(
             'Pick genre',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.onPrimary),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.onPrimary,
+            ),
           ),
           const SizedBox(height: 16),
-          
+
           // The list of genres
           Expanded(
             child: ListView.builder(
@@ -49,16 +53,22 @@ class GenreBottomSheet extends ConsumerWidget {
                   title: Text(
                     genre,
                     style: TextStyle(
-                      color: isSelected ? AppColors.primary : AppColors.onPrimary, 
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.onPrimary,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
-                  trailing: isSelected 
-                      ? const Icon(Icons.check, color: AppColors.primary) 
+                  trailing: isSelected
+                      ? const Icon(Icons.check, color: AppColors.primary)
                       : null,
                   onTap: () {
                     // 1. Update the state
-                    ref.read(uploadNotifierProvider.notifier).updateGenre(genre);
+                    ref
+                        .read(uploadNotifierProvider.notifier)
+                        .updateGenre(genre);
                     // 2. Close the bottom sheet
                     context.pop();
                   },

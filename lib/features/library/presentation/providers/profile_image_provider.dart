@@ -9,13 +9,13 @@ final imageRepositoryProvider = Provider<ImageRepository>((ref) {
 
 class ProfileImageNotifier extends Notifier<File?> {
   @override
-  File? build() => null; 
+  File? build() => null;
 
   Future<void> pickImage() async {
     final repository = ref.read(imageRepositoryProvider);
-    
+
     final file = await repository.pickProfileImage();
-    
+
     if (file != null) {
       state = file;
     }

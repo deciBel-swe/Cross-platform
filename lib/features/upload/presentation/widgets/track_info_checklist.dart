@@ -6,22 +6,16 @@ import '../../domain/entities/track_upload_metadata.dart';
 /// A widget that displays a circular progress indicator for the track completion.
 /// Tapping it reveals a bottom sheet with a detailed split-layout breakdown.
 class TrackInfoChecklist extends StatelessWidget {
-
-  const TrackInfoChecklist({
-    super.key,
-    required this.metadata,
-  });
+  const TrackInfoChecklist({super.key, required this.metadata});
   final TrackUploadMetadata metadata;
 
   @override
   Widget build(BuildContext context) {
-    
     final bool hasTitle = metadata.title.trim().isNotEmpty;
     final bool hasArtwork = metadata.coverImage != null;
     final bool hasGenre = metadata.genre.isNotEmpty;
     final bool hasDescription = metadata.description.isNotEmpty;
 
-    
     int completed = 0;
     if (hasTitle) completed++;
     if (hasArtwork) completed++;
@@ -34,12 +28,12 @@ class TrackInfoChecklist extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         _showChecklistDetails(
-          context, 
-          completed, 
-          progress, 
-          hasTitle, 
-          hasArtwork, 
-          hasGenre, 
+          context,
+          completed,
+          progress,
+          hasTitle,
+          hasArtwork,
+          hasGenre,
           hasDescription,
         );
       },
@@ -91,7 +85,11 @@ class TrackInfoChecklist extends StatelessWidget {
                     children: [
                       TextSpan(
                         text: '$completed',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                       const TextSpan(
                         text: '/4',
@@ -101,7 +99,7 @@ class TrackInfoChecklist extends StatelessWidget {
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -111,12 +109,12 @@ class TrackInfoChecklist extends StatelessWidget {
   // The Split-Layout Bottom Sheet
 
   void _showChecklistDetails(
-    BuildContext context, 
+    BuildContext context,
     int completed,
     double progress,
-    bool hasTitle, 
-    bool hasArtwork, 
-    bool hasGenre, 
+    bool hasTitle,
+    bool hasArtwork,
+    bool hasGenre,
     bool hasDescription,
   ) {
     showModalBottomSheet<void>(
@@ -127,7 +125,8 @@ class TrackInfoChecklist extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: const BoxDecoration(
-            color: AppColors.background, // Match the dark backdrop from screenshot
+            color:
+                AppColors.background, // Match the dark backdrop from screenshot
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
@@ -146,7 +145,7 @@ class TrackInfoChecklist extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // Headers
               const Text(
                 'Get everything in place',
@@ -159,10 +158,7 @@ class TrackInfoChecklist extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(
                 'Fans are more likely to play your music when you complete these:',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 32),
 
@@ -192,11 +188,18 @@ class TrackInfoChecklist extends StatelessWidget {
                             children: [
                               TextSpan(
                                 text: '$completed',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 32),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 32,
+                                ),
                               ),
                               const TextSpan(
                                 text: '/4',
-                                style: TextStyle(color: Colors.white54, fontSize: 16),
+                                style: TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 16,
+                                ),
                               ),
                             ],
                           ),
@@ -211,16 +214,22 @@ class TrackInfoChecklist extends StatelessWidget {
                     child: Column(
                       children: [
                         _ChecklistItem(
-                          title: 'Track title', 
-                          isCompleted: hasTitle, 
+                          title: 'Track title',
+                          isCompleted: hasTitle,
                           subtitle: "TIP: Don't include artist names",
                         ),
                         const SizedBox(height: 16),
-                        _ChecklistItem(title: 'Artwork', isCompleted: hasArtwork),
+                        _ChecklistItem(
+                          title: 'Artwork',
+                          isCompleted: hasArtwork,
+                        ),
                         const SizedBox(height: 16),
                         _ChecklistItem(title: 'Genre', isCompleted: hasGenre),
                         const SizedBox(height: 16),
-                        _ChecklistItem(title: 'Description', isCompleted: hasDescription),
+                        _ChecklistItem(
+                          title: 'Description',
+                          isCompleted: hasDescription,
+                        ),
                       ],
                     ),
                   ),
@@ -243,7 +252,7 @@ class TrackInfoChecklist extends StatelessWidget {
                   child: const Text(
                     'Ok, got it',
                     style: TextStyle(
-                      color: Colors.white, 
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -261,10 +270,9 @@ class TrackInfoChecklist extends StatelessWidget {
 
 /// Helper widget to draw each row in the new checklist design
 class _ChecklistItem extends StatelessWidget {
-
   const _ChecklistItem({
-    required this.title, 
-    required this.isCompleted, 
+    required this.title,
+    required this.isCompleted,
     this.subtitle,
   });
   final String title;
@@ -274,7 +282,9 @@ class _ChecklistItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: subtitle != null ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      crossAxisAlignment: subtitle != null
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
       children: [
         // The Custom Icon (White filled checkmark vs outline)
         Icon(
@@ -283,7 +293,7 @@ class _ChecklistItem extends StatelessWidget {
           size: 24,
         ),
         const SizedBox(width: 12),
-        
+
         // The Text Column
         Expanded(
           child: Column(
@@ -306,7 +316,7 @@ class _ChecklistItem extends StatelessWidget {
                     fontSize: 12,
                   ),
                 ),
-              ]
+              ],
             ],
           ),
         ),

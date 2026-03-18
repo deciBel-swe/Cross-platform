@@ -9,9 +9,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: SocialLinksWidget(
-              socialLinks: PublicProfileSocialLinks(),
-            ),
+            body: SocialLinksWidget(socialLinks: PublicProfileSocialLinks()),
           ),
         ),
       );
@@ -22,8 +20,9 @@ void main() {
       expect(find.byTooltip('Website'), findsNothing);
     });
 
-    testWidgets('renders instagram button when instagram exists',
-        (tester) async {
+    testWidgets('renders instagram button when instagram exists', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

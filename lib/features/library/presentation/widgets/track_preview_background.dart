@@ -36,7 +36,9 @@ class TrackPreviewBackground extends StatelessWidget {
                     Positioned.fill(
                       child: BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                        child: Container(color: Colors.black.withOpacity(0.18)),
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.18),
+                        ),
                       ),
                     ),
 

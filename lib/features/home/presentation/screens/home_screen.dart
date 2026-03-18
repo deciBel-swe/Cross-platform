@@ -16,7 +16,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {
               context.push('/home/upload');
             },
-          )
+          ),
         ],
       ),
       body: const Center(child: Text('Home', style: TextStyle(fontSize: 24))),

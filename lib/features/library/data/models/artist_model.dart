@@ -1,5 +1,6 @@
-import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../../domain/entities/artist.dart';
 
 part 'artist_model.freezed.dart';
 part 'artist_model.g.dart';

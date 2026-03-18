@@ -1,5 +1,6 @@
-import 'package:decibel/features/library/domain/entities/track_status.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../../domain/entities/track_status.dart';
 
 @JsonEnum(alwaysCreate: true)
 enum TrackStatusModel {

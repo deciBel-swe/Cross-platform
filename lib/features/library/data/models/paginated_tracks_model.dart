@@ -1,6 +1,6 @@
-import 'package:decibel/features/library/domain/entities/paginated_tracks.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../domain/entities/paginated_tracks.dart';
 import 'track_model.dart';
 
 part 'paginated_tracks_model.freezed.dart';

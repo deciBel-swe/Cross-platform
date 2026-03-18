@@ -26,5 +26,5 @@ class WebProfilesNotifier extends StateNotifier<PublicProfileSocialLinks> {
 
 final webProfilesProvider =
     StateNotifierProvider<WebProfilesNotifier, PublicProfileSocialLinks>(
-  (ref) => WebProfilesNotifier(),
-);
+      (ref) => WebProfilesNotifier(),
+    );

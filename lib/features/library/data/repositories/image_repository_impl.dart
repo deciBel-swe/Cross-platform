@@ -5,7 +5,6 @@ import '../../domain/repositories/image_repository.dart';
 
 @Injectable(as: ImageRepository)
 class ImageRepositoryImpl implements ImageRepository {
-
   ImageRepositoryImpl(this._picker);
   final ImagePicker _picker;
 

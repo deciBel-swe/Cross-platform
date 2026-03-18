@@ -80,7 +80,7 @@ class _CenterProgressLine extends StatelessWidget {
       width: 2,
       height: 18,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.9),
+        color: Colors.black.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12),
       ),
     );
@@ -96,7 +96,7 @@ class _CenterGuideLine extends StatelessWidget {
       child: Container(
         width: 1.4,
         margin: const EdgeInsets.symmetric(vertical: 18),
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
       ),
     );
   }
@@ -115,7 +115,7 @@ class _TimeBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.82),
+        color: Colors.black.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Padding(

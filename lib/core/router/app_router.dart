@@ -4,7 +4,7 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/library/presentation/screens/track_preview_screen.dart';
+
 import '../../features/auth/domain/entities/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -14,6 +14,8 @@ import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/profile_screen.dart';
+import '../../features/library/presentation/screens/track_preview_screen.dart';
+import '../../features/library/presentation/screens/uploads_library_screen.dart';
 import '../../features/library/presentation/screens/web_profiles.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
@@ -122,6 +124,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // 3 – Library
           StatefulShellBranch(
             routes: [
+              GoRoute(
+                path: RoutePaths.uploadLibrary,
+                builder: (context, state) => const UploadsLibraryScreen(),
+              ),
               GoRoute(
                 path: RoutePaths.library,
                 pageBuilder: (context, state) =>

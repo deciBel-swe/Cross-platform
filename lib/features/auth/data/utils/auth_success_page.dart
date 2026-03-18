@@ -16,4 +16,3 @@ Future<String> buildAuthSuccessHtml() async {
 
   return template.replaceAll(_iconPlaceholder, iconDataUrl);
 }
-
