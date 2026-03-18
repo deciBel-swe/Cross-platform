@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -30,6 +28,8 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
 
     return PopScope(
       canPop: true,
+
+      ///make sure to stop the audio when leaving the screen, even if the user uses a system back gesture or button
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) {
           await ref.read(trackAudioProvider.notifier).stop(resetState: false);
@@ -37,6 +37,7 @@ class _TrackPreviewScreenState extends ConsumerState<TrackPreviewScreen> {
       },
       child: Scaffold(
         backgroundColor: const Color(0xFF08131B),
+        // The entire screen is a stack of the background, waveform, and info layers
         body: previewAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stackTrace) => Center(

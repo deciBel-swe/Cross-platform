@@ -73,7 +73,18 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       state = state.copyWith(isPlaying: playerState == PlayerState.playing);
     }, onError: (_) {});
 
-    _completionSubscription = playerController.onCompletion.listen((_) {
+    _completionSubscription = playerController.onCompletion.listen((_) async {
+      Future.delayed(const Duration(milliseconds: 200), () async {
+        if (_isAtTrackEnd()) {
+          await replay();
+        } else {
+          state = state.copyWith(
+            isPlaying: false,
+            position: state.duration,
+            progress: 1,
+          );
+        }
+      });
       if (_isDisposed || _isStopping) {
         return;
       }
@@ -92,25 +103,6 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     required Duration duration,
   }) async {
     if (_isDisposed) return;
-
-    final isSameTrack = _preparedTrackUrl == trackUrl;
-
-    if (_isPrepared && isSameTrack) {
-      if (state.duration == Duration.zero && duration > Duration.zero) {
-        state = state.copyWith(
-          duration: duration,
-          progress: _calculateProgress(
-            position: state.position,
-            duration: duration,
-          ),
-        );
-      }
-      return;
-    }
-
-    if (_isPrepared && !isSameTrack) {
-      await stop();
-    }
 
     if (_isDisposed) return;
 
@@ -264,5 +256,37 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     }
 
     return position.inMilliseconds / duration.inMilliseconds;
+  }
+
+  bool _isAtTrackEnd() {
+    if (state.duration == Duration.zero) {
+      return false;
+    }
+
+    return state.position.inMilliseconds >=
+        (state.duration.inMilliseconds - 250);
+  }
+
+  Future<void> replay() async {
+    if (_isDisposed || !_isPrepared || _preparedTrackUrl == null) return;
+
+    try {
+      await playerController.stopPlayer();
+
+      state = state.copyWith(
+        isPlaying: false,
+        position: Duration.zero,
+        progress: 0,
+      );
+
+      await playerController.preparePlayer(
+        path: _preparedTrackUrl!,
+        shouldExtractWaveform: false,
+      );
+
+      await playerController.startPlayer();
+
+      state = state.copyWith(isPlaying: true);
+    } catch (e) {}
   }
 }
