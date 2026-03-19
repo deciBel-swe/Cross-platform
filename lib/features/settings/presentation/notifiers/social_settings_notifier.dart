@@ -5,49 +5,65 @@ import '../../domain/entities/social_settings.dart';
 import '../providers/social_settings_provider.dart';
 
 class SocialSettingsNotifier extends AsyncNotifier<SocialSettings> {
-  @override
-  @override
-FutureOr<SocialSettings> build() async {
-  final repo = ref.watch(socialSettingsRepositoryProvider);
-  
-  return repo.getSocialSettings(); 
-}
+  Timer? _debounceTimer;
+  SocialSettings? _initialStateBeforeBurst;
 
-  // Inside SocialSettingsNotifier
-Future<void> toggleProfilePrivacy(bool isPrivate) async {
-  final previousState = state.value!;
-  
-  // Freezed gives you a built-in copyWith
-  final newState = previousState.copyWith(isPrivate: isPrivate);
-  
-  state = AsyncData(newState);
+  @override
+  FutureOr<SocialSettings> build() async {
+    ref.onDispose(() => _debounceTimer?.cancel());
 
-  try {
-    await ref.read(socialSettingsRepositoryProvider).updateSocialSettings(newState);
-  } catch (e) {
-    state = AsyncData(previousState); 
+    final repo = ref.watch(socialSettingsRepositoryProvider);
+    return repo.getSocialSettings();
   }
-}
+
+  Future<void> toggleProfilePrivacy(bool isPrivate) async {
+    final previous = state.value!;
+    final updated = previous.copyWith(isPrivate: isPrivate);
+
+    await _applyUpdate(updated);
+  }
 
   Future<void> toggleHistoryVisibility(bool showHistory) async {
     final previous = state.value!;
     final updated = previous.copyWith(showHistory: showHistory);
-    
-    await _applyUpdate(updated, previous);
+
+    await _applyUpdate(updated);
   }
 
-  Future<void> _applyUpdate(SocialSettings next, SocialSettings prev) async {
-    state = AsyncData(next); 
+  Future<void> _applyUpdate(SocialSettings next) async {
+    // 1. Capture the "initial state" before rapid updates start,
+    // so we can rollback to it if the FINAL debounced request fails.
+    _initialStateBeforeBurst ??= state.value;
 
-    try {
-      await ref.read(socialSettingsRepositoryProvider).updateSocialSettings(next);
-    } catch (e) {
-      state = AsyncData(prev); // Rollback on failure
-      rethrow;
-    }
+    // 2. Perform optimistic update
+    state = AsyncData(next);
+
+    // 3. Cancel any pending sync requests
+    _debounceTimer?.cancel();
+
+    // 4. Set a new timer to sync with the backend
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      final burstStart = _initialStateBeforeBurst;
+      _initialStateBeforeBurst = null; // Clear now that we are attempting sync
+
+      try {
+        await ref
+            .read(socialSettingsRepositoryProvider)
+            .updateSocialSettings(next);
+      } catch (e) {
+        // 5. If it fails, rollback to the state from before the burst
+        if (burstStart != null) {
+          state = AsyncData(burstStart);
+        }
+        // Important: we can't easily "rethrow" from inside a Timer callback
+        // to the original toggle caller, but the provider state itself
+        // will now reflect the rollback.
+      }
+    });
   }
 }
 
-final socialSettingsProvider = AsyncNotifierProvider<SocialSettingsNotifier, SocialSettings>(
-  SocialSettingsNotifier.new,
-);
+final socialSettingsProvider =
+    AsyncNotifierProvider<SocialSettingsNotifier, SocialSettings>(
+      SocialSettingsNotifier.new,
+    );

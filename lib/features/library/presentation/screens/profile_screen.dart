@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
-import '../providers/web_profiles_provider.dart';
+import '../../../library_profile/presentation/providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
@@ -31,7 +33,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     bio:
         'Music lover and audio enthusiast. Sharing my favorite tracks and playlists.',
   );
-  // TODO: Replace with ref.watch() using Riverpod
 
   @override
   void initState() {
@@ -65,7 +66,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-
             GestureDetector(
               onTap: () {
                 context.push(RoutePaths.editWebLink);
@@ -73,9 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: const ProfileIcon(),
             ),
             const SizedBox(height: 14),
-
             _UserProfileHeader(user: user),
-
             const SizedBox(height: 16),
             Consumer(
               builder: (context, ref, child) {
@@ -83,8 +81,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return ActionButtons(socialLinks: socialLinks);
               },
             ),
-
-            // Dynamic Bio
             Text(
               user.bio,
               style: Theme.of(
@@ -92,7 +88,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ).textTheme.bodyLarge?.copyWith(color: AppColors.onPrimary),
             ),
             const SizedBox(height: 8),
-
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
@@ -111,12 +106,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
             Tile(
               title: "Pinned to Spotlight",
               subtitle: "Pin items to your spotlight",
               buttonText: "Edit",
-              onButtonPressed: () => {/* TODO: Handle edit spotlight action */},
+              onButtonPressed: () {},
             ),
             const SizedBox(height: 20),
             const MediaCollection(),
@@ -134,7 +128,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       leadingWidth: 38,
       leading: Button(
         icon: Icons.arrow_back_rounded,
-        onPressed: () => context.pop(),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(RoutePaths.library);
+          }
+        },
       ),
       centerTitle: true,
       title: AnimatedOpacity(

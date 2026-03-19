@@ -79,13 +79,20 @@ class _SocialToggleTile extends StatelessWidget {
       activeThumbColor: AppColors.primary,
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppConstants.fontSizeMedium ),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: AppConstants.fontSizeMedium,
+        ),
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 8.0),
         child: Text(
           subtitle,
-          style: const TextStyle(color: AppColors.apple, height: 1.4, fontSize: AppConstants.fontSizeSmall ),
+          style: const TextStyle(
+            color: AppColors.apple,
+            height: 1.4,
+            fontSize: AppConstants.fontSizeSmall,
+          ),
         ),
       ),
       value: value,

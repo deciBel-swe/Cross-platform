@@ -11,6 +11,6 @@ class SocialSettings with _$SocialSettings {
   }) = _SocialSettings;
 
   // The generated fromJson factory
-  factory SocialSettings.fromJson(Map<String, dynamic> json) => 
+  factory SocialSettings.fromJson(Map<String, dynamic> json) =>
       _$SocialSettingsFromJson(json);
 }
