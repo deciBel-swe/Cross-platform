@@ -23,7 +23,7 @@ class LibraryRemoteDatasource {
   }) async {
     final response = await _dioClient.get<Map<String, dynamic>>(
       '/api/users/$userId/tracks',
-      queryParams: <String, dynamic>{'page': page, 'size': size},
+      queryParams: <String, Object?>{'page': page, 'size': size},
     );
 
     final data = response.data;
@@ -48,8 +48,8 @@ class LibraryRemoteDatasource {
   }
 
   Future<TrackPeaksModel> fetchTrackPeaks(int id) async {
-    final response = await _dioClient.get<Map<String, dynamic>>(
-      '/api/tracks/$id/peaks',
+    final response = await _dioClient.get<Object?>(
+      '/api/tracks/$id/waveform-url',
     );
 
     final data = response.data;
@@ -57,6 +57,30 @@ class LibraryRemoteDatasource {
       throw Exception('Empty response');
     }
 
-    return TrackPeaksModel.fromJson(data);
+    final waveformUrl = _extractWaveformUrl(data);
+    if (waveformUrl == null || waveformUrl.trim().isEmpty) {
+      throw Exception('Empty waveformUrl');
+    }
+
+    final peaksResponse = await _dioClient.get<Object?>(waveformUrl);
+    final peaksData = peaksResponse.data;
+    if (peaksData == null) {
+      throw Exception('Empty waveform payload');
+    }
+
+    if (peaksData is! Map<String, dynamic>) {
+      throw Exception('Invalid waveform payload');
+    }
+
+    return TrackPeaksModel.fromJson(peaksData);
+  }
+
+  String? _extractWaveformUrl(Object? payload) {
+    if (payload is Map<String, dynamic>) {
+      final url = payload['waveformUrl'];
+      if (url is String && url.trim().isNotEmpty) return url;
+    }
+
+    return null;
   }
 }

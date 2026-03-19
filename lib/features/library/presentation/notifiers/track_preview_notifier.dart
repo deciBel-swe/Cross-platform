@@ -20,7 +20,7 @@ class TrackPreviewNotifier
       (value) => value,
     );
 
-    if (track.state != TrackStatus.finished || track.waveformUrl == null) {
+    if (track.state != TrackStatus.finished) {
       return (track: track, trackPeaks: null);
     }
 
