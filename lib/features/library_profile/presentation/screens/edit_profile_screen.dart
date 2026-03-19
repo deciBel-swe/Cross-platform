@@ -144,6 +144,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             children: [
               _buildTextFormField(
                 label: 'Bio',
+                
                 controller: _bioController,
                 maxLines: 3,
                 maxLength: 160,
@@ -247,10 +248,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       maxLines: maxLines,
       maxLength: maxLength,
       validator: validator,
-      style: const TextStyle(color: AppColors.onPrimary),
-      decoration: InputDecoration(
+      style: const TextStyle(color: AppColors.onPrimary),  
+          decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: AppColors.surface),
+        labelStyle: const TextStyle(color: AppColors.textSecondary),
         counterStyle: const TextStyle(color: AppColors.surface),
         errorStyle: const TextStyle(color: Colors.redAccent),
         enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.surface)),
