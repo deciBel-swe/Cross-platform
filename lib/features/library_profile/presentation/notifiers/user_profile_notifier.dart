@@ -4,7 +4,7 @@ import '../../../../core/di/injection.dart'; // Adjust to where your getIt insta
 import '../../domain/entities/public_profile_social_links.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
-import 'web_profiles_provider.dart';
+import '../providers/web_profiles_provider.dart';
 
 class UserProfileNotifier extends AsyncNotifier<UserProfile> {
   @override
@@ -13,9 +13,13 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile> {
     return _fetchProfile();
   }
 
+  void updateState(UserProfile newUser) {
+    state = AsyncData(newUser);
+  }
+
   Future<UserProfile> _fetchProfile() async {
     final repository = getIt<ProfileRepository>();
-    
+
     final result = await repository.getUserProfile();
 
     return result.fold(
@@ -23,16 +27,18 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile> {
         throw Exception(failure.message);
       },
       (profile) {
-        ref.read(webProfilesProvider.notifier).setInitialLinks(
-        profile.socialLinks ?? const PublicProfileSocialLinks(),
-      );
+        ref
+            .read(webProfilesProvider.notifier)
+            .setInitialLinks(
+              profile.socialLinks ?? const PublicProfileSocialLinks(),
+            );
         return profile;
       },
     );
   }
-
 }
 
-final userProfileProvider = AsyncNotifierProvider<UserProfileNotifier, UserProfile>(
-  () => UserProfileNotifier(),
-);
+final userProfileProvider =
+    AsyncNotifierProvider<UserProfileNotifier, UserProfile>(
+      () => UserProfileNotifier(),
+    );
