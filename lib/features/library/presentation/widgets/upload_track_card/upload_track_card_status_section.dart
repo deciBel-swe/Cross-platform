@@ -4,13 +4,8 @@ import '../../../domain/entities/track_status.dart';
 import 'upload_track_card_status_badge.dart';
 
 class UploadTrackCardStatusSection extends StatelessWidget {
-  const UploadTrackCardStatusSection({
-    super.key,
-    required this.trackId,
-    required this.state,
-  });
+  const UploadTrackCardStatusSection({super.key, required this.state});
 
-  final int trackId;
   final TrackStatus state;
 
   @override

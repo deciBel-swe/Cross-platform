@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_status.dart';
 import 'track_repository_provider.dart';
@@ -12,13 +14,20 @@ final uploadsProvider =
     );
 
 class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
-  static List<Track>? _memoryCache;
+  static final Map<
+    int,
+    ({List<Track> tracks, int currentPage, bool isLastPage})
+  >
+  _memoryCacheByUser = {};
+
+  int? _activeUserId;
+
+  bool _isDisposed = false;
 
   Timer? _processingRefreshTimer;
   bool _isRefreshingProcessing = false;
 
   static const int _pageSize = 20;
-  static const int _userId = 1;
 
   int _currentPage = 0;
   bool _isLastPage = false;
@@ -27,25 +36,62 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   @override
   Future<List<Track>> build() async {
     ref.onDispose(() {
+      _isDisposed = true;
       _processingRefreshTimer?.cancel();
       _processingRefreshTimer = null;
     });
 
-    final cached = _memoryCache;
-    if (cached != null && cached.isNotEmpty) {
-      _syncProcessingPolling(cached);
-      // Show stale data immediately and refresh in background.
-      Future<void>(() => refreshAll());
-      return cached;
+    final userId = _resolveCurrentUserId();
+    _activeUserId = userId;
+
+    if (userId == null) {
+      _currentPage = 0;
+      _isLastPage = true;
+      _syncProcessingPolling(const <Track>[]);
+      return const <Track>[];
+    }
+
+    final cached = _memoryCacheByUser[userId];
+    if (cached != null && cached.tracks.isNotEmpty) {
+      _currentPage = cached.currentPage;
+      _isLastPage = cached.isLastPage;
+
+      _syncProcessingPolling(cached.tracks);
+      Future<void>(() async {
+        if (_isDisposed) return;
+        await refreshAll();
+      });
+      return cached.tracks;
     }
 
     return _fetchFirstPage();
   }
 
+  int? _resolveCurrentUserId() {
+    final authAsync = ref.watch(authStateProvider);
+
+    return authAsync.maybeWhen(
+      data: (state) {
+        if (state is AuthAuthenticated) {
+          return state.user.id;
+        }
+        return null;
+      },
+      orElse: () => null,
+    );
+  }
+
   Future<List<Track>> _fetchFirstPage() async {
+    final userId = _activeUserId;
+    if (userId == null) {
+      _currentPage = 0;
+      _isLastPage = true;
+      return const <Track>[];
+    }
+
     final repo = ref.read(trackRepositoryProvider);
     final result = await repo.fetchTracks(
-      userId: _userId,
+      userId: userId,
       page: 0,
       size: _pageSize,
     );
@@ -57,7 +103,11 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
     _currentPage = paginated.pageNumber;
     _isLastPage = paginated.isLast;
-    _memoryCache = paginated.content;
+    _memoryCacheByUser[userId] = (
+      tracks: paginated.content,
+      currentPage: paginated.pageNumber,
+      isLastPage: paginated.isLast,
+    );
 
     _syncProcessingPolling(paginated.content);
 
@@ -65,8 +115,11 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   }
 
   Future<void> refreshAll() async {
+    if (_isDisposed) return;
     state = const AsyncLoading<List<Track>>().copyWithPrevious(state);
-    state = await AsyncValue.guard(() => _fetchFirstPage());
+    final nextState = await AsyncValue.guard(() => _fetchFirstPage());
+    if (_isDisposed) return;
+    state = nextState;
 
     final tracks = state.valueOrNull;
     if (tracks != null) {
@@ -75,11 +128,20 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   }
 
   Future<void> loadNextPage() async {
+    if (_isDisposed) return;
     if (_isLastPage || _isLoadingMore) {
       return;
     }
 
-    final currentTracks = state.valueOrNull ?? _memoryCache ?? const <Track>[];
+    final userId = _activeUserId;
+    if (userId == null) {
+      return;
+    }
+
+    final currentTracks =
+        state.valueOrNull ??
+        _memoryCacheByUser[userId]?.tracks ??
+        const <Track>[];
     if (currentTracks.isEmpty) {
       return;
     }
@@ -89,10 +151,12 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       final repo = ref.read(trackRepositoryProvider);
       final nextPage = _currentPage + 1;
       final result = await repo.fetchTracks(
-        userId: _userId,
+        userId: userId,
         page: nextPage,
         size: _pageSize,
       );
+
+      if (_isDisposed) return;
 
       final paginated = result.fold(
         (failure) => throw Exception(failure.message),
@@ -103,7 +167,12 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       _isLastPage = paginated.isLast;
 
       final updated = <Track>[...currentTracks, ...paginated.content];
-      _memoryCache = updated;
+      _memoryCacheByUser[userId] = (
+        tracks: updated,
+        currentPage: paginated.pageNumber,
+        isLastPage: paginated.isLast,
+      );
+      if (_isDisposed) return;
       state = AsyncData(updated);
 
       _syncProcessingPolling(updated);
@@ -115,9 +184,13 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   }
 
   Future<void> refreshTrack(int trackId) async {
+    if (_isDisposed) return;
     final repo = ref.read(trackRepositoryProvider);
     final result = await repo.fetchTrackById(trackId);
+
+    if (_isDisposed) return;
     result.fold((l) => null, (track) {
+      if (_isDisposed) return;
       final currentTracks = state.valueOrNull ?? [];
       if (currentTracks.isEmpty) return; // Don't update if list not loaded
 
@@ -125,9 +198,18 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
         for (final t in currentTracks)
           if (t.id == trackId) track else t,
       ];
-      // Only assign state if not disposed
+      if (_isDisposed) return;
       state = AsyncData(updated);
-      _memoryCache = updated;
+
+      final userId = _activeUserId;
+      if (userId != null) {
+        final cached = _memoryCacheByUser[userId];
+        _memoryCacheByUser[userId] = (
+          tracks: updated,
+          currentPage: cached?.currentPage ?? _currentPage,
+          isLastPage: cached?.isLastPage ?? _isLastPage,
+        );
+      }
 
       _syncProcessingPolling(updated);
     });
@@ -151,11 +233,16 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   }
 
   Future<void> _refreshProcessingTracks() async {
+    if (_isDisposed) return;
     if (_isRefreshingProcessing) {
       return;
     }
 
-    final tracks = state.valueOrNull ?? _memoryCache ?? const <Track>[];
+    final userId = _activeUserId;
+    final tracks =
+        state.valueOrNull ??
+        (userId == null ? null : _memoryCacheByUser[userId]?.tracks) ??
+        const <Track>[];
     if (tracks.isEmpty) {
       return;
     }
@@ -174,6 +261,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     try {
       for (final id in processingIds) {
         await refreshTrack(id);
+        if (_isDisposed) return;
       }
     } finally {
       _isRefreshingProcessing = false;

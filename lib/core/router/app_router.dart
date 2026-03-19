@@ -134,8 +134,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     const NoTransitionPage(child: LibraryScreen()),
                 routes: [
                   GoRoute(
-                    path: 'track-preview',
-                    builder: (context, state) => const TrackPreviewScreen(),
+                    //added the trackId as a path parameter to the track preview route, so we can in te next phases use deep links
+                    path: 'track-preview/:trackId',
+                    redirect: (context, state) {
+                      final raw = state.pathParameters['trackId'];
+                      final parsed = int.tryParse(raw ?? '');
+                      if (parsed == null) {
+                        return RoutePaths.library;
+                      }
+                      return null;
+                    },
+                    builder: (context, state) {
+                      final trackId = int.parse(
+                        state.pathParameters['trackId']!,
+                      );
+                      return TrackPreviewScreen(trackId: trackId);
+                    },
                   ),
                 ],
               ),

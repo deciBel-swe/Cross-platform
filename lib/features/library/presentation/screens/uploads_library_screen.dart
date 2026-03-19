@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
-import '../providers/track_preview_provider.dart';
 import '../providers/uploads_provider.dart';
 import '../providers/uploads_scroll_controller_provider.dart';
 import '../widgets/upload_track_card.dart';
@@ -20,6 +19,8 @@ class UploadsLibraryScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Your Uploads')),
       body: uploadsAsync.when(
+        // UX fix: keeps list visible during refresh/loading.
+        skipLoadingOnRefresh: true,
         data: (tracks) {
           if (tracks.isEmpty) {
             return Center(
@@ -56,9 +57,7 @@ class UploadsLibraryScreen extends ConsumerWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(8),
                     onTap: () {
-                      ref.read(selectedTrackIdProvider.notifier).state =
-                          track.id;
-                      context.push(RoutePaths.trackPreview);
+                      context.push(RoutePaths.trackPreview(track.id));
                     },
                     child: UploadTrackCard(
                       key: ValueKey(track.id),

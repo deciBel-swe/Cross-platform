@@ -6,18 +6,14 @@ import '../../domain/entities/track_status.dart';
 import '../providers/track_preview_provider.dart';
 import '../providers/track_repository_provider.dart';
 
-class TrackPreviewNotifier extends AsyncNotifier<TrackPreviewData> {
+// This notifier fetches both the track details and its peaks (if available) for a given track ID.
+class TrackPreviewNotifier
+    extends AutoDisposeFamilyAsyncNotifier<TrackPreviewData, int> {
   @override
-  Future<TrackPreviewData> build() async {
-    final selectedTrackId = ref.watch(selectedTrackIdProvider);
-
-    if (selectedTrackId == null) {
-      throw Exception('No track selected');
-    }
-
+  Future<TrackPreviewData> build(int trackId) async {
     final repository = ref.read(trackRepositoryProvider);
 
-    final trackResult = await repository.fetchTrackById(selectedTrackId);
+    final trackResult = await repository.fetchTrackById(trackId);
 
     final track = trackResult.fold<Track>(
       (failure) => throw Exception(failure.message),

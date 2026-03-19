@@ -6,9 +6,7 @@ import '../notifiers/track_preview_notifier.dart';
 
 typedef TrackPreviewData = ({Track track, TrackPeaks? trackPeaks});
 
-final selectedTrackIdProvider = StateProvider<int?>((ref) => null);
-
-final trackPreviewProvider =
-    AsyncNotifierProvider<TrackPreviewNotifier, TrackPreviewData>(
+final trackPreviewProvider = AsyncNotifierProvider.autoDispose
+    .family<TrackPreviewNotifier, TrackPreviewData, int>(
       TrackPreviewNotifier.new,
     );

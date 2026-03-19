@@ -10,7 +10,7 @@ import 'upload_track_card/upload_track_card_status_section.dart';
 
 class UploadTrackCard extends ConsumerWidget {
   const UploadTrackCard({super.key, required this.track});
-
+  //remove uncessary trackId parameter, as track object already contains the id and other necessary info
   final Track track;
 
   @override
@@ -29,7 +29,7 @@ class UploadTrackCard extends ConsumerWidget {
             trailing: canPlay ? UploadTrackCardPlayButton(track: track) : null,
           ),
           const SizedBox(height: 10),
-          UploadTrackCardStatusSection(trackId: track.id, state: track.state),
+          UploadTrackCardStatusSection(state: track.state),
         ],
       ),
     );

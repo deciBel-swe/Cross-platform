@@ -11,14 +11,16 @@ import '../widgets/track_preview_top_bar.dart';
 import '../widgets/track_preview_waveform_section.dart';
 
 class TrackPreviewScreen extends ConsumerWidget {
-  const TrackPreviewScreen({super.key});
+  const TrackPreviewScreen({super.key, required this.trackId});
+
+  final int trackId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Side effects (audio initialization) live in providers.
-    ref.watch(trackPreviewAutoAudioInitProvider);
+    ref.watch(trackPreviewAutoAudioInitProvider(trackId));
 
-    final previewAsync = ref.watch(trackPreviewProvider);
+    final previewAsync = ref.watch(trackPreviewProvider(trackId));
     final audioState = ref.watch(trackAudioProvider);
     final audioNotifier = ref.read(trackAudioProvider.notifier);
     final playbackUi = ref.watch(trackPreviewPlaybackUiStateProvider);
@@ -74,7 +76,7 @@ class TrackPreviewScreen extends ConsumerWidget {
             );
           }
 
-          final peaks = ref.watch(trackPreviewNormalizedPeaksProvider);
+          final peaks = ref.watch(trackPreviewNormalizedPeaksProvider(trackId));
 
           return TrackPreviewPlaybackOverlay(
             showPlayIcon: playbackUi.showPlayIcon,

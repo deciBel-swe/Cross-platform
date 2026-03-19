@@ -65,16 +65,8 @@ class LibraryMockDatasource {
     final data = LibraryMockFixtures.trackPeaksById[id];
 
     if (data == null) {
-      final template = LibraryMockFixtures.trackPeaksById[1];
-      if (template == null) {
-        throw Exception('Track peaks not found');
-      }
-
-      return TrackPeaksModel.fromJson(<String, dynamic>{
-        'trackId': id,
-        'duration': template['duration'],
-        'peaks': template['peaks'],
-      });
+      // The presentation layer already handles this by showing "Waveform is not ready yet".
+      throw Exception('Track peaks not found');
     }
 
     return TrackPeaksModel.fromJson(data);
