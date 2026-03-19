@@ -48,6 +48,7 @@ dependencies:
 
   # ---------- Waveform Visualization ----------
   audio_waveforms: ^1.2.0
+  just_audio_windows: ^0.2.2
 
   # ---------- Media & File Selection ----------
   image_picker: ^1.1.2
@@ -59,7 +60,7 @@ dependencies:
   window_manager: ^0.5.1
   responsive_framework: ^1.5.1
   device_info_plus: ^12.3.0
-
+  mime: ^2.0.0
 
   # ---------- Social Icons ----------
   font_awesome_flutter: ^10.7.0
