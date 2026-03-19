@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../upload/presentation/providers/upload_notifier.dart';
 import '../notifiers/profile_edit_notifier.dart';
 import '../notifiers/user_profile_notifier.dart';
+
+// Assuming you put your genreListProvider in a file like this:
+// import '../providers/genre_list_provider.dart'; 
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -12,21 +16,26 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
-  // 1. Add a form key to trigger validations
   final _formKey = GlobalKey<FormState>();
   
   late TextEditingController _bioController;
   late TextEditingController _cityController;
   late TextEditingController _countryController;
+  
+  // 1. Add local state to track the user's genre selections
+  late List<String> _selectedGenres;
 
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with current data from the provider
     final user = ref.read(userProfileProvider).value;
+    
     _bioController = TextEditingController(text: user?.profileDetails.bio);
     _cityController = TextEditingController(text: user?.profileDetails.city);
     _countryController = TextEditingController(text: user?.profileDetails.country);
+    
+    // 2. Initialize the selected genres with a mutable copy of the user's current data
+    _selectedGenres = List<String>.from(user?.profileDetails.favoriteGenres ?? []);
   }
 
   @override
@@ -37,23 +46,27 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
-  // 2. Optimization: Check if data actually changed before making an API call
   bool _hasChanges() {
     final user = ref.read(userProfileProvider).value;
     final originalBio = user?.profileDetails.bio ?? '';
     final originalCity = user?.profileDetails.city ?? '';
     final originalCountry = user?.profileDetails.country ?? '';
+    final originalGenres = user?.profileDetails.favoriteGenres ?? [];
 
-    // Fixed: Use || (OR) instead of && (AND)
-    return _bioController.text.trim() != originalBio ||
-           _cityController.text.trim() != originalCity ||
-           _countryController.text.trim() != originalCountry;
+    final textChanged = _bioController.text.trim() != originalBio ||
+                        _cityController.text.trim() != originalCity ||
+                        _countryController.text.trim() != originalCountry;
+
+    // 3. Compare the new genre list against the original list
+    final genresChanged = _selectedGenres.length != originalGenres.length ||
+                          !_selectedGenres.every((g) => originalGenres.contains(g));
+
+    return textChanged || genresChanged;
   }
+
   Future<void> _saveProfile() async {
-    // 1. Trigger Validations
     if (!_formKey.currentState!.validate()) return;
 
-    // 2. Check if anything actually changed
     if (!_hasChanges()) {
       Navigator.pop(context);
       return;
@@ -63,32 +76,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           bio: _bioController.text.trim(),
           city: _cityController.text.trim(),
           country: _countryController.text.trim(),
-          genres: ref.read(userProfileProvider).value?.profileDetails.favoriteGenres ?? [],
+          // 4. Pass the local state list to the save method
+          genres: _selectedGenres, 
         );
 
-    // Always check if the widget is still on screen after an 'await'
-    if (!mounted) return; 
+    if (!mounted) return;
 
     if (success) {
-      // Success State
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully!')),
       );
       Navigator.pop(context);
     } else {
-      // Error State
-      // Grab the exact error message we saved in the AsyncError state of the Notifier
       final errorState = ref.read(profileEditProvider).error;
-      final errorMessage = errorState?.toString() ?? 'Failed to update profile. Please try again.';
+      final errorMessage = errorState?.toString() ?? 'Failed to update profile.';
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            // Strip out "Exception: " if it's there for a cleaner UI
             errorMessage.replaceAll('Exception: ', ''),
             style: const TextStyle(color: Colors.white),
           ),
-          backgroundColor: Colors.redAccent, // Makes errors visually distinct
+          backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -98,6 +107,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final editState = ref.watch(profileEditProvider);
+    // 5. Watch the available genres from your provider
+    final availableGenres = ref.watch(genreListProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -108,7 +119,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           if (editState is AsyncLoading)
             const Center(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
                 child: SizedBox(
                   width: 20,
                   height: 20,
@@ -123,13 +134,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
         ],
       ),
-      // 4. Wrap your form elements in the Form widget
       body: Form(
         key: _formKey,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // Align text nicely to the left
             children: [
               _buildTextFormField(
                 label: 'Bio',
@@ -137,11 +148,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 maxLines: 3,
                 maxLength: 160,
                 validator: (value) {
-                  // STRICT CHECK: Rejects completely empty fields AND spaces-only fields
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Bio cannot be empty';
+                  if (value != null && value.isNotEmpty && value.trim().isEmpty) {
+                    return 'Bio cannot be only spaces';
                   }
-                  if (value.length > 160) {
+                  if (value != null && value.length > 160) {
                     return 'Bio must be under 160 characters';
                   }
                   return null;
@@ -153,11 +163,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _cityController,
                 maxLength: 50,
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'City cannot be empty';
+                  if (value != null && value.isNotEmpty && value.trim().isEmpty) {
+                    return 'City cannot be only spaces';
                   }
-                  // Regex checks for letters, spaces, hyphens, and apostrophes
-                  if (!RegExp(r"^[a-zA-Z\s\-\']+$").hasMatch(value.trim())) {
+                  if (value != null && value.trim().isNotEmpty && !RegExp(r"^[a-zA-Z\s\-\']+$").hasMatch(value)) {
                     return 'City contains invalid characters';
                   }
                   return null;
@@ -169,15 +178,56 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _countryController,
                 maxLength: 50,
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Country cannot be empty';
+                  if (value != null && value.isNotEmpty && value.trim().isEmpty) {
+                    return 'Country cannot be only spaces';
                   }
-                  if (!RegExp(r"^[a-zA-Z\s\-\']+$").hasMatch(value.trim())) {
+                  if (value != null && value.trim().isNotEmpty && !RegExp(r"^[a-zA-Z\s\-\']+$").hasMatch(value)) {
                     return 'Country contains invalid characters';
                   }
                   return null;
                 },
               ),
+              const SizedBox(height: 32),
+              
+              // 6. The Genre Selection UI
+              Text(
+                'Favorite Genres',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 8.0,
+                children: availableGenres.map((genre) {
+                  final isSelected = _selectedGenres.contains(genre);
+                  return FilterChip(
+                    label: Text(genre),
+                    selected: isSelected,
+                    onSelected: (bool selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedGenres.add(genre);
+                        } else {
+                          _selectedGenres.remove(genre);
+                        }
+                      });
+                    },
+                    backgroundColor: AppColors.surface,
+                    selectedColor: AppColors.google.withOpacity(0.2),
+                    checkmarkColor: AppColors.google,
+                    labelStyle: TextStyle(
+                      color: isSelected ? AppColors.google : AppColors.onPrimary,
+                    ),
+                    side: BorderSide(
+                      color: isSelected ? AppColors.google : Colors.transparent,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 40), // Extra padding at the bottom
             ],
           ),
         ),
@@ -185,7 +235,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  // 5. Upgraded to TextFormField to support validation logic
   Widget _buildTextFormField({
     required String label,
     required TextEditingController controller,
@@ -202,8 +251,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: AppColors.surface),
-        counterStyle: const TextStyle(color: AppColors.surface), // For the character count
-        errorStyle: const TextStyle(color: Colors.redAccent), // Make errors pop
+        counterStyle: const TextStyle(color: AppColors.surface),
+        errorStyle: const TextStyle(color: Colors.redAccent),
         enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.surface)),
         focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.google)),
         errorBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.redAccent)),
