@@ -182,8 +182,23 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (!state.isPrepared || _isDisposed || _isStopping) return;
 
     try {
-      await _audioPlayer.play();
-    } catch (_) {}
+      unawaited(
+        _audioPlayer.play().catchError((_) {
+          if (!_isDisposed) {
+            state = state.copyWith(isPlaying: false);
+          }
+        }),
+      );
+    } catch (_) {
+      if (!_isDisposed) {
+        state = state.copyWith(isPlaying: false);
+      }
+      return;
+    }
+
+    if (_isDisposed || _isStopping) return;
+
+    state = state.copyWith(isPlaying: true);
   }
 
   Future<void> pause() async {
@@ -313,6 +328,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
     _isStopping = true;
 
+    var didRestart = false;
+
     try {
       await Future<void>.delayed(const Duration(milliseconds: 200));
       await _audioPlayer.stop();
@@ -336,9 +353,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         progress: 0,
       );
 
-      _listenToPlayer();
-
-      state = state.copyWith(isPlaying: true);
+      didRestart = true;
     } catch (_) {
       if (!_isDisposed) {
         state = state.copyWith(isPlaying: false);
@@ -346,6 +361,11 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     } finally {
       _isStopping = false;
     }
+
+    if (_isDisposed || !didRestart) return;
+
+    // Actually resume playback after recreating the player.
+    await play();
   }
 
   Future<Duration?> _setSource(String urlOrPath) async {
