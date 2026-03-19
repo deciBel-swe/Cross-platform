@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
@@ -8,6 +9,7 @@ import '../models/user_profile_model.dart';
 
 abstract class IProfileRemoteDataSource {
   Future<SocialLinksModel> updateSocialLinks(SocialLinksModel linksModel);
+  Future<UserProfileModel> getUserProfile();
 }
 
 @LazySingleton(as: IProfileRemoteDataSource)
@@ -38,6 +40,38 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         throw const AuthException('Unauthorized to update social links');
       }
       throw ServerException(e.message ?? 'Unknown server error');
+    }
+  }
+
+  @override
+  Future<UserProfileModel> getUserProfile() async {
+    try {
+      // Consider adding '/users/me' to your ApiConstants if you haven't already.
+      final response = await _dioClient.get(ApiConstants.userProfileEndpoint);
+      debugPrint("++++++++++++++++++++++++++++++++++++");
+      debugPrint("Response from /users/me: ${response.data}");
+      debugPrint("++++++++++++++++++++++++++++++++++++");
+      if (response.data == null) {
+        throw const ServerException('Received empty response from server');
+      }
+
+      final Map<String, dynamic> responseData = response.data['data'] != null
+          ? response.data['data'] as Map<String, dynamic>
+          : response.data as Map<String, dynamic>;
+
+      return UserProfileModel.fromJson(responseData);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw const AuthException(
+          'Unauthorized to fetch profile. Please log in again.',
+        );
+      } else if (e.response?.statusCode == 404) {
+        throw const ServerException('User profile not found.');
+      }
+      throw ServerException(e.message ?? 'Unknown server error');
+    } catch (e) {
+      // Catching format/parsing exceptions specifically
+      throw ServerException('Failed to parse user profile data: $e');
     }
   }
 }
