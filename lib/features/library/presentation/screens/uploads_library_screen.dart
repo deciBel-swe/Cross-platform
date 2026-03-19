@@ -5,47 +5,17 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../providers/track_preview_provider.dart';
 import '../providers/uploads_provider.dart';
+import '../providers/uploads_scroll_controller_provider.dart';
 import '../widgets/upload_track_card.dart';
 
-class UploadsLibraryScreen extends ConsumerStatefulWidget {
+class UploadsLibraryScreen extends ConsumerWidget {
   const UploadsLibraryScreen({super.key});
 
   @override
-  ConsumerState<UploadsLibraryScreen> createState() =>
-      _UploadsLibraryScreenState();
-}
-
-class _UploadsLibraryScreenState extends ConsumerState<UploadsLibraryScreen> {
-  late final ScrollController _scrollController;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController()..addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final position = _scrollController.position;
-
-    // Load next page when the user is close to the bottom.
-    if (position.pixels >= position.maxScrollExtent - 200) {
-      ref.read(uploadsProvider.notifier).loadNextPage();
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final uploadsAsync = ref.watch(uploadsProvider);
+    final scrollController = ref.watch(uploadsScrollControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Your Uploads')),
@@ -76,7 +46,7 @@ class _UploadsLibraryScreenState extends ConsumerState<UploadsLibraryScreen> {
           return RefreshIndicator(
             onRefresh: () => ref.read(uploadsProvider.notifier).refreshAll(),
             child: ListView.builder(
-              controller: _scrollController,
+              controller: scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: tracks.length,
               itemBuilder: (context, index) {

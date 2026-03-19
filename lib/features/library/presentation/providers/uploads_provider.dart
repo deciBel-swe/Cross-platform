@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_status.dart';
-import 'track_preview_provider.dart';
+import 'track_repository_provider.dart';
 
 final uploadsProvider =
     AsyncNotifierProvider.autoDispose<UploadsNotifier, List<Track>>(

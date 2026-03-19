@@ -1,13 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_peaks.dart';
 import '../../domain/entities/track_status.dart';
 import '../providers/track_preview_provider.dart';
+import '../providers/track_repository_provider.dart';
 
-class TrackPreviewNotifier
-    extends AsyncNotifier<({Track track, TrackPeaks? trackPeaks})> {
+class TrackPreviewNotifier extends AsyncNotifier<TrackPreviewData> {
   @override
-  Future<({Track track, TrackPeaks? trackPeaks})> build() async {
+  Future<TrackPreviewData> build() async {
     final selectedTrackId = ref.watch(selectedTrackIdProvider);
 
     if (selectedTrackId == null) {
