@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/router/route_paths.dart';
-import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/user_profile.dart';
 import '../../../library_profile/presentation/providers/web_profiles_provider.dart';
+import '../../domain/entities/user_profile.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
+import '../widgets/pro_badge.dart';
 import '../widgets/profile_icon.dart';
 import '../widgets/tile.dart';
 
@@ -183,12 +182,21 @@ class _UserProfileHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          user.name,
-          style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.onPrimary,
-          ),
+        Row(
+          children: [
+            Text(
+              user.name,
+              style: textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
+            ),
+            Transform.scale(
+              scale:
+                  0.8, 
+              child: const ProBadge(),
+            ),
+          ],
         ),
         Text(
           user.location,
