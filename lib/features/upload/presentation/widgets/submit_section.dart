@@ -37,8 +37,12 @@ class SubmitSection extends ConsumerWidget {
                 final isFormValid = formKey.currentState!.validate();
                 final hasAudioFile = metadata.audioFile != null;
                 final hasGenre = metadata.genre.isNotEmpty;
+                final isGenreValidLength = metadata.genre.length <= 100;
 
                 if (!hasAudioFile) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).clearSnackBars(); // clear existed SnackBar if existed from previous error
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Please select an audio file to upload.'),
@@ -50,9 +54,27 @@ class SubmitSection extends ConsumerWidget {
                 }
 
                 if (!hasGenre) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).clearSnackBars(); // clear existed SnackBar if existed from previous error
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Please select a genre for your track.'),
+                      backgroundColor: AppColors.errors,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return; // Stop right here if there's no genre
+                }
+
+                if (!isGenreValidLength) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).clearSnackBars(); // clear existed SnackBar if existed from previous error
+                  ScaffoldMessenger.of(context).clearSnackBars();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Genre must be less than 100 characters.'),
                       backgroundColor: AppColors.errors,
                       behavior: SnackBarBehavior.floating,
                     ),
@@ -97,7 +119,14 @@ class SubmitSection extends ConsumerWidget {
                 }
               },
         child: isLoading
-            ? const CircularProgressIndicator(color: AppColors.onPrimary)
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  color: AppColors.onPrimary,
+                  strokeWidth: 2.5,
+                ),
+              )
             : const Text(
                 'Save',
                 style: TextStyle(
