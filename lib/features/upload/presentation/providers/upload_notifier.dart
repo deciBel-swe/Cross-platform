@@ -208,23 +208,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       // Duration check, in windows we have some problem to access the file and extract
       // the duration from it, so we used "just_audio_windows" in addition and trying to
       // catch windows crashes during upload the audio file
-      final player = AudioPlayer();
-      await player.setFilePath(file.path).catchError((_) => null);
-
-      // Wait for windows to actually finish parsing the file metadata
-      // by pausing the execution until the player is completely ready
-      await player.processingStateStream
-          .firstWhere(
-            (state) =>
-                state == ProcessingState.ready || state == ProcessingState.idle,
-          )
-          .catchError((_) => ProcessingState.idle);
-
-      // Grab the real duration, fully calculated from the player
-      final duration = player.duration;
-
-      // Safely dispose the player
-      await player.dispose().catchError((_) {});
+      final duration = await pickerService.getAudioDuration(file.path);
 
       if (duration == null || duration.inSeconds < 1) {
         state = AsyncValue<TrackUploadMetadata>.error(
