@@ -1,31 +1,30 @@
 import 'dart:async';
 
-import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../state/track_audio_state.dart';
 
 class TrackAudioNotifier extends Notifier<TrackAudioState> {
-  PlayerController? _playerController;
+  AudioPlayer? _player;
 
-  StreamSubscription<int>? _positionSubscription;
+  StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<PlayerState>? _playerStateSubscription;
-  StreamSubscription<void>? _completionSubscription;
 
   bool _isDisposed = false;
   bool _isStopping = false;
 
-  PlayerController get playerController {
-    final controller = _playerController;
-    if (controller == null) {
-      throw StateError('PlayerController is not initialized');
+  AudioPlayer get _audioPlayer {
+    final player = _player;
+    if (player == null) {
+      throw StateError('AudioPlayer is not initialized');
     }
-    return controller;
+    return player;
   }
 
   @override
   TrackAudioState build() {
-    _createPlayerController();
+    _createPlayer();
     _listenToPlayer();
 
     ref.onDispose(() async {
@@ -36,35 +35,31 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     return const TrackAudioState();
   }
 
-  void _createPlayerController() {
-    _playerController = PlayerController();
+  void _createPlayer() {
+    _player = AudioPlayer();
   }
 
   Future<void> _disposeCurrentPlayer() async {
     await _positionSubscription?.cancel();
     await _playerStateSubscription?.cancel();
-    await _completionSubscription?.cancel();
 
     _positionSubscription = null;
     _playerStateSubscription = null;
-    _completionSubscription = null;
 
     try {
-      _playerController?.dispose();
+      await _player?.dispose();
     } catch (_) {}
 
-    _playerController = null;
+    _player = null;
   }
 
   void _listenToPlayer() {
-    _positionSubscription = playerController.onCurrentDurationChanged.listen((
-      currentMs,
-    ) {
+    _positionSubscription = _audioPlayer.positionStream.listen((position) {
       if (_isDisposed || _isStopping || state.isDragging) {
         return;
       }
 
-      final newPosition = Duration(milliseconds: currentMs);
+      final newPosition = position;
 
       state = state.copyWith(
         position: newPosition,
@@ -75,22 +70,18 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       );
     }, onError: (_) {});
 
-    _playerStateSubscription = playerController.onPlayerStateChanged.listen((
-      playerState,
-    ) {
+    _playerStateSubscription = _audioPlayer.playerStateStream.listen((event) {
       if (_isDisposed || _isStopping) {
         return;
       }
 
-      state = state.copyWith(isPlaying: playerState == PlayerState.playing);
-    }, onError: (_) {});
+      state = state.copyWith(isPlaying: event.playing);
 
-    _completionSubscription = playerController.onCompletion.listen((_) async {
-      if (_isDisposed || _isStopping || state.isDragging) {
-        return;
+      if (event.processingState == ProcessingState.completed &&
+          !state.isDragging) {
+        // Keep the existing behavior: auto-replay when playback completes.
+        replay();
       }
-
-      await replay();
     }, onError: (_) {});
   }
 
@@ -143,7 +134,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
     if (state.isPrepared) {
       try {
-        await playerController.stopPlayer();
+        await _audioPlayer.stop();
       } catch (_) {}
     }
 
@@ -158,24 +149,20 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       isDragging: false,
     );
 
-    await playerController.preparePlayer(
-      path: trackUrl,
-      shouldExtractWaveform: false,
-    );
+    final loadedDuration = await _setSource(trackUrl);
 
     if (_isDisposed) return;
 
     var resolvedDuration = duration;
 
-    try {
-      final maxDurationMs = await playerController.getDuration(
-        DurationType.max,
-      );
-
-      if (!_isDisposed && maxDurationMs > 0) {
-        resolvedDuration = Duration(milliseconds: maxDurationMs);
+    if (loadedDuration != null && loadedDuration.inMilliseconds > 0) {
+      resolvedDuration = loadedDuration;
+    } else {
+      final playerDuration = _audioPlayer.duration;
+      if (playerDuration != null && playerDuration.inMilliseconds > 0) {
+        resolvedDuration = playerDuration;
       }
-    } catch (_) {}
+    }
 
     if (_isDisposed) return;
 
@@ -193,7 +180,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (!state.isPrepared || _isDisposed || _isStopping) return;
 
     try {
-      await playerController.startPlayer();
+      await _audioPlayer.play();
     } catch (_) {}
   }
 
@@ -201,7 +188,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (!state.isPrepared || _isDisposed || _isStopping) return;
 
     try {
-      await playerController.pausePlayer();
+      await _audioPlayer.pause();
     } catch (_) {}
 
     if (_isDisposed) return;
@@ -216,7 +203,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
     try {
       if (state.isPrepared) {
-        await playerController.stopPlayer();
+        await _audioPlayer.stop();
       }
     } catch (_) {}
 
@@ -283,7 +270,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     final safePosition = position > state.duration ? state.duration : position;
 
     try {
-      await playerController.seekTo(safePosition.inMilliseconds);
+      await _audioPlayer.seek(safePosition);
     } catch (_) {}
 
     if (_isDisposed) return;
@@ -313,43 +300,29 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (!state.isPrepared) return;
     if (state.preparedTrackUrl == null || state.preparedTrackId == null) return;
 
-    final preparedTrackUrl = state.preparedTrackUrl!;
-    final preparedTrackId = state.preparedTrackId!;
-    final currentDuration = state.duration;
-
     _isStopping = true;
 
     try {
+      await _audioPlayer.stop();
+
       await _disposeCurrentPlayer();
-
+      final preparedurl = state.preparedTrackUrl!;
       if (_isDisposed) return;
+      _createPlayer();
 
-      _createPlayerController();
+      await _setSource(preparedurl);
       _listenToPlayer();
-
-      await playerController.preparePlayer(
-        path: preparedTrackUrl,
-        shouldExtractWaveform: false,
-      );
-
+      await _audioPlayer.seek(Duration.zero);
       if (_isDisposed) return;
 
       state = state.copyWith(
-        isPrepared: true,
-        preparedTrackId: preparedTrackId,
-        preparedTrackUrl: preparedTrackUrl,
         isPlaying: false,
         isDragging: false,
         position: Duration.zero,
         progress: 0,
-        duration: currentDuration,
       );
 
-      await playerController.startPlayer();
-
-      if (_isDisposed) return;
-
-      state = state.copyWith(isPlaying: true);
+      await _audioPlayer.play();
     } catch (_) {
       if (!_isDisposed) {
         state = state.copyWith(isPlaying: false);
@@ -357,5 +330,13 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     } finally {
       _isStopping = false;
     }
+  }
+
+  Future<Duration?> _setSource(String urlOrPath) async {
+    final uri = Uri.tryParse(urlOrPath);
+    if (uri != null && uri.hasScheme) {
+      return _audioPlayer.setUrl(urlOrPath);
+    }
+    return _audioPlayer.setFilePath(urlOrPath);
   }
 }

@@ -28,7 +28,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = GoRouterRefreshStream(ref);
 
   return GoRouter(
-    initialLocation: RoutePaths.splash,
+    initialLocation: RoutePaths.trackPreview(1),
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authStateAsync = ref.read(authStateProvider);
@@ -50,14 +50,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         debugPrint(
           '[AppRouter] -> Handling as AuthUnauthenticated. Redirecting to login? \${isAuthRoute ? "No" : "Yes"}',
         );
-        return isAuthRoute ? null : RoutePaths.login;
+        // return isAuthRoute ? null : RoutePaths.login;
+        return null;
       }
 
       if (authState is AuthAuthenticated) {
         debugPrint(
           '[AppRouter] -> Handling as AuthAuthenticated. Redirecting to home? \${isAuthRoute ? "Yes" : "No"}',
         );
-        return isAuthRoute ? RoutePaths.home : null;
+        //return isAuthRoute ? RoutePaths.home : null;
+        return null;
       }
 
       debugPrint(
@@ -65,7 +67,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       );
       // authState is null -> AsyncLoading or AsyncError.
       // Block protected routes until auth is definitively resolved.
-      return isAuthRoute ? null : RoutePaths.splash;
+      //return isAuthRoute ? null : RoutePaths.splash;
+      return null;
     },
     routes: [
       // ---- Auth flow (outside the main shell) ----

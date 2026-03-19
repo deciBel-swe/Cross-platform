@@ -19,8 +19,6 @@ class WaveformExtractionService {
         noOfSamples: noOfSamples,
       );
       return peaks;
-    } finally {
-      // no need to dispose, wait or clean up manually?
-    }
+    } finally {}
   }
 }

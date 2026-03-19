@@ -45,6 +45,7 @@ dependencies:
 
   # ---------- Audio Playback ----------
   just_audio: ^0.9.43
+  just_audio_windows: ^0.2.2
 
   # ---------- Waveform Visualization ----------
   audio_waveforms: ^2.0.2
@@ -86,6 +87,7 @@ flutter:
   assets:
     - assets/icon/
     - assets/background/
+    - assets/background/desktop/
     - assets/html/
 
   # An image asset can refer to one or more resolution-specific "variants", see
