@@ -137,11 +137,20 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
   // Managing Tags
   void addTag(String tag) {
     final currentState = state.value;
+
+    // Replace all whitespace with underscores
+    // Remove anything that isn't letter, number, or underscore
+    final sanitizedTag = tag
+        .trim()
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'[^\w]'), '');
     // Check if state exit, max 10 tags, and tag is not empty
     if (currentState != null &&
         currentState.tags.length < 10 &&
-        tag.isNotEmpty) {
-      final newTags = List<String>.from(currentState.tags)..add(tag);
+        sanitizedTag.length < 21 && // Max number of chars is 20
+        sanitizedTag.length > 2 && // Min number of chars is 2
+        sanitizedTag.isNotEmpty) {
+      final newTags = List<String>.from(currentState.tags)..add(sanitizedTag);
       _updateState((state) => state.copyWith(tags: newTags));
     }
   }

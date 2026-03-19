@@ -150,8 +150,9 @@ class TrackDetailsForm extends ConsumerWidget {
           ),
           onChanged: notifier.updateDescription,
           validator: (v) {
-            if (v != null && v.length > 2000)
+            if (v != null && v.length > 2000) {
               return 'Description must be less than 2000 characters';
+            }
             return null;
           },
         ),
