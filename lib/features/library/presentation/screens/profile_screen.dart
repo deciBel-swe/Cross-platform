@@ -31,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     following: 300,
     bio:
         'Music lover and audio enthusiast. Sharing my favorite tracks and playlists.',
+    tier: UserTier.free,
   );
 
   @override
@@ -191,11 +192,13 @@ class _UserProfileHeader extends StatelessWidget {
                 color: AppColors.onPrimary,
               ),
             ),
-            Transform.scale(
-              scale:
-                  0.8, 
-              child: const ProBadge(),
-            ),
+            user.tier == UserTier.pro
+                ? Transform.scale(
+                    alignment: Alignment.bottomLeft,
+                    scale: 0.8,
+                    child: const ProBadge(),
+                  )
+                : const SizedBox.shrink(),
           ],
         ),
         Text(
