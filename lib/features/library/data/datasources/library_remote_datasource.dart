@@ -5,10 +5,9 @@ import '../../../../core/network/dio_client.dart';
 import '../models/paginated_tracks_model.dart';
 import '../models/track_model.dart';
 import '../models/track_peaks_model.dart';
-import 'library_mock_datasource.dart';
 
 /// Remote datasource for the Library feature.
-///
+
 /// NOTE: While backend is not ready, this datasource must not hit the network
 /// when [MockConfig.useMockData] is true.
 @lazySingleton
@@ -22,10 +21,6 @@ class LibraryRemoteDatasource {
     required int page,
     required int size,
   }) async {
-    if (MockConfig.useMockData) {
-      return const LibraryMockDatasource().fetchTracks(page: page, size: size);
-    }
-
     final response = await _dioClient.get<Map<String, dynamic>>(
       '/api/users/$userId/tracks',
       queryParams: <String, dynamic>{'page': page, 'size': size},
@@ -40,10 +35,6 @@ class LibraryRemoteDatasource {
   }
 
   Future<TrackModel> fetchTrackById(int id) async {
-    if (MockConfig.useMockData) {
-      return const LibraryMockDatasource().fetchTrackById(id);
-    }
-
     final response = await _dioClient.get<Map<String, dynamic>>(
       '/api/tracks/$id',
     );
@@ -57,10 +48,6 @@ class LibraryRemoteDatasource {
   }
 
   Future<TrackPeaksModel> fetchTrackPeaks(int id) async {
-    if (MockConfig.useMockData) {
-      return const LibraryMockDatasource().fetchTrackPeaks(id);
-    }
-
     final response = await _dioClient.get<Map<String, dynamic>>(
       '/api/tracks/$id/peaks',
     );

@@ -1,8 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-
 import '../state/track_audio_state.dart';
 
 class TrackAudioNotifier extends Notifier<TrackAudioState> {
@@ -316,7 +314,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     _isStopping = true;
 
     try {
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
       await _audioPlayer.stop();
 
       await _disposeCurrentPlayer();
@@ -338,7 +336,9 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         progress: 0,
       );
 
-      await _audioPlayer.play();
+      _listenToPlayer();
+
+      state = state.copyWith(isPlaying: true);
     } catch (_) {
       if (!_isDisposed) {
         state = state.copyWith(isPlaying: false);
