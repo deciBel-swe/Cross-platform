@@ -18,7 +18,7 @@ class ActionButtons extends StatelessWidget {
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
           onPressed: () {
-            context.push(RoutePaths.editWebLink);
+            context.push(RoutePaths.editProfile);
           },
           color: AppColors.textTertiary,
           iconSize: 29,

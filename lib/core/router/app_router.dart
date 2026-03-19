@@ -13,6 +13,7 @@ import '../../features/auth/presentation/screens/start_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
+import '../../features/library_profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/profile_screen.dart';
 import '../../features/library_profile/presentation/screens/web_profiles.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
@@ -179,6 +180,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'edit-web-link',
                     builder: (context, state) => const EditProfileLinkScreen(),
+                  ),
+                  GoRoute(
+                    path: 'edit-profile', // Define this as '/edit-profile'
+                    builder: (context, state) => const EditProfileScreen(),
                   ),
                 ],
               ),

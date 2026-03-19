@@ -10,6 +10,7 @@ import '../models/user_profile_model.dart';
 abstract class IProfileRemoteDataSource {
   Future<SocialLinksModel> updateSocialLinks(SocialLinksModel linksModel);
   Future<UserProfileModel> getUserProfile();
+  Future<bool> updateProfile(Map<String, dynamic> updateData);
 }
 
 @LazySingleton(as: IProfileRemoteDataSource)
@@ -40,6 +41,38 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         throw const AuthException('Unauthorized to update social links');
       }
       throw ServerException(e.message ?? 'Unknown server error');
+    }
+  }
+  // Inside IProfileRemoteDataSource abstract class
+
+  // Inside ProfileRemoteDataSource implementation
+  @override
+  Future<bool> updateProfile(Map<String, dynamic> updateData) async {
+    try {
+      // 1. Send the request
+      final response = await _dioClient.patch(
+        '/users/me', // We will fix this path in step 2!
+        data: updateData,
+      );
+debugPrint("🚀 Response from updateProfile: ${response.data}");
+      
+
+      // If we get here without a DioException, the update worked!
+    return response.statusCode == 200 || response.statusCode == 204;
+      
+    } on DioException catch (e) {
+      // 2. CATCH THE DIO ERROR! This prevents the Red Screen.
+      if (e.response?.statusCode == 401) {
+        throw const AuthException('Unauthorized to update profile');
+      } else if (e.response?.statusCode == 404) {
+        throw const ServerException('Endpoint not found (404). Check your URL.');
+      }
+      debugPrint('🚨 FAILED URL: ${e.requestOptions.uri}');
+      debugPrint('🚨 HTTP METHOD: ${e.requestOptions.method}');
+      final backendMessage = (e.response?.data?['message'] ?? e.message) as String?;
+      throw ServerException(backendMessage ?? 'Unknown server error');
+    } catch (e) {
+      throw ServerException('Data parsing error: $e');
     }
   }
 

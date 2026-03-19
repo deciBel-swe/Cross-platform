@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
-import '../providers/user_profile_notifier.dart';
+import '../notifiers/user_profile_notifier.dart';
 import '../providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
@@ -85,16 +85,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   error.toString().replaceAll('Exception: ', ''),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onPrimary.withOpacity(
-                      0.7,
-                    ), // Dim the error detail slightly
+                    color: AppColors.onPrimary
                   ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: () {
-                    // ref.invalidate forces the provider to completely rebuild from scratch
-                    // and re-run the repository fetch.
                     ref.invalidate(userProfileProvider);
                   },
                   icon: const Icon(Icons.refresh_rounded),
@@ -116,59 +112,54 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
         data: (user) => RefreshIndicator(
-  onRefresh: () async => ref.refresh(userProfileProvider.future),
-  child: SingleChildScrollView(
-    controller: _scrollController,
-    physics: const AlwaysScrollableScrollPhysics(),
-    child: Stack(
-      children: [
-        // 1. Cover Photo in the back
-        _ProfileCoverPhoto(imageUrl: user.profileDetails.coverPic),
+          onRefresh: () async => ref.refresh(userProfileProvider.future),
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Stack(
+              children: [
+                // 1. Cover Photo in the back
+                _ProfileCoverPhoto(imageUrl: user.profileDetails.coverPic),
 
-        // 2. Profile Content in the front
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // This height determines how much of the cover photo is visible 
-              // before the profile icon starts. Adjust as needed.
-              const SizedBox(height: 120), 
-              
-              GestureDetector(
-                onTap: () => context.push(RoutePaths.editWebLink),
-                child: const ProfileIcon(),
-              ),
-              const SizedBox(height: 14),
-              _UserProfileHeader(user: user),
-              const SizedBox(height: 16),
-              Consumer(
-                builder: (context, ref, child) {
-                  final socialLinks = ref.watch(webProfilesProvider);
-                  return ActionButtons(socialLinks: socialLinks);
-                },
-              ),
-              if (user.profileDetails.bio != null) ...[
-                _ExpandableBio(bio: user.profileDetails.bio!),
-                const SizedBox(height: 8),
+                // 2. Profile Content in the front
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0), 
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 120),
+                         const ProfileIcon(),
+                      const SizedBox(height: 14),
+                      _UserProfileHeader(user: user),
+                      const SizedBox(height: 16),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final socialLinks = ref.watch(webProfilesProvider);
+                          return ActionButtons(socialLinks: socialLinks);
+                        },
+                      ),
+                      if (user.profileDetails.bio != null) ...[
+                        _ExpandableBio(bio: user.profileDetails.bio!),
+                        const SizedBox(height: 8),
+                      ],
+                      const SizedBox(height: 16),
+                      Tile(
+                        title: "Pinned to Spotlight",
+                        subtitle: "Pin items to your spotlight",
+                        buttonText: "Edit",
+                        onButtonPressed: () =>
+                            context.push(RoutePaths.editProfile),
+                      ),
+                      const SizedBox(height: 20),
+                      const MediaCollection(),
+                      const SizedBox(height: 40), // Bottom padding
+                    ],
+                  ),
+                ),
               ],
-              const SizedBox(height: 16),
-              Tile(
-                title: "Pinned to Spotlight",
-                subtitle: "Pin items to your spotlight",
-                buttonText: "Edit",
-                onButtonPressed: () {},
-              ),
-              const SizedBox(height: 20),
-              const MediaCollection(),
-              const SizedBox(height: 40), // Bottom padding
-            ],
+            ),
           ),
         ),
-      ],
-    ),
-  ),
-),
       ),
     );
   }
@@ -400,6 +391,7 @@ class _ExpandableBioState extends State<_ExpandableBio> {
     );
   }
 }
+
 class _ProfileCoverPhoto extends StatelessWidget {
   const _ProfileCoverPhoto({this.imageUrl});
 
