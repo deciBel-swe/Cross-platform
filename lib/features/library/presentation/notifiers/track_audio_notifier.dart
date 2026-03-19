@@ -147,6 +147,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       progress: 0,
       duration: duration,
       isDragging: false,
+      dragProgress: null,
+      dragPosition: null,
     );
 
     final loadedDuration = await _setSource(trackUrl);
@@ -173,6 +175,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       duration: resolvedDuration,
       position: Duration.zero,
       progress: 0,
+      dragProgress: null,
+      dragPosition: null,
     );
   }
 
@@ -218,6 +222,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         duration: Duration.zero,
         progress: 0,
         isDragging: false,
+        dragProgress: null,
+        dragPosition: null,
       );
     }
 
@@ -227,7 +233,11 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   void onDragStart() {
     if (_isDisposed) return;
 
-    state = state.copyWith(isDragging: true);
+    state = state.copyWith(
+      isDragging: true,
+      dragProgress: state.progress,
+      dragPosition: state.position,
+    );
   }
 
   void onDragUpdate(double progress) {
@@ -241,8 +251,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
     state = state.copyWith(
       isDragging: true,
-      progress: clamped,
-      position: draggedPosition,
+      dragProgress: clamped,
+      dragPosition: draggedPosition,
     );
   }
 
@@ -257,8 +267,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
     state = state.copyWith(
       isDragging: false,
-      position: newPosition,
-      progress: clamped,
+      dragProgress: null,
+      dragPosition: null,
     );
 
     await seek(newPosition);
@@ -281,6 +291,9 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         position: safePosition,
         duration: state.duration,
       ),
+      dragProgress: null,
+      dragPosition: null,
+      isDragging: false,
     );
   }
 
@@ -303,6 +316,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     _isStopping = true;
 
     try {
+      await Future.delayed(const Duration(milliseconds: 200));
       await _audioPlayer.stop();
 
       await _disposeCurrentPlayer();
@@ -318,6 +332,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       state = state.copyWith(
         isPlaying: false,
         isDragging: false,
+        dragProgress: null,
+        dragPosition: null,
         position: Duration.zero,
         progress: 0,
       );

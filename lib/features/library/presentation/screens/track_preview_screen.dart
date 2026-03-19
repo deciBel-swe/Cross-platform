@@ -129,13 +129,15 @@ class TrackPreviewScreen extends ConsumerWidget {
                               },
                               onHorizontalDragEnd: (_) async {
                                 await audioNotifier.onDragEnd(
-                                  audioState.progress,
+                                  audioState.dragProgress ??
+                                      audioState.progress,
                                 );
                               },
                               child: TrackWaveform(
                                 peaks: peaks,
-                                currentPosition: playbackUi.displayedPosition,
+                                playedPosition: audioState.position,
                                 totalDuration: audioState.duration,
+                                dragPosition: audioState.dragPosition,
                                 height: 140,
                               ),
                             );

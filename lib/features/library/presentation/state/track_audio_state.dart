@@ -11,6 +11,8 @@ class TrackAudioState with _$TrackAudioState {
     String? preparedTrackUrl,
     @Default(false) bool isPlaying,
     @Default(false) bool isDragging,
+    double? dragProgress,
+    Duration? dragPosition,
     @Default(0.0) double progress,
     @Default(Duration.zero) Duration position,
     @Default(Duration.zero) Duration duration,

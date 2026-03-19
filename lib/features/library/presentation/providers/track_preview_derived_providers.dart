@@ -60,11 +60,7 @@ final trackPreviewPlaybackUiStateProvider =
       final audioState = ref.watch(trackAudioProvider);
 
       final displayedPosition = audioState.isDragging
-          ? Duration(
-              milliseconds:
-                  (audioState.duration.inMilliseconds * audioState.progress)
-                      .round(),
-            )
+          ? (audioState.dragPosition ?? audioState.position)
           : audioState.position;
 
       final shouldBlurBackground =

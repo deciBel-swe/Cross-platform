@@ -13,14 +13,16 @@ class TrackWaveform extends StatelessWidget {
   const TrackWaveform({
     super.key,
     required this.peaks,
-    required this.currentPosition,
+    required this.playedPosition,
     required this.totalDuration,
+    this.dragPosition,
     this.height = 96,
   });
 
   final List<double> peaks;
-  final Duration currentPosition;
+  final Duration playedPosition;
   final Duration totalDuration;
+  final Duration? dragPosition;
   final double height;
 
   @override
@@ -38,9 +40,17 @@ class TrackWaveform extends StatelessWidget {
     }
 
     final totalMs = totalDuration.inMilliseconds;
-    final currentMs = currentPosition.inMilliseconds;
+    final playedMs = playedPosition.inMilliseconds;
+    final dragMs = dragPosition?.inMilliseconds;
 
-    final progress = totalMs == 0 ? 0.0 : (currentMs / totalMs).clamp(0.0, 1.0);
+    final playedProgress = totalMs == 0
+        ? 0.0
+        : (playedMs / totalMs).clamp(0.0, 1.0);
+    final dragProgress = dragMs == null
+        ? null
+        : (totalMs == 0 ? 0.0 : (dragMs / totalMs).clamp(0.0, 1.0));
+
+    final displayPosition = dragPosition ?? playedPosition;
 
     return SizedBox(
       height: height,
@@ -49,7 +59,11 @@ class TrackWaveform extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Positioned.fill(
-            child: TrackWaveformCanvas(peaks: peaks, progress: progress),
+            child: TrackWaveformCanvas(
+              peaks: peaks,
+              progress: playedProgress,
+              dragProgress: dragProgress,
+            ),
           ),
 
           const TrackWaveformCenterMarkers(),
@@ -57,7 +71,7 @@ class TrackWaveform extends StatelessWidget {
           Positioned(
             bottom: 34,
             child: TrackWaveformTimeBubble(
-              currentPosition: currentPosition,
+              currentPosition: displayPosition,
               totalDuration: totalDuration,
             ),
           ),

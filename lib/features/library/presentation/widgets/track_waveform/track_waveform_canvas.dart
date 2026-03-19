@@ -7,10 +7,12 @@ class TrackWaveformCanvas extends StatelessWidget {
     super.key,
     required this.peaks,
     required this.progress,
+    this.dragProgress,
   });
 
   final List<double> peaks;
   final double progress;
+  final double? dragProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,9 @@ class TrackWaveformCanvas extends StatelessWidget {
       painter: WaveformPainter(
         peaks: peaks,
         progress: progress,
+        dragProgress: dragProgress,
         playedColor: Theme.of(context).colorScheme.primary,
+        dragColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.15),
         unplayedColor: Theme.of(context).colorScheme.outlineVariant,
         centerLineColor: Theme.of(context).dividerColor.withValues(alpha: 0.2),
       ),

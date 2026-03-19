@@ -28,8 +28,7 @@ mixin _$TrackModel {
   String? get coverUrl => throw _privateConstructorUsedError;
   String? get waveformUrl => throw _privateConstructorUsedError;
   String get genre => throw _privateConstructorUsedError;
-  List<String> get tags =>
-      throw _privateConstructorUsedError; // ignore: invalid_annotation_target
+  List<String> get tags => throw _privateConstructorUsedError;
   @JsonKey(unknownEnumValue: TrackStatusModel.processing)
   TrackStatusModel get state => throw _privateConstructorUsedError;
   DateTime get releaseDate => throw _privateConstructorUsedError;
@@ -349,7 +348,6 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
     return EqualUnmodifiableListView(_tags);
   }
 
-  // ignore: invalid_annotation_target
   @override
   @JsonKey(unknownEnumValue: TrackStatusModel.processing)
   final TrackStatusModel state;
@@ -493,7 +491,7 @@ abstract class _TrackModel implements TrackModel {
   @override
   String get genre;
   @override
-  List<String> get tags; // ignore: invalid_annotation_target
+  List<String> get tags;
   @override
   @JsonKey(unknownEnumValue: TrackStatusModel.processing)
   TrackStatusModel get state;
