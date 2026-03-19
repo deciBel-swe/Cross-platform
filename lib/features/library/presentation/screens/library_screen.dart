@@ -35,7 +35,7 @@ class _LibraryTab extends StatelessWidget {
       children: [
         _NavigationRow(
           title: 'Your uploads',
-          onTap: () => context.push(RoutePaths.uploadLibrary),
+          onTap: () => context.go(RoutePaths.uploadLibrary),
         ),
       ],
     );

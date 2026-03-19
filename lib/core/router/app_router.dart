@@ -4,7 +4,6 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../features/auth/domain/entities/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -128,16 +127,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: RoutePaths.uploadLibrary,
-                builder: (context, state) => const UploadsLibraryScreen(),
-              ),
-              GoRoute(
                 path: RoutePaths.library,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: LibraryScreen()),
                 routes: [
                   GoRoute(
-                    //added the trackId as a path parameter to the track preview route, so we can in te next phases use deep links
+                    path: "uploads",
+                    builder: (context, state) => const UploadsLibraryScreen(),
+                  ),
+                  GoRoute(
                     path: 'track-preview/:trackId',
                     redirect: (context, state) {
                       final raw = state.pathParameters['trackId'];
