@@ -14,14 +14,17 @@ class SocialSettingsRepositoryImpl implements SocialSettingsRepository {
   @override
   Future<SocialSettings> getSocialSettings() async {
     try {
-      final response = await _api.get(ApiConstants.userProfileEndpoint);
-      final privacyData = response.data['privacySettings'];
+      final response = await _api.get<Map<String, dynamic>>(
+        ApiConstants.userProfileEndpoint,
+      );
+      final data = response.data;
+      if (data == null) return _getFallbackSettings();
+
+      final privacyData = data['privacySettings'] as Map<String, dynamic>?;
 
       if (privacyData != null) {
         // Generated fromJson is now used here
-        final settings = SocialSettings.fromJson(
-          privacyData as Map<String, dynamic>,
-        );
+        final settings = SocialSettings.fromJson(privacyData);
 
         // Save to cache...
         return settings;
@@ -46,7 +49,7 @@ class SocialSettingsRepositoryImpl implements SocialSettingsRepository {
   Future<void> updateSocialSettings(SocialSettings settings) async {
     try {
       // Attempt to save to the cloud
-      await _api.put(ApiConstants.userProfilePrivacy, data: settings.toJson());
+      await _api.put<void>(ApiConstants.userProfilePrivacy, data: settings.toJson());
 
       // Only if the Cloud save works, we update the local cache
       await _cache.setString(_cacheKeyIsPrivate, settings.isPrivate.toString());

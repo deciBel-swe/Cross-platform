@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
-import '../providers/web_profiles_provider.dart';
+import '../../../library_profile/presentation/providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
 import '../widgets/profile_icon.dart';
 import '../widgets/tile.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -21,15 +24,15 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late ScrollController _scrollController;
   bool _showAppBarIcon = false;
-  
+
   final user = const UserProfile(
     name: 'Ziad Abdelraouf',
     location: 'Cairo, Egypt',
     followers: 1200,
     following: 300,
-    bio: 'Music lover and audio enthusiast. Sharing my favorite tracks and playlists.',
+    bio:
+        'Music lover and audio enthusiast. Sharing my favorite tracks and playlists.',
   );
-  // TODO: Replace with ref.watch() using Riverpod
 
   @override
   void initState() {
@@ -63,7 +66,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            
             GestureDetector(
               onTap: () {
                 context.push(RoutePaths.editWebLink);
@@ -71,26 +73,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: const ProfileIcon(),
             ),
             const SizedBox(height: 14),
-            
             _UserProfileHeader(user: user),
-            
             const SizedBox(height: 16),
             Consumer(
-  builder: (context, ref, child) {
-    final socialLinks = ref.watch(webProfilesProvider);
-    return ActionButtons(socialLinks: socialLinks);
-  },
-),
-            
-            // Dynamic Bio
+              builder: (context, ref, child) {
+                final socialLinks = ref.watch(webProfilesProvider);
+                return ActionButtons(socialLinks: socialLinks);
+              },
+            ),
             Text(
               user.bio,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.onPrimary, 
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: AppColors.onPrimary),
             ),
             const SizedBox(height: 8),
-
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
@@ -102,19 +99,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () {},
                 child: Text(
                   'Show more',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.google, 
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.google),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-
             Tile(
               title: "Pinned to Spotlight",
               subtitle: "Pin items to your spotlight",
               buttonText: "Edit",
-              onButtonPressed: () => {/* TODO: Handle edit spotlight action */},
+              onButtonPressed: () {},
             ),
             const SizedBox(height: 20),
             const MediaCollection(),
@@ -128,11 +124,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return AppBar(
       backgroundColor: AppColors.background,
       scrolledUnderElevation: 0,
-      surfaceTintColor: AppColors.transparent, 
+      surfaceTintColor: AppColors.transparent,
       leadingWidth: 38,
       leading: Button(
         icon: Icons.arrow_back_rounded,
-        onPressed: () => context.pop(),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(RoutePaths.library);
+          }
+        },
       ),
       centerTitle: true,
       title: AnimatedOpacity(
@@ -146,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               height: 32,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.surface, 
+                color: AppColors.surface,
               ),
               child: const ProfileIcon(),
             ),
@@ -154,9 +156,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(
               user.name,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.onPrimary, 
-                  ),
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
             ),
           ],
         ),
@@ -177,7 +179,7 @@ class _UserProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -190,16 +192,12 @@ class _UserProfileHeader extends StatelessWidget {
         ),
         Text(
           user.location,
-          style: textTheme.bodyMedium?.copyWith(
-            color: AppColors.onPrimary, 
-          ),
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
         ),
         const SizedBox(height: 8),
         Text(
           '${user.followers} followers - ${user.following} following',
-          style: textTheme.bodyMedium?.copyWith(
-            color: AppColors.onPrimary,
-          ),
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
         ),
       ],
     );

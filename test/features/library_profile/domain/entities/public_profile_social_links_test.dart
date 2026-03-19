@@ -9,25 +9,24 @@ void main() {
       expect(socialLinks.isEmpty, true);
     });
 
-    test('isEmpty returns false when instagram is not null', () {
+    test('isEmpty returns true when all links are empty strings', () {
       const socialLinks = PublicProfileSocialLinks(
-        instagram: 'https://instagram.com/test_user',
+        instagram: '',
+        twitter: '   ',
+        youtube: '',
+        tiktok: '',
+        linkedin: '',
+        snapchat: '',
+        facebook: '',
+        website: '',
       );
 
-      expect(socialLinks.isEmpty, false);
+      expect(socialLinks.isEmpty, true);
     });
 
-    test('isEmpty returns false when twitter is not null', () {
+    test('isEmpty returns false when one platform exists', () {
       const socialLinks = PublicProfileSocialLinks(
-        twitter: 'https://x.com/test_user',
-      );
-
-      expect(socialLinks.isEmpty, false);
-    });
-
-    test('isEmpty returns false when website is not null', () {
-      const socialLinks = PublicProfileSocialLinks(
-        website: 'https://example.com',
+        youtube: 'https://youtube.com/@test',
       );
 
       expect(socialLinks.isEmpty, false);
@@ -35,16 +34,43 @@ void main() {
 
     test('copyWith updates only instagram', () {
       const socialLinks = PublicProfileSocialLinks(
-        twitter: 'https://x.com/test_user',
+        twitter: 'https://x.com/test',
       );
 
       final updated = socialLinks.copyWith(
-        instagram: 'https://instagram.com/test_user',
+        instagram: 'https://instagram.com/test',
       );
 
-      expect(updated.instagram, 'https://instagram.com/test_user');
-      expect(updated.twitter, 'https://x.com/test_user');
-      expect(updated.website, null);
+      expect(updated.instagram, 'https://instagram.com/test');
+      expect(updated.twitter, 'https://x.com/test');
+      expect(updated.youtube, isNull);
+      expect(updated.website, isNull);
+    });
+
+    test('copyWith updates only youtube', () {
+      const socialLinks = PublicProfileSocialLinks(
+        instagram: 'https://instagram.com/test',
+      );
+
+      final updated = socialLinks.copyWith(
+        youtube: 'https://youtube.com/@test',
+      );
+
+      expect(updated.instagram, 'https://instagram.com/test');
+      expect(updated.youtube, 'https://youtube.com/@test');
+      expect(updated.twitter, isNull);
+    });
+
+    test('copyWith updates website only', () {
+      const socialLinks = PublicProfileSocialLinks(
+        facebook: 'https://facebook.com/test',
+      );
+
+      final updated = socialLinks.copyWith(website: 'https://example.com');
+
+      expect(updated.facebook, 'https://facebook.com/test');
+      expect(updated.website, 'https://example.com');
+      expect(updated.instagram, isNull);
     });
   });
 }

@@ -11,7 +11,7 @@ import '../widgets/track_details_form.dart';
 import '../widgets/track_info_checklist.dart';
 
 /// The root Presentation screen for the Track Upload feature.
-/// 
+///
 /// It holds the "GlobalKey" for the form state
 /// and structures the modular sub-widgets sequentially to build the final UI.
 class UploadScreen extends ConsumerStatefulWidget {
@@ -34,7 +34,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
     // Safety check: Show a loader while the Notifier initializes its starting state
     if (metadata == null) {
       return const Scaffold(
-        backgroundColor: AppColors.background, 
+        backgroundColor: AppColors.background,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -58,7 +58,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
             children: [
               TrackInfoChecklist(metadata: metadata),
               const SizedBox(height: 24),
-              
+
               const FileSelectionHeader(),
               const SizedBox(height: 24),
 
@@ -71,10 +71,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                 padding: const EdgeInsets.all(16),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TrackDetailsForm(),
-                    PrivacySettings(),
-                  ],
+                  children: [TrackDetailsForm(), PrivacySettings()],
                 ),
               ),
               const SizedBox(height: 32),
