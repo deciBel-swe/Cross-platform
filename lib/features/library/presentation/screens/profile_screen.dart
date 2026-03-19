@@ -6,13 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/user_profile.dart';
-import '../../../library_profile/presentation/providers/web_profiles_provider.dart';
-import '../widgets/action_buttons.dart';
-import '../widgets/button.dart';
-import '../widgets/media_collection.dart';
-import '../widgets/profile_icon.dart';
-import '../widgets/tile.dart';
+import '../../data/models/user_profile_model.dart';
+import '../providers/web_profiles_provider.dart';
+import '../../../library/domain/entities/user_profile.dart';
+import '../../../library_profile/presentation/widgets/action_buttons.dart';
+import '../../../library_profile/presentation/widgets/button.dart';
+import '../../../library_profile/presentation/widgets/media_collection.dart';
+import '../../../library_profile/presentation/widgets/profile_icon.dart';
+import '../../../library_profile/presentation/widgets/tile.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,14 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late ScrollController _scrollController;
   bool _showAppBarIcon = false;
 
-  final user = const UserProfile(
-    name: 'Ziad Abdelraouf',
-    location: 'Cairo, Egypt',
-    followers: 1200,
-    following: 300,
-    bio:
-        'Music lover and audio enthusiast. Sharing my favorite tracks and playlists.',
-  );
+  
 
   @override
   void initState() {
