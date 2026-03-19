@@ -120,7 +120,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: SingleChildScrollView(
             controller: _scrollController,
             physics:
-                const AlwaysScrollableScrollPhysics(), // Important for RefreshIndicator
+                const AlwaysScrollableScrollPhysics(), 
             padding: const EdgeInsets.symmetric(horizontal: 14.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
