@@ -10,19 +10,18 @@ class AppConstants {
 
 
   // --- Pro Badge Dimensions ---
- // --- Pro Badge Dimensions (Scaled down 25%) ---
-  static const double badgePaddingHorizontal = 13.5; // Was 18.0
-  static const double badgePaddingVertical = 7.5;    // Was 10.0
-  static const double badgeBorderRadius = 100.0;     // Kept at 100 to maintain pill shape
-  static const double badgeGapIconToText = 9.0;      // Was 12.0
-  static const double badgeTrailingBuffer = 3.0;     // Was 4.0
+  static const double badgePaddingHorizontal = 13.5; 
+  static const double badgePaddingVertical = 7.5;    
+  static const double badgeBorderRadius = 100.0;     
+  static const double badgeGapIconToText = 9.0;      
+  static const double badgeTrailingBuffer = 3.0;     
 
-  static const double badgeFontSize = 12.0;          // Was 16.0
-  static const double badgeLetterSpacing = 1.35;     // Was 1.8
+  static const double badgeFontSize = 12.0;          
+  static const double badgeLetterSpacing = 1.35;     
 
   static const double badgeIconNudgeY = -0.6;      // Positive value moves the icon down, negative moves it up
-  static const double badgeSealSize = 19.5;          // Was 26.0
-  static const double badgeIconSize = 13.5;          // Was 18.0
-  static const int badgeSealPoints = 12;             // Shape property, remains 12
+  static const double badgeSealSize = 19.5;        
+  static const double badgeIconSize = 13.5;        
+  static const int badgeSealPoints = 12;           
   static const double badgeInnerRadiusRatio = 0.82;
 }

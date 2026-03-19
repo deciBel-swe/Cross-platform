@@ -31,7 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     following: 300,
     bio:
         'Music lover and audio enthusiast. Sharing my favorite tracks and playlists.',
-    tier: UserTier.free,
+    tier: UserTier.pro,
   );
 
   @override
