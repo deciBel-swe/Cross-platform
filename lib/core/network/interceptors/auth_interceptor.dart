@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import '../../constants/api_constants.dart';
 import '../../storage/secure_storage_service.dart';
 import '../events/auth_event_bus.dart';
 
@@ -16,10 +17,17 @@ import '../events/auth_event_bus.dart';
 class AuthInterceptor extends Interceptor {
   /// Constructs the interceptor with the required secure storage service and optionally a custom
   /// Dio instance for the refresh call to prevent infinite interception loops.
-  AuthInterceptor(
-    this._secureStorage, {
-    Dio? refreshDio,
-  }) : _refreshDio = refreshDio ?? Dio();
+  AuthInterceptor(this._secureStorage, {Dio? refreshDio})
+    : _refreshDio =
+          refreshDio ??
+          (Dio()
+            ..options.baseUrl = ApiConstants.baseUrl
+            ..options.connectTimeout = const Duration(
+              milliseconds: ApiConstants.connectTimeout,
+            )
+            ..options.receiveTimeout = const Duration(
+              milliseconds: ApiConstants.receiveTimeout,
+            ));
 
   final SecureStorageService _secureStorage;
   final Dio _refreshDio;
@@ -65,17 +73,16 @@ class AuthInterceptor extends Interceptor {
 
         // If refresh successful, retry the original request
         final token = await _secureStorage.getAccessToken();
-        
+
         // Final sanity check, though highly unlikely to be null if refresh succeeded
         if (token != null) {
-            final options = err.requestOptions;
-            options.headers['Authorization'] = 'Bearer $token';
+          final options = err.requestOptions;
+          options.headers['Authorization'] = 'Bearer $token';
 
-            // Create a new request based on the original request's options
-            final response = await _refreshDio.fetch<dynamic>(options);
-            return handler.resolve(response);
+          // Create a new request based on the original request's options
+          final response = await _refreshDio.fetch<dynamic>(options);
+          return handler.resolve(response);
         }
-
       } catch (e) {
         // Refresh completely failed. The user's session is dead.
         await _secureStorage.clearAll();
@@ -104,31 +111,26 @@ class AuthInterceptor extends Interceptor {
         throw Exception('No refresh token available');
       }
 
-      // We use base urls from the primary dio instance, but we can't easily rely on it
-      // so we use the path directly if ApiConstants is available, else we assume
-      // the base url is attached to the refreshDio.
-      // E.g. _refreshDio.options.baseUrl = ApiConstants.baseUrl; 
-
       final response = await _refreshDio.post<Map<String, dynamic>>(
         '/auth/refreshtoken',
         data: {'refreshToken': refreshToken},
       );
 
       final responseBody = response.data;
-      final dataPayload = responseBody?['data'] as Map<String, dynamic>? ?? responseBody;
+      final dataPayload =
+          responseBody?['data'] as Map<String, dynamic>? ?? responseBody;
 
       final newAccessToken = dataPayload?['accessToken'] as String?;
       final expiresIn = dataPayload?['expiresIn'] as int?;
 
       if (newAccessToken != null && expiresIn != null) {
-         await _secureStorage.saveRefreshTokens(
-            accessToken: newAccessToken,
-            expiresIn: expiresIn,
-            // Optionally update the refresh token if the backend rotated it.
-            refreshToken: dataPayload?['refreshToken'] as String?,
-          );
+        await _secureStorage.saveRefreshTokens(
+          accessToken: newAccessToken,
+          expiresIn: expiresIn,
+          // No refreshToken — API does not rotate it on refresh.
+        );
       } else {
-         throw Exception('Invalid token response format');
+        throw Exception('Invalid token response format');
       }
 
       completer.complete();
@@ -136,7 +138,7 @@ class AuthInterceptor extends Interceptor {
       completer.completeError(e);
       rethrow;
     } finally {
-      // Clear the lock so future requests can try again if they hit a 401 later 
+      // Clear the lock so future requests can try again if they hit a 401 later
       // (though likely they will be logged out by now)
       _refreshLock = null;
     }

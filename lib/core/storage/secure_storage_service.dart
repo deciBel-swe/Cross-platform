@@ -24,16 +24,15 @@ class SecureStorageService {
   static const String _expiryKey = 'token_expiry';
   static const String _userKey = 'auth_user';
 
-  /// Saves the access token, refresh token, and calculates expiry time
-  /// based on a successful login response.
+  /// Saves the access token and calculates expiry time based on a successful
+  /// login or OAuth exchange response.
   ///
-  /// The [expiryTime] is currently hardcoded to 1 hour from the time of saving.
+  /// The [expiryTime] is derived from [LoginResponseModel.expiresIn] (seconds),
+  /// as returned by the API.
   Future<void> saveTokenPair(LoginResponseModel response) async {
-    // will check with backend about token duration assume 1 hour for now
-    final expiryTime = DateTime.now().add(const Duration(hours: 1));
+    final expiryTime = DateTime.now().add(Duration(seconds: response.expiresIn));
 
     await _storage.write(key: _accessTokenKey, value: response.accessToken);
-    await _storage.write(key: _refreshTokenKey, value: response.refreshToken);
     await _storage.write(
       key: _expiryKey,
       value: expiryTime.millisecondsSinceEpoch.toString(),

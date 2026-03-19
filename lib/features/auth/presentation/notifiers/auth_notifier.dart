@@ -20,8 +20,8 @@ import '../providers/auth_provider.dart';
 ///   session in secure storage and automatically logs the user in if valid.
 /// * **Authentication:** Provides [loginWithGoogle] to initiate the OAuth flow
 ///   and securely update the state upon success or failure.
-/// * **Session Management:** Provides [logout] to clear local tokens and
-///   return the user to an unauthenticated state.
+/// * **Session Management:** Provides [logout] to invalidate the backend
+///   session and return the user to an unauthenticated state.
 class AuthNotifier extends AsyncNotifier<AuthState> {
   @override
   FutureOr<AuthState> build() async {
@@ -97,9 +97,19 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   Future<void> logout() async {
-    final secureStorage = ref.read(secureStorageServiceProvider);
-    await secureStorage.clearAll();
+    final repo = ref.read(authRepositoryProvider);
 
-    state = const AsyncData(AuthUnauthenticated());
+    try {
+      final logoutResult = await repo.logout();
+      logoutResult.fold(
+        (failure) =>
+            debugPrint('[AuthNotifier] logout failed: ${failure.message}'),
+        (_) => debugPrint('[AuthNotifier] logout succeeded.'),
+      );
+    } catch (e, st) {
+      debugPrint('[AuthNotifier] Unexpected Exception during logout: $e\n$st');
+    } finally {
+      state = const AsyncData(AuthUnauthenticated());
+    }
   }
 }

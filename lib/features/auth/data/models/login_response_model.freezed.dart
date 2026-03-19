@@ -22,7 +22,7 @@ LoginResponseModel _$LoginResponseModelFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$LoginResponseModel {
   String get accessToken => throw _privateConstructorUsedError;
-  String get refreshToken => throw _privateConstructorUsedError;
+  int get expiresIn => throw _privateConstructorUsedError;
   AuthUserModel get user => throw _privateConstructorUsedError;
 
   /// Serializes this LoginResponseModel to a JSON map.
@@ -42,7 +42,7 @@ abstract class $LoginResponseModelCopyWith<$Res> {
     $Res Function(LoginResponseModel) then,
   ) = _$LoginResponseModelCopyWithImpl<$Res, LoginResponseModel>;
   @useResult
-  $Res call({String accessToken, String refreshToken, AuthUserModel user});
+  $Res call({String accessToken, int expiresIn, AuthUserModel user});
 
   $AuthUserModelCopyWith<$Res> get user;
 }
@@ -63,7 +63,7 @@ class _$LoginResponseModelCopyWithImpl<$Res, $Val extends LoginResponseModel>
   @override
   $Res call({
     Object? accessToken = null,
-    Object? refreshToken = null,
+    Object? expiresIn = null,
     Object? user = null,
   }) {
     return _then(
@@ -72,10 +72,10 @@ class _$LoginResponseModelCopyWithImpl<$Res, $Val extends LoginResponseModel>
                 ? _value.accessToken
                 : accessToken // ignore: cast_nullable_to_non_nullable
                       as String,
-            refreshToken: null == refreshToken
-                ? _value.refreshToken
-                : refreshToken // ignore: cast_nullable_to_non_nullable
-                      as String,
+            expiresIn: null == expiresIn
+                ? _value.expiresIn
+                : expiresIn // ignore: cast_nullable_to_non_nullable
+                      as int,
             user: null == user
                 ? _value.user
                 : user // ignore: cast_nullable_to_non_nullable
@@ -105,7 +105,7 @@ abstract class _$$LoginResponseModelImplCopyWith<$Res>
   ) = __$$LoginResponseModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String accessToken, String refreshToken, AuthUserModel user});
+  $Res call({String accessToken, int expiresIn, AuthUserModel user});
 
   @override
   $AuthUserModelCopyWith<$Res> get user;
@@ -126,7 +126,7 @@ class __$$LoginResponseModelImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? accessToken = null,
-    Object? refreshToken = null,
+    Object? expiresIn = null,
     Object? user = null,
   }) {
     return _then(
@@ -135,10 +135,10 @@ class __$$LoginResponseModelImplCopyWithImpl<$Res>
             ? _value.accessToken
             : accessToken // ignore: cast_nullable_to_non_nullable
                   as String,
-        refreshToken: null == refreshToken
-            ? _value.refreshToken
-            : refreshToken // ignore: cast_nullable_to_non_nullable
-                  as String,
+        expiresIn: null == expiresIn
+            ? _value.expiresIn
+            : expiresIn // ignore: cast_nullable_to_non_nullable
+                  as int,
         user: null == user
             ? _value.user
             : user // ignore: cast_nullable_to_non_nullable
@@ -153,7 +153,7 @@ class __$$LoginResponseModelImplCopyWithImpl<$Res>
 class _$LoginResponseModelImpl implements _LoginResponseModel {
   const _$LoginResponseModelImpl({
     required this.accessToken,
-    required this.refreshToken,
+    required this.expiresIn,
     required this.user,
   });
 
@@ -163,13 +163,13 @@ class _$LoginResponseModelImpl implements _LoginResponseModel {
   @override
   final String accessToken;
   @override
-  final String refreshToken;
+  final int expiresIn;
   @override
   final AuthUserModel user;
 
   @override
   String toString() {
-    return 'LoginResponseModel(accessToken: $accessToken, refreshToken: $refreshToken, user: $user)';
+    return 'LoginResponseModel(accessToken: $accessToken, expiresIn: $expiresIn, user: $user)';
   }
 
   @override
@@ -179,14 +179,14 @@ class _$LoginResponseModelImpl implements _LoginResponseModel {
             other is _$LoginResponseModelImpl &&
             (identical(other.accessToken, accessToken) ||
                 other.accessToken == accessToken) &&
-            (identical(other.refreshToken, refreshToken) ||
-                other.refreshToken == refreshToken) &&
+            (identical(other.expiresIn, expiresIn) ||
+                other.expiresIn == expiresIn) &&
             (identical(other.user, user) || other.user == user));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, accessToken, refreshToken, user);
+  int get hashCode => Object.hash(runtimeType, accessToken, expiresIn, user);
 
   /// Create a copy of LoginResponseModel
   /// with the given fields replaced by the non-null parameter values.
@@ -208,7 +208,7 @@ class _$LoginResponseModelImpl implements _LoginResponseModel {
 abstract class _LoginResponseModel implements LoginResponseModel {
   const factory _LoginResponseModel({
     required final String accessToken,
-    required final String refreshToken,
+    required final int expiresIn,
     required final AuthUserModel user,
   }) = _$LoginResponseModelImpl;
 
@@ -218,7 +218,7 @@ abstract class _LoginResponseModel implements LoginResponseModel {
   @override
   String get accessToken;
   @override
-  String get refreshToken;
+  int get expiresIn;
   @override
   AuthUserModel get user;
 

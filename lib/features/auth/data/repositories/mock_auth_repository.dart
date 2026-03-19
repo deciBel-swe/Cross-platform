@@ -149,4 +149,10 @@ class MockAuthRepository implements IAuthRepository {
     final userModel = await _secureStorageService.getUser();
     return Right(userModel?.toDomain());
   }
+
+  @override
+  Future<Either<Failure, Unit>> logout() async {
+    await _secureStorageService.clearAll();
+    return const Right(unit);
+  }
 }
