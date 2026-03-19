@@ -59,7 +59,62 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       body: userProfileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
+        error: (error, stackTrace) => Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.wifi_off_rounded, // Or Icons.error_outline
+                  color: AppColors
+                      .surface, // Adjust to an error color if you have one
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Oops! Something went wrong.',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  // This displays the clean Failure message we set up in the Repository
+                  error.toString().replaceAll('Exception: ', ''),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onPrimary.withOpacity(
+                      0.7,
+                    ), // Dim the error detail slightly
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // ref.invalidate forces the provider to completely rebuild from scratch
+                    // and re-run the repository fetch.
+                    ref.invalidate(userProfileProvider);
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Try Again'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.surface,
+                    foregroundColor: AppColors.onPrimary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         data: (user) => RefreshIndicator(
           onRefresh: () async => ref.refresh(userProfileProvider.future),
           child: SingleChildScrollView(
@@ -248,9 +303,7 @@ class _StatButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 4.0,
-        ), 
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
         child: RichText(
           text: TextSpan(
             style: Theme.of(
