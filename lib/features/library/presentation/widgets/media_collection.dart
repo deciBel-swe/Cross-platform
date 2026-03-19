@@ -1,12 +1,13 @@
-import 'package:decibel/core/theme/app_colors.dart';
-import 'package:decibel/features/library/presentation/widgets/tile.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import 'tile.dart';
 
 class MediaCollection extends StatelessWidget {
   const MediaCollection({super.key});
   @override
   Widget build(BuildContext context) {
-    final textTheme=Theme.of(context).textTheme;
+    final textTheme = Theme.of(context).textTheme;
     return Column(
       children: [
         Tile(
@@ -15,12 +16,12 @@ class MediaCollection extends StatelessWidget {
           buttonText: 'See All',
           onButtonPressed: () => {/* TODO: Handle see all tracks action */},
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Text(
           'No tracks yet',
           style: textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Tile(
           title: "Playlist",
           buttonText: "See All",
@@ -28,12 +29,12 @@ class MediaCollection extends StatelessWidget {
             //TODO: hndle see all playlist action
           },
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Text(
           'No playlists yet',
           style: textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Tile(
           title: "Likes",
           buttonText: "See All",

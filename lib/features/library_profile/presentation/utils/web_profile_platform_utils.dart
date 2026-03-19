@@ -23,10 +23,7 @@ class WebProfilePlatformUtils {
     website,
   ];
 
-  static const List<String> allPlatforms = [
-    ...displayPlatforms,
-    supportLink,
-  ];
+  static const List<String> allPlatforms = [...displayPlatforms, supportLink];
 
   static String detectPlatform(String link) {
     final lower = link.toLowerCase();

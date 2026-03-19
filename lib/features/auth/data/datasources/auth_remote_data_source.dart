@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
@@ -13,6 +13,7 @@ import '../../../../core/network/dio_client.dart';
 import '../models/device_info_model.dart';
 import '../models/login_response_model.dart';
 import '../models/oauth_exchange_request_dto.dart';
+import '../utils/auth_success_page.dart';
 
 abstract class IAuthRemoteDataSource {
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
@@ -35,7 +36,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // MOBILE: Use official Google Sign In SDK (In-App Popup) // why I used this instead of browser google is very strict I couldn't redirect to the app
       // It wasted alot of time so I decided to do this approach
       // This completely bypasses all the manual "Custom URI Scheme" redirect errors
-      final String clientId = ApiConstants.googleMobileClientId;
+      const String clientId = ApiConstants.googleMobileClientId;
 
       await g_sign_in.GoogleSignIn.instance.initialize(
         clientId: clientId,
@@ -72,8 +73,8 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // I was trying to do the same for the android but google restricting opeing apps from links not easy
       final completer = Completer<LoginResponseModel>();
 
-      final String clientId = ApiConstants.googleDesktopClientId;
-      final String redirectUri = ApiConstants.googleDesktopRedirectUri;
+      const String clientId = ApiConstants.googleDesktopClientId;
+      const String redirectUri = ApiConstants.googleDesktopRedirectUri;
 
       final authUrl = Uri.parse(
         '${ApiConstants.googleAuthUrl}'
@@ -97,13 +98,13 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
             final error = uri.queryParameters['error'];
 
             if (authCode != null) {
-              // Serve a success page and close
+              // Serve a branded success page and close
+              final html = await buildAuthSuccessHtml();
+
               request.response
                 ..statusCode = 200
                 ..headers.contentType = ContentType.html
-                ..write(
-                  '<html><body><h2>Authentication complete! You can close this tab and return to Decibel.</h2></body></html>',
-                );
+                ..write(html);
               await request.response.close();
               await localServer?.close(force: true);
 
@@ -212,7 +213,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         debugPrint('=============================');
       }
 
-      final response = await _dioClient.post(
+      final response = await _dioClient.post<Map<String, dynamic>>(
         ApiConstants.googleTokenExchangeEndpoint, // Path defined in API docs
         data: dto.toJson(),
       );
@@ -231,7 +232,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       }
     } catch (e) {
       if (e.toString().contains('DioException')) {
-        throw ServerException('A network error occurred during login.');
+        throw const ServerException('A network error occurred during login.');
       }
       throw AuthException(
         'An unexpected error occurred during Google Sign In verify: $e',

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:decibel/core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class Button extends StatelessWidget {
   const Button({super.key, required this.icon, required this.onPressed});

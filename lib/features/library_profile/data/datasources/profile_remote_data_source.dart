@@ -17,7 +17,9 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
   final DioClient _dioClient;
 
   @override
-  Future<SocialLinksModel> updateSocialLinks(SocialLinksModel linksModel) async {
+  Future<SocialLinksModel> updateSocialLinks(
+    SocialLinksModel linksModel,
+  ) async {
     try {
       final response = await _dioClient.patch(
         ApiConstants.updateSocialLinks,

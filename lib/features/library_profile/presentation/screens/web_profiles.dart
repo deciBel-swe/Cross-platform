@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../domain/entities/public_profile_social_links.dart';
-import '../providers/web_profiles_provider.dart';
 import '../providers/web_profiles_order_provider.dart';
+import '../providers/web_profiles_provider.dart';
 import '../utils/web_profile_platform_utils.dart';
 
 class EditProfileLinkScreen extends ConsumerStatefulWidget {
@@ -29,14 +28,6 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
   bool _isValidUrl(String link) {
     final uri = Uri.tryParse(link);
     return uri != null && uri.hasScheme && uri.hasAuthority;
-  }
-
-  Widget _platformIcon(String platform) {
-    return WebProfilePlatformUtils.iconForPlatform(platform);
-  }
-
-  List<String> _fallbackOrder(dynamic socialLinks) {
-    return socialLinks.nonEmptyPlatforms(includeSupportLink: false);
   }
 
   Future<void> _saveLink() async {
@@ -143,6 +134,7 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
 
     final notifier = ref.read(webProfilesProvider.notifier);
 
+    if (!mounted) return;
     if (!notifier.linkAlreadyExists(link)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -156,6 +148,7 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
     final synced = await notifier.deleteLink(link);
     ref.read(webProfilesOrderProvider.notifier).removePlatform(platform);
 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -174,7 +167,7 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
       platform: platform,
       link: link,
       isDeletePending: isDeletePending,
-      platformIcon: _platformIcon(platform),
+      platformIcon: WebProfilePlatformUtils.iconForPlatform(platform),
       isValidUrl: _isValidUrl,
       onDelete: () => _showDeleteConfirmationDialog(link),
     );
@@ -183,17 +176,7 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
   @override
   Widget build(BuildContext context) {
     final socialLinks = ref.watch(webProfilesProvider);
-    final savedOrder = ref.watch(webProfilesOrderProvider);
-
-    final orderedPlatforms = <String>[
-      ...savedOrder.where((platform) {
-        final link = socialLinks.valueForPlatform(platform);
-        return link != null && link.trim().isNotEmpty;
-      }),
-      ..._fallbackOrder(socialLinks).where((platform) {
-        return !savedOrder.contains(platform);
-      }),
-    ];
+    final orderedPlatforms = ref.watch(orderedWebPlatformsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Web Profiles')),
@@ -241,13 +224,6 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
 }
 
 class _EditableLinkRow extends ConsumerStatefulWidget {
-  final String platform;
-  final String link;
-  final bool isDeletePending;
-  final Widget platformIcon;
-  final bool Function(String) isValidUrl;
-  final VoidCallback onDelete;
-
   const _EditableLinkRow({
     required this.platform,
     required this.link,
@@ -256,6 +232,13 @@ class _EditableLinkRow extends ConsumerStatefulWidget {
     required this.isValidUrl,
     required this.onDelete,
   });
+
+  final String platform;
+  final String link;
+  final bool isDeletePending;
+  final Widget platformIcon;
+  final bool Function(String) isValidUrl;
+  final VoidCallback onDelete;
 
   @override
   ConsumerState<_EditableLinkRow> createState() => _EditableLinkRowState();
@@ -296,6 +279,7 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
     final newLink = _controller.text.trim();
     final notifier = ref.read(webProfilesProvider.notifier);
 
+    if (!mounted) return;
     if (newLink.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -303,6 +287,7 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
       return;
     }
 
+    if (!mounted) return;
     if (!widget.isValidUrl(newLink)) {
       ScaffoldMessenger.of(
         context,
@@ -331,6 +316,7 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
       return;
     }
 
+    if (!mounted) return;
     if (notifier.linkAlreadyExists(newLink)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

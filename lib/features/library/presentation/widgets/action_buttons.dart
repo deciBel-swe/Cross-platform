@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:decibel/core/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/router/route_paths.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../library_profile/domain/entities/public_profile_social_links.dart';
 import '../../../library_profile/presentation/widgets/social_links_widget.dart';
 
 class ActionButtons extends StatelessWidget {
+  const ActionButtons({super.key, required this.socialLinks});
   final PublicProfileSocialLinks socialLinks;
 
-  const ActionButtons({
-    super.key,
-    required this.socialLinks,
-  });
-
-    @override
+  @override
   Widget build(BuildContext context) {
     return Row(
       children: [

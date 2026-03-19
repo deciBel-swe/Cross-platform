@@ -83,19 +83,13 @@ void main() {
     test('linkAlreadyExists returns true for exact existing link', () async {
       await notifier.saveLink('https://instagram.com/test');
 
-      expect(
-        notifier.linkAlreadyExists('https://instagram.com/test'),
-        true,
-      );
+      expect(notifier.linkAlreadyExists('https://instagram.com/test'), true);
     });
 
     test('linkAlreadyExists returns false for non-existing link', () async {
       await notifier.saveLink('https://instagram.com/test');
 
-      expect(
-        notifier.linkAlreadyExists('https://instagram.com/other'),
-        false,
-      );
+      expect(notifier.linkAlreadyExists('https://instagram.com/other'), false);
     });
 
     test('platformAlreadyExists returns true for same platform', () async {
@@ -114,36 +108,36 @@ void main() {
       );
     });
 
-    test('getExistingLinkForPlatform returns correct stored instagram link', () async {
-      await notifier.saveLink('https://instagram.com/test');
+    test(
+      'getExistingLinkForPlatform returns correct stored instagram link',
+      () async {
+        await notifier.saveLink('https://instagram.com/test');
 
-      expect(
-        notifier.getExistingLinkForPlatform('https://instagram.com/another'),
-        'https://instagram.com/test',
-      );
-    });
+        expect(
+          notifier.getExistingLinkForPlatform('https://instagram.com/another'),
+          'https://instagram.com/test',
+        );
+      },
+    );
 
-    test('getExistingLinkForPlatform returns correct stored youtube link', () async {
-      await notifier.saveLink('https://youtube.com/@test');
+    test(
+      'getExistingLinkForPlatform returns correct stored youtube link',
+      () async {
+        await notifier.saveLink('https://youtube.com/@test');
 
-      expect(
-        notifier.getExistingLinkForPlatform('https://youtube.com/@another'),
-        'https://youtube.com/@test',
-      );
-    });
+        expect(
+          notifier.getExistingLinkForPlatform('https://youtube.com/@another'),
+          'https://youtube.com/@test',
+        );
+      },
+    );
 
     test('getPlatformKey returns correct platform for youtube', () {
-      expect(
-        notifier.getPlatformKey('https://youtube.com/@test'),
-        'youtube',
-      );
+      expect(notifier.getPlatformKey('https://youtube.com/@test'), 'youtube');
     });
 
     test('getPlatformKey returns website for unknown domain', () {
-      expect(
-        notifier.getPlatformKey('https://unknown-domain.dev'),
-        'website',
-      );
+      expect(notifier.getPlatformKey('https://unknown-domain.dev'), 'website');
     });
 
     test('getPlatformKey returns supportLink for patreon', () {
@@ -196,10 +190,7 @@ void main() {
     test('Edit link correctly for Website', () async {
       await notifier.saveLink('https://example.com');
 
-      await notifier.editLink(
-        'https://example.com',
-        'https://newexample.com',
-      );
+      await notifier.editLink('https://example.com', 'https://newexample.com');
 
       expect(notifier.state.website, 'https://newexample.com');
     });

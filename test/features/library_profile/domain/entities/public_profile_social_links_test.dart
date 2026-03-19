@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:decibel/features/library_profile/domain/entities/public_profile_social_links.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('PublicProfileSocialLinks', () {
@@ -66,9 +66,7 @@ void main() {
         facebook: 'https://facebook.com/test',
       );
 
-      final updated = socialLinks.copyWith(
-        website: 'https://example.com',
-      );
+      final updated = socialLinks.copyWith(website: 'https://example.com');
 
       expect(updated.facebook, 'https://facebook.com/test');
       expect(updated.website, 'https://example.com');

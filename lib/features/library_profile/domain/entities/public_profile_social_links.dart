@@ -91,17 +91,21 @@ class PublicProfileSocialLinks {
     Object? supportLink = _unset,
   }) {
     return PublicProfileSocialLinks(
-      instagram:
-          identical(instagram, _unset) ? this.instagram : instagram as String?,
+      instagram: identical(instagram, _unset)
+          ? this.instagram
+          : instagram as String?,
       twitter: identical(twitter, _unset) ? this.twitter : twitter as String?,
       youtube: identical(youtube, _unset) ? this.youtube : youtube as String?,
       tiktok: identical(tiktok, _unset) ? this.tiktok : tiktok as String?,
-      linkedin:
-          identical(linkedin, _unset) ? this.linkedin : linkedin as String?,
-      snapchat:
-          identical(snapchat, _unset) ? this.snapchat : snapchat as String?,
-      facebook:
-          identical(facebook, _unset) ? this.facebook : facebook as String?,
+      linkedin: identical(linkedin, _unset)
+          ? this.linkedin
+          : linkedin as String?,
+      snapchat: identical(snapchat, _unset)
+          ? this.snapchat
+          : snapchat as String?,
+      facebook: identical(facebook, _unset)
+          ? this.facebook
+          : facebook as String?,
       website: identical(website, _unset) ? this.website : website as String?,
       supportLink: identical(supportLink, _unset)
           ? this.supportLink

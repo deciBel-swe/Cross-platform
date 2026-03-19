@@ -7,9 +7,9 @@ import '../providers/web_profiles_order_provider.dart';
 import '../utils/web_profile_platform_utils.dart';
 
 class SocialLinksWidget extends ConsumerWidget {
-  final PublicProfileSocialLinks socialLinks;
-
   const SocialLinksWidget({super.key, required this.socialLinks});
+
+  final PublicProfileSocialLinks socialLinks;
 
   Future<void> _openLink(String url) async {
     final uri = Uri.parse(url);
@@ -19,21 +19,9 @@ class SocialLinksWidget extends ConsumerWidget {
     }
   }
 
-  List<String> _fallbackOrder() {
-    return socialLinks.nonEmptyPlatforms(includeSupportLink: false);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final savedOrder = ref.watch(webProfilesOrderProvider);
-    final fallback = _fallbackOrder();
-
-    final orderedPlatforms = <String>[
-      ...savedOrder.where(
-        (platform) => socialLinks.hasValueForPlatform(platform),
-      ),
-      ...fallback.where((platform) => !savedOrder.contains(platform)),
-    ];
+    final orderedPlatforms = ref.watch(orderedWebPlatformsProvider);
 
     if (orderedPlatforms.isEmpty) {
       return const SizedBox.shrink();
@@ -57,14 +45,19 @@ class SocialLinksWidget extends ConsumerWidget {
 
     return SizedBox(
       height: 56,
-      width: orderedPlatforms.length * 52,
+      width: orderedPlatforms.length * 52.0,
       child: ReorderableListView.builder(
         scrollDirection: Axis.horizontal,
         buildDefaultDragHandles: false,
         onReorder: (oldIndex, newIndex) {
-          ref
-              .read(webProfilesOrderProvider.notifier)
-              .reorder(oldIndex, newIndex);
+          if (oldIndex < newIndex) {
+            newIndex -= 1;
+          }
+          final newList = List<String>.from(orderedPlatforms);
+          final item = newList.removeAt(oldIndex);
+          newList.insert(newIndex, item);
+
+          ref.read(webProfilesOrderProvider.notifier).updateOrder(newList);
         },
         itemCount: orderedPlatforms.length,
         itemBuilder: (context, index) {

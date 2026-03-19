@@ -8,11 +8,7 @@ void main() {
   Widget buildTestWidget(PublicProfileSocialLinks socialLinks) {
     return ProviderScope(
       child: MaterialApp(
-        home: Scaffold(
-          body: SocialLinksWidget(
-            socialLinks: socialLinks,
-          ),
-        ),
+        home: Scaffold(body: SocialLinksWidget(socialLinks: socialLinks)),
       ),
     );
   }
@@ -34,8 +30,9 @@ void main() {
       expect(find.byTooltip('website'), findsNothing);
     });
 
-    testWidgets('renders nothing when all links are empty strings',
-        (tester) async {
+    testWidgets('renders nothing when all links are empty strings', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(
           const PublicProfileSocialLinks(
@@ -54,8 +51,9 @@ void main() {
       expect(find.byType(IconButton), findsNothing);
     });
 
-    testWidgets('renders only instagram icon when instagram exists',
-        (tester) async {
+    testWidgets('renders only instagram icon when instagram exists', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(
           const PublicProfileSocialLinks(
@@ -70,13 +68,12 @@ void main() {
       expect(find.byType(IconButton), findsOneWidget);
     });
 
-    testWidgets('renders only twitter icon when twitter exists',
-        (tester) async {
+    testWidgets('renders only twitter icon when twitter exists', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(
-          const PublicProfileSocialLinks(
-            twitter: 'https://x.com/test',
-          ),
+          const PublicProfileSocialLinks(twitter: 'https://x.com/test'),
         ),
       );
 
@@ -86,13 +83,12 @@ void main() {
       expect(find.byType(IconButton), findsOneWidget);
     });
 
-    testWidgets('renders only website icon when website exists',
-        (tester) async {
+    testWidgets('renders only website icon when website exists', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(
-          const PublicProfileSocialLinks(
-            website: 'https://example.com',
-          ),
+          const PublicProfileSocialLinks(website: 'https://example.com'),
         ),
       );
 
@@ -102,13 +98,12 @@ void main() {
       expect(find.byType(IconButton), findsOneWidget);
     });
 
-    testWidgets('renders only youtube icon when youtube exists',
-        (tester) async {
+    testWidgets('renders only youtube icon when youtube exists', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(
-          const PublicProfileSocialLinks(
-            youtube: 'https://youtube.com/@test',
-          ),
+          const PublicProfileSocialLinks(youtube: 'https://youtube.com/@test'),
         ),
       );
 
@@ -117,13 +112,10 @@ void main() {
       expect(find.byType(IconButton), findsOneWidget);
     });
 
-    testWidgets('renders only tiktok icon when tiktok exists',
-        (tester) async {
+    testWidgets('renders only tiktok icon when tiktok exists', (tester) async {
       await tester.pumpWidget(
         buildTestWidget(
-          const PublicProfileSocialLinks(
-            tiktok: 'https://tiktok.com/@test',
-          ),
+          const PublicProfileSocialLinks(tiktok: 'https://tiktok.com/@test'),
         ),
       );
 

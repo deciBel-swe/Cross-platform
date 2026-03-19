@@ -4,7 +4,6 @@ import '../constants/api_constants.dart';
 
 @lazySingleton
 class DioClient {
-  final Dio _dio;
   DioClient(this._dio) {
     _dio.options
       ..baseUrl = ApiConstants.baseUrl
@@ -20,6 +19,7 @@ class DioClient {
       LogInterceptor(requestBody: true, responseBody: true, error: true),
     );
   }
+  final Dio _dio;
 
   // Helper method for GET requests
   Future<Response<T>> get<T>(String path, {Map<String, dynamic>? queryParams}) {
@@ -45,6 +45,6 @@ class DioClient {
     String path, {
     Map<String, dynamic>? queryParams,
   }) {
-    return _dio.delete(path);
+    return _dio.delete(path, queryParameters: queryParams);
   }
 }

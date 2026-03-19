@@ -1,12 +1,9 @@
-import 'package:decibel/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:decibel/core/constants/app_constants.dart';
-class Tile extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final String buttonText;
-  final VoidCallback onButtonPressed;
 
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/app_colors.dart';
+
+class Tile extends StatelessWidget {
   const Tile({
     super.key,
     required this.title,
@@ -14,6 +11,11 @@ class Tile extends StatelessWidget {
     required this.buttonText,
     required this.onButtonPressed,
   });
+
+  final String title;
+  final String? subtitle;
+  final String buttonText;
+  final VoidCallback onButtonPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -26,18 +28,19 @@ class Tile extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: AppConstants.fontSizeLarge,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary, 
+                  color: AppColors.textPrimary,
                 ),
               ),
               if (subtitle != null) ...[
                 Text(
                   subtitle!,
-                  style: TextStyle(
+
+                  style: const TextStyle(
                     fontSize: AppConstants.fontSizeSmall,
-                    color: AppColors.textSecondary, 
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -49,8 +52,8 @@ class Tile extends StatelessWidget {
           height: 32,
           child: FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.surface, 
-              foregroundColor: AppColors.textPrimary, 
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.textPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
               shape: const StadiumBorder(),
             ),
