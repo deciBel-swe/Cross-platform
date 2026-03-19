@@ -1,16 +1,6 @@
 import 'dart:io';
 
 class TrackUploadMetadata {
-  final File? audioFile;
-  final File? coverImage;
-  final String title;
-  final String genre;
-  final String description;
-  final List<String> tags;
-  final DateTime? releaseDate;
-  final bool isPrivate;
-  final List<String> waveFormData;
-
   const TrackUploadMetadata({
     this.audioFile,
     this.coverImage,
@@ -22,6 +12,15 @@ class TrackUploadMetadata {
     this.isPrivate = false,
     this.waveFormData = const [],
   });
+  final File? audioFile;
+  final File? coverImage;
+  final String title;
+  final String genre;
+  final String description;
+  final List<String> tags;
+  final DateTime? releaseDate;
+  final bool isPrivate;
+  final List<String> waveFormData;
 
   // Create new instance with updated fields
   TrackUploadMetadata copyWith({
