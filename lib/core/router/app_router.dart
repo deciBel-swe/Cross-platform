@@ -16,6 +16,10 @@ import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/profile_screen.dart';
 import '../../features/library/presentation/screens/web_profiles.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
+import '../../features/settings/presentation/screens/basic_settings_screen.dart';
+import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/social_settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/upload/presentation/screens/upload_screen.dart';
 import 'go_router_refresh_stream.dart';
@@ -26,7 +30,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = GoRouterRefreshStream(ref);
 
   return GoRouter(
-    initialLocation: RoutePaths.splash,
+    initialLocation: RoutePaths.home,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authStateAsync = ref.read(authStateProvider);
@@ -126,6 +130,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: RoutePaths.library,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: LibraryScreen()),
+                routes: [
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) => const SettingsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'social-settings',
+                        builder: (context, state) =>
+                            const SocialSettingsScreen(),
+                      ),
+                      GoRoute(
+                        path: 'basic-settings',
+                        builder: (context, state) =>
+                            const BasicSettingsScreen(),
+                        routes: [
+                          GoRoute(
+                            path: 'change-app-icon',
+                            builder: (context, state) =>
+                                const ChangeAppIconScreen(),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
@@ -139,7 +168,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // 5-Profile
+          // 5 Profile
           StatefulShellBranch(
             routes: [
               GoRoute(

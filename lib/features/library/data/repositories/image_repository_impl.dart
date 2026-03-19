@@ -7,7 +7,6 @@ import '../../domain/repositories/image_repository.dart';
 class ImageRepositoryImpl implements ImageRepository {
   ImageRepositoryImpl(this._picker);
   final ImagePicker _picker;
-
   @override
   Future<File?> pickProfileImage() async {
     final XFile? pickedFile = await _picker.pickImage(

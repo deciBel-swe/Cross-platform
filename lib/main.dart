@@ -6,6 +6,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
 import 'core/di/injection.dart';
+import 'features/settings/domain/repositories/app_icon_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,14 @@ void main() async {
 
   // Dependency injection
   configureDependencies();
+
+  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    try {
+      final appIconRepository = getIt<AppIconRepository>();
+      final selectedIcon = await appIconRepository.getSelectedIcon();
+      await appIconRepository.applyIcon(selectedIcon);
+    } catch (_) {}
+  }
 
   runApp(const ProviderScope(child: DecibelApp()));
 }

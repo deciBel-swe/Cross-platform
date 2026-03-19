@@ -6,6 +6,7 @@ import '../../../library_profile/domain/entities/public_profile_social_links.dar
 
 class SocialLinksWidget extends StatelessWidget {
   const SocialLinksWidget({super.key, required this.socialLinks});
+
   final PublicProfileSocialLinks socialLinks;
 
   Future<void> _openLink(String url) async {
