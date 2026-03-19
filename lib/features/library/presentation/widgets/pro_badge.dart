@@ -42,7 +42,7 @@ class ProBadge extends StatelessWidget {
 
 /// The custom golden seal with the star cutout.
 class _GoldScallopedStar extends StatelessWidget {
-  const _GoldScallopedStar({super.key});
+  const _GoldScallopedStar();
 
   @override
   Widget build(BuildContext context) {
