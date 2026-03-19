@@ -33,7 +33,7 @@ class PickerService implements IPickerService {
     }
     return null;
   }
-  
+
   @override
   Future<Duration?> getAudioDuration(String filePath) async {
     final player = AudioPlayer();
@@ -41,13 +41,14 @@ class PickerService implements IPickerService {
 
     await player.processingStateStream
         .firstWhere(
-          (state) => state == ProcessingState.ready || state == ProcessingState.idle,
+          (state) =>
+              state == ProcessingState.ready || state == ProcessingState.idle,
         )
         .catchError((_) => ProcessingState.idle);
 
     final duration = player.duration;
     await player.dispose().catchError((_) {});
-    
+
     return duration;
   }
 }

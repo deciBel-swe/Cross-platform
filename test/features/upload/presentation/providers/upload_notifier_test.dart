@@ -171,8 +171,27 @@ void main() {
       when(() => fakeImage.lengthSync()).thenReturn(2 * 1024 * 1024);
       // Pass the MIME Magic Bytes check
       // These are the actual hex bytes that identify a file as image/jpeg
-      final jpegMagicBytes = [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x48];
-      when(() => fakeImage.openRead(any(), any())).thenAnswer((_) => Stream.fromIterable([jpegMagicBytes]));
+      final jpegMagicBytes = [
+        0xFF,
+        0xD8,
+        0xFF,
+        0xE0,
+        0x00,
+        0x10,
+        0x4A,
+        0x46,
+        0x49,
+        0x46,
+        0x00,
+        0x01,
+        0x01,
+        0x01,
+        0x00,
+        0x48,
+      ];
+      when(
+        () => fakeImage.openRead(any(), any()),
+      ).thenAnswer((_) => Stream.fromIterable([jpegMagicBytes]));
       when(
         () => mockPicker.pickCoverImage(),
       ).thenAnswer((_) async => fakeImage);
@@ -196,13 +215,34 @@ void main() {
       // Give mock the size for size check
       when(() => fakeFile.lengthSync()).thenReturn(5 * 1024 * 1024);
 
-      final mp3MagicBytes = [0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0, 0];
-      when(() => fakeFile.openRead(any(), any())).thenAnswer((_) => Stream.fromIterable([mp3MagicBytes]));
+      final mp3MagicBytes = [
+        0x49,
+        0x44,
+        0x33,
+        0x03,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+      ];
+      when(
+        () => fakeFile.openRead(any(), any()),
+      ).thenAnswer((_) => Stream.fromIterable([mp3MagicBytes]));
 
       when(() => mockPicker.pickAudioFile()).thenAnswer((_) async => fakeFile);
-      
+
       // MOCK THE DURATION SO IT PASSES THE 1-SECOND CHECK!
-      when(() => mockPicker.getAudioDuration(any())).thenAnswer((_) async => const Duration(seconds: 180));
+      when(
+        () => mockPicker.getAudioDuration(any()),
+      ).thenAnswer((_) async => const Duration(seconds: 180));
 
       // Create a Riverpod container and override the real service with our mock
       final container = ProviderContainer(
@@ -232,14 +272,35 @@ void main() {
       final fakeFile = MockFile();
       when(() => fakeFile.path).thenReturn('fake/path/audio.mp3');
       when(() => fakeFile.lengthSync()).thenReturn(5 * 1024 * 1024);
-      
-      final mp3MagicBytes = [0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0, 0];
-      when(() => fakeFile.openRead(any(), any())).thenAnswer((_) => Stream.fromIterable([mp3MagicBytes]));
+
+      final mp3MagicBytes = [
+        0x49,
+        0x44,
+        0x33,
+        0x03,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+      ];
+      when(
+        () => fakeFile.openRead(any(), any()),
+      ).thenAnswer((_) => Stream.fromIterable([mp3MagicBytes]));
 
       when(() => mockPicker.pickAudioFile()).thenAnswer((_) async => fakeFile);
-      
+
       // MOCK A 0-SECOND DURATION TO TRIGGER THE ERROR
-      when(() => mockPicker.getAudioDuration(any())).thenAnswer((_) async => const Duration(seconds: 0));
+      when(
+        () => mockPicker.getAudioDuration(any()),
+      ).thenAnswer((_) async => const Duration(seconds: 0));
 
       final container = ProviderContainer(
         overrides: [
@@ -256,37 +317,68 @@ void main() {
 
       final state = container.read(uploadNotifierProvider);
       expect(state.hasError, true);
-      expect(state.error.toString(), contains('Audio file must be at least 1 second long'));
+      expect(
+        state.error.toString(),
+        contains('Audio file must be at least 1 second long'),
+      );
     });
 
-    test('pickAudioFile rejects fake extensions (Magic Bytes mismatch)', () async {
-      final fakeFile = MockFile();
-      when(() => fakeFile.path).thenReturn('fake_audio.mp3');
-      when(() => fakeFile.lengthSync()).thenReturn(5 * 1024 * 1024);
-      
-      // We pass in empty/junk bytes that DO NOT match an MP3 signature
-      when(() => fakeFile.openRead(any(), any())).thenAnswer((_) => Stream.fromIterable([[0x00, 0x00, 0x00, 0x00]]));
+    test(
+      'pickAudioFile rejects fake extensions (Magic Bytes mismatch)',
+      () async {
+        final fakeFile = MockFile();
+        when(() => fakeFile.path).thenReturn('fake_audio.mp3');
+        when(() => fakeFile.lengthSync()).thenReturn(5 * 1024 * 1024);
 
-      when(() => mockPicker.pickAudioFile()).thenAnswer((_) async => fakeFile);
+        // We pass in empty/junk bytes that DO NOT match an MP3 signature
+        when(() => fakeFile.openRead(any(), any())).thenAnswer(
+          (_) => Stream.fromIterable([
+            [0x00, 0x00, 0x00, 0x00],
+          ]),
+        );
 
-      final notifier = await initNotifier();
-      await notifier.pickAudioFile();
+        when(
+          () => mockPicker.pickAudioFile(),
+        ).thenAnswer((_) async => fakeFile);
 
-      final state = container.read(uploadNotifierProvider);
-      expect(state.hasError, true);
-      expect(state.error.toString(), contains('FAKE EXTENTION'));
-    });
+        final notifier = await initNotifier();
+        await notifier.pickAudioFile();
+
+        final state = container.read(uploadNotifierProvider);
+        expect(state.hasError, true);
+        expect(state.error.toString(), contains('FAKE EXTENTION'));
+      },
+    );
 
     test('pickAudioFile rejects files over 20MB', () async {
       final hugeFile = MockFile();
       when(() => hugeFile.path).thenReturn('audio.mp3');
-      
+
       // Pretend the file is 25 MB
       when(() => hugeFile.lengthSync()).thenReturn(25 * 1024 * 1024);
 
       // Provide real MP3 ID3 magic bytes so it passes the MIME check
-      final mp3MagicBytes = [0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0, 0];
-      when(() => hugeFile.openRead(any(), any())).thenAnswer((_) => Stream.fromIterable([mp3MagicBytes]));
+      final mp3MagicBytes = [
+        0x49,
+        0x44,
+        0x33,
+        0x03,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+      ];
+      when(
+        () => hugeFile.openRead(any(), any()),
+      ).thenAnswer((_) => Stream.fromIterable([mp3MagicBytes]));
 
       when(() => mockPicker.pickAudioFile()).thenAnswer((_) async => hugeFile);
 
@@ -298,26 +390,55 @@ void main() {
       expect(state.error.toString(), contains('exceeds 20MB limit'));
     });
 
-    test('pickAudioFile fails when duration cannot be read (Test Environment constraint)', () async {
-      final validFile = MockFile();
-      when(() => validFile.path).thenReturn('audio.mp3');
-      when(() => validFile.lengthSync()).thenReturn(5 * 1024 * 1024);
-      
-      final mp3MagicBytes = [0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0, 0];
-      when(() => validFile.openRead(any(), any())).thenAnswer((_) => Stream.fromIterable([mp3MagicBytes]));
+    test(
+      'pickAudioFile fails when duration cannot be read (Test Environment constraint)',
+      () async {
+        final validFile = MockFile();
+        when(() => validFile.path).thenReturn('audio.mp3');
+        when(() => validFile.lengthSync()).thenReturn(5 * 1024 * 1024);
 
-      when(() => mockPicker.pickAudioFile()).thenAnswer((_) async => validFile);
+        final mp3MagicBytes = [
+          0x49,
+          0x44,
+          0x33,
+          0x03,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+        ];
+        when(
+          () => validFile.openRead(any(), any()),
+        ).thenAnswer((_) => Stream.fromIterable([mp3MagicBytes]));
 
-      when(() => mockPicker.getAudioDuration(any())).thenAnswer((_) async => const Duration(seconds: 0));
+        when(
+          () => mockPicker.pickAudioFile(),
+        ).thenAnswer((_) async => validFile);
 
-      final notifier = await initNotifier();
-      await notifier.pickAudioFile();
+        when(
+          () => mockPicker.getAudioDuration(any()),
+        ).thenAnswer((_) async => const Duration(seconds: 0));
 
-      // Because the test environment lacks native Windows/Android audio drivers,
-      // AudioPlayer fails to get the duration, triggering your 1-second fallback error.
-      final state = container.read(uploadNotifierProvider);
-      expect(state.hasError, true);
-      expect(state.error.toString(), contains('Audio file must be at least 1 second long.'));
-    });
+        final notifier = await initNotifier();
+        await notifier.pickAudioFile();
+
+        // Because the test environment lacks native Windows/Android audio drivers,
+        // AudioPlayer fails to get the duration, triggering your 1-second fallback error.
+        final state = container.read(uploadNotifierProvider);
+        expect(state.hasError, true);
+        expect(
+          state.error.toString(),
+          contains('Audio file must be at least 1 second long.'),
+        );
+      },
+    );
   });
 }
