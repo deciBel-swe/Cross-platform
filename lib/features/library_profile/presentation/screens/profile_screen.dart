@@ -13,6 +13,7 @@ import '../widgets/button.dart';
 import '../widgets/expandable_bio.dart';
 import '../widgets/media_collection.dart';
 import '../widgets/profile_icon.dart';
+import '../widgets/spotlight_section.dart';
 import '../widgets/tile.dart';
 import '../widgets/user_profile_header.dart';
 
@@ -147,6 +148,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         buttonText: AppConstants.edit,
                         onButtonPressed: () => context.push(RoutePaths.editProfile),
                       ),
+                      TopTracksSection(userId: user.id),
                       const SizedBox(height: AppConstants.spacingLarge),
                       const MediaCollection(),
                       const SizedBox(height: AppConstants.spacingMassive), 

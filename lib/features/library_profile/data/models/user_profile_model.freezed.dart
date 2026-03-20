@@ -26,9 +26,7 @@ mixin _$UserProfileModel {
   String get role => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
-  bool get emailVerified =>
-      throw _privateConstructorUsedError; // Maps the JSON string to the enum.
-  // Note: Adjust the @JsonValue in the enum if your API sends uppercase "PRO" or "FREE"
+  bool get emailVerified => throw _privateConstructorUsedError;
   UserTier get tier => throw _privateConstructorUsedError;
   @JsonKey(name: 'profile')
   ProfileDetailsModel get profileDetails => throw _privateConstructorUsedError;
@@ -325,8 +323,6 @@ class _$UserProfileModelImpl implements _UserProfileModel {
   final String username;
   @override
   final bool emailVerified;
-  // Maps the JSON string to the enum.
-  // Note: Adjust the @JsonValue in the enum if your API sends uppercase "PRO" or "FREE"
   @override
   final UserTier tier;
   @override
@@ -426,8 +422,7 @@ abstract class _UserProfileModel implements UserProfileModel {
   @override
   String get username;
   @override
-  bool get emailVerified; // Maps the JSON string to the enum.
-  // Note: Adjust the @JsonValue in the enum if your API sends uppercase "PRO" or "FREE"
+  bool get emailVerified;
   @override
   UserTier get tier;
   @override
