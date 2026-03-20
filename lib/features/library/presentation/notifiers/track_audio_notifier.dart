@@ -1,10 +1,15 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import '../state/track_audio_state.dart';
 
 class TrackAudioNotifier extends Notifier<TrackAudioState> {
   AudioPlayer? _player;
+
+  /// Factory for creating AudioPlayer instances, customizable for testing.
+  @visibleForTesting
+  static AudioPlayer Function()? audioPlayerFactory;
 
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<PlayerState>? _playerStateSubscription;
@@ -34,7 +39,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   }
 
   void _createPlayer() {
-    _player = AudioPlayer();
+    _player = audioPlayerFactory?.call() ?? AudioPlayer();
   }
 
   Future<void> _disposeCurrentPlayer() async {
