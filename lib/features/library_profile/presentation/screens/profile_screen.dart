@@ -9,9 +9,11 @@ import '../notifiers/user_profile_notifier.dart';
 import '../providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
+import '../widgets/expandable_bio.dart';
 import '../widgets/media_collection.dart';
 import '../widgets/profile_icon.dart';
 import '../widgets/tile.dart';
+import '../widgets/user_profile_header.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -84,9 +86,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   // This displays the clean Failure message we set up in the Repository
                   error.toString().replaceAll('Exception: ', ''),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onPrimary
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
@@ -123,14 +125,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 // 2. Profile Content in the front
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0), 
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 120),
-                         const ProfileIcon(),
+                      const ProfileIcon(),
                       const SizedBox(height: 14),
-                      _UserProfileHeader(user: user),
+                      UserProfileHeader(user: user),
                       const SizedBox(height: 16),
                       Consumer(
                         builder: (context, ref, child) {
@@ -139,7 +141,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         },
                       ),
                       if (user.profileDetails.bio != null) ...[
-                        _ExpandableBio(bio: user.profileDetails.bio!),
+                        ExpandableBio(bio: user.profileDetails.bio!),
                         const SizedBox(height: 8),
                       ],
                       const SizedBox(height: 16),
@@ -221,176 +223,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-class _UserProfileHeader extends StatelessWidget {
-  const _UserProfileHeader({required this.user});
-
-  final UserProfile user;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final locationStr =
-        (user.profileDetails.city != null &&
-            user.profileDetails.country != null)
-        ? '${user.profileDetails.city}, ${user.profileDetails.country}'
-        : 'No location';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          user.username,
-          style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.onPrimary,
-          ),
-        ),
-        Text(
-          locationStr,
-          style: textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
-        ),
-        const SizedBox(height: 8),
-
-        // The new tappable stats row
-        Row(
-          children: [
-            _StatButton(
-              count: user
-                  .stats
-                  .followers, // Or followersCount if you renamed it in the entity
-              label: 'followers',
-              onTap: () {
-                debugPrint('Tapped: Navigate to Followers');
-                // TODO: Replace with actual navigation
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: Text(
-                '-',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.onPrimary,
-                ),
-              ),
-            ),
-            _StatButton(
-              count: user
-                  .stats
-                  .following, // Or followingCount if you renamed it in the entity
-              label: 'following',
-              onTap: () {
-                debugPrint('Tapped: Navigate to Following');
-                // TODO: Replace with actual navigation
-              },
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _StatButton extends StatelessWidget {
-  const _StatButton({
-    required this.count,
-    required this.label,
-    required this.onTap,
-  });
-
-  final int count;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: RichText(
-          text: TextSpan(
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
-            children: [
-              TextSpan(
-                text: '$count ',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              TextSpan(text: label),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ExpandableBio extends StatefulWidget {
-  const _ExpandableBio({required this.bio});
-
-  final String bio;
-
-  @override
-  State<_ExpandableBio> createState() => _ExpandableBioState();
-}
-
-class _ExpandableBioState extends State<_ExpandableBio> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final textStyle = Theme.of(
-      context,
-    ).textTheme.bodyLarge?.copyWith(color: AppColors.onPrimary);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final span = TextSpan(text: widget.bio, style: textStyle);
-        final tp = TextPainter(
-          text: span,
-          maxLines: 3,
-          textDirection: TextDirection.ltr,
-        );
-        tp.layout(maxWidth: constraints.maxWidth);
-        final isOverflow = tp.didExceedMaxLines;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.bio,
-              style: textStyle,
-              maxLines: _expanded ? null : 3,
-              overflow: _expanded
-                  ? TextOverflow.visible
-                  : TextOverflow.ellipsis,
-            ),
-            if (isOverflow)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: () => setState(() => _expanded = !_expanded),
-                  child: Text(
-                    _expanded ? 'Show less' : 'Show more',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: AppColors.google),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
 
 class _ProfileCoverPhoto extends StatelessWidget {
   const _ProfileCoverPhoto({this.imageUrl});
