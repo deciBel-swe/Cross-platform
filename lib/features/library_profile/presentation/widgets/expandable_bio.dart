@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class ExpandableBio extends StatefulWidget {
@@ -15,16 +16,14 @@ class _ExpandableBioState extends State<ExpandableBio> {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(
-      context,
-    ).textTheme.bodyLarge?.copyWith(color: AppColors.onPrimary);
+    final textStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.onPrimary);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final span = TextSpan(text: widget.bio, style: textStyle);
         final tp = TextPainter(
           text: span,
-          maxLines: 3,
+          maxLines: AppConstants.bioCollapsedMaxLines,
           textDirection: TextDirection.ltr,
         );
         tp.layout(maxWidth: constraints.maxWidth);
@@ -36,10 +35,8 @@ class _ExpandableBioState extends State<ExpandableBio> {
             Text(
               widget.bio,
               style: textStyle,
-              maxLines: _expanded ? null : 3,
-              overflow: _expanded
-                  ? TextOverflow.visible
-                  : TextOverflow.ellipsis,
+              maxLines: _expanded ? null : AppConstants.bioCollapsedMaxLines,
+              overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
             ),
             if (isOverflow)
               Align(
@@ -52,10 +49,8 @@ class _ExpandableBioState extends State<ExpandableBio> {
                   ),
                   onPressed: () => setState(() => _expanded = !_expanded),
                   child: Text(
-                    _expanded ? 'Show less' : 'Show more',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: AppColors.google),
+                    _expanded ? AppConstants.showLess : AppConstants.showMore,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.google),
                   ),
                 ),
               ),

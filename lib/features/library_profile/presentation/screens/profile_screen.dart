@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_constants.dart'; // Ensure this path matches your project structure
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
@@ -34,9 +35,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.offset > 80 && !_showAppBarIcon) {
+    if (_scrollController.offset > AppConstants.appBarFadeScrollOffset && !_showAppBarIcon) {
       setState(() => _showAppBarIcon = true);
-    } else if (_scrollController.offset <= 80 && _showAppBarIcon) {
+    } else if (_scrollController.offset <= AppConstants.appBarFadeScrollOffset && _showAppBarIcon) {
       setState(() => _showAppBarIcon = false);
     }
   }
@@ -50,7 +51,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Watch the FutureProvider from your architecture
     final userProfileAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
@@ -63,49 +63,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingExtraLarge),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(
-                  Icons.wifi_off_rounded, // Or Icons.error_outline
-                  color: AppColors
-                      .surface, // Adjust to an error color if you have one
-                  size: 64,
+                  Icons.wifi_off_rounded,
+                  color: AppColors.surface, 
+                  size: AppConstants.errorIconSize,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppConstants.spacingRegular),
                 Text(
-                  'Oops! Something went wrong.',
+                  AppConstants.errorGeneric,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppColors.onPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppConstants.spacingSmall),
                 Text(
-                  // This displays the clean Failure message we set up in the Repository
-                  error.toString().replaceAll('Exception: ', ''),
+                  error.toString().replaceAll(AppConstants.errorExceptionPrefix, ''),
                   textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onPrimary
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppConstants.spacingExtraLarge),
                 ElevatedButton.icon(
                   onPressed: () {
                     ref.invalidate(userProfileProvider);
                   },
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Try Again'),
+                  label: const Text(AppConstants.tryAgain),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.surface,
                     foregroundColor: AppColors.onPrimary,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
+                      horizontal: AppConstants.spacingExtraLarge,
+                      vertical: 12, // Keeping standard vertical padding
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppConstants.buttonRadius),
                     ),
                   ),
                 ),
@@ -120,20 +118,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             child: Stack(
               children: [
-                // 1. Cover Photo in the back
                 _ProfileCoverPhoto(imageUrl: user.profileDetails.coverPic),
 
-                // 2. Profile Content in the front
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                  padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMedium), 
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 120),
+                      const SizedBox(height: AppConstants.profileHeaderTopOffset),
                       const ProfileIcon(),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: AppConstants.spacingMedium),
                       UserProfileHeader(user: user),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppConstants.spacingRegular),
                       Consumer(
                         builder: (context, ref, child) {
                           final socialLinks = ref.watch(webProfilesProvider);
@@ -142,19 +138,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                       if (user.profileDetails.bio != null) ...[
                         ExpandableBio(bio: user.profileDetails.bio!),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppConstants.spacingSmall),
                       ],
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppConstants.spacingRegular),
                       Tile(
-                        title: "Pinned to Spotlight",
-                        subtitle: "Pin items to your spotlight",
-                        buttonText: "Edit",
-                        onButtonPressed: () =>
-                            context.push(RoutePaths.editProfile),
+                        title: AppConstants.spotlightTitle,
+                        subtitle: AppConstants.spotlightSubtitle,
+                        buttonText: AppConstants.edit,
+                        onButtonPressed: () => context.push(RoutePaths.editProfile),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppConstants.spacingLarge),
                       const MediaCollection(),
-                      const SizedBox(height: 40), // Bottom padding
+                      const SizedBox(height: AppConstants.spacingMassive), 
                     ],
                   ),
                 ),
@@ -171,8 +166,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       backgroundColor: AppColors.background,
       leading: Button(
         icon: Icons.arrow_back_rounded,
-        onPressed: () =>
-            context.canPop() ? context.pop() : context.go(RoutePaths.library),
+        onPressed: () => context.canPop() ? context.pop() : context.go(RoutePaths.library),
       ),
     );
   }
@@ -182,22 +176,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       backgroundColor: AppColors.background,
       scrolledUnderElevation: 0,
       surfaceTintColor: AppColors.transparent,
-      leadingWidth: 38,
+      leadingWidth: AppConstants.appBarLeadingWidth,
       leading: Button(
         icon: Icons.arrow_back_rounded,
-        onPressed: () =>
-            context.canPop() ? context.pop() : context.go(RoutePaths.library),
+        onPressed: () => context.canPop() ? context.pop() : context.go(RoutePaths.library),
       ),
       centerTitle: true,
       title: AnimatedOpacity(
         opacity: _showAppBarIcon ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: AppConstants.appBarAnimationDurationMs),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: AppConstants.appBarAvatarSize,
+              height: AppConstants.appBarAvatarSize,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.surface,
@@ -223,7 +216,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-
 class _ProfileCoverPhoto extends StatelessWidget {
   const _ProfileCoverPhoto({this.imageUrl});
 
@@ -232,7 +224,7 @@ class _ProfileCoverPhoto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 200, // Fixed height for the cover area
+      height: AppConstants.coverPhotoHeight, 
       width: double.infinity,
       child: imageUrl != null
           ? Image.network(
@@ -251,7 +243,7 @@ class _ProfileCoverPhoto extends StatelessWidget {
   Widget _buildPlaceholder() {
     return Container(
       color: AppColors.surface,
-      child: const Icon(Icons.image, color: AppColors.onPrimary, size: 40),
+      child: const Icon(Icons.image, color: AppColors.onPrimary, size: AppConstants.placeholderIconSize),
     );
   }
 }

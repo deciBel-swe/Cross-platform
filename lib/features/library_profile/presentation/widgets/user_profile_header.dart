@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
+
+
 class UserProfileHeader extends StatelessWidget {
-  const UserProfileHeader({required this.user});
+  const UserProfileHeader({required this.user,super.key});
 
   final UserProfile user;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final locationStr =
-        (user.profileDetails.city != null &&
-            user.profileDetails.country != null)
+    final locationStr = (user.profileDetails.city != null && user.profileDetails.country != null)
         ? '${user.profileDetails.city}, ${user.profileDetails.country}'
-        : 'No location';
+        : AppConstants.noLocation;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,39 +30,28 @@ class UserProfileHeader extends StatelessWidget {
           locationStr,
           style: textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppConstants.spacingSmall),
 
-        // The new tappable stats row
         Row(
           children: [
             _StatButton(
-              count: user
-                  .stats
-                  .followers, // Or followersCount if you renamed it in the entity
-              label: 'followers',
-              onTap: () {
-                debugPrint('Tapped: Navigate to Followers');
-                // TODO: Replace with actual navigation
-              },
+              count: user.stats.followers,
+              label: AppConstants.followers,
+              onTap: () {},
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingTiny),
               child: Text(
-                '-',
+                AppConstants.statSeparator,
                 style: textTheme.bodyMedium?.copyWith(
                   color: AppColors.onPrimary,
                 ),
               ),
             ),
             _StatButton(
-              count: user
-                  .stats
-                  .following, // Or followingCount if you renamed it in the entity
-              label: 'following',
-              onTap: () {
-                debugPrint('Tapped: Navigate to Following');
-                // TODO: Replace with actual navigation
-              },
+              count: user.stats.following, 
+              label: AppConstants.following,
+              onTap: () {},
             ),
           ],
         ),
@@ -69,7 +59,6 @@ class UserProfileHeader extends StatelessWidget {
     );
   }
 }
-
 
 class _StatButton extends StatelessWidget {
   const _StatButton({
@@ -88,12 +77,10 @@ class _StatButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingTiny),
         child: RichText(
           text: TextSpan(
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
             children: [
               TextSpan(
                 text: '$count ',
