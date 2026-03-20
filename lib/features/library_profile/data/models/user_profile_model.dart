@@ -14,8 +14,6 @@ class UserProfileModel with _$UserProfileModel {
     required String email,
     required String username,
     required bool emailVerified,
-    // Maps the JSON string to the enum. 
-    // Note: Adjust the @JsonValue in the enum if your API sends uppercase "PRO" or "FREE"
     required UserTier tier,
     @JsonKey(name: 'profile') required ProfileDetailsModel profileDetails,
     SocialLinksModel? socialLinks,

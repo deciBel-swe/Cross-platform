@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
@@ -11,7 +13,7 @@ abstract class IProfileRemoteDataSource {
   Future<SocialLinksModel> updateSocialLinks(SocialLinksModel linksModel);
   Future<UserProfileModel> getUserProfile();
   Future<bool> updateProfile(Map<String, dynamic> updateData);
-}
+Future<bool> updateProfileImages({File? profilePic, File? coverPic});}
 
 @LazySingleton(as: IProfileRemoteDataSource)
 class ProfileRemoteDataSource implements IProfileRemoteDataSource {
@@ -43,33 +45,26 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       throw ServerException(e.message ?? 'Unknown server error');
     }
   }
-  // Inside IProfileRemoteDataSource abstract class
 
-  // Inside ProfileRemoteDataSource implementation
   @override
   Future<bool> updateProfile(Map<String, dynamic> updateData) async {
     try {
-      // 1. Send the request
       final response = await _dioClient.patch(
-        '/users/me', // We will fix this path in step 2!
+        ApiConstants.userProfileEndpoint, 
         data: updateData,
       );
-debugPrint("🚀 Response from updateProfile: ${response.data}");
-      
 
-      // If we get here without a DioException, the update worked!
-    return response.statusCode == 200 || response.statusCode == 204;
-      
+      return response.statusCode == 200 || response.statusCode == 204;
     } on DioException catch (e) {
-      // 2. CATCH THE DIO ERROR! This prevents the Red Screen.
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized to update profile');
       } else if (e.response?.statusCode == 404) {
-        throw const ServerException('Endpoint not found (404). Check your URL.');
+        throw const ServerException(
+          'Endpoint not found (404). Check your URL.',
+        );
       }
-      debugPrint('🚨 FAILED URL: ${e.requestOptions.uri}');
-      debugPrint('🚨 HTTP METHOD: ${e.requestOptions.method}');
-      final backendMessage = (e.response?.data?['message'] ?? e.message) as String?;
+      final backendMessage =
+          (e.response?.data?['message'] ?? e.message) as String?;
       throw ServerException(backendMessage ?? 'Unknown server error');
     } catch (e) {
       throw ServerException('Data parsing error: $e');
@@ -77,9 +72,47 @@ debugPrint("🚀 Response from updateProfile: ${response.data}");
   }
 
   @override
+  Future<bool> updateProfileImages({File? profilePic, File? coverPic}) async {
+    try {
+      final formData = FormData();
+
+      if (profilePic != null) {
+        final imageName = profilePic.path.split('/').last;
+        formData.files.add(
+          MapEntry(
+            'profilePic', 
+            await MultipartFile.fromFile(profilePic.path, filename: imageName),
+          ),
+        );
+      }
+
+      if (coverPic != null) {
+        final imageName = coverPic.path.split('/').last;
+        formData.files.add(
+          MapEntry(
+            'coverPic', 
+            await MultipartFile.fromFile(coverPic.path, filename: imageName),
+          ),
+        );
+      }
+
+      final response = await _dioClient.patch<dynamic>(
+        ApiConstants.userProfileImage, 
+        data: formData,
+      );
+
+      return response.statusCode == 200 || response.statusCode == 204;
+
+    } on DioException catch (error) {
+      final backendMessage = error.response?.data?['message'] ?? error.message ;
+      throw ServerException((backendMessage ?? 'Failed to upload images') as String);
+    } catch (e) {
+      throw ServerException('Unexpected error: $e');
+    }
+  }
+  @override
   Future<UserProfileModel> getUserProfile() async {
     try {
-      // Consider adding '/users/me' to your ApiConstants if you haven't already.
       final response = await _dioClient.get(ApiConstants.userProfileEndpoint);
       debugPrint("++++++++++++++++++++++++++++++++++++");
       debugPrint("Response from /users/me: ${response.data}");
@@ -103,7 +136,6 @@ debugPrint("🚀 Response from updateProfile: ${response.data}");
       }
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
-      // Catching format/parsing exceptions specifically
       throw ServerException('Failed to parse user profile data: $e');
     }
   }
