@@ -90,7 +90,9 @@ class WaveformPainter extends CustomPainter {
     );
 
     for (int index = 0; index < peaks.length; index++) {
-      final normalizedPeak = peaks[index].clamp(0.0, 1.0);
+      final val = peaks[index].clamp(0.0, 1.0);
+
+      final normalizedPeak = val;
 
       final halfBarHeight = _minBarHeight(
         normalizedPeak * (halfAvailableHeight - 6),
@@ -125,7 +127,13 @@ class WaveformPainter extends CustomPainter {
   }
 
   double _minBarHeight(double value) {
-    return value < 3 ? 3 : value;
+    // If we have actual >0 data, let's make sure it's at least visible.
+    // Smallest visible bar = 4px (2 * 4).
+    if (value <= 0) return 0; // Pure silence is just the center line.
+
+    // Scale up slightly if it's too small but not zero?
+    // Let's enforce a minimum visual height if the peak exists.
+    return value < 4 ? 4 : value;
   }
 
   @override

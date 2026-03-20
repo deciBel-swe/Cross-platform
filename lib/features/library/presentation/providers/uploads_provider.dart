@@ -227,7 +227,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       return;
     }
 
-    _processingRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    _processingRefreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       _refreshProcessingTracks();
     });
   }
@@ -265,6 +265,37 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       }
     } finally {
       _isRefreshingProcessing = false;
+    }
+  }
+
+  void addTrack(Track track) {
+    if (_isDisposed) return;
+    final currentTracks = state.valueOrNull ?? [];
+
+    // Prepend the new track
+    final updated = [track, ...currentTracks];
+
+    // Update state
+    state = AsyncData(updated);
+
+    // Update cache
+    final userId = _activeUserId;
+    if (userId != null) {
+      final cached = _memoryCacheByUser[userId];
+      _memoryCacheByUser[userId] = (
+        tracks: updated,
+        currentPage: cached?.currentPage ?? _currentPage,
+        isLastPage: cached?.isLastPage ?? _isLastPage,
+      );
+    }
+
+    _syncProcessingPolling(updated);
+  }
+
+  void invalidateCache() {
+    final userId = _activeUserId;
+    if (userId != null) {
+      _memoryCacheByUser.remove(userId);
     }
   }
 }

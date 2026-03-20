@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 class UploadTrackCardCoverArt extends StatelessWidget {
@@ -12,6 +14,15 @@ class UploadTrackCardCoverArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ImageProvider? imageProvider;
+    if (url != null) {
+      if (url!.startsWith('http')) {
+        imageProvider = NetworkImage(url!);
+      } else {
+        imageProvider = FileImage(File(url!));
+      }
+    }
+
     final theme = Theme.of(context);
     return Container(
       width: 64,
@@ -19,13 +30,17 @@ class UploadTrackCardCoverArt extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(4),
-        image: url != null && !isProcessing
-            ? DecorationImage(image: NetworkImage(url!), fit: BoxFit.cover)
+        image: imageProvider != null
+            ? DecorationImage(
+                image: imageProvider,
+                fit: BoxFit.cover,
+                onError: (_, __) {}, // Prevent crash on bad URL/File
+              )
             : null,
       ),
       child: isProcessing
           ? const Center(child: CircularProgressIndicator())
-          : (url == null ? const Icon(Icons.music_note) : null),
+          : (imageProvider == null ? const Icon(Icons.music_note) : null),
     );
   }
 }

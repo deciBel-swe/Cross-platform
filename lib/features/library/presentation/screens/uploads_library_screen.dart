@@ -33,31 +33,49 @@ class UploadsLibraryBody extends ConsumerWidget {
       skipLoadingOnRefresh: true,
       data: (tracks) {
         if (tracks.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.cloud_upload_outlined,
-                  size: 64,
-                  color: theme.disabledColor,
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return RefreshIndicator(
+                onRefresh: () =>
+                    ref.read(uploadsProvider.notifier).refreshAll(),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.cloud_upload_outlined,
+                            size: 64,
+                            color: theme.disabledColor,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('No uploads yet.'),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () =>
+                                ref.read(uploadsProvider.notifier).refreshAll(),
+                            child: const Text('Refresh'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                const Text('No uploads yet.'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () =>
-                      ref.read(uploadsProvider.notifier).refreshAll(),
-                  child: const Text('Refresh'),
-                ),
-              ],
-            ),
+              );
+            },
           );
         }
+
         return RefreshIndicator(
           onRefresh: () => ref.read(uploadsProvider.notifier).refreshAll(),
           child: ListView.builder(
             controller: scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             itemCount: tracks.length,
             itemBuilder: (context, index) {

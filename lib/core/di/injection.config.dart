@@ -34,6 +34,8 @@ import 'package:decibel/features/library/domain/repositories/track_repository.da
     as _i40;
 import 'package:decibel/features/upload/data/datasources/upload_remote_datasource.dart'
     as _i255;
+import 'package:decibel/features/upload/data/repository/mock_upload_repository_impl.dart'
+    as _i736;
 import 'package:decibel/features/upload/data/repository/upload_repository_impl.dart'
     as _i646;
 import 'package:decibel/features/upload/domain/repositories/i_upload_repository.dart'
@@ -69,6 +71,10 @@ extension GetItInjectableX on _i174.GetIt {
       registerFor: {_mock},
     );
     gh.lazySingleton<_i354.DioClient>(() => _i354.DioClient(gh<_i361.Dio>()));
+    gh.lazySingleton<_i664.IUploadRepository>(
+      () => const _i736.MockUploadRepository(),
+      registerFor: {_mock},
+    );
     gh.lazySingleton<_i414.IAuthRemoteDataSource>(
       () => _i414.AuthRemoteDataSource(gh<_i354.DioClient>()),
     );
@@ -91,12 +97,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i928.LibraryRemoteDatasource>(
       () => _i928.LibraryRemoteDatasource(gh<_i354.DioClient>()),
     );
+    gh.lazySingleton<_i664.IUploadRepository>(
+      () => _i646.UploadRepository(gh<_i255.UploadRemoteDatasource>()),
+      registerFor: {_prod},
+    );
     gh.lazySingleton<_i40.TrackRepository>(
       () => _i536.TrackRepositoryImpl(gh<_i928.LibraryRemoteDatasource>()),
       registerFor: {_prod},
-    );
-    gh.lazySingleton<_i664.IUploadRepository>(
-      () => _i646.UploadRepository(gh<_i255.UploadRemoteDatasource>()),
     );
     return this;
   }

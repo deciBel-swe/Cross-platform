@@ -87,5 +87,8 @@ List<double> _normalizePeaks(List<num> sourcePeaks) {
     return rawPeaks.map((_) => 0.0).toList();
   }
 
-  return rawPeaks.map((peak) => peak / maxPeak).toList();
+  // Linear scaling
+  return rawPeaks.map((peak) {
+    return peak / maxPeak;
+  }).toList();
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -16,6 +17,15 @@ class TrackPreviewBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ImageProvider? imageProvider;
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      if (imageUrl!.startsWith('http')) {
+        imageProvider = NetworkImage(imageUrl!);
+      } else {
+        imageProvider = FileImage(File(imageUrl!));
+      }
+    }
+
     return Positioned.fill(
       child: DecoratedBox(
         decoration: const BoxDecoration(
@@ -25,12 +35,16 @@ class TrackPreviewBackground extends StatelessWidget {
             colors: [Color(0xFF0B2233), Color(0xFF07141F), Color(0xFF000000)],
           ),
         ),
-        child: imageUrl == null || imageUrl!.isEmpty
+        child: imageProvider == null
             ? null
             : Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(imageUrl!, fit: BoxFit.cover),
+                  Image(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox(),
+                  ),
 
                   if (isBlurred)
                     Positioned.fill(

@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
+import '../../../library/data/datasources/library_mock_fixtures.dart';
+import '../../../library/presentation/providers/uploads_provider.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 import '../../domain/repositories/i_upload_repository.dart';
 
@@ -185,6 +188,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         return;
       }
 
+      // ignore: unused_local_variable
       List<double> waveFormData = [];
       try {
         final waveformService = ref.read(waveformExtractionServiceProvider);
@@ -193,10 +197,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         waveFormData = [];
       }
 
-      final metadata = state.value!.copyWith(
-        audioFile: file,
-        waveFormData: waveFormData,
-      );
+      final metadata = state.value!.copyWith(audioFile: file, waveFormData: []);
       state = AsyncData(metadata);
     }
   }
@@ -211,39 +212,75 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     }
   }
 
-  // Form Submission
   Future<bool> submitTrack() async {
-    // Getting the current state and check is it null or not for safety
     final currentState = state.value;
-    if (currentState == null) return false;
+    if (currentState == null || currentState.audioFile == null) return false;
 
-    // Set the loading state
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
-    // Getting the repository instance to the Riverpod
     final repository = ref.read(uploadRepositoryProvider);
-
-    // Calling the upload API to send the metadata and files to the backend
     final result = await repository.uploadTrack(currentState);
 
     return result.fold(
-      // If fail, then update the UI with the error
       (failure) {
         state = AsyncValue<TrackUploadMetadata>.error(
           failure.message,
           StackTrace.current,
-        ).copyWithPrevious(AsyncData(currentState));
+        ).copyWithPrevious(state);
         return false;
       },
-      // if success, then update the form with a new empty instance
-      (success) {
+      (track) {
+        // Optimistically update the list to show "Processing" instantly
+        final notifier = ref.read(uploadsProvider.notifier);
+        notifier.addTrack(track);
+        notifier.invalidateCache();
+
+        // Start background waveform extraction for the new track
+        final filePath = currentState.audioFile!.path;
+        unawaited(_runBackgroundExtraction(track.id, filePath));
+
         state = const AsyncData(TrackUploadMetadata());
         return true;
       },
     );
   }
 
-  // making helper update method to make it generic
+  Future<void> _runBackgroundExtraction(int trackId, String path) async {
+    List<double> peaks = [];
+    try {
+      final waveformService = ref.read(waveformExtractionServiceProvider);
+
+      peaks = await waveformService.extractWaveform(path);
+    } catch (e, stack) {
+      debugPrint('UploadNotifier Extraction Error: $e');
+      debugPrintStack(stackTrace: stack);
+    }
+
+    final bool isFlat = peaks.isNotEmpty && peaks.every((p) => p == 0.0);
+
+    if (peaks.isEmpty || isFlat) {
+      peaks = [];
+    } else {
+      debugPrint(
+        'Waveform Extraction Verified: REAL data available (${peaks.length} samples).',
+      );
+    }
+
+    List<double> finalPeaks = peaks;
+    if (peaks.isNotEmpty) {
+      final max = peaks.reduce((curr, next) => curr > next ? curr : next);
+      if (max <= 1.0) {
+        finalPeaks = peaks.map((e) => (e * 100).roundToDouble()).toList();
+      } else {
+        finalPeaks = peaks.map((e) => e.roundToDouble()).toList();
+      }
+    }
+
+    LibraryMockFixtures.updateMockTrackWaveform(trackId, finalPeaks);
+
+    ref.read(uploadsProvider.notifier).refreshTrack(trackId);
+  }
+
   void _updateState(TrackUploadMetadata Function(TrackUploadMetadata) update) {
     if (state.value != null) {
       state = AsyncData(update(state.value!));
