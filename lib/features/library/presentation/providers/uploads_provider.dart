@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/domain/entities/auth_state.dart';
@@ -19,6 +21,11 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     ({List<Track> tracks, int currentPage, bool isLastPage})
   >
   _memoryCacheByUser = {};
+
+  @visibleForTesting
+  static void clearMemoryCache() {
+    _memoryCacheByUser.clear();
+  }
 
   int? _activeUserId;
 
