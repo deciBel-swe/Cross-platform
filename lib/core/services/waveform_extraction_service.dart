@@ -47,6 +47,15 @@ class WaveformExtractionService {
           }
         }
 
+        // Apply noise floor to avoid absolute silence
+        const double noiseFloor = 0.02;
+        result = result.map((sample) {
+          if (sample.abs() < noiseFloor) {
+            return noiseFloor;
+          }
+          return sample;
+        }).toList();
+
         const epsilon = 1e-6;
         final isFlat =
             result.isNotEmpty && result.every((e) => e.abs() < epsilon);
