@@ -49,6 +49,7 @@ jobs:
           channel: 'stable'
           flutter-version-file: pubspec.yaml 
           cache: true
+          pub-cache: true
             
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -75,6 +76,7 @@ jobs:
           channel: 'stable'
           flutter-version-file: pubspec.yaml 
           cache: true
+          pub-cache: true
           
       - run: flutter pub get
       
