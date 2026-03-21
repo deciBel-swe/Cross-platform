@@ -1,14 +1,14 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../upload/presentation/providers/upload_notifier.dart';
-import '../notifiers/profile_edit_notifier.dart';
-import '../notifiers/user_profile_notifier.dart';
-
-// Assuming you put your genreListProvider in a file like this:
-// import '../providers/genre_list_provider.dart';
+import '../../domain/entities/user_profile.dart';
+import '../providers/profile_edit_provider.dart';
+import '../providers/user_profile_provider.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -24,13 +24,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _cityController;
   late TextEditingController _countryController;
 
-  // 1. Add local state to track the user's genre selections
   late List<String> _selectedGenres;
-
+  late UserProfile? user;
+  Either<Failure, UserProfile>? userState;
   @override
   void initState() {
     super.initState();
-    final user = ref.read(userProfileProvider).value;
+    userState = ref.read(userProfileProvider).value;
+    user = userState?.fold((failure) => null, (profile) => profile);
 
     _bioController = TextEditingController(text: user?.profileDetails.bio);
     _cityController = TextEditingController(text: user?.profileDetails.city);
@@ -38,7 +39,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       text: user?.profileDetails.country,
     );
 
-    // 2. Initialize the selected genres with a mutable copy of the user's current data
     _selectedGenres = List<String>.from(
       user?.profileDetails.favoriteGenres ?? [],
     );
@@ -52,8 +52,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
-  bool _hasChanges() {
-    final user = ref.read(userProfileProvider).value;
+  bool _hasChanges(UserProfile? user
+) {
+    
     final originalBio = user?.profileDetails.bio ?? '';
     final originalCity = user?.profileDetails.city ?? '';
     final originalCountry = user?.profileDetails.country ?? '';
@@ -75,13 +76,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (!_hasChanges()) {
+    if (!_hasChanges(user)) {
       context.pop();
       return;
     }
 
     final success = await ref
-        .read(profileEditProvider.notifier)
+        .read(profileEditNotifierProvider.notifier)
         .updateGeneralInfo(
           bio: _bioController.text.trim(),
           city: _cityController.text.trim(),
@@ -98,7 +99,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       );
       context.pop();
     } else {
-      final errorState = ref.read(profileEditProvider).error;
+      final errorState = ref.read(profileEditNotifierProvider).error;
       final errorMessage =
           errorState?.toString() ?? 'Failed to update profile.';
 
@@ -117,7 +118,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final editState = ref.watch(profileEditProvider);
+    final editState = ref.watch(profileEditNotifierProvider);
     // 5. Watch the available genres from your provider
     final availableGenres = ref.watch(genreListProvider);
 
@@ -257,7 +258,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       });
                     },
                     backgroundColor: AppColors.surface,
-                    selectedColor: AppColors.google.withOpacity(0.2),
+                    selectedColor: AppColors.google,
                     checkmarkColor: AppColors.google,
                     labelStyle: TextStyle(
                       color: isSelected

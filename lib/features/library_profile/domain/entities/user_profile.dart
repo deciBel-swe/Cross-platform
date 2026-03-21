@@ -6,7 +6,6 @@ import 'public_profile_social_links.dart';
 enum UserTier { 
   @JsonValue('FREE') free, 
   @JsonValue('PRO') pro,
-  @JsonValue('ARTIST') artist, 
 }
 
 class UserProfile {

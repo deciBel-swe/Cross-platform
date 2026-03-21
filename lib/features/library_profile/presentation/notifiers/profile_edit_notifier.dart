@@ -1,20 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/injection.dart'; // Adjust to where your getIt instance is defined
-import '../../domain/entities/public_profile_social_links.dart';
-import '../../domain/entities/user_profile.dart';
-import '../../domain/repositories/profile_repository.dart';
+import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
-import 'user_profile_notifier.dart';
 
-final profileEditProvider =
-    StateNotifierProvider<ProfileEditNotifier, AsyncValue<void>>(
-      (ref) => ProfileEditNotifier(ref),
-    );
 
-class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
-  ProfileEditNotifier(this.ref) : super(const AsyncData(null));
-  final Ref ref;
+class ProfileEditNotifier extends AsyncNotifier<void> {
+  
+  @override
+  FutureOr<void> build() {
+  }
 
   Future<bool> updateGeneralInfo({
     required String bio,
@@ -24,7 +20,9 @@ class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
 
-    final repository = getIt<ProfileRepository>();
+    // 4. Using ref.read instead of calling getIt directly
+    final repository = ref.read(profileRepositoryProvider);
+    
     final result = await repository.updateProfile(
       bio: bio,
       city: city,
@@ -38,10 +36,11 @@ class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
         return false;
       },
       (success) {
-       ref.invalidate(userProfileProvider);
+        ref.invalidate(userProfileProvider);
         state = const AsyncData(null);
         return true;
       },
     );
   }
 }
+

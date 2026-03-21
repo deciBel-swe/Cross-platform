@@ -6,6 +6,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
 import '../notifiers/user_profile_notifier.dart';
+import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
@@ -54,7 +55,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: userProfileAsync.maybeWhen(
-        data: (user) => _buildAppBar(context, user),
+        data: (eitherUser) => eitherUser.fold(
+          (failure) => _buildFallbackAppBar(context),
+
+          (profile) => _buildAppBar(context, profile),
+        ),
         orElse: () => _buildFallbackAppBar(context),
       ),
       body: userProfileAsync.when(
@@ -84,9 +89,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   // This displays the clean Failure message we set up in the Repository
                   error.toString().replaceAll('Exception: ', ''),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onPrimary
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
@@ -111,52 +116,72 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
         ),
-        data: (user) => RefreshIndicator(
-          onRefresh: () async => ref.refresh(userProfileProvider.future),
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Stack(
-              children: [
-                // 1. Cover Photo in the back
-                _ProfileCoverPhoto(imageUrl: user.profileDetails.coverPic),
-
-                // 2. Profile Content in the front
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0), 
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 120),
-                         const ProfileIcon(),
-                      const SizedBox(height: 14),
-                      _UserProfileHeader(user: user),
-                      const SizedBox(height: 16),
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final socialLinks = ref.watch(webProfilesProvider);
-                          return ActionButtons(socialLinks: socialLinks);
-                        },
-                      ),
-                      if (user.profileDetails.bio != null) ...[
-                        _ExpandableBio(bio: user.profileDetails.bio!),
-                        const SizedBox(height: 8),
-                      ],
-                      const SizedBox(height: 16),
-                      Tile(
-                        title: "Pinned to Spotlight",
-                        subtitle: "Pin items to your spotlight",
-                        buttonText: "Edit",
-                        onButtonPressed: () =>
-                            context.push(RoutePaths.editProfile),
-                      ),
-                      const SizedBox(height: 20),
-                      const MediaCollection(),
-                      const SizedBox(height: 40), // Bottom padding
-                    ],
-                  ),
+        data: (eitherUser) => eitherUser.fold(
+          (failure) => RefreshIndicator(
+            onRefresh: () async => ref.refresh(userProfileProvider.future),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Center(
+                  child: Text('Could not load profile: ${failure.message}'),
                 ),
-              ],
+              ),
+            ),
+          ),
+          (user) => RefreshIndicator(
+            onRefresh: () async => ref.refresh(userProfileProvider.future),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Stack(
+                  children: [
+                    // 1. Cover Photo in the back
+                    _ProfileCoverPhoto(imageUrl: user.profileDetails.coverPic),
+
+                    // 2. Profile Content in the front
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 120),
+                          const ProfileIcon(),
+                          const SizedBox(height: 14),
+                          _UserProfileHeader(user: user),
+                          const SizedBox(height: 16),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final socialLinks = ref.watch(
+                                webProfilesProvider,
+                              );
+                              return ActionButtons(socialLinks: socialLinks);
+                            },
+                          ),
+                          if (user.profileDetails.bio != null) ...[
+                            _ExpandableBio(bio: user.profileDetails.bio!),
+                            const SizedBox(height: 8),
+                          ],
+                          const SizedBox(height: 16),
+                          Tile(
+                            title: "Pinned to Spotlight",
+                            subtitle: "Pin items to your spotlight",
+                            buttonText: "Edit",
+                            onButtonPressed: () =>
+                                context.push(RoutePaths.editProfile),
+                          ),
+                          const SizedBox(height: 20),
+                          const MediaCollection(),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
