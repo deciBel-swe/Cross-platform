@@ -34,7 +34,7 @@ class UploadTrackCardCoverArt extends StatelessWidget {
             ? DecorationImage(
                 image: imageProvider,
                 fit: BoxFit.cover,
-                onError: (_, __) {}, // Prevent crash on bad URL/File
+                onError: (_, _) {}, // Prevent crash on bad URL/File
               )
             : null,
       ),

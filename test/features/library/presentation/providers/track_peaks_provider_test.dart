@@ -38,7 +38,7 @@ void main() {
       // Arrange
       when(
         () => mockRepo.fetchTrackPeaksById(tTrackId),
-      ).thenAnswer((_) async => Right(tTrackPeaks));
+      ).thenAnswer((_) async => const Right(tTrackPeaks));
 
       final container = createContainer();
 

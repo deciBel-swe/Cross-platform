@@ -43,7 +43,7 @@ class TrackPreviewBackground extends StatelessWidget {
                   Image(
                     image: imageProvider,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox(),
+                    errorBuilder: (_, _, _) => const SizedBox(),
                   ),
 
                   if (isBlurred)

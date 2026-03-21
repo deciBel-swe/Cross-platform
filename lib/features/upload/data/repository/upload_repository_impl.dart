@@ -21,7 +21,6 @@ class UploadRepository implements IUploadRepository {
   ) async {
     try {
       if (metadata.audioFile == null) {
-      if (metadata.audioFile == null) {
         return const Left(ServerFailure('Audio file is required'));
       }
 
@@ -32,7 +31,6 @@ class UploadRepository implements IUploadRepository {
         metadata.coverImage,
         model,
       );
-      );
 
       return Right(trackModel.toEntity());
     } on ServerException catch (error) {
@@ -41,11 +39,6 @@ class UploadRepository implements IUploadRepository {
       return const Left(
         ServerFailure('An unexpected error occurred during file upload'),
       );
-    } catch (error) {
-      return const Left(
-        ServerFailure('An unexpected error occurred during file upload'),
-      );
     }
   }
 }
-

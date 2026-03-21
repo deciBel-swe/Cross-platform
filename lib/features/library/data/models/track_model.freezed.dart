@@ -29,7 +29,6 @@ mixin _$TrackModel {
   String? get waveformUrl => throw _privateConstructorUsedError;
   String get genre => throw _privateConstructorUsedError;
   List<String> get tags => throw _privateConstructorUsedError;
-  @JsonKey(unknownEnumValue: TrackStatusModel.processing)
   TrackStatusModel get state => throw _privateConstructorUsedError;
   DateTime get releaseDate => throw _privateConstructorUsedError;
   int get playCount => throw _privateConstructorUsedError;
@@ -63,7 +62,6 @@ abstract class $TrackModelCopyWith<$Res> {
     String? waveformUrl,
     String genre,
     List<String> tags,
-    @JsonKey(unknownEnumValue: TrackStatusModel.processing)
     TrackStatusModel state,
     DateTime releaseDate,
     int playCount,
@@ -197,7 +195,6 @@ abstract class _$$TrackModelImplCopyWith<$Res>
     String? waveformUrl,
     String genre,
     List<String> tags,
-    @JsonKey(unknownEnumValue: TrackStatusModel.processing)
     TrackStatusModel state,
     DateTime releaseDate,
     int playCount,
@@ -314,7 +311,7 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
     this.waveformUrl,
     required this.genre,
     final List<String> tags = const <String>[],
-    @JsonKey(unknownEnumValue: TrackStatusModel.processing) required this.state,
+    required this.state,
     required this.releaseDate,
     this.playCount = 0,
     this.likeCount = 0,
@@ -349,7 +346,6 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
   }
 
   @override
-  @JsonKey(unknownEnumValue: TrackStatusModel.processing)
   final TrackStatusModel state;
   @override
   final DateTime releaseDate;
@@ -464,7 +460,6 @@ abstract class _TrackModel implements TrackModel {
     final String? waveformUrl,
     required final String genre,
     final List<String> tags,
-    @JsonKey(unknownEnumValue: TrackStatusModel.processing)
     required final TrackStatusModel state,
     required final DateTime releaseDate,
     final int playCount,
@@ -493,7 +488,6 @@ abstract class _TrackModel implements TrackModel {
   @override
   List<String> get tags;
   @override
-  @JsonKey(unknownEnumValue: TrackStatusModel.processing)
   TrackStatusModel get state;
   @override
   DateTime get releaseDate;

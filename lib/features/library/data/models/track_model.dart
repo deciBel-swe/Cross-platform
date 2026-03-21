@@ -21,7 +21,6 @@ class TrackModel with _$TrackModel {
     String? waveformUrl,
     required String genre,
     @Default(<String>[]) List<String> tags,
-    @JsonKey(unknownEnumValue: TrackStatusModel.processing)
     required TrackStatusModel state,
     required DateTime releaseDate,
     @Default(0) int playCount,

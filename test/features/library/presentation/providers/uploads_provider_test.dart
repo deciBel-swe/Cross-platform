@@ -1,5 +1,3 @@
-
-
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
@@ -54,11 +52,7 @@ void main() {
   }
 
   group('UploadsNotifier', () {
-    const user = AuthUser(
-      id: 1,
-      username: 'test_user',
-      tier: UserTier.free,
-    );
+    const user = AuthUser(id: 1, username: 'test_user', tier: UserTier.free);
     const authState = AuthAuthenticated(user: user);
 
     test('initial build fetches tracks for authenticated user', () async {
@@ -86,91 +80,129 @@ void main() {
         isLast: true,
       );
 
-      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20))
-          .thenAnswer((_) async => Right(paginated));
+      when(
+        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
+      ).thenAnswer((_) async => Right(paginated));
 
       final container = createContainer(authState: authState);
-      container.listen(uploadsProvider, (_, __) {}); // Keep alive
+      container.listen(uploadsProvider, (_, _) {}); // Keep alive
 
       final state = await container.read(uploadsProvider.future);
 
       expect(state, tracks);
-      verify(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20)).called(1);
+      verify(
+        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
+      ).called(1);
     });
 
     test('initial build returns empty list if unauthenticated', () async {
       final container = createContainer(authState: const AuthUnauthenticated());
-      container.listen(uploadsProvider, (_, __) {}); // Keep alive
+      container.listen(uploadsProvider, (_, _) {}); // Keep alive
 
       final state = await container.read(uploadsProvider.future);
 
       expect(state, isEmpty);
-      verifyNever(() => mockRepo.fetchTracks(userId: any(named: 'userId'), page: any(named: 'page'), size: any(named: 'size')));
+      verifyNever(
+        () => mockRepo.fetchTracks(
+          userId: any(named: 'userId'),
+          page: any(named: 'page'),
+          size: any(named: 'size'),
+        ),
+      );
     });
 
     test('refreshAll re-fetches data', () async {
       // Setup mock before container creation due to sync build
-      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20))
-          .thenAnswer((_) async => const Right(PaginatedTracks(
-                content: [],
-                pageNumber: 0,
-                pageSize: 20,
-                totalElements: 0,
-                totalPages: 0,
-                isLast: true,
-              )));
+      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20)).thenAnswer(
+        (_) async => const Right(
+          PaginatedTracks(
+            content: [],
+            pageNumber: 0,
+            pageSize: 20,
+            totalElements: 0,
+            totalPages: 0,
+            isLast: true,
+          ),
+        ),
+      );
 
       final container = createContainer(authState: authState);
-      container.listen(uploadsProvider, (_, __) {}); // Keep alive
+      container.listen(uploadsProvider, (_, _) {}); // Keep alive
 
       // Ensure initial load completes
       await container.read(uploadsProvider.future);
-      
+
       // Wait for async auth state to settle if needed, though future completion implies a value
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       // Verify fetchTracks was called once by initial build
-      verify(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20)).called(1);
-      
+      verify(
+        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
+      ).called(1);
+
       clearInteractions(mockRepo);
 
       // Act
       await container.read(uploadsProvider.notifier).refreshAll();
-      
+
       // Allow async operations to complete
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
       final refreshState = container.read(uploadsProvider);
-      expect(refreshState.hasError, isFalse, reason: 'Refresh failed with error: ${refreshState.error}');
+      expect(
+        refreshState.hasError,
+        isFalse,
+        reason: 'Refresh failed with error: ${refreshState.error}',
+      );
 
       // Verify called ONCE (refresh only)
-      verify(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20)).called(1);
+      verify(
+        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
+      ).called(1);
     });
 
     test('loadNextPage fetches next page', () async {
       // Page 0
       final page0 = PaginatedTracks(
-        content: [Track(
+        content: [
+          Track(
             id: 1,
             title: 'T1',
             artist: const Artist(id: 1, username: 'U'),
-            genre: '', tags: [], state: TrackStatus.finished, releaseDate: DateTime.now(), playCount: 0, likeCount: 0, repostCount: 0, createdAt: DateTime.now()
-        )],
+            genre: '',
+            tags: [],
+            state: TrackStatus.finished,
+            releaseDate: DateTime.now(),
+            playCount: 0,
+            likeCount: 0,
+            repostCount: 0,
+            createdAt: DateTime.now(),
+          ),
+        ],
         pageNumber: 0,
         pageSize: 20,
         totalElements: 2,
         totalPages: 1,
         isLast: false, // Not last
       );
-      
+
       // Page 1
       final page1 = PaginatedTracks(
-        content: [Track(
+        content: [
+          Track(
             id: 2,
             title: 'T2',
             artist: const Artist(id: 1, username: 'U'),
-            genre: '', tags: [], state: TrackStatus.finished, releaseDate: DateTime.now(), playCount: 0, likeCount: 0, repostCount: 0, createdAt: DateTime.now()
-        )],
+            genre: '',
+            tags: [],
+            state: TrackStatus.finished,
+            releaseDate: DateTime.now(),
+            playCount: 0,
+            likeCount: 0,
+            repostCount: 0,
+            createdAt: DateTime.now(),
+          ),
+        ],
         pageNumber: 1,
         pageSize: 20,
         totalElements: 2,
@@ -178,14 +210,16 @@ void main() {
         isLast: true,
       );
 
-      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20))
-          .thenAnswer((_) async => Right(page0));
-      
-      when(() => mockRepo.fetchTracks(userId: 1, page: 1, size: 20))
-          .thenAnswer((_) async => Right(page1));
+      when(
+        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
+      ).thenAnswer((_) async => Right(page0));
+
+      when(
+        () => mockRepo.fetchTracks(userId: 1, page: 1, size: 20),
+      ).thenAnswer((_) async => Right(page1));
 
       final container = createContainer(authState: authState);
-      container.listen(uploadsProvider, (_, __) {}); // Keep alive
+      container.listen(uploadsProvider, (_, _) {}); // Keep alive
 
       // Load initial
       await container.read(uploadsProvider.future);
@@ -202,19 +236,22 @@ void main() {
     });
 
     test('addTrack updates state optimistically', () async {
-      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20))
-          .thenAnswer((_) async => const Right(PaginatedTracks(
-                content: [],
-                pageNumber: 0,
-                pageSize: 20,
-                totalElements: 0,
-                totalPages: 0,
-                isLast: true,
-              )));
-      
+      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20)).thenAnswer(
+        (_) async => const Right(
+          PaginatedTracks(
+            content: [],
+            pageNumber: 0,
+            pageSize: 20,
+            totalElements: 0,
+            totalPages: 0,
+            isLast: true,
+          ),
+        ),
+      );
+
       final container = createContainer(authState: authState);
-      container.listen(uploadsProvider, (_, __) {}); // Keep alive
-      
+      container.listen(uploadsProvider, (_, _) {}); // Keep alive
+
       await container.read(uploadsProvider.future);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
@@ -243,19 +280,22 @@ void main() {
     });
 
     test('invalidateCache just clears memory cache', () async {
-      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20))
-          .thenAnswer((_) async => const Right(PaginatedTracks(
-                content: [],
-                pageNumber: 0,
-                pageSize: 20,
-                totalElements: 0,
-                totalPages: 0,
-                isLast: true,
-              )));
-      
+      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20)).thenAnswer(
+        (_) async => const Right(
+          PaginatedTracks(
+            content: [],
+            pageNumber: 0,
+            pageSize: 20,
+            totalElements: 0,
+            totalPages: 0,
+            isLast: true,
+          ),
+        ),
+      );
+
       final container = createContainer(authState: authState);
-      container.listen(uploadsProvider, (_, __) {}); // Keep alive
-      
+      container.listen(uploadsProvider, (_, _) {}); // Keep alive
+
       // Initial load
       await container.read(uploadsProvider.future);
       await Future<void>.delayed(const Duration(milliseconds: 50));
