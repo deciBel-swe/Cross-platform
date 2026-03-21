@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
-import '../notifiers/user_profile_notifier.dart';
 import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';

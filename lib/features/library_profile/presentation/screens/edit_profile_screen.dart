@@ -5,10 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../upload/presentation/providers/upload_notifier.dart';
 import '../../domain/entities/user_profile.dart';
 import '../providers/profile_edit_provider.dart';
 import '../providers/user_profile_provider.dart';
+import '../widgets/genre_manager.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -52,9 +52,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
-  bool _hasChanges(UserProfile? user
-) {
-    
+  bool _hasChanges(UserProfile? user) {
     final originalBio = user?.profileDetails.bio ?? '';
     final originalCity = user?.profileDetails.city ?? '';
     final originalCountry = user?.profileDetails.country ?? '';
@@ -120,7 +118,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     final editState = ref.watch(profileEditNotifierProvider);
     // 5. Watch the available genres from your provider
-    final availableGenres = ref.watch(genreListProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -240,38 +237,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
-                children: availableGenres.map((genre) {
-                  final isSelected = _selectedGenres.contains(genre);
-                  return FilterChip(
-                    label: Text(genre),
-                    selected: isSelected,
-                    onSelected: (bool selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedGenres.add(genre);
-                        } else {
-                          _selectedGenres.remove(genre);
-                        }
-                      });
-                    },
-                    backgroundColor: AppColors.surface,
-                    selectedColor: AppColors.google,
-                    checkmarkColor: AppColors.google,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? AppColors.google
-                          : AppColors.onPrimary,
-                    ),
-                    side: BorderSide(
-                      color: isSelected ? AppColors.google : Colors.transparent,
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 40), // Extra padding at the bottom
+              GenreManagerWidget(initialSelectedGenres: _selectedGenres),
+              const SizedBox(height: 40),
             ],
           ),
         ),

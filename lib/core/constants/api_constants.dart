@@ -17,6 +17,8 @@ class ApiConstants {
   /// Step 2: Backend redirects browser -> returns Token
   /// Step 3: Flutter exchanges OAuth token with backend
   static const String googleTokenExchangeEndpoint = '/auth/oauth/google';
+  static const String genresEndpoint = '/genres';
+
 
   static const String userProfileEndpoint = '/users/me';
   static const String userProfilePrivacy = '/users/me/privacy';
