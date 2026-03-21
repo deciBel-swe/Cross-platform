@@ -13,11 +13,16 @@ class LibraryScreen extends StatelessWidget {
       context.push(RoutePaths.profile);
     }
 
+    void goToSettings() {
+      context.push(RoutePaths.settings);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Library'),
         actions: [
           IconButton(onPressed: goToProfile, icon: const Icon(Icons.person)),
+          IconButton(onPressed: goToSettings, icon: const Icon(Icons.settings)),
         ],
       ),
       body: const _LibraryTab(),

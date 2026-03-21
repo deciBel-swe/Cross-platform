@@ -5,7 +5,7 @@ version: 1.0.0+1
 
 environment:
   sdk: ^3.10.8
-  flutter: 3.38.9
+  flutter: "3.38.9"
 
 dependencies:
   flutter:
@@ -60,6 +60,14 @@ dependencies:
   device_info_plus: ^12.3.0
   window_manager: ^0.5.1
 
+  # ---------- App Icon ----------
+  dynamic_app_icon_flutter_plus: ^0.0.1
+
+
+  # ---------- Social Icons ----------
+  font_awesome_flutter: ^10.7.0
+  # ---------- Google Sign In ----------
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -89,6 +97,19 @@ flutter:
     - assets/background/
     - assets/background/desktop/
     - assets/html/
+    - assets/icon/app_icon.png
+    - assets/icon/black_app_icon_trans.png
+    - assets/icon/white_app_icon_trans.png
+    - assets/icon/app_Icon_style1.png
+    - assets/icon/app_Icon_style2.png
+    - assets/icon/desktop/app_icon_classic.ico
+    - assets/icon/desktop/app_icon_black.ico
+    - assets/icon/desktop/app_icon_white.ico
+    - assets/html/auth_complete.html
+    - assets/background/background_startscreen.png
+    - assets/background/foreground_startscreen.png
+    - assets/background/desktop/background_startscreen.png
+    - assets/background/desktop/foreground_startscreen.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

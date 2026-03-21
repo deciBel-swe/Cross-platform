@@ -13,7 +13,7 @@ class UploadRemoteDatasource {
   const UploadRemoteDatasource(this._dioClient);
   final DioClient _dioClient;
 
-  Future<TrackModel> uploadTrack(
+  Future<void> uploadTrack(
     File audioFile,
     File? coverImage,
     TrackMetadataModel model,
@@ -47,12 +47,7 @@ class UploadRemoteDatasource {
       }
 
       // 4. Send the single creation request
-      final response = await _dioClient.post<dynamic>(
-        '/tracks',
-        data: formData,
-      );
-
-      return TrackModel.fromJson(response.data as Map<String, dynamic>);
+      await _dioClient.post<dynamic>('/api/tracks', data: formData);
     } on DioException catch (error) {
       throw ServerException(error.message ?? 'Failed to upload track');
     }
