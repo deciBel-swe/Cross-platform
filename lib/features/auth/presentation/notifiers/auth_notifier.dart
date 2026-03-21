@@ -3,33 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/exceptions.dart';
 import '../../domain/entities/auth_state.dart';
-import '../../domain/entities/auth_user.dart';
-
-class AuthNotifier extends AsyncNotifier<AuthState> {
-  @override
-  FutureOr<AuthState> build() async {
-    debugPrint('[AuthNotifier] Initializing with Mock User for testing...');
-
-    return const AuthAuthenticated(
-      user: AuthUser(
-        id: 1,
-        username: 'Ska_Tester',
-        tier: UserTier.artist,
-        profileUrl: 'https://decibel.example.com/ska',
-        avatarUrl: 'https://i.pravatar.cc/150?u=ska',
-      ),
-    );
-  }
-
-  Future<void> loginWithGoogle() async {
-    debugPrint('[AuthNotifier] loginWithGoogle skipped - using Mock User.');
-  }
-
-  Future<void> logout() async {
-    debugPrint('[AuthNotifier] logout disabled during testing.');
-  }
-}
+import '../providers/auth_provider.dart';
 
 /// Manages the authentication state of the application.
 ///
@@ -45,72 +21,72 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 ///   and securely update the state upon success or failure.
 /// * **Session Management:** Provides [logout] to clear local tokens and
 ///   return the user to an unauthenticated state.
-// class AuthNotifier extends AsyncNotifier<AuthState> {
-//   @override
-//   FutureOr<AuthState> build() async {
-//     final secureStorage = ref.watch(secureStorageServiceProvider);
-//     final repo = ref.watch(authRepositoryProvider);
+class AuthNotifier extends AsyncNotifier<AuthState> {
+  @override
+  FutureOr<AuthState> build() async {
+    final secureStorage = ref.watch(secureStorageServiceProvider);
+    final repo = ref.watch(authRepositoryProvider);
 
-//     final isExpired = await secureStorage.isAccessTokenExpired();
-//     if (isExpired) {
-//       return const AuthUnauthenticated();
-//     }
+    final isExpired = await secureStorage.isAccessTokenExpired();
+    if (isExpired) {
+      return const AuthUnauthenticated();
+    }
 
-//     try {
-//       final userEither = await repo.getCurrentUser();
-//       return userEither.fold((failure) => const AuthUnauthenticated(), (user) {
-//         if (user != null) {
-//           return AuthAuthenticated(user: user);
-//         }
-//         return const AuthUnauthenticated();
-//       });
-//     } catch (_) {
-//       // Ignore errors during check, fallback to unauthenticated state.
-//     }
+    try {
+      final userEither = await repo.getCurrentUser();
+      return userEither.fold((failure) => const AuthUnauthenticated(), (user) {
+        if (user != null) {
+          return AuthAuthenticated(user: user);
+        }
+        return const AuthUnauthenticated();
+      });
+    } catch (_) {
+      // Ignore errors during check, fallback to unauthenticated state.
+    }
 
-//     return const AuthUnauthenticated();
-//   }
+    return const AuthUnauthenticated();
+  }
 
-//   Future<void> loginWithGoogle() async {
-//     debugPrint('[AuthNotifier] loginWithGoogle() started.');
-//     state = const AsyncLoading();
+  Future<void> loginWithGoogle() async {
+    debugPrint('[AuthNotifier] loginWithGoogle() started.');
+    state = const AsyncLoading();
 
-//     state = await AsyncValue.guard(() async {
-//       final repo = ref.read(authRepositoryProvider);
+    state = await AsyncValue.guard(() async {
+      final repo = ref.read(authRepositoryProvider);
 
-//       try {
-//         debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
-//         final userEither = await repo.loginWithGoogle();
+      try {
+        debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
+        final userEither = await repo.loginWithGoogle();
 
-//         return userEither.fold(
-//           (failure) {
-//             debugPrint('[AuthNotifier] Failure: ${failure.message}');
-//             throw Exception(failure.message);
-//           },
-//           (user) {
-//             debugPrint(
-//               '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
-//             );
-//             return AuthAuthenticated(user: user);
-//           },
-//         );
-//       } on AppException catch (e) {
-//         debugPrint('[AuthNotifier] AppException: ${e.message}');
-//         // Will be caught by UI async guard
-//         throw Exception(e.message);
-//       } catch (e, st) {
-//         debugPrint('[AuthNotifier] Unexpected Exception: $e\n$st');
-//         throw Exception(e.toString());
-//       }
-//     });
+        return userEither.fold(
+          (failure) {
+            debugPrint('[AuthNotifier] Failure: ${failure.message}');
+            throw Exception(failure.message);
+          },
+          (user) {
+            debugPrint(
+              '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
+            );
+            return AuthAuthenticated(user: user);
+          },
+        );
+      } on AppException catch (e) {
+        debugPrint('[AuthNotifier] AppException: ${e.message}');
+        // Will be caught by UI async guard
+        throw Exception(e.message);
+      } catch (e, st) {
+        debugPrint('[AuthNotifier] Unexpected Exception: $e\n$st');
+        throw Exception(e.toString());
+      }
+    });
 
-//     debugPrint('[AuthNotifier] State is now: $state');
-//   }
+    debugPrint('[AuthNotifier] State is now: $state');
+  }
 
-//   Future<void> logout() async {
-//     final secureStorage = ref.read(secureStorageServiceProvider);
-//     await secureStorage.clearAll();
+  Future<void> logout() async {
+    final secureStorage = ref.read(secureStorageServiceProvider);
+    await secureStorage.clearAll();
 
-//     state = const AsyncData(AuthUnauthenticated());
-//   }
-// }
+    state = const AsyncData(AuthUnauthenticated());
+  }
+}
