@@ -5,9 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../notifiers/genre_list_notifier.dart';
 
 class GenreManagerWidget extends ConsumerStatefulWidget {
-  final List<String> initialSelectedGenres;
-
   const GenreManagerWidget({super.key, this.initialSelectedGenres = const []});
+  final List<String> initialSelectedGenres;
 
   @override
   ConsumerState<GenreManagerWidget> createState() => _GenreManagerWidgetState();
@@ -66,12 +65,12 @@ class _GenreManagerWidgetState extends ConsumerState<GenreManagerWidget> {
                   },
                   backgroundColor: AppColors.surface,
                   selectedColor: AppColors.google,
-                  checkmarkColor: AppColors.google,
-                  labelStyle: TextStyle(
-                    color: isSelected ? AppColors.google : AppColors.onPrimary,
-                  ),
+                  checkmarkColor: AppColors.onPrimary,
+                  labelStyle: const TextStyle(color: AppColors.onPrimary),
                   side: BorderSide(
-                    color: isSelected ? AppColors.google : Colors.transparent,
+                    color: isSelected
+                        ? AppColors.google
+                        : AppColors.transparent,
                   ),
                 );
               }).toList(),

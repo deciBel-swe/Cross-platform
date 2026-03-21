@@ -22,12 +22,18 @@ import '../../features/auth/data/repositories/mock_auth_repository.dart'
     as _i703;
 import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
+import '../../features/library_profile/data/datasources/genre_data_source_remote.dart'
+    as _i271;
 import '../../features/library_profile/data/datasources/profile_remote_data_source.dart'
     as _i364;
+import '../../features/library_profile/data/repositories/genre_repository_impl.dart'
+    as _i140;
 import '../../features/library_profile/data/repositories/image_repository_impl.dart'
     as _i423;
 import '../../features/library_profile/data/repositories/profile_repository_impl.dart'
     as _i997;
+import '../../features/library_profile/domain/repositories/genre_repository.dart'
+    as _i2;
 import '../../features/library_profile/domain/repositories/image_repository.dart'
     as _i121;
 import '../../features/library_profile/domain/repositories/profile_repository.dart'
@@ -85,8 +91,16 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       registerFor: {_prod},
     );
+    gh.lazySingleton<_i271.IGenreRemoteDataSource>(
+      () => _i271.GenreRemoteDataSource(gh<_i667.DioClient>()),
+    );
     gh.factory<_i464.UploadRemoteDatasource>(
       () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i2.AllGenresRepository>(
+      () => _i140.AllGenresRepositoryImpl(
+        remoteDataSource: gh<_i271.IGenreRemoteDataSource>(),
+      ),
     );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),

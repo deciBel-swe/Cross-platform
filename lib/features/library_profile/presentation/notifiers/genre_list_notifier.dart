@@ -13,7 +13,7 @@ class AllGenresListNotifier extends AsyncNotifier<Either<Failure, List<String>>>
   }
 
   Future<Either<Failure, List<String>>> _fetchGenres() async {
-    final repository = ref.read(allGenresRepositoryProvider);
+    final repository = ref.read(allGenreRepositoryProvider);
     return await repository.getGenres();
   }
 }
