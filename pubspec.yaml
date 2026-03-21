@@ -49,6 +49,7 @@ dependencies:
 
   # ---------- Waveform Visualization ----------
   audio_waveforms: ^2.0.1
+  flutter_soloud: 2.1.7
 
   # ---------- Media & File Selection ----------
   image_picker: ^1.1.2
@@ -65,6 +66,7 @@ dependencies:
 
   # ---------- Social Icons ----------
   font_awesome_flutter: ^11.0.0
+  
 
   # ---------- Google Sign In ----------
 

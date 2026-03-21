@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 
 final waveformExtractionServiceProvider = Provider<WaveformExtractionService>((
   ref,
@@ -18,11 +19,8 @@ class WaveformExtractionService {
     String path, {
     int noOfSamples = 100,
   }) async {
-    if (path.trim().isEmpty) {
-      return const <double>[];
-    }
+    if (path.trim().isEmpty) return const <double>[];
 
-    // Chain this request to the end of the previous one
     final completer = Completer<List<double>>();
 
     _serial = _serial.whenComplete(() async {
@@ -34,31 +32,59 @@ class WaveformExtractionService {
         }
 
         List<double> result = [];
-        try {
-          final extractor = WaveformExtractionController();
-          result = await extractor.extractWaveformData(
-            path: path,
-            noOfSamples: 150,
+
+        if (Platform.isWindows) {
+          result = await _extractForWindows(path, noOfSamples);
+        } else {
+          try {
+            final extractor = WaveformExtractionController();
+            result = await extractor.extractWaveformData(
+              path: path,
+              noOfSamples: noOfSamples,
+            );
+          } catch (e) {
+            debugPrint('WaveformService mobile extractor error: $e');
+          }
+        }
+
+        const epsilon = 1e-6;
+        final isFlat =
+            result.isNotEmpty && result.every((e) => e.abs() < epsilon);
+
+        if (!completer.isCompleted) {
+          completer.complete(
+            (result.isNotEmpty && !isFlat) ? result : const [],
           );
-        } catch (e) {
-          debugPrint('WaveformService extractor error: $e');
         }
-
-        bool isFlat = result.isNotEmpty && result.every((e) => e == 0.0);
-
-        if (result.isNotEmpty && !isFlat) {
-          if (!completer.isCompleted) completer.complete(result);
-          return;
-        }
-
-        if (!completer.isCompleted) completer.complete(const <double>[]);
       } catch (e, stack) {
-        debugPrint('WaveformService Failure for "$path": $e');
-        debugPrintStack(stackTrace: stack);
-        if (!completer.isCompleted) completer.complete(const <double>[]);
+        debugPrint('WaveformService Failure: $e\n$stack');
+        if (!completer.isCompleted) {
+          completer.complete(const <double>[]);
+        }
       }
     });
 
     return completer.future;
+  }
+
+  Future<List<double>> _extractForWindows(String path, int noOfSamples) async {
+    try {
+      final soloud = SoLoud.instance;
+
+      if (!soloud.isInitialized) {
+        await soloud.init();
+      }
+
+      final audioData = await soloud.readSamplesFromFile(
+        path,
+        noOfSamples,
+        average: true,
+      );
+
+      return audioData.map((e) => e.abs().toDouble()).toList();
+    } catch (e, stack) {
+      debugPrint('Windows SoLoud Error: $e\n$stack');
+      return const [];
+    }
   }
 }
