@@ -35,11 +35,35 @@ class AuthInterceptor extends Interceptor {
   // Concurrency lock for refresh requests
   Future<void>? _refreshLock;
 
+  /// Endpoints that do not require authentication and should bypass
+  /// proactive token refresh to avoid blocking on stale token refresh attempts.
+  static const List<String> _publicEndpoints = [
+    '/auth/login/local',
+    '/auth/register/local',
+    '/auth/oauth/google',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/refreshtoken',
+  ];
+
+  /// Returns `true` if the request path matches a public endpoint that
+  /// should not trigger proactive token refresh.
+  bool _isPublicEndpoint(String path) {
+    return _publicEndpoints.any((endpoint) => path.contains(endpoint));
+  }
+
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    // Skip proactive refresh and token attachment for public endpoints
+    // (login, register, OAuth exchange, etc.) to avoid blocking on stale
+    // token refresh attempts.
+    if (_isPublicEndpoint(options.path)) {
+      return handler.next(options);
+    }
+
     // 1. Check proactive expiration before attaching.
     final isExpired = await _secureStorage.isAccessTokenExpired();
 

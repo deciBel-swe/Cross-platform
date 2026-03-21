@@ -93,6 +93,12 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       }
     });
 
+    // If the login failed, recover to unauthenticated state so the router
+    // can redirect back to the start/login screen instead of staying on splash.
+    if (state.hasError) {
+      state = const AsyncData(AuthUnauthenticated());
+    }
+
     debugPrint('[AuthNotifier] State is now: $state');
   }
 

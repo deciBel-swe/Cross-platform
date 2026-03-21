@@ -172,7 +172,14 @@ void main() {
 
         // Error caught -> Error state
         () => listener(any(), any(that: isA<AsyncError<AuthState>>())),
+
+        // Notifier recovers to unauthenticated
+        () => listener(any(), any(that: isA<AsyncData<AuthState>>())),
       ]);
+
+      // Verify final state is AuthUnauthenticated (recovered from error)
+      final finalState = container.read(authStateProvider);
+      expect(finalState.valueOrNull, isA<AuthUnauthenticated>());
     });
   });
 
