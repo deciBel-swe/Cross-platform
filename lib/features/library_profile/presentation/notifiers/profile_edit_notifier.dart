@@ -74,7 +74,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile == null) return;
-
+      if (!context.mounted) return;
       final croppedFile = await _performCrop(context, pickedFile.path, isProfile);
       if (croppedFile == null) return;
 
@@ -91,8 +91,14 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
 
       result.fold(
         (failure) {
-          if (isProfile) _localProfilePic = null; else _localCoverPic = null;
-          state = AsyncError(failure.message, StackTrace.current);
+          final errorStr = failure.message.toString();
+          if (errorStr.contains('SocketException') || 
+              errorStr.contains('connection error') ||
+              errorStr.contains('Network is unreachable')) {
+            state = AsyncError('No internet. Image kept locally but not uploaded.', StackTrace.current);
+          } else {
+            state = AsyncError(failure.message, StackTrace.current);
+          }
         },
         (success) => ref.invalidate(userProfileProvider),
       );
@@ -110,27 +116,31 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
   }) async {
     state = const AsyncLoading();
 
-    // 4. Using ref.read instead of calling getIt directly
-    final repository = ref.read(profileRepositoryProvider);
+    try {
+      final repository = ref.read(profileRepositoryProvider);
 
-    final result = await repository.updateProfile(
-      bio: bio,
-      city: city,
-      country: country,
-      favoriteGenres: genres,
-      socialLinks: socialLinks,
-    );
+      final result = await repository.updateProfile(
+        bio: bio,
+        city: city,
+        country: country,
+        favoriteGenres: genres,
+        socialLinks: socialLinks,
+      );
 
-    return result.fold(
-      (failure) {
-        state = AsyncError(failure.message, StackTrace.current);
-        return false;
-      },
-      (success) {
-        ref.invalidate(userProfileProvider);
-        state = const AsyncData(null);
-        return true;
-      },
-    );
+      return result.fold(
+        (failure) {
+          state = AsyncError(failure.message, StackTrace.current);
+          return false;
+        },
+        (success) {
+          ref.invalidate(userProfileProvider);
+          state = const AsyncData(null);
+          return true;
+        },
+      );
+    } catch (e) {
+      state = AsyncError(e.toString(), StackTrace.current);
+      return false; 
+    }
   }
 }
