@@ -316,7 +316,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
           throw const AuthException('Failed to obtain Google Server Auth Code');
         }
 
-        return await _exchangeCodeWithBackend(authCode, deviceInfo);
+        return await exchangeCodeWithBackend(authCode, deviceInfo);
       } on PlatformException catch (e) {
         if (e.code == 'sign_in_canceled') {
           throw const AuthException('Sign in was canceled by the user.');
@@ -327,13 +327,20 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // DESKTOP: Use local HTTP server loopback
       final completer = Completer<LoginResponseModel>();
 
+      const clientId = ApiConstants.googleDesktopClientId;
+      const redirectUri = ApiConstants.googleDesktopRedirectUri;
+
       final authUrl = Uri.parse(
-        '${ApiConstants.baseUrl}${ApiConstants.googleAuthEndpoint}',
+        '${ApiConstants.googleAuthUrl}'
+        '?client_id=$clientId'
+        '&redirect_uri=$redirectUri'
+        '&response_type=code'
+        '&scope=email%20profile',
       );
 
       HttpServer? localServer;
       try {
-        localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 3000);
+        localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 8081);
 
         // Listen to single incoming request on the localhost server
         localServer.listen((HttpRequest request) async {
@@ -357,7 +364,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
               // Exchange the code with our backend
               try {
-                final model = await _exchangeCodeWithBackend(
+                final model = await exchangeCodeWithBackend(
                   authCode,
                   deviceInfo,
                 );
@@ -456,8 +463,8 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     }
   }
 
-  /// Here I communicate with the backend to exchange the auth code for tokens
-  Future<LoginResponseModel> _exchangeCodeWithBackend(
+  @visibleForTesting
+  Future<LoginResponseModel> exchangeCodeWithBackend(
     String authCode,
     DeviceInfoModel deviceInfo,
   ) async {

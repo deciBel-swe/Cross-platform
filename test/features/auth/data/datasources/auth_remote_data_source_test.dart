@@ -1,39 +1,55 @@
 import 'package:decibel/core/constants/api_constants.dart';
+import 'package:decibel/core/network/dio_client.dart';
+import 'package:decibel/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:decibel/features/auth/data/models/device_info_model.dart';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockDio extends Mock implements Dio {}
+class MockDioClient extends Mock implements DioClient {}
 
 void main() {
-  late MockDio mockDio;
+  late MockDioClient mockDioClient;
+  late AuthRemoteDataSource dataSource;
 
   setUp(() {
-    mockDio = MockDio();
+    mockDioClient = MockDioClient();
+    dataSource = AuthRemoteDataSource(mockDioClient);
   });
 
-  group('AuthRemoteDataSource Backend Token Exchange', () {
+  group('AuthRemoteDataSource exchangeCodeWithBackend', () {
     const tAuthCode = 'test_auth_code';
+    const tDeviceInfo = DeviceInfoModel(
+      deviceType: 'DESKTOP',
+      fingerPrint: 'test_fingerprint',
+      deviceName: 'test',
+    );
 
     final tLoginResponseJson = {
-      'access_token': 'access_token',
-      'refresh_token': 'refresh_token',
-      'expires_in': 3600,
-      'user': {'id': 1, 'username': 'test_user', 'tier': 'free'},
+      'data': {
+        'accessToken': 'access_token_123',
+        'expiresIn': 3600,
+        'user': {'id': 1, 'username': 'test_user', 'tier': 'FREE'}
+      }
     };
 
-    // Note: To fully test loginWithGoogle() end-to-end requires mocking GoogleSignIn and
-    // local http server sockets, which are environment-dependent. Here we test the isolated
-    // logic handling the backend /dio interaction.
+    final tResponseHeaders = Headers.fromMap({
+      'set-cookie': [
+        'refreshToken=refresh_token_123; Path=/auth; HttpOnly; SameSite=Lax',
+        'otherCookie=value'
+      ],
+      'content-type': ['application/json']
+    });
 
     test(
-      'should return LoginResponseModel when the Dio post is successful (200)',
+      'should extract refreshToken from set-cookie header and return LoginResponseModel',
       () async {
         // Arrange
         when(
-          () => mockDio.post<dynamic>(
+          () => mockDioClient.post<dynamic>(
             ApiConstants.googleTokenExchangeEndpoint,
-            data: {'code': tAuthCode},
+            data: any(named: 'data'),
           ),
         ).thenAnswer(
           (_) async => Response(
@@ -42,15 +58,60 @@ void main() {
             ),
             statusCode: 200,
             data: tLoginResponseJson,
+            headers: tResponseHeaders,
           ),
         );
 
         // Act
-        // Since _exchangeCodeWithBackend is private, we can't test it directly unless we make
-        // it visible for testing, or we test through an exposed path. Since loginWithGoogle
-        // contains the UI flow, we simulate backend logic via reflection or just verify Dio
-        // is mocked for when it's called. As a pure unit test file, we ensure the integration
-        // of Dio is valid for expected throws.
+        final result = await dataSource.exchangeCodeWithBackend(
+          tAuthCode,
+          tDeviceInfo,
+        );
+
+        // Assert
+        expect(result.accessToken, 'access_token_123');
+        expect(result.refreshToken, 'refresh_token_123'); // Custom extraction
+        expect(result.expiresIn, 3600);
+        expect(result.user.username, 'test_user');
+      },
+    );
+
+    test(
+      'should fallback to plain body parsing without data envelope',
+      () async {
+        // Arrange
+        final flatJson = {
+          'accessToken': 'access_token_flat',
+          'expiresIn': 1800,
+          'user': {'id': 2, 'username': 'flat_user', 'tier': 'FREE'}
+        };
+
+        when(
+          () => mockDioClient.post<dynamic>(
+            ApiConstants.googleTokenExchangeEndpoint,
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(
+              path: ApiConstants.googleTokenExchangeEndpoint,
+            ),
+            statusCode: 200,
+            data: flatJson,
+            headers: Headers(),
+          ),
+        );
+
+        // Act
+        final result = await dataSource.exchangeCodeWithBackend(
+          tAuthCode,
+          tDeviceInfo,
+        );
+
+        // Assert
+        expect(result.accessToken, 'access_token_flat');
+        expect(result.refreshToken, isNull); // No cookie provided
+        expect(result.user.username, 'flat_user');
       },
     );
   });
