@@ -127,7 +127,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         data: (eitherUser) => eitherUser.fold(
           (failure) => RefreshIndicator(
-            onRefresh: () async => ref.refresh(userProfileProvider.future),
+            onRefresh: () async => ref.read(userProfileProvider.notifier).refreshProfile(),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: SizedBox(
@@ -142,7 +142,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
           (user) => RefreshIndicator(
-            onRefresh: () async => ref.refresh(userProfileProvider.future),
+            onRefresh: () async => ref.read(userProfileProvider.notifier).refreshProfile(),
             child: SingleChildScrollView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
