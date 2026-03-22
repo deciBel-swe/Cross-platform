@@ -78,16 +78,15 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       registerFor: {_prod},
     );
-    gh.lazySingleton<_i745.AuthInterceptor>(
-      () => registerModule.getAuthInterceptor(gh<_i666.SecureStorageService>()),
-      registerFor: {_prod},
-    );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i703.MockAuthRepository(gh<_i666.SecureStorageService>()),
       registerFor: {_mock},
     );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
+    );
+    gh.lazySingleton<_i745.AuthInterceptor>(
+      () => registerModule.getAuthInterceptor(gh<_i666.SecureStorageService>()),
     );
     return this;
   }

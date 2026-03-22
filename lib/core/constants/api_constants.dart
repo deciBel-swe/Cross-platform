@@ -15,6 +15,9 @@ class ApiConstants {
   static const String googleTokenExchangeEndpoint = '/auth/oauth/google';
   static const String logoutEndpoint = '/auth/logout';
 
+  static const String userProfileEndpoint = '/users/me';
+  static const String userProfilePrivacy = '/users/me/privacy';
+
   // Dio Timeout constants
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;

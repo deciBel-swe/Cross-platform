@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
 import 'package:injectable/injectable.dart';
-
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/failures.dart';
@@ -15,7 +12,6 @@ import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../datasources/auth_mock_fixtures.dart';
 import '../models/login_response_model.dart';
-import '../utils/auth_success_page.dart';
 
 /// Mock implementation of [IAuthRepository] for testing and development.
 @Environment('mock')
@@ -71,64 +67,14 @@ class MockAuthRepository implements IAuthRepository {
 
       return Right(model.user.toDomain());
     } else {
-      // --- DESKTOP: Use local HTTP server loopback
-      final authUrl = Uri.parse(
-        '${ApiConstants.baseUrl}${ApiConstants.googleAuthEndpoint}',
-      );
+      // --- DESKTOP MOCK: Bypass browser and local server entirely
+      await Future<void>.delayed(AuthMockFixtures.delay);
+      const mockResponse = AuthMockFixtures.mockLoginResponse;
+      final model = LoginResponseModel.fromJson(mockResponse);
 
-      final completer = Completer<Either<Failure, AuthUser>>();
+      await _secureStorageService.saveTokenPair(model);
 
-      // Prepare the success response
-      void completeSuccess() {
-        Future.delayed(AuthMockFixtures.delay, () {
-          const mockResponse = AuthMockFixtures.mockLoginResponse;
-          final model = LoginResponseModel.fromJson(mockResponse);
-          if (!completer.isCompleted) {
-            _secureStorageService.saveTokenPair(model).then((_) {
-              if (!completer.isCompleted) {
-                completer.complete(Right(model.user.toDomain()));
-              }
-            });
-          }
-        });
-      }
-
-      HttpServer? localServer;
-      try {
-        localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 3000);
-        localServer.listen((HttpRequest request) async {
-          final uri = request.uri;
-          if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
-            final authCode = uri.queryParameters['token'] ?? uri.queryParameters['code'];
-
-            if (authCode != null) {
-              debugPrint('=== DESKTOP GOOGLE LOGIN SUCCESS ===');
-              debugPrint('Authorization Code Received: $authCode');
-              debugPrint('====================================');
-            }
-          }
-
-          final html = await buildAuthSuccessHtml();
-
-          request.response
-            ..statusCode = 200
-            ..headers.contentType = ContentType.html
-            ..write(html);
-          await request.response.close();
-          await localServer?.close(force: true);
-          completeSuccess();
-        });
-      } catch (_) {
-        // Ignore port binding errors if testing rapidly
-      }
-
-      try {
-        await launchUrl(authUrl, mode: LaunchMode.externalApplication);
-      } catch (_) {
-        await localServer?.close(force: true);
-      }
-
-      return completer.future;
+      return Right(model.user.toDomain());
     }
   }
 

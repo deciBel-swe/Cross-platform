@@ -46,7 +46,7 @@ class UploadRemoteDatasource {
       }
 
       // 4. Send the single creation request
-      await _dioClient.post<dynamic>('/api/tracks', data: formData);
+      await _dioClient.post<dynamic>('/tracks', data: formData);
     } on DioException catch (error) {
       throw ServerException(error.message ?? 'Failed to upload track');
     }

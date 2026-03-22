@@ -30,16 +30,16 @@ void main() {
       'data': {
         'accessToken': 'access_token_123',
         'expiresIn': 3600,
-        'user': {'id': 1, 'username': 'test_user', 'tier': 'FREE'}
-      }
+        'user': {'id': 1, 'username': 'test_user', 'tier': 'FREE'},
+      },
     };
 
     final tResponseHeaders = Headers.fromMap({
       'set-cookie': [
         'refreshToken=refresh_token_123; Path=/auth; HttpOnly; SameSite=Lax',
-        'otherCookie=value'
+        'otherCookie=value',
       ],
-      'content-type': ['application/json']
+      'content-type': ['application/json'],
     });
 
     test(
@@ -83,7 +83,7 @@ void main() {
         final flatJson = {
           'accessToken': 'access_token_flat',
           'expiresIn': 1800,
-          'user': {'id': 2, 'username': 'flat_user', 'tier': 'FREE'}
+          'user': {'id': 2, 'username': 'flat_user', 'tier': 'FREE'},
         };
 
         when(

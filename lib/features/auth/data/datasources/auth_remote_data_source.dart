@@ -348,7 +348,8 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
           // Check if it's the OAuth redirect path
           if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
-            final authCode = uri.queryParameters['token'] ?? uri.queryParameters['code'];
+            final authCode =
+                uri.queryParameters['token'] ?? uri.queryParameters['code'];
             final error = uri.queryParameters['error'];
 
             if (authCode != null) {
@@ -501,8 +502,9 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
             for (final part in parts) {
               final trimmed = part.trim();
               if (trimmed.startsWith('refreshToken=')) {
-                extractedRefreshToken =
-                    trimmed.substring('refreshToken='.length);
+                extractedRefreshToken = trimmed.substring(
+                  'refreshToken='.length,
+                );
                 break;
               }
             }

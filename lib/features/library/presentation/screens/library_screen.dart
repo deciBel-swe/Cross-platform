@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+
 
 /// Simple library screen with a logout action.
 class LibraryScreen extends ConsumerWidget {
@@ -15,22 +15,20 @@ class LibraryScreen extends ConsumerWidget {
       context.push(RoutePaths.profile);
     }
 
-    final isAuthBusy = ref.watch(authStateProvider).isLoading;
+    void goToSettings() {
+      context.push(RoutePaths.settings);
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Library'),
         actions: [
           IconButton(onPressed: goToProfile, icon: const Icon(Icons.person)),
+          IconButton(onPressed: goToSettings, icon: const Icon(Icons.settings)),
         ],
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: isAuthBusy
-              ? null
-              : () => ref.read(authStateProvider.notifier).logout(),
-          child: const Text('Log out'),
-        ),
+      body: const Center(
+        child: Text('Library Content'),
       ),
     );
   }

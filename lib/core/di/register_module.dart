@@ -26,7 +26,6 @@ abstract class RegisterModule {
   /// specifically for making the refresh token request without
   /// triggering the interceptor itself recursively.
   @lazySingleton
-  @Environment(Environment.prod)
   AuthInterceptor getAuthInterceptor(SecureStorageService secureStorage) {
     final refreshDio = Dio(
       BaseOptions(

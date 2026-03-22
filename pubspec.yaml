@@ -59,6 +59,9 @@ dependencies:
   responsive_framework: ^1.5.1
   device_info_plus: ^12.3.0
 
+  # ---------- App Icon ----------
+  dynamic_app_icon_flutter_plus: ^0.0.1
+
 
   # ---------- Social Icons ----------
   font_awesome_flutter: ^10.7.0
@@ -92,6 +95,11 @@ flutter:
     - assets/icon/app_icon.png
     - assets/icon/black_app_icon_trans.png
     - assets/icon/white_app_icon_trans.png
+    - assets/icon/app_Icon_style1.png
+    - assets/icon/app_Icon_style2.png
+    - assets/icon/desktop/app_icon_classic.ico
+    - assets/icon/desktop/app_icon_black.ico
+    - assets/icon/desktop/app_icon_white.ico
     - assets/html/auth_complete.html
     - assets/background/background_startscreen.png
     - assets/background/foreground_startscreen.png
