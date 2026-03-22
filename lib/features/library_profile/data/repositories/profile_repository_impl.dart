@@ -52,27 +52,29 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-Future<Either<Failure, bool>> updateProfile({
-  String? bio,
-  String? city,
-  String? country,
-  List<String>? favoriteGenres,
-}) async {
-  try {
-    // FIX: Notice the quotes around the keys!
-    final Map<String, dynamic> updateData = {
-      if (bio != null) 'bio': bio,
-      if (city != null) 'city': city,
-      if (country != null) 'country': country,
-      if (favoriteGenres != null) 'favoriteGenres': favoriteGenres,
-    };
+  Future<Either<Failure, bool>> updateProfile({
+    String? bio,
+    String? city,
+    String? country,
+    List<String>? favoriteGenres,
+    PublicProfileSocialLinks? socialLinks,
+  }) async {
+    try {
+      // FIX: Notice the quotes around the keys!
+      final Map<String, dynamic> updateData = {
+        if (bio != null) 'bio': bio,
+        if (city != null) 'city': city,
+        if (country != null) 'country': country,
+        if (favoriteGenres != null) 'favoriteGenres': favoriteGenres,
+        if (socialLinks != null) 'socialLinks': socialLinks.toModel().toJson(),
+      };
 
-    final success = await _remoteDataSource.updateProfile(updateData);
-    return Right(success);
-  } on ServerException catch (e) {
-    return Left(ServerFailure(e.message));
-  } catch (e) {
-    return Left(ServerFailure(e.toString()));
+      final success = await _remoteDataSource.updateProfile(updateData);
+      return Right(success);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
-}
 }

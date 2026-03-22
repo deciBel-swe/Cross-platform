@@ -10,6 +10,7 @@ abstract class ProfileRepository {
     String? city,
     String? country,
     List<String>? favoriteGenres,
+    PublicProfileSocialLinks ? socialLinks,
   });
   Future<Either<Failure, PublicProfileSocialLinks>> updateSocialLinks(
     PublicProfileSocialLinks links,

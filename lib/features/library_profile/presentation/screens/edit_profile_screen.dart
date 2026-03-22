@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/public_profile_social_links.dart';
 import '../../domain/entities/user_profile.dart';
 import '../providers/profile_edit_provider.dart';
 import '../providers/user_profile_provider.dart';
+import '../providers/web_profiles_provider.dart';
 import '../widgets/genre_manager.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -25,6 +27,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _countryController;
 
   late List<String> _selectedGenres;
+  late PublicProfileSocialLinks ?_socialLinks;
   late UserProfile? user;
   Either<Failure, UserProfile>? userState;
   @override
@@ -32,7 +35,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.initState();
     userState = ref.read(userProfileProvider).value;
     user = userState?.fold((failure) => null, (profile) => profile);
-
+    _socialLinks = ref.read(webProfilesProvider);
     _bioController = TextEditingController(text: user?.profileDetails.bio);
     _cityController = TextEditingController(text: user?.profileDetails.city);
     _countryController = TextEditingController(
@@ -87,6 +90,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           country: _countryController.text.trim(),
           // 4. Pass the local state list to the save method
           genres: _selectedGenres,
+          socialLinks: _socialLinks!
         );
 
     if (!mounted) return;
