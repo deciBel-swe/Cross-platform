@@ -4,7 +4,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/public_profile_social_links.dart';
-import '../../domain/entities/user_profile.dart'; // Add this import
+import '../../domain/entities/user_profile.dart'; 
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';
 import '../models/user_profile_model.dart';
@@ -62,11 +62,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       // FIX: Notice the quotes around the keys!
       final Map<String, dynamic> updateData = {
-        if (bio != null) 'bio': bio,
-        if (city != null) 'city': city,
-        if (country != null) 'country': country,
-        if (favoriteGenres != null) 'favoriteGenres': favoriteGenres,
-        if (socialLinks != null) 'socialLinks': socialLinks.toModel().toJson(),
+        ...?(bio != null ? {'bio': bio} : null),
+        ...?(city != null ? {'city': city} : null),
+        ...?(country != null ? {'country': country} : null),
+        ...?(favoriteGenres != null ? {'favoriteGenres': favoriteGenres} : null),
+        ...?(socialLinks != null ? {'socialLinks': socialLinks.toModel().toJson()} : null),
       };
 
       final success = await _remoteDataSource.updateProfile(updateData);

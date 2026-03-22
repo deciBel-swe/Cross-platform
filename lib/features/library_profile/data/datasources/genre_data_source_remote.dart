@@ -18,16 +18,17 @@ class GenreRemoteDataSource implements IGenreRemoteDataSource {
   @override
   Future<List<String>> getGenres() async {
     try {
-      // Note: You will need to add `genresEndpoint = '/genres'` to your ApiConstants
-      // or replace this with the hardcoded string '/genres'
-      final response = await _dioClient.get(ApiConstants.genresEndpoint);
+      final response = await _dioClient.get<dynamic>(ApiConstants.genresEndpoint);
+      final data = response.data;
+
+      // 2. Check if it's a Map before accessing the 'data' key
+      final dynamic responseData = (data is Map<String, dynamic>)
+          ? data['data'] ?? data
+          : data;
 
       if (response.data == null) {
         throw const ServerException('Received empty response from server');
       }
-
-      // Handle both { "data": ["Pop", "Rock"] } and directly ["Pop", "Rock"]
-      final dynamic responseData = response.data['data'] ?? response.data;
 
       if (responseData is List) {
         return responseData.map((e) => e.toString()).toList();
@@ -44,9 +45,10 @@ class GenreRemoteDataSource implements IGenreRemoteDataSource {
           'Genres endpoint not found (404). Check your URL.',
         );
       }
+      final responseData = e.response?.data as Map<String, dynamic>?;
 
-      final backendMessage =
-          (e.response?.data?['message'] ?? e.message) as String?;
+      // 2. Now you can safely access the key without linting errors
+      final backendMessage = (responseData?['message'] ?? e.message) as String?;
       throw ServerException(backendMessage ?? 'Unknown server error');
     } catch (e) {
       throw ServerException('Data parsing error: $e');
