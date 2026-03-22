@@ -3,16 +3,16 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  app_links
-  desktop_webview_auth
   file_selector_windows
   flutter_secure_storage_windows
+  just_audio_windows
   screen_retriever_windows
   url_launcher_windows
   window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  flutter_soloud
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

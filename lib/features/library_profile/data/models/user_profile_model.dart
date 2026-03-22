@@ -31,7 +31,7 @@ class SocialLinksModel with _$SocialLinksModel {
   const factory SocialLinksModel({
     String? instagram,
     String? twitter,
-    @JsonKey(name: 'x') String? x,
+    String? x,
     String? youtube,
     String? tiktok,
     String? linkedin,

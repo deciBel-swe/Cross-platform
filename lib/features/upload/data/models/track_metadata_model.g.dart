@@ -14,7 +14,7 @@ _$TrackMetadataModelImpl _$$TrackMetadataModelImplFromJson(
   isPrivate: json['isPrivate'] as bool,
   releaseDate: json['releaseDate'] as String,
   waveFormData: (json['waveFormData'] as List<dynamic>)
-      .map((e) => e as String)
+      .map((e) => (e as num).toDouble())
       .toList(),
   description: json['description'] as String?,
   tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),

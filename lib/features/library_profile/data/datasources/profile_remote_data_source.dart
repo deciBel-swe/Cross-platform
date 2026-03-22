@@ -21,17 +21,17 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
     SocialLinksModel linksModel,
   ) async {
     try {
-      final response = await _dioClient.patch(
+      final response = await _dioClient.patch<Map<String, dynamic>>(
         ApiConstants.updateSocialLinks,
         data: linksModel.toJson(),
       );
 
-      if (response.data == null || response.data['success'] != true) {
+      if (response.data == null || response.data?['success'] != true) {
         throw const ServerException('Failed to update social links');
       }
 
       return SocialLinksModel.fromJson(
-        response.data['data'] as Map<String, dynamic>,
+        response.data?['data'] as Map<String, dynamic>,
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {

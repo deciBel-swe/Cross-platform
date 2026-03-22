@@ -66,6 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
+
             GestureDetector(
               onTap: () {
                 context.push(RoutePaths.editWebLink);
@@ -73,7 +74,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: const ProfileIcon(),
             ),
             const SizedBox(height: 14),
+
             _UserProfileHeader(user: user),
+
             const SizedBox(height: 16),
             Consumer(
               builder: (context, ref, child) {
@@ -81,6 +84,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return ActionButtons(socialLinks: socialLinks);
               },
             ),
+
+            // Dynamic Bio
             Text(
               user.bio,
               style: Theme.of(

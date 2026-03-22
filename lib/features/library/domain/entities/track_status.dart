@@ -1,0 +1,1 @@
+enum TrackStatus { processing, finished }

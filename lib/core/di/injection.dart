@@ -1,8 +1,4 @@
-/// GetIt + Injectable service locator setup.
-library;
-
 import 'package:get_it/get_it.dart';
-
 import 'package:injectable/injectable.dart';
 
 import '../../features/settings/data/repositories/app_icon_repository_impl.dart';

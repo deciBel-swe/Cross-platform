@@ -14,7 +14,7 @@ class TrackMetadataModel with _$TrackMetadataModel {
     required String genre,
     required bool isPrivate,
     required String releaseDate,
-    required List<String> waveFormData,
+    required List<double> waveFormData,
     String? description,
     List<String>? tags,
   }) = _TrackMetadataModel;
