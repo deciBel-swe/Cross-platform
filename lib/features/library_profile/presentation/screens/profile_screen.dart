@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_constants.dart'; // Ensure this path matches your project structure
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
-import '../notifiers/user_profile_notifier.dart';
+import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
@@ -36,9 +36,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.offset > AppConstants.appBarFadeScrollOffset && !_showAppBarIcon) {
+    if (_scrollController.offset > AppConstants.appBarFadeScrollOffset &&
+        !_showAppBarIcon) {
       setState(() => _showAppBarIcon = true);
-    } else if (_scrollController.offset <= AppConstants.appBarFadeScrollOffset && _showAppBarIcon) {
+    } else if (_scrollController.offset <=
+            AppConstants.appBarFadeScrollOffset &&
+        _showAppBarIcon) {
       setState(() => _showAppBarIcon = false);
     }
   }
@@ -52,42 +55,51 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch the Provider that now returns an Either<Failure, UserProfile>
     final userProfileAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: userProfileAsync.maybeWhen(
-        data: (user) => _buildAppBar(context, user),
+        data: (eitherUser) => eitherUser.fold(
+          (failure) => _buildFallbackAppBar(context),
+          (profile) => _buildAppBar(context, profile),
+        ),
         orElse: () => _buildFallbackAppBar(context),
       ),
       body: userProfileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingExtraLarge),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.spacingExtraLarge,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(
                   Icons.wifi_off_rounded,
-                  color: AppColors.surface, 
+                  color: AppColors.surface,
                   size: AppConstants.errorIconSize,
                 ),
                 const SizedBox(height: AppConstants.spacingRegular),
                 Text(
-                  AppConstants.errorGeneric,
+                  'Oops! Something went wrong.', // Fallback text from feat/prof-state
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        color: AppColors.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: AppConstants.spacingSmall),
                 Text(
-                  error.toString().replaceAll(AppConstants.errorExceptionPrefix, ''),
+                  error.toString().replaceAll(
+                        AppConstants.errorExceptionPrefix,
+                        '',
+                      ),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onPrimary
-                  ),
+                        color: AppColors.onPrimary,
+                      ),
                 ),
                 const SizedBox(height: AppConstants.spacingExtraLarge),
                 ElevatedButton.icon(
@@ -101,10 +113,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     foregroundColor: AppColors.onPrimary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppConstants.spacingExtraLarge,
-                      vertical: 12, // Keeping standard vertical padding
+                      vertical: 12,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppConstants.buttonRadius),
+                      borderRadius:
+                          BorderRadius.circular(AppConstants.buttonRadius),
                     ),
                   ),
                 ),
@@ -112,50 +125,71 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
         ),
-        data: (user) => RefreshIndicator(
-          onRefresh: () async => ref.refresh(userProfileProvider.future),
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Stack(
-              children: [
-                _ProfileCoverPhoto(imageUrl: user.profileDetails.coverPic),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMedium), 
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: AppConstants.profileHeaderTopOffset),
-                      const ProfileIcon(),
-                      const SizedBox(height: AppConstants.spacingMedium),
-                      UserProfileHeader(user: user),
-                      const SizedBox(height: AppConstants.spacingRegular),
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final socialLinks = ref.watch(webProfilesProvider);
-                          return ActionButtons(socialLinks: socialLinks);
-                        },
-                      ),
-                      if (user.profileDetails.bio != null) ...[
-                        ExpandableBio(bio: user.profileDetails.bio!),
-                        const SizedBox(height: AppConstants.spacingSmall),
-                      ],
-                      const SizedBox(height: AppConstants.spacingRegular),
-                      Tile(
-                        title: AppConstants.spotlightTitle,
-                        subtitle: AppConstants.spotlightSubtitle,
-                        buttonText: AppConstants.edit,
-                        onButtonPressed: () => context.push(RoutePaths.editProfile),
-                      ),
-                      TopTracksSection(userId: user.id),
-                      const SizedBox(height: AppConstants.spacingLarge),
-                      const MediaCollection(),
-                      const SizedBox(height: AppConstants.spacingMassive), 
-                    ],
+        data: (eitherUser) => eitherUser.fold(
+          (failure) => RefreshIndicator(
+            onRefresh: () async => ref.refresh(userProfileProvider.future),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Center(
+                  child: Text(
+                    'Could not load profile: ${failure.message}',
+                    style: const TextStyle(color: AppColors.onPrimary),
                   ),
                 ),
-              ],
+              ),
+            ),
+          ),
+          (user) => RefreshIndicator(
+            onRefresh: () async => ref.refresh(userProfileProvider.future),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Stack(
+                children: [
+                  _ProfileCoverPhoto(imageUrl: user.profileDetails.coverPic),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppConstants.spacingMedium,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          height: AppConstants.profileHeaderTopOffset,
+                        ),
+                        const ProfileIcon(),
+                        const SizedBox(height: AppConstants.spacingMedium),
+                        UserProfileHeader(user: user),
+                        const SizedBox(height: AppConstants.spacingRegular),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final socialLinks = ref.watch(webProfilesProvider);
+                            return ActionButtons(socialLinks: socialLinks);
+                          },
+                        ),
+                        if (user.profileDetails.bio != null) ...[
+                          ExpandableBio(bio: user.profileDetails.bio!),
+                          const SizedBox(height: AppConstants.spacingSmall),
+                        ],
+                        const SizedBox(height: AppConstants.spacingRegular),
+                        Tile(
+                          title: AppConstants.spotlightTitle,
+                          subtitle: AppConstants.spotlightSubtitle,
+                          buttonText: AppConstants.edit,
+                          onButtonPressed: () =>
+                              context.push(RoutePaths.editProfile),
+                        ),
+                        TopTracksSection(userId: user.id),
+                        const SizedBox(height: AppConstants.spacingLarge),
+                        const MediaCollection(),
+                        const SizedBox(height: AppConstants.spacingMassive),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -168,7 +202,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       backgroundColor: AppColors.background,
       leading: Button(
         icon: Icons.arrow_back_rounded,
-        onPressed: () => context.canPop() ? context.pop() : context.go(RoutePaths.library),
+        onPressed: () =>
+            context.canPop() ? context.pop() : context.go(RoutePaths.library),
       ),
     );
   }
@@ -181,12 +216,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       leadingWidth: AppConstants.appBarLeadingWidth,
       leading: Button(
         icon: Icons.arrow_back_rounded,
-        onPressed: () => context.canPop() ? context.pop() : context.go(RoutePaths.library),
+        onPressed: () =>
+            context.canPop() ? context.pop() : context.go(RoutePaths.library),
       ),
       centerTitle: true,
       title: AnimatedOpacity(
         opacity: _showAppBarIcon ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: AppConstants.appBarAnimationDurationMs),
+        duration: const Duration(
+          milliseconds: AppConstants.appBarAnimationDurationMs,
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -203,9 +241,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Text(
               user.username,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.onPrimary,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.onPrimary,
+                  ),
             ),
           ],
         ),
@@ -226,7 +264,7 @@ class _ProfileCoverPhoto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: AppConstants.coverPhotoHeight, 
+      height: AppConstants.coverPhotoHeight,
       width: double.infinity,
       child: imageUrl != null
           ? Image.network(
@@ -245,7 +283,11 @@ class _ProfileCoverPhoto extends StatelessWidget {
   Widget _buildPlaceholder() {
     return Container(
       color: AppColors.surface,
-      child: const Icon(Icons.image, color: AppColors.onPrimary, size: AppConstants.placeholderIconSize),
+      child: const Icon(
+        Icons.image,
+        color: AppColors.onPrimary,
+        size: AppConstants.placeholderIconSize,
+      ),
     );
   }
 }

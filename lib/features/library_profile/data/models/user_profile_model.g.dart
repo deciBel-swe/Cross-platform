@@ -42,11 +42,7 @@ Map<String, dynamic> _$$UserProfileModelImplToJson(
   'stats': instance.stats,
 };
 
-const _$UserTierEnumMap = {
-  UserTier.free: 'FREE',
-  UserTier.pro: 'PRO',
-  UserTier.artist: 'ARTIST',
-};
+const _$UserTierEnumMap = {UserTier.free: 'FREE', UserTier.pro: 'PRO'};
 
 _$ProfileDetailsModelImpl _$$ProfileDetailsModelImplFromJson(
   Map<String, dynamic> json,

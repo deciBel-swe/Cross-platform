@@ -36,14 +36,19 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Either<Failure, UserProfile>> getUserProfile() async {
     try {
+      // 1. Fetch the raw data model from your Dio data source
       final model = await _remoteDataSource.getUserProfile();
 
+      // 2. Convert to Domain Entity and return on the Right (Success) side
       return Right(model.toEntity());
     } on AuthException catch (e) {
+      // Return Auth errors on the Left side
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
+      // Return Server errors on the Left side
       return Left(ServerFailure(e.message));
     } catch (e) {
+      // Catch any unexpected parsing or network errors
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -54,13 +59,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
     String? city,
     String? country,
     List<String>? favoriteGenres,
+    PublicProfileSocialLinks? socialLinks,
   }) async {
     try {
+      // FIX: Notice the quotes around the keys!
       final Map<String, dynamic> updateData = {
-        if (bio != null) 'bio': bio,
-        if (city != null) 'city': city,
-        if (country != null) 'country': country,
-        if (favoriteGenres != null) 'favoriteGenres': favoriteGenres,
+        ...?(bio != null ? {'bio': bio} : null),
+        ...?(city != null ? {'city': city} : null),
+        ...?(country != null ? {'country': country} : null),
+        ...?(favoriteGenres != null ? {'favoriteGenres': favoriteGenres} : null),
+        ...?(socialLinks != null ? {'socialLinks': socialLinks.toModel().toJson()} : null),
       };
 
       final success = await _remoteDataSource.updateProfile(updateData);

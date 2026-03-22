@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../notifiers/user_profile_notifier.dart';
+import '../providers/user_profile_provider.dart';
 
 class ProfileIcon extends ConsumerWidget {
   const ProfileIcon({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedImage =
-        ref.watch(userProfileProvider).value?.profileDetails.profilePic;
+    final selectedImage = ref.watch(userProfileProvider).value?.fold(
+      (failure) => null,
+      (userProfile) => userProfile.profileDetails.profilePic,
+    );
 
     return GestureDetector(
       child: FittedBox(

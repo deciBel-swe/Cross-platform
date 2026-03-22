@@ -4,7 +4,6 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/public_profile_social_links.dart';
 import '../entities/user_profile.dart';
-
 abstract class ProfileRepository {
   Future<Either<Failure, UserProfile>> getUserProfile();
   Future<Either<Failure, bool>> updateProfile({
@@ -12,6 +11,7 @@ abstract class ProfileRepository {
     String? city,
     String? country,
     List<String>? favoriteGenres,
+    PublicProfileSocialLinks? socialLinks,
   });
   Future<Either<Failure, PublicProfileSocialLinks>> updateSocialLinks(
     PublicProfileSocialLinks links,

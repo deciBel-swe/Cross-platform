@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui; // Needed for toByteData
 
@@ -9,19 +10,17 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../domain/repositories/profile_repository.dart';
+import '../../domain/entities/public_profile_social_links.dart';
 import '../../domain/repositories/update_image.dart';
-import 'user_profile_notifier.dart';
+import '../providers/user_profile_provider.dart';
+import '../providers/web_profiles_provider.dart';
 
-final profileEditProvider =
-    StateNotifierProvider<ProfileEditNotifier, AsyncValue<void>>(
-  (ref) => ProfileEditNotifier(ref),
+// Added this based on Riverpod 2.0 AsyncNotifier usage
+final profileEditProvider = AsyncNotifierProvider<ProfileEditNotifier, void>(
+  ProfileEditNotifier.new,
 );
 
-class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
-  ProfileEditNotifier(this.ref) : super(const AsyncData(null));
-  
-  final Ref ref;
+class ProfileEditNotifier extends AsyncNotifier<void> {
   File? _localProfilePic;
   File? _localCoverPic;
 
@@ -29,6 +28,9 @@ class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
   File? get localCoverPic => _localCoverPic;
 
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  FutureOr<void> build() {}
 
   /// HELPER: Unified Cropping for Windows, Android, and iOS
   /// HELPER: This replaces the native ImageCropper logic for Windows/Cross-platform
@@ -104,14 +106,19 @@ class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
     required String city,
     required String country,
     required List<String> genres,
+    required PublicProfileSocialLinks socialLinks,
   }) async {
     state = const AsyncLoading();
-    final repository = getIt<ProfileRepository>();
+
+    // 4. Using ref.read instead of calling getIt directly
+    final repository = ref.read(profileRepositoryProvider);
+
     final result = await repository.updateProfile(
       bio: bio,
       city: city,
       country: country,
       favoriteGenres: genres,
+      socialLinks: socialLinks,
     );
 
     return result.fold(

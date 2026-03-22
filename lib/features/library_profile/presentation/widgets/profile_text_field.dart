@@ -28,7 +28,7 @@ class ProfileTextField extends StatelessWidget {
       style: const TextStyle(color: AppColors.onPrimary),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: AppColors.surface),
+        labelStyle: const TextStyle(color: AppColors.onPrimary),
         counterStyle: const TextStyle(color: AppColors.surface),
         errorStyle: const TextStyle(color: Colors.redAccent),
         enabledBorder: const UnderlineInputBorder(
