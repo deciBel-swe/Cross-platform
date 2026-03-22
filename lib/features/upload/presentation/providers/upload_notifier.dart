@@ -190,7 +190,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
       if (mimeType == null || !allowedAudioMimeTypes.contains(mimeType)) {
         state = AsyncValue<TrackUploadMetadata>.error(
-          'Security Alert: This file is not a valid audio format, FAKE EXTENTION. Please upload a real MP3/WAV file.,',
+          'Security Alert: This file is not a valid audio format, FAKE EXTENSION. Please upload a real MP3/WAV file.,',
           StackTrace.current,
         ).copyWithPrevious(state);
         return;
@@ -240,7 +240,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
       if (mimeType == null || !allowedImageMimeTypes.contains(mimeType)) {
         state = AsyncValue<TrackUploadMetadata>.error(
-          "Security Alert: This file is not a valid image format, FAKE EXTENTION. Please upload a real JPG or PNG file.",
+          "Security Alert: This file is not a valid image format, FAKE EXTENSION. Please upload a real JPG or PNG file.",
           StackTrace.current,
         ).copyWithPrevious(state);
         return;
