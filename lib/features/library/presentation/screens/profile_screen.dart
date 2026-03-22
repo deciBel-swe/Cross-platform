@@ -4,11 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../library_profile/presentation/providers/web_profiles_provider.dart';
 import '../../domain/entities/user_profile.dart';
-import '../providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
+import '../widgets/pro_badge.dart';
 import '../widgets/profile_icon.dart';
 import '../widgets/tile.dart';
 
@@ -30,8 +31,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     following: 300,
     bio:
         'Music lover and audio enthusiast. Sharing my favorite tracks and playlists.',
+    tier: UserTier.pro,
   );
-  // TODO: Replace with ref.watch() using Riverpod
 
   @override
   void initState() {
@@ -92,7 +93,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ).textTheme.bodyLarge?.copyWith(color: AppColors.onPrimary),
             ),
             const SizedBox(height: 8),
-
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
@@ -111,12 +111,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
             Tile(
               title: "Pinned to Spotlight",
               subtitle: "Pin items to your spotlight",
               buttonText: "Edit",
-              onButtonPressed: () => {/* TODO: Handle edit spotlight action */},
+              onButtonPressed: () {},
             ),
             const SizedBox(height: 20),
             const MediaCollection(),
@@ -134,7 +133,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       leadingWidth: 38,
       leading: Button(
         icon: Icons.arrow_back_rounded,
-        onPressed: () => context.pop(),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(RoutePaths.library);
+          }
+        },
       ),
       centerTitle: true,
       title: AnimatedOpacity(
@@ -183,12 +188,23 @@ class _UserProfileHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          user.name,
-          style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.onPrimary,
-          ),
+        Row(
+          children: [
+            Text(
+              user.name,
+              style: textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
+            ),
+            user.tier == UserTier.pro
+                ? Transform.scale(
+                    alignment: Alignment.bottomLeft,
+                    scale: 0.8,
+                    child: const ProBadge(),
+                  )
+                : const SizedBox.shrink(),
+          ],
         ),
         Text(
           user.location,

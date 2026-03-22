@@ -5,7 +5,7 @@ version: 1.0.0+1
 
 environment:
   sdk: ^3.10.8
-  flutter: 3.38.9
+  flutter: "3.38.9"
 
 dependencies:
   flutter:
@@ -41,30 +41,34 @@ dependencies:
   # ---------- Local Storage ----------
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.5.4
 
   # ---------- Audio Playback ----------
   just_audio: ^0.9.43
+  just_audio_windows: ^0.2.2
 
   # ---------- Waveform Visualization ----------
-  audio_waveforms: ^1.2.0
+  audio_waveforms: ^2.0.1
+  flutter_soloud: ^3.5.3
 
   # ---------- Media & File Selection ----------
   image_picker: ^1.1.2
   file_picker: ^8.1.7
+  responsive_framework: ^1.5.1
   url_launcher: ^6.3.2
   app_links: ^7.0.0
   google_sign_in: ^7.2.0
-  window_manager: ^0.5.1
-  responsive_framework: ^1.5.1
   device_info_plus: ^12.3.0
+  window_manager: ^0.5.1
 
   # ---------- App Icon ----------
   dynamic_app_icon_flutter_plus: ^0.0.1
 
 
   # ---------- Social Icons ----------
-  font_awesome_flutter: ^10.7.0
+  font_awesome_flutter: ^11.0.0
+  
+
   # ---------- Google Sign In ----------
 
 dev_dependencies:
@@ -92,6 +96,10 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/icon/
+    - assets/background/
+    - assets/background/desktop/
+    - assets/html/
     - assets/icon/app_icon.png
     - assets/icon/black_app_icon_trans.png
     - assets/icon/white_app_icon_trans.png
@@ -100,6 +108,18 @@ flutter:
     - assets/icon/desktop/app_icon_classic.ico
     - assets/icon/desktop/app_icon_black.ico
     - assets/icon/desktop/app_icon_white.ico
+    - assets/icon/desktop/app_icon_style1.ico
+    - assets/icon/desktop/app_icon_style2.ico
+    - assets/icon/desktop/app_icon_style3.ico
+    - assets/icon/desktop/app_icon_style4.ico
+    - assets/icon/desktop/app_icon_style5.ico
+    - assets/icon/desktop/app_icon_style6White.ico
+    - assets/icon/desktop/app_icon_style6Black.ico
+    - assets/icon/white_app_icon_trans_style3.png
+    - assets/icon/white_app_icon_trans_style4.png
+    - assets/icon/white_app_icon_trans_style5.png
+    - assets/icon/white_app_icon_trans_style6.png
+    - assets/icon/black_app_icon_trans_style6.png
     - assets/html/auth_complete.html
     - assets/background/background_startscreen.png
     - assets/background/foreground_startscreen.png

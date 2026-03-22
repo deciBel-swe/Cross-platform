@@ -12,7 +12,6 @@ class TrackUploadMetadata {
     this.isPrivate = false,
     this.waveFormData = const [],
   });
-
   final File? audioFile;
   final File? coverImage;
   final String title;
@@ -21,7 +20,7 @@ class TrackUploadMetadata {
   final List<String> tags;
   final DateTime? releaseDate;
   final bool isPrivate;
-  final List<String> waveFormData;
+  final List<double> waveFormData;
 
   // Create new instance with updated fields
   TrackUploadMetadata copyWith({
@@ -33,7 +32,7 @@ class TrackUploadMetadata {
     List<String>? tags,
     DateTime? releaseDate,
     bool? isPrivate,
-    List<String>? waveFormData,
+    List<double>? waveFormData,
   }) {
     return TrackUploadMetadata(
       audioFile: audioFile ?? this.audioFile,

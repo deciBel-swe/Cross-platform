@@ -82,8 +82,13 @@ class AppIconRepositoryImpl implements AppIconRepository {
         AppIconOption.classic => AppAssets.desktopIconClassic,
         AppIconOption.black => AppAssets.desktopIconBlack,
         AppIconOption.white => AppAssets.desktopIconWhite,
-        AppIconOption.style1 => AppAssets.style1Icon,
-        AppIconOption.style2 => AppAssets.style2Icon,
+        AppIconOption.style1 => AppAssets.desktopIconStyle1,
+        AppIconOption.style2 => AppAssets.desktopIconStyle2,
+        AppIconOption.style3 => AppAssets.desktopIconStyle3,
+        AppIconOption.style4 => AppAssets.desktopIconStyle4,
+        AppIconOption.style5 => AppAssets.desktopIconStyle5,
+        AppIconOption.style6White => AppAssets.desktopIconStyle6White,
+        AppIconOption.style6Black => AppAssets.desktopIconStyle6Black,
       };
     }
 
@@ -93,6 +98,11 @@ class AppIconRepositoryImpl implements AppIconRepository {
       AppIconOption.white => AppAssets.whiteLogo,
       AppIconOption.style1 => AppAssets.style1Icon,
       AppIconOption.style2 => AppAssets.style2Icon,
+      AppIconOption.style3 => AppAssets.style3Icon,
+      AppIconOption.style4 => AppAssets.style4Icon,
+      AppIconOption.style5 => AppAssets.style5Icon,
+      AppIconOption.style6White => AppAssets.style6WhiteIcon,
+      AppIconOption.style6Black => AppAssets.style6BlackIcon,
     };
   }
 
