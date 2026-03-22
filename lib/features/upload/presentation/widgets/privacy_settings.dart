@@ -43,8 +43,12 @@ class PrivacySettings extends ConsumerWidget {
               onChanged: isLoading
                   ? null
                   : (val) {
-                      ref.read(uploadNotifierProvider.notifier).togglePrivacy(val!);
-                      ref.read(uploadNotifierProvider.notifier).clearReleaseDate();
+                      ref
+                          .read(uploadNotifierProvider.notifier)
+                          .togglePrivacy(val!);
+                      ref
+                          .read(uploadNotifierProvider.notifier)
+                          .clearReleaseDate();
                     },
             ),
             const Expanded(
@@ -283,11 +287,17 @@ class PrivacySettings extends ConsumerWidget {
             return Row(
               children: [
                 Expanded(
-                  child: _buildDateTimeBox(text: dateText, isActive: isBoxActive),
+                  child: _buildDateTimeBox(
+                    text: dateText,
+                    isActive: isBoxActive,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildDateTimeBox(text: timeText, isActive: isBoxActive),
+                  child: _buildDateTimeBox(
+                    text: timeText,
+                    isActive: isBoxActive,
+                  ),
                 ),
               ],
             );

@@ -5,7 +5,6 @@ version: 1.0.0+1
 
 environment:
   sdk: ^3.10.8
-  flutter: "3.38.9"
 
 dependencies:
   flutter:
@@ -57,6 +56,7 @@ dependencies:
   responsive_framework: ^1.5.1
   url_launcher: ^6.3.2
   app_links: ^7.0.0
+  desktop_webview_auth: ^0.0.16
   google_sign_in: ^7.2.0
   device_info_plus: ^12.3.0
   window_manager: ^0.5.1
@@ -64,10 +64,8 @@ dependencies:
   # ---------- App Icon ----------
   dynamic_app_icon_flutter_plus: ^0.0.1
 
-
   # ---------- Social Icons ----------
   font_awesome_flutter: ^11.0.0
-  
 
   # ---------- Google Sign In ----------
 
