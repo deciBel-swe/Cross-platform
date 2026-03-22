@@ -55,8 +55,6 @@ dependencies:
   file_picker: ^8.1.7
   responsive_framework: ^1.5.1
   url_launcher: ^6.3.2
-  app_links: ^7.0.0
-  desktop_webview_auth: ^0.0.16
   google_sign_in: ^7.2.0
   device_info_plus: ^12.3.0
   window_manager: ^0.5.1

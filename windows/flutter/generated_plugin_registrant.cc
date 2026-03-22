@@ -6,8 +6,6 @@
 
 #include "generated_plugin_registrant.h"
 
-#include <app_links/app_links_plugin_c_api.h>
-#include <desktop_webview_auth/desktop_webview_auth_plugin.h>
 #include <file_selector_windows/file_selector_windows.h>
 #include <flutter_secure_storage_windows/flutter_secure_storage_windows_plugin.h>
 #include <just_audio_windows/just_audio_windows_plugin.h>
@@ -16,10 +14,6 @@
 #include <window_manager/window_manager_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  AppLinksPluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("AppLinksPluginCApi"));
-  DesktopWebviewAuthPluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("DesktopWebviewAuthPlugin"));
   FileSelectorWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FileSelectorWindows"));
   FlutterSecureStorageWindowsPluginRegisterWithRegistrar(
