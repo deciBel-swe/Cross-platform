@@ -107,6 +107,18 @@ flutter:
     - assets/icon/desktop/app_icon_classic.ico
     - assets/icon/desktop/app_icon_black.ico
     - assets/icon/desktop/app_icon_white.ico
+    - assets/icon/desktop/app_icon_style1.ico
+    - assets/icon/desktop/app_icon_style2.ico
+    - assets/icon/desktop/app_icon_style3.ico
+    - assets/icon/desktop/app_icon_style4.ico
+    - assets/icon/desktop/app_icon_style5.ico
+    - assets/icon/desktop/app_icon_style6White.ico
+    - assets/icon/desktop/app_icon_style6Black.ico
+    - assets/icon/white_app_icon_trans_style3.png
+    - assets/icon/white_app_icon_trans_style4.png
+    - assets/icon/white_app_icon_trans_style5.png
+    - assets/icon/white_app_icon_trans_style6.png
+    - assets/icon/black_app_icon_trans_style6.png
     - assets/html/auth_complete.html
     - assets/background/background_startscreen.png
     - assets/background/foreground_startscreen.png
