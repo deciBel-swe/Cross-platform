@@ -49,7 +49,7 @@ dependencies:
 
   # ---------- Waveform Visualization ----------
   audio_waveforms: ^2.0.1
-  flutter_soloud: 2.1.7
+  flutter_soloud: ^3.5.3
 
   # ---------- Media & File Selection ----------
   image_picker: ^1.1.2
