@@ -138,7 +138,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 localCoverPic: editNotifier.localCoverPic,
                 localProfilePic: editNotifier.localProfilePic,
                 onPickImage: (isProfile) =>
-                    editNotifier.selectAndUploadImage(isProfile: isProfile),
+                    editNotifier.selectAndUploadImage(isProfile: isProfile, context: context),
               ),
 
               const SizedBox(height: 24),

@@ -1,22 +1,26 @@
 import 'dart:io';
+import 'dart:ui' as ui; // Needed for toByteData
 
+import 'package:croppy/croppy.dart' as cp;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../domain/repositories/update_image.dart';
 import 'user_profile_notifier.dart';
 
 final profileEditProvider =
     StateNotifierProvider<ProfileEditNotifier, AsyncValue<void>>(
-      (ref) => ProfileEditNotifier(ref),
-    );
+  (ref) => ProfileEditNotifier(ref),
+);
 
 class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
   ProfileEditNotifier(this.ref) : super(const AsyncData(null));
+  
   final Ref ref;
   File? _localProfilePic;
   File? _localCoverPic;
@@ -26,21 +30,56 @@ class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
 
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> selectAndUploadImage({required bool isProfile}) async {
+  /// HELPER: Unified Cropping for Windows, Android, and iOS
+  /// HELPER: This replaces the native ImageCropper logic for Windows/Cross-platform
+  Future<CroppedFile?> _performCrop(
+    BuildContext context, 
+    String path, 
+    bool isProfile,
+  ) async {
+    // FIX: Using the correct showMaterialImageCropper API for version 1.4.1
+    final result = await cp.showMaterialImageCropper(
+      context,
+      imageProvider: FileImage(File(path)),
+      allowedAspectRatios: [
+        isProfile
+            ? const cp.CropAspectRatio(width: 1, height: 1)
+            : const cp.CropAspectRatio(width: 16, height: 9)
+      ],
+      // FIX: cropPathFn must return a CropShape object, not a Path.
+      // We use the built-in factory functions to avoid "PathBuilder" errors.
+      cropPathFn: isProfile ? cp.ellipseCropShapeFn : cp.aabbCropShapeFn,
+    );
+
+    if (result == null) return null;
+
+    // Convert the result to a file so it remains compatible with your existing logic
+    final byteData = await result.uiImage.toByteData(format: ui.ImageByteFormat.png);
+    if (byteData == null) return null;
+
+    final tempDir = await getTemporaryDirectory();
+    final tempPath = '${tempDir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.png';
+    final file = await File(tempPath).writeAsBytes(byteData.buffer.asUint8List());
+
+    return CroppedFile(file.path);
+  }
+
+  /// MAIN ACTION: Pick, Crop, and Upload
+  Future<void> selectAndUploadImage({
+    required BuildContext context,
+    required bool isProfile,
+  }) async {
     try {
-      final picked = await _picker.pickImage(source: ImageSource.gallery);
-      if (picked == null) return;
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile == null) return;
 
-      final cropped = await _performCrop(picked.path, isProfile);
-      if (cropped == null) return;
-      final file = File(cropped.path);
+      final croppedFile = await _performCrop(context, pickedFile.path, isProfile);
+      if (croppedFile == null) return;
 
-      if (isProfile)
-        _localProfilePic = file;
-      else
-        _localCoverPic = file;
+      final file = File(croppedFile.path);
 
-      state = const AsyncData(null); 
+      if (isProfile) _localProfilePic = file; else _localCoverPic = file;
+      state = const AsyncData(null);
 
       final useCase = getIt<UpdateProfileImagesUseCase>();
       final result = await useCase.execute(
@@ -50,45 +89,14 @@ class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
 
       result.fold(
         (failure) {
-          if (isProfile)
-            _localProfilePic = null;
-          else
-            _localCoverPic = null;
+          if (isProfile) _localProfilePic = null; else _localCoverPic = null;
           state = AsyncError(failure.message, StackTrace.current);
         },
-        (success) {
-          ref.invalidate(userProfileProvider);
-        },
+        (success) => ref.invalidate(userProfileProvider),
       );
     } catch (e) {
-      state = AsyncError(e.toString(), StackTrace.current);
+      state = AsyncError("Failed to process image: $e", StackTrace.current);
     }
-  }
-
-  Future<CroppedFile?> _performCrop(String path, bool isProfile) {
-    return ImageCropper().cropImage(
-      sourcePath: path,
-      aspectRatio: isProfile
-          ? const CropAspectRatio(ratioX: 1, ratioY: 1)
-          : const CropAspectRatio(ratioX: 16, ratioY: 9),
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Crop Photo',
-          toolbarColor: AppColors.background,
-          toolbarWidgetColor: AppColors.apple,
-          initAspectRatio: isProfile
-              ? CropAspectRatioPreset.square
-              : CropAspectRatioPreset.ratio16x9,
-          lockAspectRatio: true,
-          cropStyle: isProfile ? CropStyle.circle : CropStyle.rectangle,
-        ),
-        IOSUiSettings(
-          title: 'Crop Photo',
-          aspectRatioLockEnabled: true,
-          cropStyle: isProfile ? CropStyle.circle : CropStyle.rectangle,
-        ),
-      ],
-    );
   }
 
   Future<bool> updateGeneralInfo({
@@ -98,7 +106,6 @@ class ProfileEditNotifier extends StateNotifier<AsyncValue<void>> {
     required List<String> genres,
   }) async {
     state = const AsyncLoading();
-
     final repository = getIt<ProfileRepository>();
     final result = await repository.updateProfile(
       bio: bio,

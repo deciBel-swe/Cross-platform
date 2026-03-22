@@ -34,6 +34,8 @@ import '../../features/library_profile/domain/repositories/profile_repository.da
     as _i106;
 import '../../features/library_profile/domain/repositories/track_repository.dart'
     as _i127;
+import '../../features/library_profile/domain/repositories/update_image.dart'
+    as _i728;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/upload_repository_impl.dart'
@@ -64,9 +66,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i703.MockAuthRepository(),
       registerFor: {_mock},
     );
-    gh.lazySingleton<_i226.ITrackRemoteDataSource>(
-      () => _i226.TrackRemoteDataSourceImpl(gh<_i361.Dio>()),
-    );
     gh.lazySingleton<_i667.DioClient>(() => _i667.DioClient(gh<_i361.Dio>()));
     gh.lazySingleton<_i364.IProfileRemoteDataSource>(
       () => _i364.ProfileRemoteDataSource(gh<_i667.DioClient>()),
@@ -76,9 +75,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i106.ProfileRepository>(
       () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
-    );
-    gh.lazySingleton<_i127.TrackRepository>(
-      () => _i928.TrackRepositoryImpl(gh<_i226.ITrackRemoteDataSource>()),
     );
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),
@@ -90,8 +86,17 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       registerFor: {_prod},
     );
+    gh.lazySingleton<_i728.UpdateProfileImagesUseCase>(
+      () => _i728.UpdateProfileImagesUseCase(gh<_i106.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i226.ITrackRemoteDataSource>(
+      () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
+    );
     gh.factory<_i464.UploadRemoteDatasource>(
       () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i127.TrackRepository>(
+      () => _i928.TrackRepositoryImpl(gh<_i226.ITrackRemoteDataSource>()),
     );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),

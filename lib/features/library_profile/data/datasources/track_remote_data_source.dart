@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/network/dio_client.dart';
 import '../models/track_dto.dart';
 
 abstract class ITrackRemoteDataSource {
@@ -10,26 +11,29 @@ abstract class ITrackRemoteDataSource {
 
 @LazySingleton(as: ITrackRemoteDataSource)
 class TrackRemoteDataSourceImpl implements ITrackRemoteDataSource {
-  const TrackRemoteDataSourceImpl(this.dio);
+  const TrackRemoteDataSourceImpl(this._dioClient);
 
-  final Dio dio;
+  final DioClient _dioClient;
 
   @override
   Future<List<TrackDto>> getUserTracks(int userId) async {
     try {
-      final response = await dio.get('/users/$userId/tracks');
-    final responseMap = response.data as Map<String, dynamic>;
-    
-    final nestedData = responseMap['data'] as Map<String, dynamic>?;
+      final response = await _dioClient.get('/users/$userId/tracks');
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        return [];
+      }
 
-    final List<dynamic> content = (nestedData?['content'] as List<dynamic>?) ?? [];
-    
-    debugPrint('Successfully found ${content.length} tracks in the nested data.');
-      return content
-          .map((json) => TrackDto.fromJson(json as Map<String, dynamic>))
+      final nestedData = data['data'];
+      final List<dynamic> contentList = (nestedData is Map<String, dynamic>)
+          ? (nestedData['content'] as List<dynamic>? ?? [])
+          : [];
+
+      return contentList
+          .whereType<Map<String, dynamic>>()
+          .map((trackJson) => TrackDto.fromJson(trackJson))
           .toList();
     } on DioException catch (e) {
-      // Map Dio errors to your architecture's ServerException
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
       throw ServerException(e.toString());

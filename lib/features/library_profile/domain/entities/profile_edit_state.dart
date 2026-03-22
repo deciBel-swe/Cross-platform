@@ -1,10 +1,6 @@
 import 'dart:io';
 
 class ProfileEditState {
-  final File? localProfilePic;
-  final File? localCoverPic;
-  final bool isLoading;
-  final String? errorMessage;
 
   ProfileEditState({
     this.localProfilePic,
@@ -12,6 +8,10 @@ class ProfileEditState {
     this.isLoading = false,
     this.errorMessage,
   });
+  final File? localProfilePic;
+  final File? localCoverPic;
+  final bool isLoading;
+  final String? errorMessage;
 
   ProfileEditState copyWith({
     File? localProfilePic,
