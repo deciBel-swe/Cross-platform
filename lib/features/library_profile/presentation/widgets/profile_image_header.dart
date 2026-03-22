@@ -5,18 +5,18 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
 class ProfileImageHeader extends StatelessWidget {
-  final UserProfile user; 
-  final File? localCoverPic;
-  final File? localProfilePic;
-  final Function(bool isProfilePic) onPickImage;
-
   const ProfileImageHeader({
     super.key,
     required this.user,
     this.localCoverPic,
     this.localProfilePic,
     required this.onPickImage,
+
   });
+  final UserProfile user; 
+  final File? localCoverPic;
+  final File? localProfilePic;
+  final void Function(bool isProfilePic) onPickImage;
 
   @override
   Widget build(BuildContext context) {

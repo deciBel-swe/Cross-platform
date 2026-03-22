@@ -1,13 +1,10 @@
 import 'dart:io';
 
-import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
-import '../../../../core/errors/failures.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/user_profile_model.dart';
 

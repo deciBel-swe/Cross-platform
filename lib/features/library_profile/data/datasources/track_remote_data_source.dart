@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
@@ -18,7 +17,7 @@ class TrackRemoteDataSourceImpl implements ITrackRemoteDataSource {
   @override
   Future<List<TrackDto>> getUserTracks(int userId) async {
     try {
-      final response = await _dioClient.get('/users/$userId/tracks');
+      final response = await _dioClient.get<dynamic>('/users/$userId/tracks');
       final data = response.data;
       if (data is! Map<String, dynamic>) {
         return [];

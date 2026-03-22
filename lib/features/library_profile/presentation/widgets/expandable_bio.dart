@@ -3,7 +3,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class ExpandableBio extends StatefulWidget {
-  const ExpandableBio({required this.bio});
+  const ExpandableBio({required this.bio, super.key});
 
   final String bio;
 

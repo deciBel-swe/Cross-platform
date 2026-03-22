@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 class GenreSelector extends StatelessWidget {
-  final List<String> availableGenres;
-  final List<String> selectedGenres;
-  final Function(String genre, bool isSelected) onGenreToggled;
-
   const GenreSelector({
     super.key,
     required this.availableGenres,
     required this.selectedGenres,
     required this.onGenreToggled,
   });
+  final List<String> availableGenres;
+  final List<String> selectedGenres;
+  final void Function(String genre, bool isSelected) onGenreToggled;
+
 
   @override
   Widget build(BuildContext context) {

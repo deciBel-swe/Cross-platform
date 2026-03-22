@@ -35,8 +35,8 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
   /// HELPER: Unified Cropping for Windows, Android, and iOS
   /// HELPER: This replaces the native ImageCropper logic for Windows/Cross-platform
   Future<CroppedFile?> _performCrop(
-    BuildContext context, 
-    String path, 
+    BuildContext context,
+    String path,
     bool isProfile,
   ) async {
     // FIX: Using the correct showMaterialImageCropper API for version 1.4.1
@@ -46,7 +46,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
       allowedAspectRatios: [
         isProfile
             ? const cp.CropAspectRatio(width: 1, height: 1)
-            : const cp.CropAspectRatio(width: 16, height: 9)
+            : const cp.CropAspectRatio(width: 16, height: 9),
       ],
       // FIX: cropPathFn must return a CropShape object, not a Path.
       // We use the built-in factory functions to avoid "PathBuilder" errors.
@@ -56,12 +56,17 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
     if (result == null) return null;
 
     // Convert the result to a file so it remains compatible with your existing logic
-    final byteData = await result.uiImage.toByteData(format: ui.ImageByteFormat.png);
+    final byteData = await result.uiImage.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
     if (byteData == null) return null;
 
     final tempDir = await getTemporaryDirectory();
-    final tempPath = '${tempDir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.png';
-    final file = await File(tempPath).writeAsBytes(byteData.buffer.asUint8List());
+    final tempPath =
+        '${tempDir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.png';
+    final file = await File(
+      tempPath,
+    ).writeAsBytes(byteData.buffer.asUint8List());
 
     return CroppedFile(file.path);
   }
@@ -75,12 +80,20 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile == null) return;
       if (!context.mounted) return;
-      final croppedFile = await _performCrop(context, pickedFile.path, isProfile);
+      final croppedFile = await _performCrop(
+        context,
+        pickedFile.path,
+        isProfile,
+      );
       if (croppedFile == null) return;
 
       final file = File(croppedFile.path);
 
-      if (isProfile) _localProfilePic = file; else _localCoverPic = file;
+      if (isProfile) {
+        _localProfilePic = file;
+      } else {
+        _localCoverPic = file;
+      }
       state = const AsyncData(null);
 
       final useCase = getIt<UpdateProfileImagesUseCase>();
@@ -89,19 +102,19 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
         coverPic: !isProfile ? file : null,
       );
 
-      result.fold(
-        (failure) {
-          final errorStr = failure.message.toString();
-          if (errorStr.contains('SocketException') || 
-              errorStr.contains('connection error') ||
-              errorStr.contains('Network is unreachable')) {
-            state = AsyncError('No internet. Image kept locally but not uploaded.', StackTrace.current);
-          } else {
-            state = AsyncError(failure.message, StackTrace.current);
-          }
-        },
-        (success) => ref.invalidate(userProfileProvider),
-      );
+      result.fold((failure) {
+        final errorStr = failure.message.toString();
+        if (errorStr.contains('SocketException') ||
+            errorStr.contains('connection error') ||
+            errorStr.contains('Network is unreachable')) {
+          state = AsyncError(
+            'No internet. Image kept locally but not uploaded.',
+            StackTrace.current,
+          );
+        } else {
+          state = AsyncError(failure.message, StackTrace.current);
+        }
+      }, (success) => ref.invalidate(userProfileProvider));
     } catch (e) {
       state = AsyncError("Failed to process image: $e", StackTrace.current);
     }
@@ -140,7 +153,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
       );
     } catch (e) {
       state = AsyncError(e.toString(), StackTrace.current);
-      return false; 
+      return false;
     }
   }
 }

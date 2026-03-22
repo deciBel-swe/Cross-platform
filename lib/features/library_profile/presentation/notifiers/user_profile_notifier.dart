@@ -24,7 +24,7 @@ class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
     state = AsyncData(Right(newUser));
   }
   Future<void> refreshProfile() async {
-    final minLoadTime = Future.delayed(const Duration(milliseconds: 1500));
+    final minLoadTime = Future<void>.delayed(const Duration(milliseconds: 1500));
     
     final fetchTask = _fetchProfile();
 

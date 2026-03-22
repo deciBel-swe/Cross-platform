@@ -6,7 +6,6 @@ part 'track_dto.g.dart';
 
 @freezed
 class TrackDto with _$TrackDto {
-  const TrackDto._();
 
   const factory TrackDto({
     required int id,
@@ -16,6 +15,7 @@ class TrackDto with _$TrackDto {
     @Default(0) int playCount,
     @Default(0) int likeCount,
   }) = _TrackDto;
+  const TrackDto._();
 
   factory TrackDto.fromJson(Map<String, dynamic> json) => _$TrackDtoFromJson(json);
 

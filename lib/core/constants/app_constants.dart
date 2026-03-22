@@ -33,7 +33,7 @@ class AppConstants {
 
   static const String tryAgain = 'Try Again';
 
-  static const String InternetExceptionMessage =
+  static const String internetExceptionMessage =
       'No internet connection. Please check your network and try again.';
 
   // ==========================================

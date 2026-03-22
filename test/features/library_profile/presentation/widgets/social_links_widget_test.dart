@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:decibel/features/library_profile/domain/entities/public_profile_social_links.dart';
-import 'package:decibel/features/library_profile/presentation/widgets/social_links_widget.dart';
 import 'package:decibel/features/library_profile/presentation/providers/web_profiles_provider.dart';
+import 'package:decibel/features/library_profile/presentation/widgets/social_links_widget.dart';
 
 class MockWebProfilesNotifier extends WebProfilesNotifier {
-  final PublicProfileSocialLinks _initialState;
   MockWebProfilesNotifier(this._initialState);
+  final PublicProfileSocialLinks _initialState;
 
   @override
   PublicProfileSocialLinks build() => _initialState;

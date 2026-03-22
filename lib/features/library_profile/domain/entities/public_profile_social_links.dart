@@ -1,16 +1,6 @@
 import '../../presentation/utils/web_profile_platform_utils.dart';
 
 class PublicProfileSocialLinks {
-  final String? instagram;
-  final String? twitter;
-  final String? youtube;
-  final String? tiktok;
-  final String? linkedin;
-  final String? snapchat;
-  final String? facebook;
-  final String? website;
-  final String? supportLink;
-
   const PublicProfileSocialLinks({
     this.instagram,
     this.twitter,
@@ -22,6 +12,16 @@ class PublicProfileSocialLinks {
     this.website,
     this.supportLink,
   });
+  final String? instagram;
+  final String? twitter;
+  final String? youtube;
+  final String? tiktok;
+  final String? linkedin;
+  final String? snapchat;
+  final String? facebook;
+  final String? website;
+  final String? supportLink;
+
 
   static List<String> get displayPlatforms =>
       WebProfilePlatformUtils.displayPlatforms;

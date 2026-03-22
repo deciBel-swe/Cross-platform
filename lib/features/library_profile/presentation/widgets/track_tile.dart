@@ -5,12 +5,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/track.dart';
 
 class TrackTile extends StatelessWidget {
-  final Track track;
-  final bool isLiked; // UI state passed from the parent
-  final VoidCallback? onTap;
-  final VoidCallback? onMorePressed;
-  final VoidCallback? onLikePressed;
-
   const TrackTile({
     super.key,
     required this.track,
@@ -19,6 +13,12 @@ class TrackTile extends StatelessWidget {
     this.onMorePressed,
     this.onLikePressed,
   });
+  final Track track;
+  final bool isLiked; // UI state passed from the parent
+  final VoidCallback? onTap;
+  final VoidCallback? onMorePressed;
+  final VoidCallback? onLikePressed;
+
 
   @override
   Widget build(BuildContext context) {
