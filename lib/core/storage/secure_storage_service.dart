@@ -17,12 +17,28 @@ class SecureStorageService {
 
   /// Saves the access token, refresh token, and calculates expiry time.
   Future<void> saveTokenPair(LoginResponseModel response) async {
-    // will check with backend about token duration assume 1 hour for now
     final expiryTime = DateTime.now().add(const Duration(hours: 1));
 
     await Future.wait([
       _storage.write(key: _accessTokenKey, value: response.accessToken),
       _storage.write(key: _refreshTokenKey, value: response.refreshToken),
+      _storage.write(
+        key: _expiryKey,
+        value: expiryTime.millisecondsSinceEpoch.toString(),
+      ),
+    ]);
+  }
+
+  /// Saves raw access and refresh tokens without requiring a user model.
+  Future<void> saveRawTokenPair({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    final expiryTime = DateTime.now().add(const Duration(hours: 1));
+
+    await Future.wait([
+      _storage.write(key: _accessTokenKey, value: accessToken),
+      _storage.write(key: _refreshTokenKey, value: refreshToken),
       _storage.write(
         key: _expiryKey,
         value: expiryTime.millisecondsSinceEpoch.toString(),
@@ -46,7 +62,6 @@ class SecureStorageService {
 
     final expiryDate = DateTime.fromMillisecondsSinceEpoch(expiryMillis);
 
-    // Consider token expired if current time is past expiry - 1 minute.
     final currentDate = DateTime.now();
     return currentDate.isAfter(expiryDate.subtract(const Duration(minutes: 1)));
   }

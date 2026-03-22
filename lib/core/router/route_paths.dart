@@ -15,4 +15,5 @@ class RoutePaths {
   static const String profile = '/profile';
   static const String upload = '/upload';
   static const String editWebLink = '/profile/edit-web-link';
+  static const loginCreateAccount = '/login-create-account';
 }

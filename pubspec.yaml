@@ -51,6 +51,7 @@ dependencies:
   url_launcher: ^6.3.2
   app_links: ^7.0.0
   desktop_webview_auth: ^0.0.16
+  webview_flutter: ^4.7.0
   google_sign_in: ^7.2.0
   window_manager: ^0.5.1
   responsive_framework: ^1.5.1

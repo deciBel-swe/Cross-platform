@@ -19,6 +19,8 @@ import '../../features/library/presentation/screens/profile_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/library/presentation/screens/web_profiles.dart';
+import '../../features/auth/presentation/screens/login_create_account_screen.dart';
+import '../../features/auth/presentation/screens/login_create_account_screen.dart';
 import 'main_shell.dart';
 import 'route_paths.dart';
 
@@ -37,9 +39,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       debugPrint('[AppRouter] authStateAsync: \$authStateAsync');
 
       final isAuthRoute =
-          state.matchedLocation == RoutePaths.login ||
-          state.matchedLocation == RoutePaths.register ||
-          state.matchedLocation == RoutePaths.splash;
+    state.matchedLocation == RoutePaths.login ||
+    state.matchedLocation == RoutePaths.register ||
+    state.matchedLocation == RoutePaths.loginCreateAccount ||
+    state.matchedLocation == RoutePaths.splash;
 
       // Extract the actual AuthState from the AsyncValue
       final authState = authStateAsync.valueOrNull;
@@ -74,11 +77,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RoutePaths.login,
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) => const LoginCreateAccountScreen(),
       ),
       GoRoute(
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.loginCreateAccount,
+        builder: (context, state) => const LoginCreateAccountScreen(),
       ),
 
       // ---- Main app shell (bottom navigation) ----

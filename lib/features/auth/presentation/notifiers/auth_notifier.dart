@@ -7,20 +7,6 @@ import '../../../../core/errors/exceptions.dart';
 import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
 
-/// Manages the authentication state of the application.
-///
-/// This notifier acts as the central hub for all authentication related
-/// business logic. It communicates with the [IAuthRepository] to perform
-/// network operations (like Google Sign-In) and the [SecureStorageService]
-/// to manage local session tokens.
-///
-/// **Responsibilities:**
-/// * **Initialization:** During [build], it checks for an existing, unexpired
-///   session in secure storage and automatically logs the user in if valid.
-/// * **Authentication:** Provides [loginWithGoogle] to initiate the OAuth flow
-///   and securely update the state upon success or failure.
-/// * **Session Management:** Provides [logout] to clear local tokens and
-///   return the user to an unauthenticated state.
 class AuthNotifier extends AsyncNotifier<AuthState> {
   @override
   FutureOr<AuthState> build() async {
@@ -72,7 +58,6 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         );
       } on AppException catch (e) {
         debugPrint('[AuthNotifier] AppException: ${e.message}');
-        // Will be caught by UI async guard
         throw Exception(e.message);
       } catch (e, st) {
         debugPrint('[AuthNotifier] Unexpected Exception: $e\n$st');
@@ -88,5 +73,38 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     await secureStorage.clearAll();
 
     state = const AsyncData(AuthUnauthenticated());
+  }
+
+  Future<void> handleWebViewLoginSuccess({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    final secureStorage = ref.read(secureStorageServiceProvider);
+    final repo = ref.read(authRepositoryProvider);
+
+    state = const AsyncLoading();
+
+    try {
+      await secureStorage.saveRawTokenPair(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      );
+
+      final userEither = await repo.getCurrentUser();
+
+      final authState = userEither.fold<AuthState>(
+        (failure) => throw Exception(failure.message),
+        (user) {
+          if (user != null) {
+            return AuthAuthenticated(user: user);
+          }
+          return const AuthUnauthenticated();
+        },
+      );
+
+      state = AsyncData(authState);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
   }
 }

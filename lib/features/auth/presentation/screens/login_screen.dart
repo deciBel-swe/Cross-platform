@@ -173,7 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ElevatedButton(
                   onPressed: () {
                     // TODO(auth): implement email sign-in
-                    context.go(RoutePaths.home);
+                    context.go(RoutePaths.loginCreateAccount);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.onPrimary,
