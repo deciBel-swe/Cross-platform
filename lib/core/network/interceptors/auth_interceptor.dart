@@ -147,11 +147,27 @@ class AuthInterceptor extends Interceptor {
       final newAccessToken = dataPayload?['accessToken'] as String?;
       final expiresIn = dataPayload?['expiresIn'] as int?;
 
+      String? newRefreshToken = dataPayload?['refreshToken'] as String?;
+      final cookies = response.headers.map['set-cookie'] ?? <String>[];
+      for (final cookie in cookies) {
+        if (cookie.contains('refreshToken=')) {
+          final parts = cookie.split(';');
+          for (final part in parts) {
+            final trimmed = part.trim();
+            if (trimmed.startsWith('refreshToken=')) {
+              newRefreshToken = trimmed.substring('refreshToken='.length);
+              break;
+            }
+          }
+        }
+        if (newRefreshToken != null && newRefreshToken != refreshToken) break;
+      }
+
       if (newAccessToken != null && expiresIn != null) {
         await _secureStorage.saveRefreshTokens(
           accessToken: newAccessToken,
           expiresIn: expiresIn,
-          // No refreshToken — API does not rotate it on refresh.
+          refreshToken: newRefreshToken,
         );
       } else {
         throw Exception('Invalid token response format');

@@ -327,15 +327,8 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // DESKTOP: Use local HTTP server loopback
       final completer = Completer<LoginResponseModel>();
 
-      const String clientId = ApiConstants.googleDesktopClientId;
-      const String redirectUri = ApiConstants.googleDesktopRedirectUri;
-
       final authUrl = Uri.parse(
-        '${ApiConstants.googleAuthUrl}'
-        '?client_id=$clientId'
-        '&redirect_uri=$redirectUri'
-        '&response_type=code'
-        '&scope=email%20profile',
+        '${ApiConstants.baseUrl}${ApiConstants.googleAuthEndpoint}',
       );
 
       HttpServer? localServer;
@@ -348,7 +341,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
           // Check if it's the OAuth redirect path
           if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
-            final authCode = uri.queryParameters['code'];
+            final authCode = uri.queryParameters['token'] ?? uri.queryParameters['code'];
             final error = uri.queryParameters['error'];
 
             if (authCode != null) {
@@ -492,16 +485,40 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // Extract refreshToken from cookies
+        final cookies = response.headers.map['set-cookie'] ?? <String>[];
+        String? extractedRefreshToken;
+        for (final cookie in cookies) {
+          if (cookie.contains('refreshToken=')) {
+            final parts = cookie.split(';');
+            for (final part in parts) {
+              final trimmed = part.trim();
+              if (trimmed.startsWith('refreshToken=')) {
+                extractedRefreshToken =
+                    trimmed.substring('refreshToken='.length);
+                break;
+              }
+            }
+          }
+          if (extractedRefreshToken != null) break;
+        }
+
         final body = response.data;
+        Map<String, dynamic> dataMap;
         if (body is Map<String, dynamic> && body['data'] != null) {
-          final dataMap = body['data'] as Map<String, dynamic>;
-          return LoginResponseModel.fromJson(dataMap);
+          dataMap = Map<String, dynamic>.from(body['data'] as Map);
         } else if (body is Map<String, dynamic>) {
           // Fallback in case the backend doesn't wrap the specific endpoint
-          return LoginResponseModel.fromJson(body);
+          dataMap = Map<String, dynamic>.from(body);
         } else {
           throw const AuthException('Invalid response format from server.');
         }
+
+        if (extractedRefreshToken != null) {
+          dataMap['refreshToken'] = extractedRefreshToken;
+        }
+
+        return LoginResponseModel.fromJson(dataMap);
       } else {
         throw AuthException(
           'Backend returned an error. Status Code: ${response.statusCode}',

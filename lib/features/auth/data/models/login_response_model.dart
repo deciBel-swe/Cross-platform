@@ -11,6 +11,7 @@ class LoginResponseModel with _$LoginResponseModel {
     required String accessToken,
     required int expiresIn,
     required AuthUserModel user,
+    String? refreshToken,
   }) = _LoginResponseModel;
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) =>

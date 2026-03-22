@@ -72,15 +72,8 @@ class MockAuthRepository implements IAuthRepository {
       return Right(model.user.toDomain());
     } else {
       // --- DESKTOP: Use local HTTP server loopback
-      const String clientId = ApiConstants.googleDesktopClientId;
-      const String redirectUri = ApiConstants.googleDesktopRedirectUri;
-
       final authUrl = Uri.parse(
-        '${ApiConstants.googleAuthUrl}'
-        '?client_id=$clientId'
-        '&redirect_uri=$redirectUri'
-        '&response_type=code'
-        '&scope=email%20profile',
+        '${ApiConstants.baseUrl}${ApiConstants.googleAuthEndpoint}',
       );
 
       final completer = Completer<Either<Failure, AuthUser>>();
@@ -106,7 +99,7 @@ class MockAuthRepository implements IAuthRepository {
         localServer.listen((HttpRequest request) async {
           final uri = request.uri;
           if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
-            final authCode = uri.queryParameters['code'];
+            final authCode = uri.queryParameters['token'] ?? uri.queryParameters['code'];
 
             if (authCode != null) {
               debugPrint('=== DESKTOP GOOGLE LOGIN SUCCESS ===');

@@ -1,7 +1,7 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = 'http://localhost:8081';
+  static const String baseUrl = 'http://localhost:8081/api';
   //static const String baseUrl = 'http://10.0.2.2:8081';
   //static const String baseUrl =
   //    'https://30d05557-562b-4dbd-ab42-3c3725b209ea.mock.pstmn.io';
