@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/track.dart';
+import '../../../library/domain/entities/track.dart';
 
 class TrackTile extends StatelessWidget {
   const TrackTile({
@@ -19,7 +19,6 @@ class TrackTile extends StatelessWidget {
   final VoidCallback? onMorePressed;
   final VoidCallback? onLikePressed;
 
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -28,7 +27,7 @@ class TrackTile extends StatelessWidget {
 
     // --- Custom Colors ---
     // The specific orange color for the active heart from your design
-    const activeLikeColor = Color(0xffff3f00); 
+    const activeLikeColor = Color(0xffff3f00);
 
     // High contrast for the title, muted for the subtitle/stats
     final titleColor = isDark ? Colors.white : Colors.black87;
@@ -74,7 +73,7 @@ class TrackTile extends StatelessWidget {
                 children: [
                   // Full Title (Artist - Title)
                   Text(
-                    "${track.artistName} - ${track.title}",
+                    "${track.artist.username} - ${track.title}",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.titleMedium?.copyWith(
@@ -86,12 +85,10 @@ class TrackTile extends StatelessWidget {
 
                   // Artist Name Subtitle
                   Text(
-                    track.artistName,
+                    track.artist.username,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: subtitleColor,
-                    ),
+                    style: textTheme.bodyMedium?.copyWith(color: subtitleColor),
                   ),
                   const SizedBox(height: 10),
 
@@ -118,7 +115,7 @@ class TrackTile extends StatelessWidget {
 
                       // Duration
                       Text(
-                        _formatDuration(track.duration),
+                        _formatDuration(_displayDuration(track)),
                         style: textTheme.bodySmall?.copyWith(
                           color: subtitleColor,
                           fontWeight: FontWeight.w500,
@@ -131,11 +128,14 @@ class TrackTile extends StatelessWidget {
                       // Interactive Like Heart
                       GestureDetector(
                         onTap: onLikePressed,
-                        behavior: HitTestBehavior.opaque, // Ensures the padding is clickable
+                        behavior: HitTestBehavior
+                            .opaque, // Ensures the padding is clickable
                         child: Padding(
                           padding: const EdgeInsets.only(right: 8.0),
                           child: Icon(
-                            isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                            isLiked
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
                             size: 16,
                             color: isLiked ? activeLikeColor : subtitleColor,
                           ),
@@ -153,8 +153,9 @@ class TrackTile extends StatelessWidget {
               onPressed: onMorePressed,
               color: subtitleColor,
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(), // Removes default padding for tighter layout
-            )
+              constraints:
+                  const BoxConstraints(), // Removes default padding for tighter layout
+            ),
           ],
         ),
       ),
@@ -164,11 +165,7 @@ class TrackTile extends StatelessWidget {
   // --- UI Helpers ---
 
   Widget _buildPlaceholderIcon() {
-    return const Icon(
-      Icons.music_note_rounded,
-      color: Colors.grey,
-      size: 32,
-    );
+    return const Icon(Icons.music_note_rounded, color: Colors.grey, size: 32);
   }
 
   Widget _buildDotSeparator(Color color) {
@@ -176,10 +173,7 @@ class TrackTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6.0),
       child: Text(
         "·",
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: color, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -200,12 +194,20 @@ class TrackTile extends StatelessWidget {
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    
+
     if (duration.inHours > 0) {
       return "${duration.inHours}:$twoDigitMinutes:$twoDigitSeconds";
     } else {
       // Remove leading zero for single-digit minutes (e.g., "4:02" instead of "04:02")
       return "${duration.inMinutes.remainder(60)}:$twoDigitSeconds";
     }
+  }
+
+  Duration _displayDuration(Track track) {
+    final seconds = track.releaseDate
+        .difference(track.createdAt)
+        .inSeconds
+        .abs();
+    return Duration(seconds: seconds);
   }
 }

@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:decibel/features/library_profile/domain/entities/public_profile_social_links.dart';
 import 'package:decibel/features/library_profile/presentation/providers/web_profiles_provider.dart';
 import 'package:decibel/features/library_profile/presentation/widgets/social_links_widget.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 class MockWebProfilesNotifier extends WebProfilesNotifier {
   MockWebProfilesNotifier(this._initialState);
@@ -18,7 +17,9 @@ void main() {
   Widget buildTestWidget(PublicProfileSocialLinks socialLinks) {
     return ProviderScope(
       overrides: [
-        webProfilesProvider.overrideWith(() => MockWebProfilesNotifier(socialLinks)),
+        webProfilesProvider.overrideWith(
+          () => MockWebProfilesNotifier(socialLinks),
+        ),
       ],
       child: MaterialApp(
         home: Scaffold(body: SocialLinksWidget(socialLinks: socialLinks)),

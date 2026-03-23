@@ -16,7 +16,9 @@ class FileSelectionHeader extends ConsumerWidget {
     // Watch the global upload state to rebuild when a new file is picked
     final state = ref.watch(uploadNotifierProvider);
     final isLoading = state is AsyncLoading;
-    final metadata = state.value!;
+    final metadata = state.valueOrNull;
+
+    if (metadata == null) return const CircularProgressIndicator();
 
     String fileDetails = '';
     if (metadata.audioFile != null) {
@@ -96,6 +98,20 @@ class FileSelectionHeader extends ConsumerWidget {
                   ),
                 ),
               ],
+
+              if (state.hasError)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    state.error.toString(),
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
               const SizedBox(height: 8),
               OutlinedButton(
                 onPressed: isLoading

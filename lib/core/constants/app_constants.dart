@@ -1,5 +1,5 @@
 /// App-wide string literals, numeric values, and configuration keys.
-/// 
+///
 /// 💡 TIP TO AVOID MERGE CONFLICTS:
 /// 1. Find the correct feature section.
 /// 2. Keep variables in ALPHABETICAL order within their section.
@@ -72,7 +72,8 @@ class AppConstants {
 
   static const double badgeGapIconToText = 9.0;
 
-  static const double badgeIconNudgeY = -0.6; // Positive moves down, negative moves up
+  static const double badgeIconNudgeY =
+      -0.6; // Positive moves down, negative moves up
 
   static const double badgeIconSize = 13.5;
 

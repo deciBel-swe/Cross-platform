@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../library/data/models/track_model.dart';
 import '../models/track_metadata_model.dart';
 
 @injectable
@@ -12,7 +13,7 @@ class UploadRemoteDatasource {
   const UploadRemoteDatasource(this._dioClient);
   final DioClient _dioClient;
 
-  Future<void> uploadTrack(
+  Future<TrackModel> uploadTrack(
     File audioFile,
     File? coverImage,
     TrackMetadataModel model,
@@ -46,7 +47,12 @@ class UploadRemoteDatasource {
       }
 
       // 4. Send the single creation request
-      await _dioClient.post<dynamic>('/api/tracks', data: formData);
+      final response = await _dioClient.post<dynamic>(
+        '/tracks',
+        data: formData,
+      );
+
+      return TrackModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (error) {
       throw ServerException(error.message ?? 'Failed to upload track');
     }

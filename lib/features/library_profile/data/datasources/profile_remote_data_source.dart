@@ -98,8 +98,8 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
     } catch (e) {
       throw ServerException('Failed to parse user profile data: $e');
     }
-    
   }
+
   @override
   Future<bool> updateProfileImages({File? profilePic, File? coverPic}) async {
     try {
@@ -109,7 +109,7 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         final imageName = profilePic.path.split('/').last;
         formData.files.add(
           MapEntry(
-            'profilePic', 
+            'profilePic',
             await MultipartFile.fromFile(profilePic.path, filename: imageName),
           ),
         );
@@ -119,25 +119,25 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         final imageName = coverPic.path.split('/').last;
         formData.files.add(
           MapEntry(
-            'coverPic', 
+            'coverPic',
             await MultipartFile.fromFile(coverPic.path, filename: imageName),
           ),
         );
       }
 
       final response = await _dioClient.patch<dynamic>(
-        ApiConstants.userProfileImage, 
+        ApiConstants.userProfileImage,
         data: formData,
       );
 
       return response.statusCode == 200 || response.statusCode == 204;
-
     } on DioException catch (error) {
-      final backendMessage = error.response?.data?['message'] ?? error.message ;
-      throw ServerException((backendMessage ?? 'Failed to upload images') as String);
+      final backendMessage = error.response?.data?['message'] ?? error.message;
+      throw ServerException(
+        (backendMessage ?? 'Failed to upload images') as String,
+      );
     } catch (e) {
       throw ServerException('Unexpected error: $e');
     }
   }
-  
 }

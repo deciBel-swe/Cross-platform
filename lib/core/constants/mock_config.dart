@@ -1,2 +1,9 @@
-// This file previously contained a MockConfig with an unused `useMockData` flag.
-// It was removed to avoid dead configuration that could drift from actual behavior.
+class MockConfig {
+  MockConfig._();
+
+  /// Global flag to determine if the app should use mock data or real backend services.
+  static bool useMockData = const bool.fromEnvironment(
+    'USE_MOCK_DATA',
+    defaultValue: true,
+  );
+}

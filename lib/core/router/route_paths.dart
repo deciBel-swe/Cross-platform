@@ -3,6 +3,7 @@ class RoutePaths {
   RoutePaths._();
 
   static const String splash = '/';
+  static const String start = '/start';
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
@@ -22,4 +23,7 @@ class RoutePaths {
   static const String upload = '/home/upload';
   static const String uploadLibrary = '/library/uploads';
   static const String editWebLink = '/profile/edit-web-link';
+  static const String trackPreviewBase = '/library/track-preview';
+
+  static String trackPreview(int trackId) => '$trackPreviewBase/$trackId';
 }

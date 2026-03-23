@@ -1118,7 +1118,6 @@ SocialLinksModel _$SocialLinksModelFromJson(Map<String, dynamic> json) {
 mixin _$SocialLinksModel {
   String? get instagram => throw _privateConstructorUsedError;
   String? get twitter => throw _privateConstructorUsedError;
-  @JsonKey(name: 'x')
   String? get x => throw _privateConstructorUsedError;
   String? get youtube => throw _privateConstructorUsedError;
   String? get tiktok => throw _privateConstructorUsedError;
@@ -1148,7 +1147,7 @@ abstract class $SocialLinksModelCopyWith<$Res> {
   $Res call({
     String? instagram,
     String? twitter,
-    @JsonKey(name: 'x') String? x,
+    String? x,
     String? youtube,
     String? tiktok,
     String? linkedin,
@@ -1245,7 +1244,7 @@ abstract class _$$SocialLinksModelImplCopyWith<$Res>
   $Res call({
     String? instagram,
     String? twitter,
-    @JsonKey(name: 'x') String? x,
+    String? x,
     String? youtube,
     String? tiktok,
     String? linkedin,
@@ -1334,7 +1333,7 @@ class _$SocialLinksModelImpl implements _SocialLinksModel {
   const _$SocialLinksModelImpl({
     this.instagram,
     this.twitter,
-    @JsonKey(name: 'x') this.x,
+    this.x,
     this.youtube,
     this.tiktok,
     this.linkedin,
@@ -1352,7 +1351,6 @@ class _$SocialLinksModelImpl implements _SocialLinksModel {
   @override
   final String? twitter;
   @override
-  @JsonKey(name: 'x')
   final String? x;
   @override
   final String? youtube;
@@ -1433,7 +1431,7 @@ abstract class _SocialLinksModel implements SocialLinksModel {
   const factory _SocialLinksModel({
     final String? instagram,
     final String? twitter,
-    @JsonKey(name: 'x') final String? x,
+    final String? x,
     final String? youtube,
     final String? tiktok,
     final String? linkedin,
@@ -1451,7 +1449,6 @@ abstract class _SocialLinksModel implements SocialLinksModel {
   @override
   String? get twitter;
   @override
-  @JsonKey(name: 'x')
   String? get x;
   @override
   String? get youtube;

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Settings window that surfaces configurable app preferences.
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   static const String _title = 'Settings';
@@ -13,7 +15,7 @@ class SettingsScreen extends StatelessWidget {
   static const String _socalSettingsTitle = 'Social Settings';
   static const String _socalSettingsSubtitle = 'Privacy Settings';
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text(_title)),
       body: ListView(
@@ -28,6 +30,17 @@ class SettingsScreen extends StatelessWidget {
             title: _socalSettingsTitle,
             subtitle: _socalSettingsSubtitle,
             onTap: () => context.push(RoutePaths.socialSettings),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(authStateProvider.notifier).logout();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: const Text('Log out'),
           ),
         ],
       ),

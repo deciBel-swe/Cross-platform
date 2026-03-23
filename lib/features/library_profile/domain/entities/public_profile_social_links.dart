@@ -22,7 +22,6 @@ class PublicProfileSocialLinks {
   final String? website;
   final String? supportLink;
 
-
   static List<String> get displayPlatforms =>
       WebProfilePlatformUtils.displayPlatforms;
 

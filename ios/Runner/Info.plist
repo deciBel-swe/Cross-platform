@@ -81,6 +81,51 @@
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
+			<key>style3</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>style3</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>style4</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>style4</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>style5</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>style5</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>style6White</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>style6White</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>style6Black</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>style6Black</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
 		</dict>
 		<key>CFBundlePrimaryIcon</key>
 		<dict>

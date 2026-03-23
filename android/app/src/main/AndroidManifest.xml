@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <application
@@ -84,6 +90,71 @@
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_style2"
+            android:label="decibel"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.decibel.decibel.MainActivity.style3"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_style3"
+            android:label="decibel"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.decibel.decibel.MainActivity.style4"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_style4"
+            android:label="decibel"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.decibel.decibel.MainActivity.style5"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_style5"
+            android:label="decibel"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.decibel.decibel.MainActivity.style6White"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_style6_white"
+            android:label="decibel"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="com.decibel.decibel.MainActivity.style6Black"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_style6_black"
             android:label="decibel"
             android:targetActivity=".MainActivity">
             <intent-filter>

@@ -66,9 +66,9 @@ void main() {
         router.go(RoutePaths.home);
         await tester.pumpAndSettle();
 
-        // Assert: The RouteGuard intercepted the navigation and forced it back to /login
+        // Assert: The RouteGuard intercepted the navigation and forced it back to /start
         final location = router.routerDelegate.currentConfiguration.uri.path;
-        expect(location, equals(RoutePaths.login));
+        expect(location, equals(RoutePaths.start));
       },
     );
 

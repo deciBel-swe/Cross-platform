@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/entities/track.dart';
+import '../../../library/domain/entities/track.dart';
 import '../providers/track_provider.dart';
 
-class UserTracksNotifier extends AutoDisposeFamilyAsyncNotifier<List<Track>, int> {
-  
+class UserTracksNotifier
+    extends AutoDisposeFamilyAsyncNotifier<List<Track>, int> {
   @override
   FutureOr<List<Track>> build(int arg) async {
     // 'arg' is the userId passed from the UI
@@ -14,30 +14,24 @@ class UserTracksNotifier extends AutoDisposeFamilyAsyncNotifier<List<Track>, int
 
   Future<List<Track>> _fetchUserTracks(int userId) async {
     final repository = ref.watch(trackRepositoryProvider);
-    
-    // Call the repository method we built earlier
-    final result = await repository.getUserTracks(userId);
 
-    // Unpack the Either<Failure, List<Track>>
-    return result.fold(
-      (failure) {
-        // By throwing an exception here, Riverpod automatically catches it 
-        // and transitions the state to AsyncError(failure.message).
-        throw Exception(failure.message); 
-      },
-      (tracks) {
-        // Return the tracks to transition the state to AsyncData(tracks)
-        return tracks;
-      },
+    final result = await repository.fetchTracks(
+      userId: userId,
+      page: 0,
+      size: 20,
     );
+
+    return result.fold((failure) {
+      throw Exception(failure.message);
+    }, (paginated) => paginated.content);
   }
 
   // Helper method for "Pull to Refresh" in the UI
   Future<void> refresh() async {
     // Set state back to loading to show the spinner
     state = const AsyncLoading();
-    
-    // AsyncValue.guard safely executes the future and handles any 
+
+    // AsyncValue.guard safely executes the future and handles any
     // exceptions (like the one we throw in our fold above)
     state = await AsyncValue.guard(() => _fetchUserTracks(arg));
   }
@@ -46,6 +40,5 @@ class UserTracksNotifier extends AutoDisposeFamilyAsyncNotifier<List<Track>, int
 // ---------------------------------------------------------
 // The Provider to watch in your UI
 // ---------------------------------------------------------
-final userTracksProvider = AsyncNotifierProvider.autoDispose.family<UserTracksNotifier, List<Track>, int>(
-  UserTracksNotifier.new,
-);
+final userTracksProvider = AsyncNotifierProvider.autoDispose
+    .family<UserTracksNotifier, List<Track>, int>(UserTracksNotifier.new);
