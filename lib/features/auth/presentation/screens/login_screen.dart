@@ -3,9 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
@@ -171,10 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 // ---- Continue button (white) ----
                 ElevatedButton(
-                  onPressed: () {
-                    // TODO(auth): implement email sign-in
-                    context.go(RoutePaths.home);
-                  },
+                  onPressed: null, // TODO(auth): enable once local/WebView auth is wired up
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.onPrimary,
                     foregroundColor: AppColors.onBackground,

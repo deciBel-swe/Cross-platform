@@ -83,7 +83,7 @@ class WaveformExtractionService {
       if (!soloud.isInitialized) {
         await soloud.init();
       }
-
+      // ignore: experimental_member_use
       final audioData = await soloud.readSamplesFromFile(
         path,
         noOfSamples,

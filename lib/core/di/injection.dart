@@ -15,6 +15,7 @@ final GetIt getIt = GetIt.instance;
 )
 void configureDependencies() {
   getIt.init(environment: 'mock');
+  //getIt.init(environment: Environment.prod);
   _registerSettingsDependencies();
 }
 

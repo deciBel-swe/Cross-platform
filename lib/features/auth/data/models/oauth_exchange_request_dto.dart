@@ -15,3 +15,11 @@ class OauthExchangeRequestDto with _$OauthExchangeRequestDto {
   factory OauthExchangeRequestDto.fromJson(Map<String, dynamic> json) =>
       _$OauthExchangeRequestDtoFromJson(json);
 }
+
+// Custom toJson override to match API field name 'authTokenDto'
+extension OauthExchangeRequestDtoX on OauthExchangeRequestDto {
+  Map<String, dynamic> toApiJson() => {
+    'authTokenDto': code,
+    'deviceInfo': deviceInfo.toJson(),
+  };
+}
