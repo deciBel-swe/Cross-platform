@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:decibel/core/services/picker_service.dart';
+import 'package:decibel/core/services/waveform_extraction_service.dart';
 import 'package:decibel/core/storage/shared_prefs_service.dart';
 import 'package:decibel/features/upload/domain/repositories/i_upload_repository.dart';
 import 'package:decibel/features/upload/presentation/providers/upload_notifier.dart';
@@ -14,12 +15,16 @@ class MockSharedPrefsService extends Mock implements SharedPrefsService {}
 
 class MockUploadRepository extends Mock implements IUploadRepository {}
 
+class MockWaveformExtractionService extends Mock
+    implements WaveformExtractionService {}
+
 class MockFile extends Mock implements File {}
 
 void main() {
   late MockPickerService mockPicker;
   late MockSharedPrefsService mockPrefs;
   late MockUploadRepository mockRepo;
+  late MockWaveformExtractionService mockWaveformService;
   late ProviderContainer container;
 
   /// 2. Set up fresh mocks before each test runs
@@ -27,6 +32,7 @@ void main() {
     mockPicker = MockPickerService();
     mockPrefs = MockSharedPrefsService();
     mockRepo = MockUploadRepository();
+    mockWaveformService = MockWaveformExtractionService();
 
     // The notifier always checks privacy settings on startup, so we mock it.
     when(
@@ -37,10 +43,20 @@ void main() {
       () => mockPicker.getAudioDuration(any()),
     ).thenAnswer((_) async => const Duration(seconds: 180));
 
+    when(
+      () => mockWaveformService.extractWaveform(
+        any(),
+        noOfSamples: any(named: 'noOfSamples'),
+      ),
+    ).thenAnswer((_) async => [0.1, 0.3, 0.2]);
+
     container = ProviderContainer(
       overrides: [
         sharedPrefsServiceProvider.overrideWithValue(mockPrefs),
         pickerServiceProvider.overrideWithValue(mockPicker),
+        waveformExtractionServiceProvider.overrideWithValue(
+          mockWaveformService,
+        ),
         uploadRepositoryProvider.overrideWithValue(mockRepo),
       ],
     );
@@ -249,6 +265,9 @@ void main() {
         overrides: [
           sharedPrefsServiceProvider.overrideWithValue(mockPrefs),
           pickerServiceProvider.overrideWithValue(mockPicker),
+          waveformExtractionServiceProvider.overrideWithValue(
+            mockWaveformService,
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -306,6 +325,9 @@ void main() {
         overrides: [
           sharedPrefsServiceProvider.overrideWithValue(mockPrefs),
           pickerServiceProvider.overrideWithValue(mockPicker),
+          waveformExtractionServiceProvider.overrideWithValue(
+            mockWaveformService,
+          ),
         ],
       );
       addTearDown(container.dispose);
