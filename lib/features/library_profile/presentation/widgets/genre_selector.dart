@@ -37,8 +37,8 @@ class GenreSelector extends StatelessWidget {
               onSelected: (bool selected) => onGenreToggled(genre, selected),
               backgroundColor: AppColors.surface,
               selectedColor: AppColors.google,
-              checkmarkColor: AppColors.google,
-              labelStyle: TextStyle(color: isSelected ? AppColors.google : AppColors.onPrimary),
+              checkmarkColor: AppColors.onPrimary,
+              labelStyle: const TextStyle(color:  AppColors.onPrimary ),
               side: BorderSide(color: isSelected ? AppColors.google : Colors.transparent),
             );
           }).toList(),

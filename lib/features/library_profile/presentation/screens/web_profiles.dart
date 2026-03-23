@@ -178,9 +178,11 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
     final socialLinks = ref.watch(webProfilesProvider);
     final orderedPlatforms = ref.watch(orderedWebPlatformsProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Web Profiles')),
-      body: Padding(
+    return 
+    // Scaffold(
+      // appBar: AppBar(title: const Text('Web Profiles')),
+      // body: 
+      Padding(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Column(
@@ -218,7 +220,7 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
             ],
           ),
         ),
-      ),
+      // ),
     );
   }
 }

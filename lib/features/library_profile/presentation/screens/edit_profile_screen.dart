@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/failures.dart';
-import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../upload/presentation/providers/upload_notifier.dart';
 import '../../domain/entities/public_profile_social_links.dart';
@@ -14,7 +13,8 @@ import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
 import '../widgets/genre_selector.dart'; 
 import '../widgets/profile_image_header.dart'; 
-import '../widgets/profile_text_field.dart'; 
+import '../widgets/profile_text_field.dart';
+import 'web_profiles.dart'; 
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -144,16 +144,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       appBar: AppBar(
         title: const Text('Edit Profile'),
         backgroundColor: AppColors.background,
+        elevation: 0,
+        shadowColor: AppColors.transparent,
+        surfaceTintColor: AppColors.background,
         actions: [
-          TextButton(
-            onPressed: () {
-              context.push(RoutePaths.editWebLink);
-            },
-            child: const Text(
-              'Edit Web links',
-              style: TextStyle(color: AppColors.accentTeal),
-            ),
-          ),
+          // TextButton(
+          //   onPressed: () {
+          //     context.push(RoutePaths.editWebLink);
+          //   },
+          //   child: const Text(
+          //     'Edit Web links',
+          //     style: TextStyle(color: AppColors.accentTeal),
+          //   ),
+          // ),
           if (editState is AsyncLoading)
             const Center(
               child: Padding(
@@ -277,6 +280,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       },
                     ),
                     const SizedBox(height: 40),
+                    const EditProfileLinkScreen()
                   ],
                 ),
               ),
