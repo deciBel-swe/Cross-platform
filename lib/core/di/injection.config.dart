@@ -49,6 +49,7 @@ import '../../features/upload/data/repository/upload_repository_impl.dart'
 import '../../features/upload/domain/repositories/i_upload_repository.dart'
     as _i43;
 import '../network/dio_client.dart' as _i667;
+import '../network/interceptors/auth_interceptor.dart' as _i745;
 import '../storage/secure_storage_service.dart' as _i666;
 import 'register_module.dart' as _i291;
 
@@ -72,11 +73,18 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i485.MockTrackRepository(),
       registerFor: {_mock},
     );
-    gh.lazySingleton<_i589.IAuthRepository>(
-      () => _i703.MockAuthRepository(),
-      registerFor: {_mock},
+    gh.lazySingleton<_i667.DioClient>(
+      () => _i667.DioClient(
+        gh<_i361.Dio>(),
+        authInterceptor: gh<_i745.AuthInterceptor>(),
+      ),
     );
-    gh.lazySingleton<_i667.DioClient>(() => _i667.DioClient(gh<_i361.Dio>()));
+    gh.factory<_i464.UploadRemoteDatasource>(
+      () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i534.LibraryRemoteDatasource>(
+      () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => const _i580.MockUploadRepository(),
       registerFor: {_mock},
@@ -89,6 +97,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i106.ProfileRepository>(
       () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i43.IUploadRepository>(
+      () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
+      registerFor: {_prod},
     );
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),
@@ -103,19 +115,16 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       registerFor: {_prod},
     );
-    gh.factory<_i464.UploadRemoteDatasource>(
-      () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
-    );
-    gh.lazySingleton<_i534.LibraryRemoteDatasource>(
-      () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
-    );
-    gh.lazySingleton<_i43.IUploadRepository>(
-      () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
-      registerFor: {_prod},
-    );
     gh.lazySingleton<_i252.TrackRepository>(
       () => _i637.TrackRepositoryImpl(gh<_i534.LibraryRemoteDatasource>()),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i589.IAuthRepository>(
+      () => _i703.MockAuthRepository(gh<_i666.SecureStorageService>()),
+      registerFor: {_mock},
+    );
+    gh.lazySingleton<_i745.AuthInterceptor>(
+      () => registerModule.getAuthInterceptor(gh<_i666.SecureStorageService>()),
     );
     return this;
   }

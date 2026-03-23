@@ -8,6 +8,7 @@ class AuthMockFixtures {
   static const Map<String, dynamic> mockLoginResponse = {
     'accessToken': 'mock_access_token_12345',
     'refreshToken': 'mock_refresh_token_abcde',
+    'expiresIn': 3600,
     'user': {
       'id': 101,
       'username': 'mock_user_free',
@@ -20,6 +21,7 @@ class AuthMockFixtures {
   static const Map<String, dynamic> mockArtistLoginResponse = {
     'accessToken': 'mock_access_token_artist',
     'refreshToken': 'mock_refresh_token_artist',
+    'expiresIn': 3600,
     'user': {
       'id': 102,
       'username': 'ziad_the_artist',

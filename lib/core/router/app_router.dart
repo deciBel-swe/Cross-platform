@@ -9,6 +9,7 @@ import '../../features/auth/domain/entities/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/start_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -45,33 +46,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute =
           state.matchedLocation == RoutePaths.login ||
           state.matchedLocation == RoutePaths.register ||
+          state.matchedLocation == RoutePaths.start ||
           state.matchedLocation == RoutePaths.splash;
 
       final authState = authStateAsync.valueOrNull;
 
       if (authState is AuthUnauthenticated) {
-        debugPrint(
-          '[AppRouter] -> Handling as AuthUnauthenticated. Redirecting to login? ${isAuthRoute ? "No" : "Yes"}',
-        );
-        return isAuthRoute ? null : RoutePaths.login;
+        debugPrint('[AppRouter] -> Handling as AuthUnauthenticated.');
+        // If user is on a protected route or splash, send them to start
+        return isAuthRoute && state.matchedLocation != RoutePaths.splash
+            ? null
+            : RoutePaths.start;
       }
 
       if (authState is AuthAuthenticated) {
-        debugPrint(
-          '[AppRouter] -> Handling as AuthAuthenticated. Redirecting to home? ${isAuthRoute ? "Yes" : "No"}',
-        );
+        debugPrint('[AppRouter] -> Handling as AuthAuthenticated.');
         return isAuthRoute ? RoutePaths.home : null;
       }
 
       debugPrint(
-        '[AppRouter] -> State is Loading or Error. Redirecting to splash? ${isAuthRoute ? "No (already auth route)" : "Yes"}',
+        '[AppRouter] -> State is Loading or Error. Staying on splash.',
       );
-
-      return isAuthRoute ? null : RoutePaths.splash;
+      // Always go to splash while loading unless we are already on a route we want to keep
+      return state.matchedLocation == RoutePaths.splash
+          ? null
+          : RoutePaths.splash;
     },
     routes: [
       GoRoute(
         path: RoutePaths.splash,
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.start,
         builder: (context, state) => const StartScreen(),
       ),
       GoRoute(

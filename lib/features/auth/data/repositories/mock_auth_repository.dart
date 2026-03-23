@@ -1,25 +1,25 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
 import 'package:injectable/injectable.dart';
 
-import 'package:url_launcher/url_launcher.dart';
-
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/storage/secure_storage_service.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../datasources/auth_mock_fixtures.dart';
 import '../models/login_response_model.dart';
-import '../utils/auth_success_page.dart';
 
 /// Mock implementation of [IAuthRepository] for testing and development.
 @Environment('mock')
 @LazySingleton(as: IAuthRepository)
 class MockAuthRepository implements IAuthRepository {
+  MockAuthRepository(this._secureStorageService);
+
+  final SecureStorageService _secureStorageService;
   @override
   Future<Either<Failure, AuthUser>> loginWithGoogle() async {
     // Launch the REAL Google Auth URL directly to test the consent screen
@@ -39,9 +39,14 @@ class MockAuthRepository implements IAuthRepository {
 
       await g_sign_in.GoogleSignIn.instance.signOut();
       //this account will be removed when we switch to production
-      final account = await g_sign_in.GoogleSignIn.instance.authenticate(
-        scopeHint: ['email', 'profile'],
-      );
+      g_sign_in.GoogleSignInAccount account;
+      try {
+        account = await g_sign_in.GoogleSignIn.instance.authenticate(
+          scopeHint: ['email', 'profile'],
+        );
+      } catch (e) {
+        return Left(AuthFailure('Google Sign-In failed or was cancelled: $e'));
+      }
 
       // wow so this is a flag to run only in debug mode very USEFUL
       if (kDebugMode) {
@@ -58,80 +63,35 @@ class MockAuthRepository implements IAuthRepository {
       const mockResponse = AuthMockFixtures.mockLoginResponse;
       final model = LoginResponseModel.fromJson(mockResponse);
 
+      await _secureStorageService.saveTokenPair(model);
+
       return Right(model.user.toDomain());
     } else {
-      // --- DESKTOP: Use local HTTP server loopback
-      const String clientId = ApiConstants.googleDesktopClientId;
-      const String redirectUri = ApiConstants.googleDesktopRedirectUri;
+      // --- DESKTOP MOCK: Bypass browser and local server entirely
+      await Future<void>.delayed(AuthMockFixtures.delay);
+      const mockResponse = AuthMockFixtures.mockLoginResponse;
+      final model = LoginResponseModel.fromJson(mockResponse);
 
-      final authUrl = Uri.parse(
-        '${ApiConstants.googleAuthUrl}'
-        '?client_id=$clientId'
-        '&redirect_uri=$redirectUri'
-        '&response_type=code'
-        '&scope=email%20profile',
-      );
+      await _secureStorageService.saveTokenPair(model);
 
-      final completer = Completer<Either<Failure, AuthUser>>();
-
-      // Prepare the success response
-      void completeSuccess() {
-        // Using Future<void>.delayed is preferred for type safety in modern Dart
-        Future<void>.delayed(AuthMockFixtures.delay, () {
-          const mockResponse = AuthMockFixtures.mockLoginResponse;
-          final model = LoginResponseModel.fromJson(mockResponse);
-          if (!completer.isCompleted) {
-            completer.complete(Right(model.user.toDomain()));
-          }
-        });
-      }
-
-      HttpServer? localServer;
-      try {
-        localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 3000);
-        localServer.listen((HttpRequest request) async {
-          final uri = request.uri;
-          if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
-            final authCode = uri.queryParameters['code'];
-
-            if (authCode != null) {
-              debugPrint('=== DESKTOP GOOGLE LOGIN SUCCESS ===');
-              debugPrint('Authorization Code Received: $authCode');
-              debugPrint('====================================');
-            }
-          }
-
-          final html = await buildAuthSuccessHtml();
-
-          request.response
-            ..statusCode = 200
-            ..headers.contentType = ContentType.html
-            ..write(html);
-          await request.response.close();
-          await localServer?.close(force: true);
-          completeSuccess();
-        });
-      } catch (_) {
-        // Ignore port binding errors if testing rapidly
-      }
-
-      try {
-        await launchUrl(authUrl, mode: LaunchMode.externalApplication);
-      } catch (_) {
-        await localServer?.close(force: true);
-      }
-
-      return completer.future;
+      return Right(model.user.toDomain());
     }
   }
 
   @override
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
-    // Simulate reading from local storage without delay
-    // this will be tied to SecureStorageService.
-    const mockResponse = AuthMockFixtures.mockLoginResponse;
-    final model = LoginResponseModel.fromJson(mockResponse);
+    final isExpired = await _secureStorageService.isAccessTokenExpired();
+    if (isExpired) {
+      return const Right(null);
+    }
 
-    return Right(model.user.toDomain());
+    final userModel = await _secureStorageService.getUser();
+    return Right(userModel?.toDomain());
+  }
+
+  @override
+  Future<Either<Failure, Unit>> logout() async {
+    await _secureStorageService.clearAll();
+    return const Right(unit);
   }
 }

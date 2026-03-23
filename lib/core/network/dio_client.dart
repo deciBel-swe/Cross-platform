@@ -1,10 +1,20 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../constants/api_constants.dart';
+import 'interceptors/auth_interceptor.dart';
 
+/// Centralized HTTP client wrapper around [Dio] for the Decibel application.
+///
+/// This client comes pre-configured with base URLs, timeouts, and required
+/// interceptors such as [AuthInterceptor] for JWT handling and [LogInterceptor]
+/// for debugging.
 @lazySingleton
 class DioClient {
-  DioClient(this._dio) {
+  /// Constructs the client, attaching the [AuthInterceptor] if provided.
+  ///
+  /// The [AuthInterceptor] can be null if running in a mocked environment
+  /// where token injection and refreshing are not applicable.
+  DioClient(this._dio, {AuthInterceptor? authInterceptor}) {
     _dio.options
       ..baseUrl = ApiConstants.baseUrl
       ..connectTimeout = const Duration(
@@ -14,6 +24,10 @@ class DioClient {
         milliseconds: ApiConstants.receiveTimeout,
       )
       ..contentType = 'application/json';
+
+    if (authInterceptor != null) {
+      _dio.interceptors.add(authInterceptor);
+    }
 
     _dio.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true, error: true),

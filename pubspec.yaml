@@ -6,7 +6,6 @@ version: 1.0.0+1
 environment:
   sdk: ^3.10.8
   flutter: "3.38.9"
-
 dependencies:
   flutter:
     sdk: flutter
@@ -49,7 +48,7 @@ dependencies:
 
   # ---------- Waveform Visualization ----------
   audio_waveforms: ^2.0.1
-  flutter_soloud: ^3.5.3
+  flutter_soloud: 3.5.3
 
   # ---------- Media & File Selection ----------
   image_picker: ^1.1.2

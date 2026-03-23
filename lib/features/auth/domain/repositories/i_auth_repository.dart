@@ -15,13 +15,9 @@ abstract class IAuthRepository {
   /// Returns null if no user is currently logged in or the session has expired.
   Future<Either<Failure, AuthUser?>> getCurrentUser();
 
-  /// Logs out the current user by clearing authentication tokens.
+  /// Logs out the current user from the backend and clears the local session.
   ///
-  /// This method should invalidate any stored tokens (access and refresh)
-  /// and clear any cached user session data.
-  ///
-  /// Returns a [Future<void>] that completes when the logout operation is finished.
-  ///
-  /// Throws [AppException] subclasses on failure, which should be mapped to [Failure] if needed.
-  //Future<void> logout();
+  /// Returns a failure if the backend logout request fails.
+  /// Local authentication data should still be cleared afterwards.
+  Future<Either<Failure, Unit>> logout();
 }

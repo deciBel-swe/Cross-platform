@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/exceptions.dart';
@@ -25,16 +26,11 @@ class AuthRepository implements IAuthRepository {
     try {
       final isExpired = await _secureStorageService.isAccessTokenExpired();
       if (isExpired) {
-        return const Right(
-          null,
-        ); // A refresh logic would go here initially, but for now just logout.
+        return const Right(null);
       }
 
-      // Because we don't have a /me endpoint or local user db mapped right now,
-      // getting the current user purely relies on valid tokens.
-      // we'd fetch the user's profile info when backend is ready.
-      // Returning null requires them to login again
-      return const Right(null);
+      final userModel = await _secureStorageService.getUser();
+      return Right(userModel?.toDomain());
     } catch (e) {
       return const Right(null);
     }
@@ -96,8 +92,32 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[AuthRepository] Unexpected error in loginWithGoogle: $e');
+        debugPrint('[AuthRepository] StackTrace: $st');
+      }
       return const Left(AuthFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> logout() async {
+    try {
+      await _remoteDataSource.logout();
+      return const Right(unit);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[AuthRepository] Unexpected error in logout: $e');
+        debugPrint('[AuthRepository] StackTrace: $st');
+      }
+      return const Left(AuthFailure('An unexpected error occurred.'));
+    } finally {
+      await _secureStorageService.clearAll();
     }
   }
 }

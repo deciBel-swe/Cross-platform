@@ -35,49 +35,63 @@ class PrivacySettings extends ConsumerWidget {
         ),
 
         // Public / Private Radio
-        RadioMenuButton<bool>(
-          value: false, // false = Public
-          groupValue: metadata.isPrivate,
-          onChanged: isLoading
-              ? null
-              : (val) {
-                  // 1. Set to Public
-                  ref.read(uploadNotifierProvider.notifier).togglePrivacy(val!);
-                  // 2. Force the schedule to turn OFF because it is public now!
-                  ref.read(uploadNotifierProvider.notifier).clearReleaseDate();
-                },
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Public', style: TextStyle(color: AppColors.onPrimary)),
-              Text(
-                'Anyone can find this',
-                style: TextStyle(color: AppColors.textMuted),
+        Row(
+          children: [
+            Radio<bool>(
+              value: false,
+              groupValue: metadata.isPrivate,
+              onChanged: isLoading
+                  ? null
+                  : (val) {
+                      ref
+                          .read(uploadNotifierProvider.notifier)
+                          .togglePrivacy(val!);
+                      ref
+                          .read(uploadNotifierProvider.notifier)
+                          .clearReleaseDate();
+                    },
+            ),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Public', style: TextStyle(color: AppColors.onPrimary)),
+                  Text(
+                    'Anyone can find this',
+                    style: TextStyle(color: AppColors.textMuted),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        RadioMenuButton<bool>(
-          value: true,
-          groupValue: metadata.isPrivate,
-          onChanged: isLoading
-              ? null
-              : (val) => ref
-                    .read(uploadNotifierProvider.notifier)
-                    .togglePrivacy(val!),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Unlisted (Private)',
-                style: TextStyle(color: AppColors.onPrimary),
+        Row(
+          children: [
+            Radio<bool>(
+              value: true,
+              groupValue: metadata.isPrivate,
+              onChanged: isLoading
+                  ? null
+                  : (val) => ref
+                        .read(uploadNotifierProvider.notifier)
+                        .togglePrivacy(val!),
+            ),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Unlisted (Private)',
+                    style: TextStyle(color: AppColors.onPrimary),
+                  ),
+                  Text(
+                    'Anyone with private link can access',
+                    style: TextStyle(color: AppColors.textMuted),
+                  ),
+                ],
               ),
-              Text(
-                'Anyone with private link can access',
-                style: TextStyle(color: AppColors.textMuted),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
 
         // Follower Exclusive (Mock)
@@ -85,9 +99,11 @@ class PrivacySettings extends ConsumerWidget {
           contentPadding: EdgeInsets.zero,
           title: Row(
             children: [
-              const Text(
-                'Follower Exclusive',
-                style: TextStyle(color: AppColors.textHint),
+              const Expanded(
+                child: Text(
+                  'Follower Exclusive',
+                  style: TextStyle(color: AppColors.textHint),
+                ),
               ),
               const SizedBox(width: 8),
               Container(
@@ -140,9 +156,11 @@ class PrivacySettings extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'Schedule your release with Artist Pro',
-                style: TextStyle(color: AppColors.onPrimary),
+              const Expanded(
+                child: Text(
+                  'Schedule your release with Artist Pro',
+                  style: TextStyle(color: AppColors.onPrimary),
+                ),
               ),
             ],
           ),
@@ -268,9 +286,19 @@ class PrivacySettings extends ConsumerWidget {
             // 2. Build the UI
             return Row(
               children: [
-                _buildDateTimeBox(text: dateText, isActive: isBoxActive),
+                Expanded(
+                  child: _buildDateTimeBox(
+                    text: dateText,
+                    isActive: isBoxActive,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                _buildDateTimeBox(text: timeText, isActive: isBoxActive),
+                Expanded(
+                  child: _buildDateTimeBox(
+                    text: timeText,
+                    isActive: isBoxActive,
+                  ),
+                ),
               ],
             );
           },

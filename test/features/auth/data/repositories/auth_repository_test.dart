@@ -45,7 +45,7 @@ void main() {
 
     const tLoginResponseModel = LoginResponseModel(
       accessToken: 'access_token',
-      refreshToken: 'refresh_token',
+      expiresIn: 3600,
       user: AuthUserModel(
         id: 1,
         username: 'test_user',
@@ -148,5 +148,48 @@ void main() {
       // Assert
       expect(result, const Left<Failure, AuthUser>(AuthFailure('Auth error')));
     });
+
+    test(
+      'logout should call remote logout, clear storage, and return unit on success',
+      () async {
+        // Arrange
+        when(() => mockRemoteDataSource.logout()).thenAnswer((_) async {});
+        when(
+          () => mockSecureStorageService.clearAll(),
+        ).thenAnswer((_) async => {});
+
+        // Act
+        final result = await repository.logout();
+
+        // Assert
+        expect(result, const Right<Failure, Unit>(unit));
+        verify(() => mockRemoteDataSource.logout()).called(1);
+        verify(() => mockSecureStorageService.clearAll()).called(1);
+      },
+    );
+
+    test(
+      'logout should clear storage and return ServerFailure when backend logout fails',
+      () async {
+        // Arrange
+        when(
+          () => mockRemoteDataSource.logout(),
+        ).thenThrow(const ServerException('Logout failed'));
+        when(
+          () => mockSecureStorageService.clearAll(),
+        ).thenAnswer((_) async => {});
+
+        // Act
+        final result = await repository.logout();
+
+        // Assert
+        expect(
+          result,
+          const Left<Failure, Unit>(ServerFailure('Logout failed')),
+        );
+        verify(() => mockRemoteDataSource.logout()).called(1);
+        verify(() => mockSecureStorageService.clearAll()).called(1);
+      },
+    );
   });
 }
