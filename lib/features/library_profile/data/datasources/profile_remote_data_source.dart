@@ -26,23 +26,61 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
     SocialLinksModel linksModel,
   ) async {
     try {
+      final unsupportedPlatforms = <String>[
+        if ((linksModel.facebook ?? '').trim().isNotEmpty) 'facebook',
+        if ((linksModel.youtube ?? '').trim().isNotEmpty) 'youtube',
+        if ((linksModel.tiktok ?? '').trim().isNotEmpty) 'tiktok',
+        if ((linksModel.linkedin ?? '').trim().isNotEmpty) 'linkedin',
+        if ((linksModel.snapchat ?? '').trim().isNotEmpty) 'snapchat',
+      ];
+
+      if (unsupportedPlatforms.isNotEmpty) {
+        throw ServerException(
+          'These platforms are not supported by the current API: '
+          '${unsupportedPlatforms.join(', ')}. '
+          'Supported platforms: instagram, twitter, website, supportLink.',
+        );
+      }
+
+      final payload = <String, dynamic>{
+        if ((linksModel.instagram ?? '').trim().isNotEmpty)
+          'instagram': linksModel.instagram!.trim(),
+        if (((linksModel.twitter ?? linksModel.x) ?? '').trim().isNotEmpty)
+          'twitter': (linksModel.twitter ?? linksModel.x)!.trim(),
+        if ((linksModel.website ?? '').trim().isNotEmpty)
+          'website': linksModel.website!.trim(),
+        if ((linksModel.supportLink ?? '').trim().isNotEmpty)
+          'supportLink': linksModel.supportLink!.trim(),
+      };
+
       final response = await _dioClient.patch<dynamic>(
         ApiConstants.updateSocialLinks,
-        data: linksModel.toJson(),
+        data: payload,
       );
 
       final data = response.data as Map<String, dynamic>?;
 
-      if (data == null || data['success'] != true) {
+      if (data == null) {
         throw const ServerException('Failed to update social links');
       }
 
-      return SocialLinksModel.fromJson(data['data'] as Map<String, dynamic>);
+      final Object? responseData = data['data'] ?? data;
+      if (responseData is! Map<String, dynamic>) {
+        throw const ServerException('Invalid social links response format');
+      }
+
+      return SocialLinksModel.fromJson(responseData);
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized to update social links');
       }
-      throw ServerException(e.message ?? 'Unknown server error');
+      final responseData = e.response?.data;
+      final backendMessage = responseData is Map<String, dynamic>
+          ? responseData['message'] as String?
+          : null;
+      throw ServerException(
+        backendMessage ?? e.message ?? 'Unknown server error',
+      );
     }
   }
 
@@ -84,8 +122,30 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       final Map<String, dynamic> responseData = data['data'] != null
           ? data['data'] as Map<String, dynamic>
           : data;
+      final Object? socialLinksDto = responseData['socialLinksDto'];
+      final List<Object?> socialLinksList = socialLinksDto is List
+          ? socialLinksDto.cast<Object?>()
+          : const <Object?>[];
+      final Map<String, dynamic>? normalizedSocialLinks =
+          socialLinksDto is Map<String, dynamic>
+          ? socialLinksDto
+          : socialLinksList.isNotEmpty &&
+                socialLinksList.first is Map<String, dynamic>
+          ? socialLinksList.first as Map<String, dynamic>
+          : null;
 
-      return UserProfileModel.fromJson(responseData);
+      final Map<String, dynamic> normalizedResponse = {
+        ...responseData,
+        'Role': _normalizeRole(responseData),
+        'stats': {
+          'followers': (responseData['followerCount'] as num?)?.toInt() ?? 0,
+          'following': (responseData['followingCount'] as num?)?.toInt() ?? 0,
+          'tracksCount': (responseData['trackCount'] as num?)?.toInt() ?? 0,
+        },
+        'socialLinks': normalizedSocialLinks,
+      };
+
+      return UserProfileModel.fromJson(normalizedResponse);
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw const AuthException(
@@ -98,6 +158,14 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
     } catch (e) {
       throw ServerException('Failed to parse user profile data: $e');
     }
+  }
+
+  String _normalizeRole(Map<String, dynamic> responseData) {
+    final Object? roleValue = responseData['Role'] ?? responseData['role'];
+    if (roleValue == null) {
+      return 'USER';
+    }
+    return roleValue.toString();
   }
 
   @override
@@ -132,10 +200,11 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
       return response.statusCode == 200 || response.statusCode == 204;
     } on DioException catch (error) {
-      final backendMessage = error.response?.data?['message'] ?? error.message;
-      throw ServerException(
-        (backendMessage ?? 'Failed to upload images') as String,
-      );
+      final responseData = error.response?.data;
+      final String? backendMessage = responseData is Map<String, dynamic>
+          ? responseData['message'] as String?
+          : null;
+      throw ServerException(backendMessage ?? 'Failed to upload images');
     } catch (e) {
       throw ServerException('Unexpected error: $e');
     }

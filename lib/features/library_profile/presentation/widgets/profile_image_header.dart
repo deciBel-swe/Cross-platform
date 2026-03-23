@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
+
 class ProfileImageHeader extends StatelessWidget {
   const ProfileImageHeader({
     super.key,
@@ -11,9 +12,8 @@ class ProfileImageHeader extends StatelessWidget {
     this.localCoverPic,
     this.localProfilePic,
     required this.onPickImage,
-
   });
-  final UserProfile user; 
+  final UserProfile user;
   final File? localCoverPic;
   final File? localProfilePic;
   final void Function(bool isProfilePic) onPickImage;
@@ -21,7 +21,7 @@ class ProfileImageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 220, 
+      height: 220,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -35,11 +35,26 @@ class ProfileImageHeader extends StatelessWidget {
               child: localCoverPic != null
                   ? Image.file(localCoverPic!, fit: BoxFit.cover)
                   : (user.profileDetails.coverPic != null
-                      ? Image.network(user.profileDetails.coverPic!, fit: BoxFit.cover)
-                      : const Center(child: Icon(Icons.add_a_photo, color: AppColors.textSecondary))),
+                        ? Image.network(
+                            user.profileDetails.coverPic!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Center(
+                                  child: Icon(
+                                    Icons.add_a_photo,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                          )
+                        : const Center(
+                            child: Icon(
+                              Icons.add_a_photo,
+                              color: AppColors.textSecondary,
+                            ),
+                          )),
             ),
           ),
-          
+
           // Profile Photo
           Positioned(
             bottom: 0,
@@ -55,34 +70,66 @@ class ProfileImageHeader extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 46,
                       backgroundColor: AppColors.surface,
-                      backgroundImage: localProfilePic != null
-                          ? FileImage(localProfilePic!)
-                          : (user.profileDetails.profilePic != null
-                              ? NetworkImage(user.profileDetails.profilePic!) as ImageProvider
-                              : null),
-                      child: localProfilePic == null && user.profileDetails.profilePic == null
-                          ? const Icon(Icons.person, size: 40, color: AppColors.textSecondary)
-                          : null,
+                      child: ClipOval(
+                        child: SizedBox(
+                          width: 92,
+                          height: 92,
+                          child: localProfilePic != null
+                              ? Image.file(localProfilePic!, fit: BoxFit.cover)
+                              : (user.profileDetails.profilePic != null
+                                    ? Image.network(
+                                        user.profileDetails.profilePic!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                                  Icons.person,
+                                                  size: 40,
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
+                                      )
+                                    : const Icon(
+                                        Icons.person,
+                                        size: 40,
+                                        color: AppColors.textSecondary,
+                                      )),
+                        ),
+                      ),
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(color: AppColors.background, shape: BoxShape.circle),
-                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 24),
+                    decoration: const BoxDecoration(
+                      color: AppColors.background,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-          
+
           // Cover Photo Camera Icon
           Positioned(
             top: 16,
             right: 16,
             child: Container(
               padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(color: AppColors.background, shape: BoxShape.circle),
-              child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+              decoration: const BoxDecoration(
+                color: AppColors.background,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.camera_alt,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
           ),
         ],

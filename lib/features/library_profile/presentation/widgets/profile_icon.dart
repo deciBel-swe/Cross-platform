@@ -9,10 +9,13 @@ class ProfileIcon extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedImage = ref.watch(userProfileProvider).value?.fold(
-      (failure) => null,
-      (userProfile) => userProfile.profileDetails.profilePic,
-    );
+    final selectedImage = ref
+        .watch(userProfileProvider)
+        .value
+        ?.fold(
+          (failure) => null,
+          (userProfile) => userProfile.profileDetails.profilePic,
+        );
 
     return GestureDetector(
       child: FittedBox(
@@ -20,12 +23,21 @@ class ProfileIcon extends ConsumerWidget {
         child: CircleAvatar(
           radius: 64,
           backgroundColor: AppColors.surface,
-          backgroundImage: selectedImage != null
-              ? NetworkImage(selectedImage)
-              : null,
-          child: selectedImage == null
-              ? const Icon(Icons.person, size: 64, color: AppColors.outline)
-              : null,
+          child: selectedImage != null
+              ? ClipOval(
+                  child: Image.network(
+                    selectedImage,
+                    width: 128,
+                    height: 128,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.person,
+                      size: 64,
+                      color: AppColors.outline,
+                    ),
+                  ),
+                )
+              : const Icon(Icons.person, size: 64, color: AppColors.outline),
         ),
       ),
     );

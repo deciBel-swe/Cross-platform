@@ -22,7 +22,7 @@ class LibraryRemoteDatasource {
     required int size,
   }) async {
     final response = await _dioClient.get<Map<String, dynamic>>(
-      '/api/users/$userId/tracks',
+      '/users/$userId/tracks',
       queryParams: <String, Object?>{'page': page, 'size': size},
     );
 
@@ -35,9 +35,7 @@ class LibraryRemoteDatasource {
   }
 
   Future<TrackModel> fetchTrackById(int id) async {
-    final response = await _dioClient.get<Map<String, dynamic>>(
-      '/api/tracks/$id',
-    );
+    final response = await _dioClient.get<Map<String, dynamic>>('/tracks/$id');
 
     final data = response.data;
     if (data == null) {
@@ -48,9 +46,7 @@ class LibraryRemoteDatasource {
   }
 
   Future<TrackPeaksModel> fetchTrackPeaks(int id) async {
-    final response = await _dioClient.get<Object?>(
-      '/api/tracks/$id/waveform-url',
-    );
+    final response = await _dioClient.get<Object?>('/tracks/$id/waveform-url');
 
     final data = response.data;
     if (data == null) {
