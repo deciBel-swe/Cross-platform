@@ -2,8 +2,15 @@ class ApiConstants {
   ApiConstants._();
 
   //static const String baseUrl = 'http://192.168.1.4:3000/api';
-  static const String baseUrl =
-      'https://30d05557-562b-4dbd-ab42-3c3725b209ea.mock.pstmn.io/';
+  static const String baseUrl = 'http://localhost:8082/api';
+  // static const String baseUrl =
+  //     'https://30d05557-562b-4dbd-ab42-3c3725b209ea.mock.pstmn.io';
+
+  /// Endpoint for patching the current user's profile
+  static const String updateProfile = '/users/me';
+
+  /// Endpoint for patching the current user's social links
+  static const String updateSocialLinks = '/users/me/social-links';
 
   /// Step 1: Triggers Google login in browser
   static const String googleAuthEndpoint = '/oauth2/authorization/google';
@@ -11,6 +18,9 @@ class ApiConstants {
   /// Step 2: Backend redirects browser -> returns Token
   /// Step 3: Flutter exchanges OAuth token with backend
   static const String googleTokenExchangeEndpoint = '/auth/oauth/google';
+
+  static const String userProfileEndpoint = '/users/me';
+  static const String userProfilePrivacy = '/users/me/privacy';
 
   // Dio Timeout constants
   static const int connectTimeout = 30000;

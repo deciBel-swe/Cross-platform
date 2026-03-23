@@ -76,7 +76,8 @@ class MockAuthRepository implements IAuthRepository {
 
       // Prepare the success response
       void completeSuccess() {
-        Future.delayed(AuthMockFixtures.delay, () {
+        // Using Future<void>.delayed is preferred for type safety in modern Dart
+        Future<void>.delayed(AuthMockFixtures.delay, () {
           const mockResponse = AuthMockFixtures.mockLoginResponse;
           final model = LoginResponseModel.fromJson(mockResponse);
           if (!completer.isCompleted) {

@@ -14,8 +14,14 @@ import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/profile_screen.dart';
-import '../../features/library/presentation/screens/web_profiles.dart';
+import '../../features/library/presentation/screens/track_preview_screen.dart';
+import '../../features/library/presentation/screens/uploads_library_screen.dart';
+import '../../features/library_profile/presentation/screens/web_profiles.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
+import '../../features/settings/presentation/screens/basic_settings_screen.dart';
+import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/social_settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/upload/presentation/screens/upload_screen.dart';
 import 'go_router_refresh_stream.dart';
@@ -26,34 +32,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = GoRouterRefreshStream(ref);
 
   return GoRouter(
-    initialLocation: RoutePaths.splash,
+    initialLocation: RoutePaths.home,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authStateAsync = ref.read(authStateProvider);
 
       debugPrint(
-        '[AppRouter] redirect run! matchedLocation: \${state.matchedLocation}',
+        '[AppRouter] redirect run! matchedLocation: ${state.matchedLocation}',
       );
-      debugPrint('[AppRouter] authStateAsync: \$authStateAsync');
+      debugPrint('[AppRouter] authStateAsync: $authStateAsync');
 
       final isAuthRoute =
           state.matchedLocation == RoutePaths.login ||
           state.matchedLocation == RoutePaths.register ||
           state.matchedLocation == RoutePaths.splash;
 
-      // Extract the actual AuthState from the AsyncValue
       final authState = authStateAsync.valueOrNull;
 
       if (authState is AuthUnauthenticated) {
         debugPrint(
-          '[AppRouter] -> Handling as AuthUnauthenticated. Redirecting to login? \${isAuthRoute ? "No" : "Yes"}',
+          '[AppRouter] -> Handling as AuthUnauthenticated. Redirecting to login? ${isAuthRoute ? "No" : "Yes"}',
         );
         return isAuthRoute ? null : RoutePaths.login;
       }
 
       if (authState is AuthAuthenticated) {
         debugPrint(
-          '[AppRouter] -> Handling as AuthAuthenticated. Redirecting to home? \${isAuthRoute ? "Yes" : "No"}',
+          '[AppRouter] -> Handling as AuthAuthenticated. Redirecting to home? ${isAuthRoute ? "Yes" : "No"}',
         );
         return isAuthRoute ? RoutePaths.home : null;
       }
@@ -61,12 +66,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       debugPrint(
         '[AppRouter] -> State is Loading or Error. Redirecting to splash? ${isAuthRoute ? "No (already auth route)" : "Yes"}',
       );
-      // authState is null -> AsyncLoading or AsyncError.
-      // Block protected routes until auth is definitively resolved.
+
       return isAuthRoute ? null : RoutePaths.splash;
     },
     routes: [
-      // ---- Auth flow (outside the main shell) ----
       GoRoute(
         path: RoutePaths.splash,
         builder: (context, state) => const StartScreen(),
@@ -79,13 +82,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
       ),
-
-      // ---- Main app shell (bottom navigation) ----
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),
         branches: [
-          // 0 – Home
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -99,7 +99,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // 1 – Feed
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -109,7 +108,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // 2 – Search
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -119,17 +117,61 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // 3 – Library
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: RoutePaths.library,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: LibraryScreen()),
+                routes: [
+                  GoRoute(
+                    path: 'uploads',
+                    builder: (context, state) => const UploadsLibraryScreen(),
+                  ),
+                  GoRoute(
+                    path: 'track-preview/:trackId',
+                    redirect: (context, state) {
+                      final raw = state.pathParameters['trackId'];
+                      final parsed = int.tryParse(raw ?? '');
+                      if (parsed == null) {
+                        return RoutePaths.library;
+                      }
+                      return null;
+                    },
+                    builder: (context, state) {
+                      final trackId = int.parse(
+                        state.pathParameters['trackId']!,
+                      );
+                      return TrackPreviewScreen(trackId: trackId);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) => const SettingsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'social-settings',
+                        builder: (context, state) =>
+                            const SocialSettingsScreen(),
+                      ),
+                      GoRoute(
+                        path: 'basic-settings',
+                        builder: (context, state) =>
+                            const BasicSettingsScreen(),
+                        routes: [
+                          GoRoute(
+                            path: 'change-app-icon',
+                            builder: (context, state) =>
+                                const ChangeAppIconScreen(),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
-          // 4 – Upgrade
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -139,7 +181,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // 5-Profile
           StatefulShellBranch(
             routes: [
               GoRoute(

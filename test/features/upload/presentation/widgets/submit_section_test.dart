@@ -4,6 +4,9 @@ import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/core/router/route_paths.dart';
 import 'package:decibel/core/storage/shared_prefs_service.dart';
+import 'package:decibel/features/library/domain/entities/artist.dart';
+import 'package:decibel/features/library/domain/entities/track.dart';
+import 'package:decibel/features/library/domain/entities/track_status.dart';
 import 'package:decibel/features/upload/domain/entities/track_upload_metadata.dart';
 import 'package:decibel/features/upload/domain/repositories/i_upload_repository.dart';
 import 'package:decibel/features/upload/presentation/providers/upload_notifier.dart';
@@ -56,11 +59,24 @@ void main() {
 
     final formKey = GlobalKey<FormState>();
     final mockRouter = MockGoRouter();
+    final uploadedTrack = Track(
+      id: 1,
+      title: 'test track',
+      artist: const Artist(id: 1, username: 'tester'),
+      genre: 'Rock',
+      tags: <String>[],
+      state: TrackStatus.finished,
+      releaseDate: DateTime(2026, 1, 1),
+      playCount: 0,
+      likeCount: 0,
+      repostCount: 0,
+      createdAt: DateTime(2026, 1, 1),
+    );
 
     // Tell the repository to return a Success
     when(
       () => mockRepo.uploadTrack(any()),
-    ).thenAnswer((_) async => const Right(unit));
+    ).thenAnswer((_) async => Right(uploadedTrack));
 
     await tester.pumpWidget(
       ProviderScope(

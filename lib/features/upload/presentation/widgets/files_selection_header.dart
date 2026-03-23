@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/track_upload_metadata.dart';
 import '../providers/upload_notifier.dart';
 
 /// Displays the selected track's cover art and audio file name.

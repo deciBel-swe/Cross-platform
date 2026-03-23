@@ -12,6 +12,7 @@ import '../widgets/track_info_checklist.dart';
 
 /// The root Presentation screen for the Track Upload feature.
 ///
+///
 /// It holds the "GlobalKey" for the form state
 /// and structures the modular sub-widgets sequentially to build the final UI.
 class UploadScreen extends ConsumerStatefulWidget {
