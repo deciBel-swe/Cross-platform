@@ -5,7 +5,6 @@ import 'dart:ui' as ui; // Needed for toByteData
 import 'package:croppy/croppy.dart' as cp;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -34,7 +33,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
 
   /// HELPER: Unified Cropping for Windows, Android, and iOS
   /// HELPER: This replaces the native ImageCropper logic for Windows/Cross-platform
-  Future<CroppedFile?> _performCrop(
+  Future<File?> _performCrop(
     BuildContext context,
     String path,
     bool isProfile,
@@ -68,7 +67,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
       tempPath,
     ).writeAsBytes(byteData.buffer.asUint8List());
 
-    return CroppedFile(file.path);
+    return file;
   }
 
   /// MAIN ACTION: Pick, Crop, and Upload
