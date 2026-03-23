@@ -33,6 +33,8 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
   Timer? _processingRefreshTimer;
   bool _isRefreshingProcessing = false;
+  // Tracks that reached terminal statuses so we stop polling them.
+  final Set<int> _terminalStatusTrackIds = <int>{};
 
   static const int _pageSize = 20;
 
@@ -110,6 +112,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
     _currentPage = paginated.pageNumber;
     _isLastPage = paginated.isLast;
+    _terminalStatusTrackIds.clear();
     _memoryCacheByUser[userId] = (
       tracks: paginated.content,
       currentPage: paginated.pageNumber,
@@ -193,13 +196,39 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   Future<void> refreshTrack(int trackId) async {
     if (_isDisposed) return;
     final repo = ref.read(trackRepositoryProvider);
-    final result = await repo.fetchTrackById(trackId);
+    final userId = _activeUserId;
+    if (userId == null) {
+      return;
+    }
+
+    final result = await repo.fetchTracks(
+      userId: userId,
+      page: 0,
+      size: _pageSize,
+    );
 
     if (_isDisposed) return;
-    result.fold((l) => null, (track) {
+    result.fold((l) => null, (paginated) {
+      final Track? track = paginated.content
+          .where((item) => item.id == trackId)
+          .cast<Track?>()
+          .firstWhere((item) => item != null, orElse: () => null);
+
+      if (track == null) {
+        return;
+      }
+
       if (_isDisposed) return;
       final currentTracks = state.valueOrNull ?? [];
       if (currentTracks.isEmpty) return; // Don't update if list not loaded
+
+      if (track.state == TrackStatus.processing) {
+        // Track became non-terminal again, so it should be polled.
+        _terminalStatusTrackIds.remove(track.id);
+      } else {
+        // Finished/failed items are treated as terminal and excluded from polling.
+        _terminalStatusTrackIds.add(track.id);
+      }
 
       final updated = [
         for (final t in currentTracks)
@@ -223,7 +252,12 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   }
 
   void _syncProcessingPolling(List<Track> tracks) {
-    final hasProcessing = tracks.any((t) => t.state == TrackStatus.processing);
+    // Poll only tracks still processing and not already marked terminal.
+    final hasProcessing = tracks.any(
+      (t) =>
+          t.state == TrackStatus.processing &&
+          !_terminalStatusTrackIds.contains(t.id),
+    );
     if (!hasProcessing) {
       _processingRefreshTimer?.cancel();
       _processingRefreshTimer = null;
@@ -255,7 +289,11 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     }
 
     final processingIds = tracks
-        .where((t) => t.state == TrackStatus.processing)
+        .where(
+          (t) =>
+              t.state == TrackStatus.processing &&
+              !_terminalStatusTrackIds.contains(t.id),
+        )
         .map((t) => t.id)
         .toList();
 
@@ -266,8 +304,39 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
     _isRefreshingProcessing = true;
     try {
+      final repo = ref.read(trackRepositoryProvider);
       for (final id in processingIds) {
-        await refreshTrack(id);
+        // Source of truth: backend processing status endpoint.
+        final statusResult = await repo.fetchTrackStatusById(id);
+        if (_isDisposed) return;
+
+        await statusResult.fold(
+          (_) async {
+            await refreshTrack(id);
+          },
+          (status) async {
+            switch (status) {
+              case 'UPLOADING':
+              case 'PROCESSING':
+                // Keep polling while processing is active.
+                _terminalStatusTrackIds.remove(id);
+                break;
+              case 'FINISHED':
+                // Refresh once to pull final waveform URL/state from track list endpoint.
+                _terminalStatusTrackIds.add(id);
+                await refreshTrack(id);
+                break;
+              case 'FAILED':
+                // Terminal failed status should stop repeated polling.
+                _terminalStatusTrackIds.add(id);
+                await refreshTrack(id);
+                break;
+              default:
+                await refreshTrack(id);
+            }
+          },
+        );
+
         if (_isDisposed) return;
       }
     } finally {
@@ -281,6 +350,10 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
     // Prepend the new track
     final updated = [track, ...currentTracks];
+
+    if (track.state == TrackStatus.processing) {
+      _terminalStatusTrackIds.remove(track.id);
+    }
 
     // Update state
     state = AsyncData(updated);

@@ -14,5 +14,9 @@ abstract class TrackRepository {
 
   Future<Either<Failure, Track>> fetchTrackById(int id);
 
+  /// Fetches backend processing status (UPLOADING/PROCESSING/FINISHED/FAILED)
+  /// used by uploads polling to reflect server-side waveform lifecycle.
+  Future<Either<Failure, String>> fetchTrackStatusById(int id);
+
   Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id);
 }

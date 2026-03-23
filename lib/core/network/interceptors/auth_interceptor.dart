@@ -31,6 +31,7 @@ class AuthInterceptor extends Interceptor {
 
   final SecureStorageService _secureStorage;
   final Dio _refreshDio;
+  final Uri _apiBaseUri = Uri.parse(ApiConstants.baseUrl);
 
   // Concurrency lock for refresh requests
   Future<void>? _refreshLock;
@@ -52,11 +53,26 @@ class AuthInterceptor extends Interceptor {
     return _publicEndpoints.any((endpoint) => path.contains(endpoint));
   }
 
+  bool _isApiRequest(RequestOptions options) {
+    final requestUri = options.uri;
+
+    return requestUri.host == _apiBaseUri.host &&
+        requestUri.port == _apiBaseUri.port;
+  }
+
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    final isApiRequest = _isApiRequest(options);
+
+    if (!isApiRequest) {
+      // External URLs (e.g. blob waveform files) must not receive app Bearer tokens.
+      options.headers.remove('Authorization');
+      return handler.next(options);
+    }
+
     // Skip proactive refresh and token attachment for public endpoints
     // (login, register, OAuth exchange, etc.) to avoid blocking on stale
     // token refresh attempts.
@@ -90,6 +106,11 @@ class AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
+    // Skip token refresh/retry flow for non-API hosts.
+    if (!_isApiRequest(err.requestOptions)) {
+      return handler.next(err);
+    }
+
     // Check if the error is due to an invalid/expired token (401)
     if (err.response?.statusCode == 401) {
       try {

@@ -10,6 +10,10 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.config.dart"
   language:
     # Enforces strict typing by throwing an error if the compiler has to guess a type.
     strict-casts: true
@@ -22,6 +26,8 @@ analyzer:
     avoid_annotating_with_dynamic: error
     # Ensures no debug print statements make it into production code.
     avoid_print: error
+    # Required for Freezed + JsonKey on constructor parameters.
+    invalid_annotation_target: ignore
 
 linter:
   # The lint rules applied to this project can be customized in the

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:decibel/features/library/presentation/notifiers/track_audio_notifier.dart';
-import 'package:decibel/features/library_profile/presentation/providers/track_audio_provider.dart';
 import 'package:decibel/features/library/presentation/state/track_audio_state.dart';
+import 'package:decibel/features/library_profile/presentation/providers/track_audio_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';

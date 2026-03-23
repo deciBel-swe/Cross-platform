@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../library_profile/presentation/providers/track_preview_provider.dart';
+import '../../../library_profile/presentation/providers/track_repository_provider.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_peaks.dart';
 import '../../domain/entities/track_status.dart';
-import '../../../library_profile/presentation/providers/track_preview_provider.dart';
-import '../../../library_profile/presentation/providers/track_repository_provider.dart';
 
 // This notifier fetches both the track details and its peaks (if available) for a given track ID.
 class TrackPreviewNotifier

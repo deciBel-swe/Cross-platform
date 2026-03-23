@@ -2,14 +2,14 @@ import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failures.dart';
-import '../../../library/domain/entities/paginated_tracks.dart';
-import '../../../library/domain/entities/track.dart';
-import '../../../library/domain/entities/track_peaks.dart';
-import '../../domain/repositories/track_repository.dart';
 import '../../../library/data/datasources/library_remote_datasource.dart';
 import '../../../library/data/models/paginated_tracks_model.dart';
 import '../../../library/data/models/track_model.dart';
 import '../../../library/data/models/track_peaks_model.dart';
+import '../../../library/domain/entities/paginated_tracks.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../../library/domain/entities/track_peaks.dart';
+import '../../domain/repositories/track_repository.dart';
 
 @Environment('prod')
 @LazySingleton(as: TrackRepository)
@@ -41,6 +41,17 @@ class TrackRepositoryImpl implements TrackRepository {
     try {
       final model = await _remote.fetchTrackById(id);
       return Right(model.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> fetchTrackStatusById(int id) async {
+    try {
+      // Pass-through to backend status endpoint; provider handles polling decisions.
+      final status = await _remote.fetchTrackStatusById(id);
+      return Right(status);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

@@ -226,12 +226,26 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       List<double> waveFormData = [];
       try {
         final waveformService = ref.read(waveformExtractionServiceProvider);
-        waveFormData = await waveformService.extractWaveform(file.path);
+        waveFormData = await waveformService.extractWaveform(
+          file.path,
+          noOfSamples: 8,
+        );
       } catch (e) {
         waveFormData = [];
       }
 
-      final metadata = state.value!.copyWith(audioFile: file, waveFormData: []);
+      if (waveFormData.isEmpty) {
+        state = AsyncValue<TrackUploadMetadata>.error(
+          'Could not extract waveform data from this audio file. Please try another file.',
+          StackTrace.current,
+        ).copyWithPrevious(state);
+        return;
+      }
+
+      final metadata = state.value!.copyWith(
+        audioFile: file,
+        waveFormData: waveFormData,
+      );
       state = AsyncData(metadata);
     }
   }
