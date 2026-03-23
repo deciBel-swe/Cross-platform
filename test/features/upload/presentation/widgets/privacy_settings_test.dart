@@ -68,8 +68,8 @@ void main() {
     await tester.pumpWidget(buildWidgetUnderTest(container));
     await tester.pumpAndSettle();
 
-    // Act: Tap the 'Unlisted (Private)' radio tile
-    await tester.tap(find.text('Unlisted (Private)'));
+    // Act: Tap the unlisted/private Radio control (value: true)
+    await tester.tap(find.byType(Radio<bool>).at(1));
     await tester.pump();
 
     // Assert: Check the Riverpod state directly
@@ -92,6 +92,7 @@ void main() {
       await container.read(uploadNotifierProvider.future);
 
       // First, let's manually inject a release date into the state so we can prove it gets cleared
+      container.read(uploadNotifierProvider.notifier).togglePrivacy(true);
       container
           .read(uploadNotifierProvider.notifier)
           .updateReleaseDate(DateTime(2026, 1, 1));
@@ -99,8 +100,8 @@ void main() {
       await tester.pumpWidget(buildWidgetUnderTest(container));
       await tester.pumpAndSettle();
 
-      // Act: Tap the 'Public' radio tile
-      await tester.tap(find.text('Public'));
+      // Act: Tap the public Radio control (value: false)
+      await tester.tap(find.byType(Radio<bool>).at(0));
       await tester.pump();
 
       // Assert: Privacy is false, and the release date was forcefully cleared

@@ -346,7 +346,7 @@ void main() {
 
         final state = container.read(uploadNotifierProvider);
         expect(state.hasError, true);
-        expect(state.error.toString(), contains('FAKE EXTENTION'));
+        expect(state.error.toString(), contains('FAKE EXTENSION'));
       },
     );
 
