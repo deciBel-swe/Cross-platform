@@ -67,7 +67,6 @@ dependencies:
   # ---------- Social Icons ----------
   font_awesome_flutter: ^11.0.0
 
-  image_cropper: ^11.0.0
   permission_handler: ^12.0.1
   croppy: ^1.4.1
   path_provider: ^2.1.5
