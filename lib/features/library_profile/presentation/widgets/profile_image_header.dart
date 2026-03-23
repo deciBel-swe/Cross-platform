@@ -20,41 +20,58 @@ class ProfileImageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDesktop = MediaQuery.sizeOf(context).width > 600;
+
+    double coverHeight = isDesktop ? 350.0 : 160.0;
+
+    double stackHeight = isDesktop ? 430.0 : 220.0;
+
     return SizedBox(
-      height: 220,
+      height: stackHeight,
+      width: double.infinity,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Cover Photo
-          GestureDetector(
-            onTap: () => onPickImage(false),
-            child: Container(
-              height: 160,
-              width: double.infinity,
-              color: AppColors.surface,
-              child: localCoverPic != null
-                  ? Image.file(localCoverPic!, fit: BoxFit.cover)
-                  : (user.profileDetails.coverPic != null
-                        ? Image.network(
-                            user.profileDetails.coverPic!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Center(
-                                  child: Icon(
-                                    Icons.add_a_photo,
-                                    color: AppColors.textSecondary,
-                                  ),
+          // --- BACKGROUND LAYER: Cover Photo ---
+          SizedBox(
+            height: coverHeight,
+            width: double.infinity,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () => onPickImage(false),
+                child: Container(
+                  clipBehavior: Clip.hardEdge,
+                  decoration: const BoxDecoration(color: AppColors.surface),
+                  child: localCoverPic != null
+                      ? Image.file(
+                          localCoverPic!,
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
+                        )
+                      : (user.profileDetails.coverPic != null
+                            ? Image.network(
+                                user.profileDetails.coverPic!,
+                                fit: BoxFit.cover,
+                                filterQuality: FilterQuality.high,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(
+                                      child: Icon(
+                                        Icons.add_a_photo,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                              )
+                            : const Center(
+                                child: Icon(
+                                  Icons.add_a_photo,
+                                  color: AppColors.textSecondary,
                                 ),
-                          )
-                        : const Center(
-                            child: Icon(
-                              Icons.add_a_photo,
-                              color: AppColors.textSecondary,
-                            ),
-                          )),
+                              )),
+                ),
+              ),
             ),
           ),
-
           // Profile Photo
           Positioned(
             bottom: 0,

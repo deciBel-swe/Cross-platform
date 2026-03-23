@@ -46,7 +46,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
       allowedAspectRatios: [
         isProfile
             ? const cp.CropAspectRatio(width: 1, height: 1)
-            : const cp.CropAspectRatio(width: 16, height: 9),
+            : const cp.CropAspectRatio(width: 21, height: 9),
       ],
       // FIX: cropPathFn must return a CropShape object, not a Path.
       // We use the built-in factory functions to avoid "PathBuilder" errors.

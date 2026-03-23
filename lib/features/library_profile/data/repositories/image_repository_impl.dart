@@ -10,6 +10,8 @@ class ImageRepositoryImpl implements ImageRepository {
   @override
   Future<File?> pickProfileImage() async {
     final XFile? pickedFile = await _picker.pickImage(
+      maxHeight: 1000,
+      maxWidth: 1800,
       source: ImageSource.gallery,
     );
 

@@ -261,22 +261,31 @@ class _ProfileCoverPhoto extends StatelessWidget {
 
   final String? imageUrl;
 
-  @override
+ @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: AppConstants.coverPhotoHeight,
-      width: double.infinity,
-      child: imageUrl != null
-          ? Image.network(
-              imageUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return _buildPlaceholder();
-              },
-            )
-          : _buildPlaceholder(),
+    // 1. Wrap in a Center so it stays in the middle of wide desktop screens
+    return Center(
+      // 2. Add ConstrainedBox to stop the extreme horizontal stretching
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900), // Adjust this value to your liking
+        child: SizedBox(
+          height: AppConstants.coverPhotoHeight,
+          width: double.infinity,
+          child: imageUrl != null
+              ? Image.network(
+                  imageUrl!,
+                  fit: BoxFit.cover,
+                  // 3. Add FilterQuality.high for smoother desktop scaling
+                  filterQuality: FilterQuality.high, 
+                  errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return _buildPlaceholder();
+                  },
+                )
+              : _buildPlaceholder(),
+        ),
+      ),
     );
   }
 
