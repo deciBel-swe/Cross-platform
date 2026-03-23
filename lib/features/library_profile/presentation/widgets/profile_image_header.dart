@@ -35,41 +35,35 @@ class ProfileImageHeader extends StatelessWidget {
           // --- BACKGROUND LAYER: Cover Photo ---
           SizedBox(
             height: coverHeight,
-            width: double.infinity,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () => onPickImage(false),
-                child: Container(
-                  clipBehavior: Clip.hardEdge,
-                  decoration: const BoxDecoration(color: AppColors.surface),
-                  child: localCoverPic != null
-                      ? Image.file(
-                          localCoverPic!,
-                          fit: BoxFit.cover,
-                          filterQuality: FilterQuality.high,
-                        )
-                      : (user.profileDetails.coverPic != null
-                            ? Image.network(
-                                user.profileDetails.coverPic!,
-                                fit: BoxFit.cover,
-                                filterQuality: FilterQuality.high,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Center(
-                                      child: Icon(
-                                        Icons.add_a_photo,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                              )
-                            : const Center(
-                                child: Icon(
-                                  Icons.add_a_photo,
-                                  color: AppColors.textSecondary,
+            child: Container(
+              width: double.infinity,
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(color: AppColors.surface),
+              child: localCoverPic != null
+                  ? Image.file(
+                      localCoverPic!,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
+                    )
+                  : (user.profileDetails.coverPic != null
+                        ? Image.network(
+                            user.profileDetails.coverPic!,
+                            fit: BoxFit.cover,
+                            filterQuality: FilterQuality.high,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Center(
+                                  child: Icon(
+                                    Icons.add_a_photo,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
-                              )),
-                ),
-              ),
+                          )
+                        : const Center(
+                            child: Icon(
+                              Icons.add_a_photo,
+                              color: AppColors.textSecondary,
+                            ),
+                          )),
             ),
           ),
           // Profile Photo
@@ -136,16 +130,22 @@ class ProfileImageHeader extends StatelessWidget {
           Positioned(
             top: 16,
             right: 16,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: AppColors.background,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.camera_alt,
-                color: Colors.white,
-                size: 20,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () => onPickImage(false),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: AppColors.background,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
               ),
             ),
           ),

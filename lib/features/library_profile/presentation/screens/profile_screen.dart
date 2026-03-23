@@ -86,20 +86,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Text(
                   'Oops! Something went wrong.', // Fallback text from feat/prof-state
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.onPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: AppColors.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: AppConstants.spacingSmall),
                 Text(
                   error.toString().replaceAll(
-                        AppConstants.errorExceptionPrefix,
-                        '',
-                      ),
+                    AppConstants.errorExceptionPrefix,
+                    '',
+                  ),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onPrimary,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
                 ),
                 const SizedBox(height: AppConstants.spacingExtraLarge),
                 ElevatedButton.icon(
@@ -116,8 +116,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       vertical: 12,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.buttonRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.buttonRadius,
+                      ),
                     ),
                   ),
                 ),
@@ -127,7 +128,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         data: (eitherUser) => eitherUser.fold(
           (failure) => RefreshIndicator(
-            onRefresh: () async => ref.read(userProfileProvider.notifier).refreshProfile(),
+            onRefresh: () async =>
+                ref.read(userProfileProvider.notifier).refreshProfile(),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: SizedBox(
@@ -142,27 +144,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
           (user) => RefreshIndicator(
-            onRefresh: () async => ref.read(userProfileProvider.notifier).refreshProfile(),
+            onRefresh: () async =>
+                ref.read(userProfileProvider.notifier).refreshProfile(),
             child: SingleChildScrollView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
-              child: Stack(
+              child: Column(
                 children: [
-                  _ProfileCoverPhoto(imageUrl: user.profileDetails.coverPic),
+                  Stack(
+                    clipBehavior: Clip.none, 
+                    children: [
+                      _ProfileCoverPhoto(
+                        imageUrl: user.profileDetails.coverPic,
+                      ),
+
+                      const Positioned(bottom:- 32,child:  Padding(
+                        padding: EdgeInsets.only(left:AppConstants.spacingMedium),
+                        child: ProfileIcon(),
+                      )),
+                    ],
+                  ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppConstants.spacingMedium,
-                    ),
+                    padding: const EdgeInsets.all(AppConstants.spacingMedium),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(
-                          height: AppConstants.profileHeaderTopOffset,
-                        ),
-                        const ProfileIcon(),
-                        const SizedBox(height: AppConstants.spacingMedium),
+                        const SizedBox(height: AppConstants.spacingMassive),
                         UserProfileHeader(user: user),
-                        const SizedBox(height: AppConstants.spacingRegular),
                         Consumer(
                           builder: (context, ref, child) {
                             final socialLinks = ref.watch(webProfilesProvider);
@@ -241,9 +249,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Text(
               user.username,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.onPrimary,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
             ),
           ],
         ),
@@ -261,31 +269,27 @@ class _ProfileCoverPhoto extends StatelessWidget {
 
   final String? imageUrl;
 
- @override
+  @override
   Widget build(BuildContext context) {
-    // 1. Wrap in a Center so it stays in the middle of wide desktop screens
-    return Center(
-      // 2. Add ConstrainedBox to stop the extreme horizontal stretching
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900), // Adjust this value to your liking
-        child: SizedBox(
-          height: AppConstants.coverPhotoHeight,
-          width: double.infinity,
-          child: imageUrl != null
-              ? Image.network(
-                  imageUrl!,
-                  fit: BoxFit.cover,
-                  // 3. Add FilterQuality.high for smoother desktop scaling
-                  filterQuality: FilterQuality.high, 
-                  errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return _buildPlaceholder();
-                  },
-                )
-              : _buildPlaceholder(),
-        ),
-      ),
+    bool isDesktop = MediaQuery.sizeOf(context).width > 600;
+
+    double coverHeight = isDesktop ? 350.0 : 160.0;
+
+    return SizedBox(
+      height: coverHeight,
+      width: double.infinity,
+      child: imageUrl != null
+          ? Image.network(
+              imageUrl!,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return _buildPlaceholder();
+              },
+            )
+          : _buildPlaceholder(),
     );
   }
 
