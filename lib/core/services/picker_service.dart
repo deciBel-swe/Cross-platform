@@ -2,10 +2,13 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:just_audio/just_audio.dart';
 
 abstract class IPickerService {
   Future<File?> pickAudioFile();
   Future<File?> pickCoverImage();
+
+  Future<Duration?> getAudioDuration(String filePath);
 }
 
 class PickerService implements IPickerService {
@@ -40,6 +43,24 @@ class PickerService implements IPickerService {
       return File(image.path);
     }
     return null;
+  }
+
+  @override
+  Future<Duration?> getAudioDuration(String filePath) async {
+    final player = AudioPlayer();
+    await player.setFilePath(filePath).catchError((_) => null);
+
+    await player.processingStateStream
+        .firstWhere(
+          (state) =>
+              state == ProcessingState.ready || state == ProcessingState.idle,
+        )
+        .catchError((_) => ProcessingState.idle);
+
+    final duration = player.duration;
+    await player.dispose().catchError((_) {});
+
+    return duration;
   }
 }
 

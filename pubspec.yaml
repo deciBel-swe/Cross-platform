@@ -61,6 +61,7 @@ dependencies:
 
   # ---------- App Icon ----------
   dynamic_app_icon_flutter_plus: ^0.0.1
+  mime: ^2.0.0
 
   # ---------- Social Icons ----------
   font_awesome_flutter: ^11.0.0

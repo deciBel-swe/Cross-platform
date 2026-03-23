@@ -17,11 +17,51 @@ class TagsBottomSheet extends ConsumerStatefulWidget {
 
 class _TagsBottomSheetState extends ConsumerState<TagsBottomSheet> {
   final _tagController = TextEditingController();
+  String? _errorMessage;
 
   @override
   void dispose() {
     _tagController.dispose();
     super.dispose();
+  }
+
+  void _validateInput(String value) {
+    setState(() {
+      if (value.isEmpty) {
+        _errorMessage = null;
+      } else if (value.contains(' ')) {
+        _errorMessage = 'No spaces allowed (use underscores)';
+      } else if (RegExp(r'[^a-zA-Z0-9_]').hasMatch(value)) {
+        _errorMessage = 'Only letters, numbers, and underscores';
+      } else if (value.length < 3) {
+        _errorMessage = 'Too short (min 3 chars)';
+      } else if (value.length > 20) {
+        _errorMessage = 'Too long (max 20 chars)';
+      } else {
+        _errorMessage = null;
+      }
+    });
+  }
+
+  void _handleSubmitted(String value) {
+    final sanitized = value.trim();
+    final currentTags = ref.read(uploadNotifierProvider).value?.tags ?? [];
+
+    // 1. Check current error status
+    if (_errorMessage != null || sanitized.isEmpty) return;
+
+    // 2. Check for duplicates
+    if (currentTags.contains(sanitized)) {
+      setState(() => _errorMessage = 'Tag already exists');
+      return;
+    }
+
+    // 3. Final length check
+    if (sanitized.length >= 3 && sanitized.length <= 20) {
+      ref.read(uploadNotifierProvider.notifier).addTag(sanitized);
+      _tagController.clear();
+      setState(() => _errorMessage = null);
+    }
   }
 
   @override
@@ -72,12 +112,24 @@ class _TagsBottomSheetState extends ConsumerState<TagsBottomSheet> {
           TextField(
             controller: _tagController,
             enabled: !isAtLimit, // Disable input if they hit the 10 limit
+
+            onChanged: (value) => _validateInput(value),
             style: const TextStyle(color: AppColors.onPrimary),
+            maxLength: 20,
             decoration: InputDecoration(
-              hintText: isAtLimit
-                  ? 'Maximum tags reached'
-                  : 'Type a tag and press Enter',
+              hintText: 'e.g. decibel_1',
               hintStyle: const TextStyle(color: AppColors.textHint),
+
+              errorText: _errorMessage,
+
+              helperText: isAtLimit
+                  ? 'Limit reached. Delete a tag to add more.'
+                  : 'Letters, numbers, and underscores only.',
+
+              helperStyle: TextStyle(
+                color: isAtLimit ? AppColors.errors : AppColors.textMuted,
+              ),
+
               filled: true,
               fillColor: AppColors.background,
               border: OutlineInputBorder(
@@ -90,15 +142,7 @@ class _TagsBottomSheetState extends ConsumerState<TagsBottomSheet> {
               ),
             ),
             textInputAction: TextInputAction.done,
-            onSubmitted: (value) {
-              final trimmed = value.trim();
-              if (trimmed.isNotEmpty) {
-                // Add the tag via the Notifier
-                ref.read(uploadNotifierProvider.notifier).addTag(trimmed);
-                // Clear the text field for the next tag
-                _tagController.clear();
-              }
-            },
+            onSubmitted: _handleSubmitted,
           ),
           const SizedBox(height: 16),
 

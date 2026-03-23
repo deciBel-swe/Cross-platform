@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:mime/mime.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
@@ -142,11 +143,20 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
   // Managing Tags
   void addTag(String tag) {
     final currentState = state.value;
+
+    // Replace all whitespace with underscores
+    // Remove anything that isn't letter, number, or underscore
+    final sanitizedTag = tag
+        .trim()
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'[^\w]'), '');
     // Check if state exit, max 10 tags, and tag is not empty
     if (currentState != null &&
         currentState.tags.length < 10 &&
-        tag.isNotEmpty) {
-      final newTags = List<String>.from(currentState.tags)..add(tag);
+        sanitizedTag.length < 21 && // Max number of chars is 20
+        sanitizedTag.length > 2 && // Min number of chars is 2
+        sanitizedTag.isNotEmpty) {
+      final newTags = List<String>.from(currentState.tags)..add(sanitizedTag);
       _updateState((state) => state.copyWith(tags: newTags));
     }
   }
@@ -167,22 +177,46 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     final file = await pickerService.pickAudioFile();
     if (file != null) {
-      final extension = file.path.split('.').last.toLowerCase();
-      final sizeInMB = file.lengthSync() / (1024 * 1024);
+      final audioSizeInMB = file.lengthSync() / (1024 * 1024);
 
-      // Fallback in case the OS picker ignores the filter
-      if (extension != 'mp3' && extension != 'wav') {
+      // Read the first bytes (Magic Bits)
+      // MIME prioritize the extention of the file over the Magic bytes,
+      // so without the file path, MIME will only chick the bytes not the fake extention
+      final headerBytes = await file.openRead(0, 16).first;
+      final mimeType = lookupMimeType('', headerBytes: headerBytes);
+
+      // The allowed mime types
+      const allowedAudioMimeTypes = [
+        'audio/mpeg', // MP3
+        'audio/wav', // WAV
+        'audio/x-wav', // Alternate WAV
+      ];
+
+      if (mimeType == null || !allowedAudioMimeTypes.contains(mimeType)) {
         state = AsyncValue<TrackUploadMetadata>.error(
-          "Unsupported format. Please use MP3, WAV.",
+          'Security Alert: This file is not a valid audio format, FAKE EXTENSION. Please upload a real MP3/WAV file.,',
           StackTrace.current,
         ).copyWithPrevious(state);
         return;
       }
 
       // Check if the user didn't cancel the upload
-      if (sizeInMB > 500) {
+      if (audioSizeInMB > 20) {
         state = AsyncValue<TrackUploadMetadata>.error(
-          "File exceeds 500MB limit.",
+          "Audio file exceeds 20MB limit.",
+          StackTrace.current,
+        ).copyWithPrevious(state);
+        return;
+      }
+
+      // Duration check, in windows we have some problem to access the file and extract
+      // the duration from it, so we used "just_audio_windows" in addition and trying to
+      // catch windows crashes during upload the audio file
+      final duration = await pickerService.getAudioDuration(file.path);
+
+      if (duration == null || duration.inSeconds < 1) {
+        state = AsyncValue<TrackUploadMetadata>.error(
+          "Audio file must be at least 1 second long.",
           StackTrace.current,
         ).copyWithPrevious(state);
         return;
@@ -208,6 +242,32 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     final image = await pickerService.pickCoverImage();
     if (image != null) {
+      // Read the first bytes (Magic Bits)
+      final imageSize = image.lengthSync() / (1024 * 1024);
+
+      final headerBytes = await image.openRead(0, 16).first;
+
+      final mimeType = lookupMimeType('', headerBytes: headerBytes);
+
+      const allowedImageMimeTypes = ['image/jpeg', 'image/png'];
+
+      if (mimeType == null || !allowedImageMimeTypes.contains(mimeType)) {
+        state = AsyncValue<TrackUploadMetadata>.error(
+          "Security Alert: This file is not a valid image format, FAKE EXTENSION. Please upload a real JPG or PNG file.",
+          StackTrace.current,
+        ).copyWithPrevious(state);
+        return;
+      }
+
+      // Check if the user didn't cancel the upload
+      if (imageSize > 20) {
+        state = AsyncValue<TrackUploadMetadata>.error(
+          "Image file exceeds 20MB limit.",
+          StackTrace.current,
+        ).copyWithPrevious(state);
+        return;
+      }
+
       _updateState((state) => state.copyWith(coverImage: image));
     }
   }
