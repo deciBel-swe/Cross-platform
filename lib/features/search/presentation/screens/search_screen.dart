@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -14,13 +15,18 @@ class SearchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.of(context).isDesktop;
+
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: isDesktop ? null : AppBar(title: const Text('Search')),
       body: ListView(
         padding: const EdgeInsets.all(AppDimensions.paddingLg),
         children: [
-          const Text('Search', style: AppTextStyles.sectionTitle),
-          const SizedBox(height: AppDimensions.paddingMd),
+          if (isDesktop) ...[
+            const Text('Search', style: AppTextStyles.sectionTitle),
+            const SizedBox(height: AppDimensions.paddingMd),
+          ],
 
           // ---- Search field ----
           const _LargeSearchField(),

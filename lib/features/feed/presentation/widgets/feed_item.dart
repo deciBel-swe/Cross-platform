@@ -2,11 +2,13 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
+import 'mobile_feed_track_card.dart';
 
 /// A single mocked entry in the activity feed.
 class FeedItem extends StatelessWidget {
@@ -46,6 +48,21 @@ class FeedItem extends StatelessWidget {
     final colors =
         gradientColors ??
         const [AppColors.surfaceLight, AppColors.surfaceContainer];
+    final isDesktop = ResponsiveBreakpoints.of(context).isDesktop;
+
+    if (!isDesktop) {
+      return _MobileFeedItem(
+        userName: userName,
+        action: action,
+        trackTitle: trackTitle,
+        trackArtist: trackArtist,
+        timeAgo: timeAgo,
+        likes: likes,
+        comments: comments,
+        duration: duration,
+        gradientColors: colors,
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
@@ -167,6 +184,78 @@ class FeedItem extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobileFeedItem extends StatelessWidget {
+  const _MobileFeedItem({
+    required this.userName,
+    required this.action,
+    required this.trackTitle,
+    required this.trackArtist,
+    required this.timeAgo,
+    required this.likes,
+    required this.comments,
+    required this.duration,
+    required this.gradientColors,
+  });
+
+  final String userName;
+  final String action;
+  final String trackTitle;
+  final String trackArtist;
+  final String timeAgo;
+  final String likes;
+  final String comments;
+  final String duration;
+  final List<Color> gradientColors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(
+                radius: 12,
+                backgroundColor: AppColors.surfaceLight,
+                child: Icon(
+                  Icons.person,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(width: AppDimensions.paddingSm),
+              Expanded(
+                child: Text(
+                  '$userName $action · $timeAgo',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.headlineMedium.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.paddingSm),
+              const Icon(Icons.more_vert, color: AppColors.textSecondary),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.paddingMd),
+          MobileFeedTrackCard(
+            title: trackTitle,
+            artist: trackArtist,
+            duration: duration,
+            likes: likes,
+            comments: comments,
+            gradientColors: gradientColors,
           ),
         ],
       ),

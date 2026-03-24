@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -14,18 +15,30 @@ class FeedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.of(context).isDesktop;
+
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: isDesktop
+          ? null
+          : AppBar(centerTitle: true, title: const _MobileFeedTabs()),
       body: ListView(
-        padding: const EdgeInsets.all(AppDimensions.paddingLg),
+        padding: EdgeInsets.fromLTRB(
+          isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
+          isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
+          isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
+          AppDimensions.paddingLg,
+        ),
         children: [
-          const Text('Your Feed', style: AppTextStyles.sectionTitle),
-          const SizedBox(height: AppDimensions.paddingSm),
-          const Text(
-            'Hear the latest from people you follow.',
-            style: AppTextStyles.bodyMedium,
-          ),
-          const SizedBox(height: AppDimensions.paddingLg),
+          if (isDesktop) ...[
+            const Text('Your Feed', style: AppTextStyles.sectionTitle),
+            const SizedBox(height: AppDimensions.paddingSm),
+            const Text(
+              'Hear the latest from people you follow.',
+              style: AppTextStyles.bodyMedium,
+            ),
+            const SizedBox(height: AppDimensions.paddingLg),
+          ],
           ..._mockFeedItems.map(
             (item) => Padding(
               padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
@@ -137,4 +150,36 @@ List<double> _buildMockPeaks({required int seed, int count = 220}) {
     final folded = rawValue <= 0.5 ? rawValue : (1 - rawValue);
     return (folded * 1.8).clamp(0.06, 1.0);
   });
+}
+
+class _MobileFeedTabs extends StatelessWidget {
+  const _MobileFeedTabs();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Discover',
+          style: AppTextStyles.sectionTitle.copyWith(fontSize: 16),
+        ),
+        const SizedBox(width: AppDimensions.paddingLg),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingLg,
+            vertical: AppDimensions.paddingSm,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceVariant,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            'Following',
+            style: AppTextStyles.sectionTitle.copyWith(fontSize: 16),
+          ),
+        ),
+      ],
+    );
+  }
 }
