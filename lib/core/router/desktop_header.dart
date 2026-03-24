@@ -34,7 +34,7 @@ class DesktopHeader extends StatelessWidget {
           _HeaderIconButton(
             icon: Icons.upload_outlined,
             tooltip: 'Upload',
-            onPressed: () {},
+            onPressed: () => context.push(RoutePaths.upload),
           ),
 
           const SizedBox(width: AppDimensions.paddingXs),
