@@ -1,15 +1,15 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:decibel/core/router/app_router.dart';
 import 'package:decibel/core/router/route_paths.dart';
 import 'package:decibel/features/auth/domain/entities/auth_state.dart';
 import 'package:decibel/features/auth/domain/entities/auth_user.dart';
-import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
 import 'package:decibel/features/auth/presentation/notifiers/auth_notifier.dart';
+import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 class MockAuthNotifier extends AsyncNotifier<AuthState>
     implements AuthNotifier {
@@ -66,9 +66,9 @@ void main() {
         router.go(RoutePaths.home);
         await tester.pumpAndSettle();
 
-        // Assert: The RouteGuard intercepted the navigation and forced it back to /login
+        // Assert: The RouteGuard intercepted the navigation and forced it back to /start
         final location = router.routerDelegate.currentConfiguration.uri.path;
-        expect(location, equals(RoutePaths.login));
+        expect(location, equals(RoutePaths.start));
       },
     );
 

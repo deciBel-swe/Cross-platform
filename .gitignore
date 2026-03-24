@@ -11,6 +11,9 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+.fvm/
+.fvmrc
+.reports/
 
 # IntelliJ related
 *.iml
@@ -21,7 +24,7 @@ migrate_working_dir/
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
-#.vscode/
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -33,6 +36,19 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# VS Code specific files
+.vscode/
+
+# FVM (Flutter Version Management)
+.fvm/
+
+# Flutter Generated Desktop Files
+linux/flutter/generated_plugin_registrant.cc
+linux/flutter/generated_plugins.cmake
+macos/Flutter/GeneratedPluginRegistrant.swift
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+
 # Symbolication related
 app.*.symbols
 
@@ -43,3 +59,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# FVM Version Cache
+.fvm/

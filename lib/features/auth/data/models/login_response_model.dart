@@ -9,8 +9,9 @@ part 'login_response_model.g.dart';
 class LoginResponseModel with _$LoginResponseModel {
   const factory LoginResponseModel({
     required String accessToken,
-    required String refreshToken,
+    required int expiresIn,
     required AuthUserModel user,
+    String? refreshToken,
   }) = _LoginResponseModel;
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) =>

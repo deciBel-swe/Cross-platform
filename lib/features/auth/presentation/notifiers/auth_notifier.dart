@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/network/events/auth_event_bus.dart';
 import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
 
@@ -19,11 +20,23 @@ import '../providers/auth_provider.dart';
 ///   session in secure storage and automatically logs the user in if valid.
 /// * **Authentication:** Provides [loginWithGoogle] to initiate the OAuth flow
 ///   and securely update the state upon success or failure.
-/// * **Session Management:** Provides [logout] to clear local tokens and
-///   return the user to an unauthenticated state.
+/// * **Session Management:** Provides [logout] to invalidate the backend
+///   session and return the user to an unauthenticated state.
 class AuthNotifier extends AsyncNotifier<AuthState> {
   @override
   FutureOr<AuthState> build() async {
+    // Listen for forced logouts from interceptors or other backend-driven events
+    final logoutSub = AuthEventBus().logoutStream.listen((_) {
+      debugPrint(
+        '[AuthNotifier] Received forced logout event from AuthEventBus',
+      );
+      logout();
+    });
+
+    ref.onDispose(() {
+      logoutSub.cancel();
+    });
+
     final secureStorage = ref.watch(secureStorageServiceProvider);
     final repo = ref.watch(authRepositoryProvider);
 
@@ -80,13 +93,29 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       }
     });
 
+    // If the login failed, recover to unauthenticated state so the router
+    // can redirect back to the start/login screen instead of staying on splash.
+    if (state.hasError) {
+      state = const AsyncData(AuthUnauthenticated());
+    }
+
     debugPrint('[AuthNotifier] State is now: $state');
   }
 
   Future<void> logout() async {
-    final secureStorage = ref.read(secureStorageServiceProvider);
-    await secureStorage.clearAll();
+    final repo = ref.read(authRepositoryProvider);
 
-    state = const AsyncData(AuthUnauthenticated());
+    try {
+      final logoutResult = await repo.logout();
+      logoutResult.fold(
+        (failure) =>
+            debugPrint('[AuthNotifier] logout failed: ${failure.message}'),
+        (_) => debugPrint('[AuthNotifier] logout succeeded.'),
+      );
+    } catch (e, st) {
+      debugPrint('[AuthNotifier] Unexpected Exception during logout: $e\n$st');
+    } finally {
+      state = const AsyncData(AuthUnauthenticated());
+    }
   }
 }

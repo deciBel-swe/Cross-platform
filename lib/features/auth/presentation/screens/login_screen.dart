@@ -3,12 +3,11 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
-import '../../../../core/router/route_paths.dart';
 
 /// Sign-in screen: OAuth buttons, divider, email + password fields,
 /// and a white Continue button.
@@ -56,10 +55,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Watch for the current authentication state to show loading indicators
+    final authState = ref.watch(authStateProvider);
+    final isLoading = authState.isLoading;
+
+    // Listen for errors and show a SnackBar
+    ref.listen<AsyncValue<AuthState>>(authStateProvider, (previous, next) {
+      if (!next.isLoading && next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error.toString().replaceAll('Exception: ', '')),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign in'),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -80,6 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     color: AppColors.google,
                     size: 24,
                   ),
+                  isLoading: isLoading,
                   onPressed: () {
                     ref.read(authStateProvider.notifier).loginWithGoogle();
                   },
@@ -153,13 +169,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 // ---- Continue button (white) ----
                 ElevatedButton(
-                  onPressed: () {
-                    // TODO(auth): implement email sign-in
-                    context.go(RoutePaths.home);
-                  },
+                  onPressed: null, // TODO(auth): enable once local/WebView auth is wired up
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    backgroundColor: AppColors.onPrimary,
+                    foregroundColor: AppColors.onBackground,
                   ),
                   child: const Text('Continue'),
                 ),

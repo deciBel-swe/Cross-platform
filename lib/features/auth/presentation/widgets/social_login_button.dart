@@ -10,6 +10,7 @@ class SocialLoginButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.icon,
+    this.isLoading = false,
     this.onPressed,
   });
 
@@ -22,6 +23,9 @@ class SocialLoginButton extends StatelessWidget {
   /// Tap callback; `null` disables the button.
   final VoidCallback? onPressed;
 
+  /// Whether the button is currently in a loading state.
+  final bool isLoading;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -30,7 +34,7 @@ class SocialLoginButton extends StatelessWidget {
       width: double.infinity,
       height: 48,
       child: OutlinedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: theme.dividerColor),
           shape: RoundedRectangleBorder(
@@ -40,9 +44,17 @@ class SocialLoginButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(width: 24, height: 24, child: icon),
-            const SizedBox(width: 12),
-            Text(label, style: theme.textTheme.labelLarge),
+            if (isLoading)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else ...[
+              SizedBox(width: 24, height: 24, child: icon),
+              const SizedBox(width: 12),
+              Text(label, style: theme.textTheme.labelLarge),
+            ],
           ],
         ),
       ),
