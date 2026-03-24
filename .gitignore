@@ -13,6 +13,7 @@
 migrate_working_dir/
 .fvm/
 .fvmrc
+.reports/
 
 # IntelliJ related
 *.iml

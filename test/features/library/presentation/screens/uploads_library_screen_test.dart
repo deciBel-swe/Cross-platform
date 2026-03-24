@@ -3,19 +3,15 @@ import 'dart:async';
 import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:decibel/features/library/domain/entities/track_status.dart';
-import 'package:decibel/features/library/presentation/providers/uploads_provider.dart';
 import 'package:decibel/features/library/presentation/screens/uploads_library_screen.dart';
-import 'package:decibel/features/library/presentation/widgets/upload_track_card.dart';
+import 'package:decibel/features/library_profile/presentation/providers/uploads_provider.dart';
+import 'package:decibel/features/library_profile/presentation/widgets/upload_track_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class FakeUploadsNotifier extends UploadsNotifier {
-  FakeUploadsNotifier({
-    required this.tracks,
-    this.error,
-    this.pendingBuild,
-  });
+  FakeUploadsNotifier({required this.tracks, this.error, this.pendingBuild});
 
   final List<Track> tracks;
   final Object? error;
@@ -62,17 +58,15 @@ void main() {
 
   Widget buildTestWidget(FakeUploadsNotifier notifier) {
     return ProviderScope(
-      overrides: [
-        uploadsProvider.overrideWith(() => notifier),
-      ],
-      child: const MaterialApp(
-        home: UploadsLibraryScreen(),
-      ),
+      overrides: [uploadsProvider.overrideWith(() => notifier)],
+      child: const MaterialApp(home: UploadsLibraryScreen()),
     );
   }
 
   group('UploadsLibraryScreen', () {
-    testWidgets('shows loading indicator while uploads are loading', (tester) async {
+    testWidgets('shows loading indicator while uploads are loading', (
+      tester,
+    ) async {
       final completer = Completer<List<Track>>();
       final notifier = FakeUploadsNotifier(
         tracks: const <Track>[],
@@ -97,7 +91,9 @@ void main() {
       expect(find.byType(UploadTrackCard), findsNothing);
     });
 
-    testWidgets('shows list of upload cards when uploads exist', (tester) async {
+    testWidgets('shows list of upload cards when uploads exist', (
+      tester,
+    ) async {
       final notifier = FakeUploadsNotifier(
         tracks: <Track>[
           makeTrack(id: 1, title: 'First Track'),
@@ -113,7 +109,9 @@ void main() {
       expect(find.text('Second Track'), findsOneWidget);
     });
 
-    testWidgets('shows error state with retry button when provider fails', (tester) async {
+    testWidgets('shows error state with retry button when provider fails', (
+      tester,
+    ) async {
       final notifier = FakeUploadsNotifier(
         tracks: const <Track>[],
         error: Exception('boom'),

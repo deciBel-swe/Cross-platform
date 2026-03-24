@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
 
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <application
         android:label="decibel"
         android:name="${applicationName}"
@@ -40,7 +42,10 @@
                 <data android:scheme="com.googleusercontent.apps.767709617177-l61vbedk9lanvrgirt6e0840a4kijs6u" />
             </intent-filter>
         </activity>
-
+<activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity-alias
             android:name="com.decibel.decibel.MainActivity.black"
             android:enabled="false"

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/track_audio_provider.dart';
-import '../providers/track_preview_derived_providers.dart';
-import '../providers/track_preview_provider.dart';
-import '../widgets/track_preview_background.dart';
-import '../widgets/track_preview_info.dart';
-import '../widgets/track_preview_playback_overlay.dart';
-import '../widgets/track_preview_top_bar.dart';
-import '../widgets/track_preview_waveform_section.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import '../../../library_profile/presentation/providers/track_preview_derived_providers.dart';
+import '../../../library_profile/presentation/providers/track_preview_provider.dart';
+import '../../../library_profile/presentation/widgets/track_preview_background.dart';
+import '../../../library_profile/presentation/widgets/track_preview_info.dart';
+import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
+import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
+import '../../../library_profile/presentation/widgets/track_preview_waveform_section.dart';
 
 class TrackPreviewScreen extends ConsumerWidget {
   const TrackPreviewScreen({super.key, required this.trackId});

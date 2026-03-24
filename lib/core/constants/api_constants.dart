@@ -21,9 +21,11 @@ class ApiConstants {
   /// Step 3: Flutter exchanges OAuth token with backend
   static const String googleTokenExchangeEndpoint = '/auth/oauth/google';
   static const String logoutEndpoint = '/auth/logout';
+  static const String genresEndpoint = '/genres';
 
   static const String userProfileEndpoint = '/users/me';
   static const String userProfilePrivacy = '/users/me/privacy';
+  static const String userProfileImage = '/users/me/images';
 
   // Dio Timeout constants
   static const int connectTimeout = 30000;

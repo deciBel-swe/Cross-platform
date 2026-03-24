@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/library/domain/entities/track_peaks.dart';
-import 'package:decibel/features/library/domain/repositories/track_repository.dart';
-import 'package:decibel/features/library/presentation/providers/track_peaks_provider.dart';
-import 'package:decibel/features/library/presentation/providers/track_repository_provider.dart';
+import 'package:decibel/features/library_profile/domain/repositories/track_repository.dart';
+import 'package:decibel/features/library_profile/presentation/providers/track_peaks_provider.dart';
+import 'package:decibel/features/library_profile/presentation/providers/track_repository_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';

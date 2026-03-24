@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:decibel/features/library/presentation/notifiers/track_audio_notifier.dart';
-import 'package:decibel/features/library/presentation/providers/track_audio_provider.dart';
 import 'package:decibel/features/library/presentation/state/track_audio_state.dart';
+import 'package:decibel/features/library_profile/presentation/providers/track_audio_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
@@ -21,16 +21,24 @@ void main() {
     playerStateController = StreamController<PlayerState>.broadcast();
 
     // Mock streams
-    when(() => mockPlayer.positionStream).thenAnswer((_) => positionController.stream);
-    when(() => mockPlayer.playerStateStream).thenAnswer((_) => playerStateController.stream);
-    
+    when(
+      () => mockPlayer.positionStream,
+    ).thenAnswer((_) => positionController.stream);
+    when(
+      () => mockPlayer.playerStateStream,
+    ).thenAnswer((_) => playerStateController.stream);
+
     // Mock basic properties
     when(() => mockPlayer.play()).thenAnswer((_) async {});
     when(() => mockPlayer.pause()).thenAnswer((_) async {});
     when(() => mockPlayer.stop()).thenAnswer((_) async {});
     when(() => mockPlayer.seek(any())).thenAnswer((_) async {});
-    when(() => mockPlayer.setUrl(any())).thenAnswer((_) async => const Duration(seconds: 100));
-    when(() => mockPlayer.setFilePath(any())).thenAnswer((_) async => const Duration(seconds: 100));
+    when(
+      () => mockPlayer.setUrl(any()),
+    ).thenAnswer((_) async => const Duration(seconds: 100));
+    when(
+      () => mockPlayer.setFilePath(any()),
+    ).thenAnswer((_) async => const Duration(seconds: 100));
     when(() => mockPlayer.dispose()).thenAnswer((_) async {});
     when(() => mockPlayer.duration).thenReturn(const Duration(seconds: 100));
 
@@ -75,8 +83,10 @@ void main() {
       expect(state.preparedTrackId, 1);
       expect(state.preparedTrackUrl, 'https://example.com/track.mp3');
       expect(state.duration, const Duration(seconds: 100));
-      
-      verify(() => mockPlayer.setUrl('https://example.com/track.mp3')).called(1);
+
+      verify(
+        () => mockPlayer.setUrl('https://example.com/track.mp3'),
+      ).called(1);
     });
 
     test('initializeForTrack triggers play if autoPlay is true', () async {
@@ -95,10 +105,10 @@ void main() {
     test('updates position and progress from stream', () async {
       final container = createContainer();
       final notifier = container.read(trackAudioProvider.notifier);
-      
+
       // Initialize first ensuring streams are listened to
       // We need to trigger build() which happens on read
-      container.read(trackAudioProvider); 
+      container.read(trackAudioProvider);
 
       // Initialize properly
       await notifier.initializeForTrack(
@@ -110,7 +120,7 @@ void main() {
 
       // Emit position update
       positionController.add(const Duration(seconds: 50));
-      
+
       // Wait for stream event to propagate
       await Future<void>.delayed(Duration.zero);
 
@@ -124,7 +134,7 @@ void main() {
       container.read(trackAudioProvider); // trigger build
 
       playerStateController.add(PlayerState(true, ProcessingState.ready));
-      
+
       await Future<void>.delayed(Duration.zero);
 
       final state = container.read(trackAudioProvider);
@@ -134,7 +144,7 @@ void main() {
     test('seek calls player.seek', () async {
       final container = createContainer();
       final notifier = container.read(trackAudioProvider.notifier);
-      
+
       await notifier.initializeForTrack(
         trackId: 1,
         trackUrl: 'url',
@@ -145,7 +155,7 @@ void main() {
       await notifier.seek(const Duration(seconds: 30));
 
       verify(() => mockPlayer.seek(const Duration(seconds: 30))).called(1);
-      
+
       final state = container.read(trackAudioProvider);
       expect(state.position, const Duration(seconds: 30));
     });

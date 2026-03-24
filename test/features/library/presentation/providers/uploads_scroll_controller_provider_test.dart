@@ -1,6 +1,6 @@
 import 'package:decibel/features/library/domain/entities/track.dart';
-import 'package:decibel/features/library/presentation/providers/uploads_provider.dart';
-import 'package:decibel/features/library/presentation/providers/uploads_scroll_controller_provider.dart';
+import 'package:decibel/features/library_profile/presentation/providers/uploads_provider.dart';
+import 'package:decibel/features/library_profile/presentation/providers/uploads_scroll_controller_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

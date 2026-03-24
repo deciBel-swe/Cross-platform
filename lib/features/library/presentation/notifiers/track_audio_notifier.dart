@@ -121,6 +121,26 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       if (autoPlay) {
         await play();
       }
+    } catch (error) {
+      // Guard against source-load failures (e.g. invalid/unreachable URL)
+      // so playback errors don't bubble as unhandled UI exceptions.
+      if (kDebugMode) {
+        debugPrint('TrackAudioNotifier initializeForTrack failed: $error');
+      }
+
+      if (!_isDisposed) {
+        state = state.copyWith(
+          isPrepared: false,
+          preparedTrackId: null,
+          preparedTrackUrl: null,
+          isPlaying: false,
+          position: Duration.zero,
+          progress: 0,
+          dragProgress: null,
+          dragPosition: null,
+          isDragging: false,
+        );
+      }
     } finally {
       if (!_isDisposed) {
         state = state.copyWith(isPreparing: false);
@@ -374,10 +394,16 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   }
 
   Future<Duration?> _setSource(String urlOrPath) async {
-    final uri = Uri.tryParse(urlOrPath);
-    if (uri != null && uri.hasScheme) {
-      return _audioPlayer.setUrl(urlOrPath);
+    final normalizedSource = urlOrPath.trim();
+    if (normalizedSource.isEmpty) {
+      // Fail fast for invalid audio source values.
+      throw const FormatException('Track source is empty');
     }
-    return _audioPlayer.setFilePath(urlOrPath);
+
+    final uri = Uri.tryParse(normalizedSource);
+    if (uri != null && uri.hasScheme) {
+      return _audioPlayer.setUrl(normalizedSource);
+    }
+    return _audioPlayer.setFilePath(normalizedSource);
   }
 }

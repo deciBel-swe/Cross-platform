@@ -22,16 +22,18 @@ UserProfileModel _$UserProfileModelFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$UserProfileModel {
   int get id => throw _privateConstructorUsedError;
-  String get username => throw _privateConstructorUsedError;
-  String get displayName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'Role')
+  String get role => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
-  String? get bio => throw _privateConstructorUsedError;
-  String get tier => throw _privateConstructorUsedError;
-  int get followersCount => throw _privateConstructorUsedError;
-  int get followingCount => throw _privateConstructorUsedError;
-  int get tracksCount => throw _privateConstructorUsedError;
-  bool get isVerified => throw _privateConstructorUsedError;
+  String get username => throw _privateConstructorUsedError;
+  bool get emailVerified => throw _privateConstructorUsedError;
+  UserTier get tier => throw _privateConstructorUsedError;
+  @JsonKey(name: 'profile')
+  ProfileDetailsModel get profileDetails => throw _privateConstructorUsedError;
   SocialLinksModel? get socialLinks => throw _privateConstructorUsedError;
+  PrivacySettingsModel get privacySettings =>
+      throw _privateConstructorUsedError;
+  UserStatsModel get stats => throw _privateConstructorUsedError;
 
   /// Serializes this UserProfileModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -52,19 +54,21 @@ abstract class $UserProfileModelCopyWith<$Res> {
   @useResult
   $Res call({
     int id,
-    String username,
-    String displayName,
+    @JsonKey(name: 'Role') String role,
     String email,
-    String? bio,
-    String tier,
-    int followersCount,
-    int followingCount,
-    int tracksCount,
-    bool isVerified,
+    String username,
+    bool emailVerified,
+    UserTier tier,
+    @JsonKey(name: 'profile') ProfileDetailsModel profileDetails,
     SocialLinksModel? socialLinks,
+    PrivacySettingsModel privacySettings,
+    UserStatsModel stats,
   });
 
+  $ProfileDetailsModelCopyWith<$Res> get profileDetails;
   $SocialLinksModelCopyWith<$Res>? get socialLinks;
+  $PrivacySettingsModelCopyWith<$Res> get privacySettings;
+  $UserStatsModelCopyWith<$Res> get stats;
 }
 
 /// @nodoc
@@ -83,16 +87,15 @@ class _$UserProfileModelCopyWithImpl<$Res, $Val extends UserProfileModel>
   @override
   $Res call({
     Object? id = null,
-    Object? username = null,
-    Object? displayName = null,
+    Object? role = null,
     Object? email = null,
-    Object? bio = freezed,
+    Object? username = null,
+    Object? emailVerified = null,
     Object? tier = null,
-    Object? followersCount = null,
-    Object? followingCount = null,
-    Object? tracksCount = null,
-    Object? isVerified = null,
+    Object? profileDetails = null,
     Object? socialLinks = freezed,
+    Object? privacySettings = null,
+    Object? stats = null,
   }) {
     return _then(
       _value.copyWith(
@@ -100,49 +103,55 @@ class _$UserProfileModelCopyWithImpl<$Res, $Val extends UserProfileModel>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                       as int,
-            username: null == username
-                ? _value.username
-                : username // ignore: cast_nullable_to_non_nullable
-                      as String,
-            displayName: null == displayName
-                ? _value.displayName
-                : displayName // ignore: cast_nullable_to_non_nullable
+            role: null == role
+                ? _value.role
+                : role // ignore: cast_nullable_to_non_nullable
                       as String,
             email: null == email
                 ? _value.email
                 : email // ignore: cast_nullable_to_non_nullable
                       as String,
-            bio: freezed == bio
-                ? _value.bio
-                : bio // ignore: cast_nullable_to_non_nullable
-                      as String?,
+            username: null == username
+                ? _value.username
+                : username // ignore: cast_nullable_to_non_nullable
+                      as String,
+            emailVerified: null == emailVerified
+                ? _value.emailVerified
+                : emailVerified // ignore: cast_nullable_to_non_nullable
+                      as bool,
             tier: null == tier
                 ? _value.tier
                 : tier // ignore: cast_nullable_to_non_nullable
-                      as String,
-            followersCount: null == followersCount
-                ? _value.followersCount
-                : followersCount // ignore: cast_nullable_to_non_nullable
-                      as int,
-            followingCount: null == followingCount
-                ? _value.followingCount
-                : followingCount // ignore: cast_nullable_to_non_nullable
-                      as int,
-            tracksCount: null == tracksCount
-                ? _value.tracksCount
-                : tracksCount // ignore: cast_nullable_to_non_nullable
-                      as int,
-            isVerified: null == isVerified
-                ? _value.isVerified
-                : isVerified // ignore: cast_nullable_to_non_nullable
-                      as bool,
+                      as UserTier,
+            profileDetails: null == profileDetails
+                ? _value.profileDetails
+                : profileDetails // ignore: cast_nullable_to_non_nullable
+                      as ProfileDetailsModel,
             socialLinks: freezed == socialLinks
                 ? _value.socialLinks
                 : socialLinks // ignore: cast_nullable_to_non_nullable
                       as SocialLinksModel?,
+            privacySettings: null == privacySettings
+                ? _value.privacySettings
+                : privacySettings // ignore: cast_nullable_to_non_nullable
+                      as PrivacySettingsModel,
+            stats: null == stats
+                ? _value.stats
+                : stats // ignore: cast_nullable_to_non_nullable
+                      as UserStatsModel,
           )
           as $Val,
     );
+  }
+
+  /// Create a copy of UserProfileModel
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ProfileDetailsModelCopyWith<$Res> get profileDetails {
+    return $ProfileDetailsModelCopyWith<$Res>(_value.profileDetails, (value) {
+      return _then(_value.copyWith(profileDetails: value) as $Val);
+    });
   }
 
   /// Create a copy of UserProfileModel
@@ -158,6 +167,26 @@ class _$UserProfileModelCopyWithImpl<$Res, $Val extends UserProfileModel>
       return _then(_value.copyWith(socialLinks: value) as $Val);
     });
   }
+
+  /// Create a copy of UserProfileModel
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $PrivacySettingsModelCopyWith<$Res> get privacySettings {
+    return $PrivacySettingsModelCopyWith<$Res>(_value.privacySettings, (value) {
+      return _then(_value.copyWith(privacySettings: value) as $Val);
+    });
+  }
+
+  /// Create a copy of UserProfileModel
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $UserStatsModelCopyWith<$Res> get stats {
+    return $UserStatsModelCopyWith<$Res>(_value.stats, (value) {
+      return _then(_value.copyWith(stats: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -171,20 +200,25 @@ abstract class _$$UserProfileModelImplCopyWith<$Res>
   @useResult
   $Res call({
     int id,
-    String username,
-    String displayName,
+    @JsonKey(name: 'Role') String role,
     String email,
-    String? bio,
-    String tier,
-    int followersCount,
-    int followingCount,
-    int tracksCount,
-    bool isVerified,
+    String username,
+    bool emailVerified,
+    UserTier tier,
+    @JsonKey(name: 'profile') ProfileDetailsModel profileDetails,
     SocialLinksModel? socialLinks,
+    PrivacySettingsModel privacySettings,
+    UserStatsModel stats,
   });
 
   @override
+  $ProfileDetailsModelCopyWith<$Res> get profileDetails;
+  @override
   $SocialLinksModelCopyWith<$Res>? get socialLinks;
+  @override
+  $PrivacySettingsModelCopyWith<$Res> get privacySettings;
+  @override
+  $UserStatsModelCopyWith<$Res> get stats;
 }
 
 /// @nodoc
@@ -202,16 +236,15 @@ class __$$UserProfileModelImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? username = null,
-    Object? displayName = null,
+    Object? role = null,
     Object? email = null,
-    Object? bio = freezed,
+    Object? username = null,
+    Object? emailVerified = null,
     Object? tier = null,
-    Object? followersCount = null,
-    Object? followingCount = null,
-    Object? tracksCount = null,
-    Object? isVerified = null,
+    Object? profileDetails = null,
     Object? socialLinks = freezed,
+    Object? privacySettings = null,
+    Object? stats = null,
   }) {
     return _then(
       _$UserProfileModelImpl(
@@ -219,46 +252,42 @@ class __$$UserProfileModelImplCopyWithImpl<$Res>
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
                   as int,
-        username: null == username
-            ? _value.username
-            : username // ignore: cast_nullable_to_non_nullable
-                  as String,
-        displayName: null == displayName
-            ? _value.displayName
-            : displayName // ignore: cast_nullable_to_non_nullable
+        role: null == role
+            ? _value.role
+            : role // ignore: cast_nullable_to_non_nullable
                   as String,
         email: null == email
             ? _value.email
             : email // ignore: cast_nullable_to_non_nullable
                   as String,
-        bio: freezed == bio
-            ? _value.bio
-            : bio // ignore: cast_nullable_to_non_nullable
-                  as String?,
+        username: null == username
+            ? _value.username
+            : username // ignore: cast_nullable_to_non_nullable
+                  as String,
+        emailVerified: null == emailVerified
+            ? _value.emailVerified
+            : emailVerified // ignore: cast_nullable_to_non_nullable
+                  as bool,
         tier: null == tier
             ? _value.tier
             : tier // ignore: cast_nullable_to_non_nullable
-                  as String,
-        followersCount: null == followersCount
-            ? _value.followersCount
-            : followersCount // ignore: cast_nullable_to_non_nullable
-                  as int,
-        followingCount: null == followingCount
-            ? _value.followingCount
-            : followingCount // ignore: cast_nullable_to_non_nullable
-                  as int,
-        tracksCount: null == tracksCount
-            ? _value.tracksCount
-            : tracksCount // ignore: cast_nullable_to_non_nullable
-                  as int,
-        isVerified: null == isVerified
-            ? _value.isVerified
-            : isVerified // ignore: cast_nullable_to_non_nullable
-                  as bool,
+                  as UserTier,
+        profileDetails: null == profileDetails
+            ? _value.profileDetails
+            : profileDetails // ignore: cast_nullable_to_non_nullable
+                  as ProfileDetailsModel,
         socialLinks: freezed == socialLinks
             ? _value.socialLinks
             : socialLinks // ignore: cast_nullable_to_non_nullable
                   as SocialLinksModel?,
+        privacySettings: null == privacySettings
+            ? _value.privacySettings
+            : privacySettings // ignore: cast_nullable_to_non_nullable
+                  as PrivacySettingsModel,
+        stats: null == stats
+            ? _value.stats
+            : stats // ignore: cast_nullable_to_non_nullable
+                  as UserStatsModel,
       ),
     );
   }
@@ -269,16 +298,15 @@ class __$$UserProfileModelImplCopyWithImpl<$Res>
 class _$UserProfileModelImpl implements _UserProfileModel {
   const _$UserProfileModelImpl({
     required this.id,
-    required this.username,
-    required this.displayName,
+    @JsonKey(name: 'Role') required this.role,
     required this.email,
-    this.bio,
+    required this.username,
+    required this.emailVerified,
     required this.tier,
-    required this.followersCount,
-    required this.followingCount,
-    required this.tracksCount,
-    required this.isVerified,
+    @JsonKey(name: 'profile') required this.profileDetails,
     this.socialLinks,
+    required this.privacySettings,
+    required this.stats,
   });
 
   factory _$UserProfileModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -287,29 +315,29 @@ class _$UserProfileModelImpl implements _UserProfileModel {
   @override
   final int id;
   @override
-  final String username;
-  @override
-  final String displayName;
+  @JsonKey(name: 'Role')
+  final String role;
   @override
   final String email;
   @override
-  final String? bio;
+  final String username;
   @override
-  final String tier;
+  final bool emailVerified;
   @override
-  final int followersCount;
+  final UserTier tier;
   @override
-  final int followingCount;
-  @override
-  final int tracksCount;
-  @override
-  final bool isVerified;
+  @JsonKey(name: 'profile')
+  final ProfileDetailsModel profileDetails;
   @override
   final SocialLinksModel? socialLinks;
+  @override
+  final PrivacySettingsModel privacySettings;
+  @override
+  final UserStatsModel stats;
 
   @override
   String toString() {
-    return 'UserProfileModel(id: $id, username: $username, displayName: $displayName, email: $email, bio: $bio, tier: $tier, followersCount: $followersCount, followingCount: $followingCount, tracksCount: $tracksCount, isVerified: $isVerified, socialLinks: $socialLinks)';
+    return 'UserProfileModel(id: $id, role: $role, email: $email, username: $username, emailVerified: $emailVerified, tier: $tier, profileDetails: $profileDetails, socialLinks: $socialLinks, privacySettings: $privacySettings, stats: $stats)';
   }
 
   @override
@@ -318,23 +346,20 @@ class _$UserProfileModelImpl implements _UserProfileModel {
         (other.runtimeType == runtimeType &&
             other is _$UserProfileModelImpl &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.role, role) || other.role == role) &&
+            (identical(other.email, email) || other.email == email) &&
             (identical(other.username, username) ||
                 other.username == username) &&
-            (identical(other.displayName, displayName) ||
-                other.displayName == displayName) &&
-            (identical(other.email, email) || other.email == email) &&
-            (identical(other.bio, bio) || other.bio == bio) &&
+            (identical(other.emailVerified, emailVerified) ||
+                other.emailVerified == emailVerified) &&
             (identical(other.tier, tier) || other.tier == tier) &&
-            (identical(other.followersCount, followersCount) ||
-                other.followersCount == followersCount) &&
-            (identical(other.followingCount, followingCount) ||
-                other.followingCount == followingCount) &&
-            (identical(other.tracksCount, tracksCount) ||
-                other.tracksCount == tracksCount) &&
-            (identical(other.isVerified, isVerified) ||
-                other.isVerified == isVerified) &&
+            (identical(other.profileDetails, profileDetails) ||
+                other.profileDetails == profileDetails) &&
             (identical(other.socialLinks, socialLinks) ||
-                other.socialLinks == socialLinks));
+                other.socialLinks == socialLinks) &&
+            (identical(other.privacySettings, privacySettings) ||
+                other.privacySettings == privacySettings) &&
+            (identical(other.stats, stats) || other.stats == stats));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -342,16 +367,15 @@ class _$UserProfileModelImpl implements _UserProfileModel {
   int get hashCode => Object.hash(
     runtimeType,
     id,
-    username,
-    displayName,
+    role,
     email,
-    bio,
+    username,
+    emailVerified,
     tier,
-    followersCount,
-    followingCount,
-    tracksCount,
-    isVerified,
+    profileDetails,
     socialLinks,
+    privacySettings,
+    stats,
   );
 
   /// Create a copy of UserProfileModel
@@ -374,16 +398,15 @@ class _$UserProfileModelImpl implements _UserProfileModel {
 abstract class _UserProfileModel implements UserProfileModel {
   const factory _UserProfileModel({
     required final int id,
-    required final String username,
-    required final String displayName,
+    @JsonKey(name: 'Role') required final String role,
     required final String email,
-    final String? bio,
-    required final String tier,
-    required final int followersCount,
-    required final int followingCount,
-    required final int tracksCount,
-    required final bool isVerified,
+    required final String username,
+    required final bool emailVerified,
+    required final UserTier tier,
+    @JsonKey(name: 'profile') required final ProfileDetailsModel profileDetails,
     final SocialLinksModel? socialLinks,
+    required final PrivacySettingsModel privacySettings,
+    required final UserStatsModel stats,
   }) = _$UserProfileModelImpl;
 
   factory _UserProfileModel.fromJson(Map<String, dynamic> json) =
@@ -392,31 +415,698 @@ abstract class _UserProfileModel implements UserProfileModel {
   @override
   int get id;
   @override
-  String get username;
-  @override
-  String get displayName;
+  @JsonKey(name: 'Role')
+  String get role;
   @override
   String get email;
   @override
-  String? get bio;
+  String get username;
   @override
-  String get tier;
+  bool get emailVerified;
   @override
-  int get followersCount;
+  UserTier get tier;
   @override
-  int get followingCount;
-  @override
-  int get tracksCount;
-  @override
-  bool get isVerified;
+  @JsonKey(name: 'profile')
+  ProfileDetailsModel get profileDetails;
   @override
   SocialLinksModel? get socialLinks;
+  @override
+  PrivacySettingsModel get privacySettings;
+  @override
+  UserStatsModel get stats;
 
   /// Create a copy of UserProfileModel
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$UserProfileModelImplCopyWith<_$UserProfileModelImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+ProfileDetailsModel _$ProfileDetailsModelFromJson(Map<String, dynamic> json) {
+  return _ProfileDetailsModel.fromJson(json);
+}
+
+/// @nodoc
+mixin _$ProfileDetailsModel {
+  String? get bio => throw _privateConstructorUsedError;
+  String? get city => throw _privateConstructorUsedError;
+  String? get country => throw _privateConstructorUsedError;
+  String? get profilePic => throw _privateConstructorUsedError;
+  String? get coverPic => throw _privateConstructorUsedError;
+  List<String> get favoriteGenres => throw _privateConstructorUsedError;
+
+  /// Serializes this ProfileDetailsModel to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of ProfileDetailsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $ProfileDetailsModelCopyWith<ProfileDetailsModel> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ProfileDetailsModelCopyWith<$Res> {
+  factory $ProfileDetailsModelCopyWith(
+    ProfileDetailsModel value,
+    $Res Function(ProfileDetailsModel) then,
+  ) = _$ProfileDetailsModelCopyWithImpl<$Res, ProfileDetailsModel>;
+  @useResult
+  $Res call({
+    String? bio,
+    String? city,
+    String? country,
+    String? profilePic,
+    String? coverPic,
+    List<String> favoriteGenres,
+  });
+}
+
+/// @nodoc
+class _$ProfileDetailsModelCopyWithImpl<$Res, $Val extends ProfileDetailsModel>
+    implements $ProfileDetailsModelCopyWith<$Res> {
+  _$ProfileDetailsModelCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of ProfileDetailsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? bio = freezed,
+    Object? city = freezed,
+    Object? country = freezed,
+    Object? profilePic = freezed,
+    Object? coverPic = freezed,
+    Object? favoriteGenres = null,
+  }) {
+    return _then(
+      _value.copyWith(
+            bio: freezed == bio
+                ? _value.bio
+                : bio // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            city: freezed == city
+                ? _value.city
+                : city // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            country: freezed == country
+                ? _value.country
+                : country // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            profilePic: freezed == profilePic
+                ? _value.profilePic
+                : profilePic // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            coverPic: freezed == coverPic
+                ? _value.coverPic
+                : coverPic // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            favoriteGenres: null == favoriteGenres
+                ? _value.favoriteGenres
+                : favoriteGenres // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$ProfileDetailsModelImplCopyWith<$Res>
+    implements $ProfileDetailsModelCopyWith<$Res> {
+  factory _$$ProfileDetailsModelImplCopyWith(
+    _$ProfileDetailsModelImpl value,
+    $Res Function(_$ProfileDetailsModelImpl) then,
+  ) = __$$ProfileDetailsModelImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    String? bio,
+    String? city,
+    String? country,
+    String? profilePic,
+    String? coverPic,
+    List<String> favoriteGenres,
+  });
+}
+
+/// @nodoc
+class __$$ProfileDetailsModelImplCopyWithImpl<$Res>
+    extends _$ProfileDetailsModelCopyWithImpl<$Res, _$ProfileDetailsModelImpl>
+    implements _$$ProfileDetailsModelImplCopyWith<$Res> {
+  __$$ProfileDetailsModelImplCopyWithImpl(
+    _$ProfileDetailsModelImpl _value,
+    $Res Function(_$ProfileDetailsModelImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of ProfileDetailsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? bio = freezed,
+    Object? city = freezed,
+    Object? country = freezed,
+    Object? profilePic = freezed,
+    Object? coverPic = freezed,
+    Object? favoriteGenres = null,
+  }) {
+    return _then(
+      _$ProfileDetailsModelImpl(
+        bio: freezed == bio
+            ? _value.bio
+            : bio // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        city: freezed == city
+            ? _value.city
+            : city // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        country: freezed == country
+            ? _value.country
+            : country // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        profilePic: freezed == profilePic
+            ? _value.profilePic
+            : profilePic // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        coverPic: freezed == coverPic
+            ? _value.coverPic
+            : coverPic // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        favoriteGenres: null == favoriteGenres
+            ? _value._favoriteGenres
+            : favoriteGenres // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$ProfileDetailsModelImpl implements _ProfileDetailsModel {
+  const _$ProfileDetailsModelImpl({
+    this.bio,
+    this.city,
+    this.country,
+    this.profilePic,
+    this.coverPic,
+    final List<String> favoriteGenres = const [],
+  }) : _favoriteGenres = favoriteGenres;
+
+  factory _$ProfileDetailsModelImpl.fromJson(Map<String, dynamic> json) =>
+      _$$ProfileDetailsModelImplFromJson(json);
+
+  @override
+  final String? bio;
+  @override
+  final String? city;
+  @override
+  final String? country;
+  @override
+  final String? profilePic;
+  @override
+  final String? coverPic;
+  final List<String> _favoriteGenres;
+  @override
+  @JsonKey()
+  List<String> get favoriteGenres {
+    if (_favoriteGenres is EqualUnmodifiableListView) return _favoriteGenres;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_favoriteGenres);
+  }
+
+  @override
+  String toString() {
+    return 'ProfileDetailsModel(bio: $bio, city: $city, country: $country, profilePic: $profilePic, coverPic: $coverPic, favoriteGenres: $favoriteGenres)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ProfileDetailsModelImpl &&
+            (identical(other.bio, bio) || other.bio == bio) &&
+            (identical(other.city, city) || other.city == city) &&
+            (identical(other.country, country) || other.country == country) &&
+            (identical(other.profilePic, profilePic) ||
+                other.profilePic == profilePic) &&
+            (identical(other.coverPic, coverPic) ||
+                other.coverPic == coverPic) &&
+            const DeepCollectionEquality().equals(
+              other._favoriteGenres,
+              _favoriteGenres,
+            ));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    bio,
+    city,
+    country,
+    profilePic,
+    coverPic,
+    const DeepCollectionEquality().hash(_favoriteGenres),
+  );
+
+  /// Create a copy of ProfileDetailsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ProfileDetailsModelImplCopyWith<_$ProfileDetailsModelImpl> get copyWith =>
+      __$$ProfileDetailsModelImplCopyWithImpl<_$ProfileDetailsModelImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$ProfileDetailsModelImplToJson(this);
+  }
+}
+
+abstract class _ProfileDetailsModel implements ProfileDetailsModel {
+  const factory _ProfileDetailsModel({
+    final String? bio,
+    final String? city,
+    final String? country,
+    final String? profilePic,
+    final String? coverPic,
+    final List<String> favoriteGenres,
+  }) = _$ProfileDetailsModelImpl;
+
+  factory _ProfileDetailsModel.fromJson(Map<String, dynamic> json) =
+      _$ProfileDetailsModelImpl.fromJson;
+
+  @override
+  String? get bio;
+  @override
+  String? get city;
+  @override
+  String? get country;
+  @override
+  String? get profilePic;
+  @override
+  String? get coverPic;
+  @override
+  List<String> get favoriteGenres;
+
+  /// Create a copy of ProfileDetailsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ProfileDetailsModelImplCopyWith<_$ProfileDetailsModelImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+PrivacySettingsModel _$PrivacySettingsModelFromJson(Map<String, dynamic> json) {
+  return _PrivacySettingsModel.fromJson(json);
+}
+
+/// @nodoc
+mixin _$PrivacySettingsModel {
+  bool get isPrivate => throw _privateConstructorUsedError;
+  bool get showHistory => throw _privateConstructorUsedError;
+
+  /// Serializes this PrivacySettingsModel to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of PrivacySettingsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $PrivacySettingsModelCopyWith<PrivacySettingsModel> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $PrivacySettingsModelCopyWith<$Res> {
+  factory $PrivacySettingsModelCopyWith(
+    PrivacySettingsModel value,
+    $Res Function(PrivacySettingsModel) then,
+  ) = _$PrivacySettingsModelCopyWithImpl<$Res, PrivacySettingsModel>;
+  @useResult
+  $Res call({bool isPrivate, bool showHistory});
+}
+
+/// @nodoc
+class _$PrivacySettingsModelCopyWithImpl<
+  $Res,
+  $Val extends PrivacySettingsModel
+>
+    implements $PrivacySettingsModelCopyWith<$Res> {
+  _$PrivacySettingsModelCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of PrivacySettingsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? isPrivate = null, Object? showHistory = null}) {
+    return _then(
+      _value.copyWith(
+            isPrivate: null == isPrivate
+                ? _value.isPrivate
+                : isPrivate // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            showHistory: null == showHistory
+                ? _value.showHistory
+                : showHistory // ignore: cast_nullable_to_non_nullable
+                      as bool,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$PrivacySettingsModelImplCopyWith<$Res>
+    implements $PrivacySettingsModelCopyWith<$Res> {
+  factory _$$PrivacySettingsModelImplCopyWith(
+    _$PrivacySettingsModelImpl value,
+    $Res Function(_$PrivacySettingsModelImpl) then,
+  ) = __$$PrivacySettingsModelImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({bool isPrivate, bool showHistory});
+}
+
+/// @nodoc
+class __$$PrivacySettingsModelImplCopyWithImpl<$Res>
+    extends _$PrivacySettingsModelCopyWithImpl<$Res, _$PrivacySettingsModelImpl>
+    implements _$$PrivacySettingsModelImplCopyWith<$Res> {
+  __$$PrivacySettingsModelImplCopyWithImpl(
+    _$PrivacySettingsModelImpl _value,
+    $Res Function(_$PrivacySettingsModelImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of PrivacySettingsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? isPrivate = null, Object? showHistory = null}) {
+    return _then(
+      _$PrivacySettingsModelImpl(
+        isPrivate: null == isPrivate
+            ? _value.isPrivate
+            : isPrivate // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        showHistory: null == showHistory
+            ? _value.showHistory
+            : showHistory // ignore: cast_nullable_to_non_nullable
+                  as bool,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$PrivacySettingsModelImpl implements _PrivacySettingsModel {
+  const _$PrivacySettingsModelImpl({
+    required this.isPrivate,
+    required this.showHistory,
+  });
+
+  factory _$PrivacySettingsModelImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PrivacySettingsModelImplFromJson(json);
+
+  @override
+  final bool isPrivate;
+  @override
+  final bool showHistory;
+
+  @override
+  String toString() {
+    return 'PrivacySettingsModel(isPrivate: $isPrivate, showHistory: $showHistory)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PrivacySettingsModelImpl &&
+            (identical(other.isPrivate, isPrivate) ||
+                other.isPrivate == isPrivate) &&
+            (identical(other.showHistory, showHistory) ||
+                other.showHistory == showHistory));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, isPrivate, showHistory);
+
+  /// Create a copy of PrivacySettingsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PrivacySettingsModelImplCopyWith<_$PrivacySettingsModelImpl>
+  get copyWith =>
+      __$$PrivacySettingsModelImplCopyWithImpl<_$PrivacySettingsModelImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$PrivacySettingsModelImplToJson(this);
+  }
+}
+
+abstract class _PrivacySettingsModel implements PrivacySettingsModel {
+  const factory _PrivacySettingsModel({
+    required final bool isPrivate,
+    required final bool showHistory,
+  }) = _$PrivacySettingsModelImpl;
+
+  factory _PrivacySettingsModel.fromJson(Map<String, dynamic> json) =
+      _$PrivacySettingsModelImpl.fromJson;
+
+  @override
+  bool get isPrivate;
+  @override
+  bool get showHistory;
+
+  /// Create a copy of PrivacySettingsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$PrivacySettingsModelImplCopyWith<_$PrivacySettingsModelImpl>
+  get copyWith => throw _privateConstructorUsedError;
+}
+
+UserStatsModel _$UserStatsModelFromJson(Map<String, dynamic> json) {
+  return _UserStatsModel.fromJson(json);
+}
+
+/// @nodoc
+mixin _$UserStatsModel {
+  int get followers => throw _privateConstructorUsedError;
+  int get following => throw _privateConstructorUsedError;
+  int get tracksCount => throw _privateConstructorUsedError;
+
+  /// Serializes this UserStatsModel to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of UserStatsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $UserStatsModelCopyWith<UserStatsModel> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $UserStatsModelCopyWith<$Res> {
+  factory $UserStatsModelCopyWith(
+    UserStatsModel value,
+    $Res Function(UserStatsModel) then,
+  ) = _$UserStatsModelCopyWithImpl<$Res, UserStatsModel>;
+  @useResult
+  $Res call({int followers, int following, int tracksCount});
+}
+
+/// @nodoc
+class _$UserStatsModelCopyWithImpl<$Res, $Val extends UserStatsModel>
+    implements $UserStatsModelCopyWith<$Res> {
+  _$UserStatsModelCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of UserStatsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? followers = null,
+    Object? following = null,
+    Object? tracksCount = null,
+  }) {
+    return _then(
+      _value.copyWith(
+            followers: null == followers
+                ? _value.followers
+                : followers // ignore: cast_nullable_to_non_nullable
+                      as int,
+            following: null == following
+                ? _value.following
+                : following // ignore: cast_nullable_to_non_nullable
+                      as int,
+            tracksCount: null == tracksCount
+                ? _value.tracksCount
+                : tracksCount // ignore: cast_nullable_to_non_nullable
+                      as int,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$UserStatsModelImplCopyWith<$Res>
+    implements $UserStatsModelCopyWith<$Res> {
+  factory _$$UserStatsModelImplCopyWith(
+    _$UserStatsModelImpl value,
+    $Res Function(_$UserStatsModelImpl) then,
+  ) = __$$UserStatsModelImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({int followers, int following, int tracksCount});
+}
+
+/// @nodoc
+class __$$UserStatsModelImplCopyWithImpl<$Res>
+    extends _$UserStatsModelCopyWithImpl<$Res, _$UserStatsModelImpl>
+    implements _$$UserStatsModelImplCopyWith<$Res> {
+  __$$UserStatsModelImplCopyWithImpl(
+    _$UserStatsModelImpl _value,
+    $Res Function(_$UserStatsModelImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of UserStatsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? followers = null,
+    Object? following = null,
+    Object? tracksCount = null,
+  }) {
+    return _then(
+      _$UserStatsModelImpl(
+        followers: null == followers
+            ? _value.followers
+            : followers // ignore: cast_nullable_to_non_nullable
+                  as int,
+        following: null == following
+            ? _value.following
+            : following // ignore: cast_nullable_to_non_nullable
+                  as int,
+        tracksCount: null == tracksCount
+            ? _value.tracksCount
+            : tracksCount // ignore: cast_nullable_to_non_nullable
+                  as int,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$UserStatsModelImpl implements _UserStatsModel {
+  const _$UserStatsModelImpl({
+    required this.followers,
+    required this.following,
+    required this.tracksCount,
+  });
+
+  factory _$UserStatsModelImpl.fromJson(Map<String, dynamic> json) =>
+      _$$UserStatsModelImplFromJson(json);
+
+  @override
+  final int followers;
+  @override
+  final int following;
+  @override
+  final int tracksCount;
+
+  @override
+  String toString() {
+    return 'UserStatsModel(followers: $followers, following: $following, tracksCount: $tracksCount)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$UserStatsModelImpl &&
+            (identical(other.followers, followers) ||
+                other.followers == followers) &&
+            (identical(other.following, following) ||
+                other.following == following) &&
+            (identical(other.tracksCount, tracksCount) ||
+                other.tracksCount == tracksCount));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, followers, following, tracksCount);
+
+  /// Create a copy of UserStatsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$UserStatsModelImplCopyWith<_$UserStatsModelImpl> get copyWith =>
+      __$$UserStatsModelImplCopyWithImpl<_$UserStatsModelImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$UserStatsModelImplToJson(this);
+  }
+}
+
+abstract class _UserStatsModel implements UserStatsModel {
+  const factory _UserStatsModel({
+    required final int followers,
+    required final int following,
+    required final int tracksCount,
+  }) = _$UserStatsModelImpl;
+
+  factory _UserStatsModel.fromJson(Map<String, dynamic> json) =
+      _$UserStatsModelImpl.fromJson;
+
+  @override
+  int get followers;
+  @override
+  int get following;
+  @override
+  int get tracksCount;
+
+  /// Create a copy of UserStatsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$UserStatsModelImplCopyWith<_$UserStatsModelImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

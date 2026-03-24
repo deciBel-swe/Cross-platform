@@ -9,7 +9,7 @@ import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
 import '../../../library/data/datasources/library_mock_fixtures.dart';
-import '../../../library/presentation/providers/uploads_provider.dart';
+import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 import '../../domain/repositories/i_upload_repository.dart';
 
@@ -226,12 +226,26 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       List<double> waveFormData = [];
       try {
         final waveformService = ref.read(waveformExtractionServiceProvider);
-        waveFormData = await waveformService.extractWaveform(file.path);
+        waveFormData = await waveformService.extractWaveform(
+          file.path,
+          noOfSamples: 8,
+        );
       } catch (e) {
         waveFormData = [];
       }
 
-      final metadata = state.value!.copyWith(audioFile: file, waveFormData: []);
+      if (waveFormData.isEmpty) {
+        state = AsyncValue<TrackUploadMetadata>.error(
+          'Could not extract waveform data from this audio file. Please try another file.',
+          StackTrace.current,
+        ).copyWithPrevious(state);
+        return;
+      }
+
+      final metadata = state.value!.copyWith(
+        audioFile: file,
+        waveFormData: waveFormData,
+      );
       state = AsyncData(metadata);
     }
   }

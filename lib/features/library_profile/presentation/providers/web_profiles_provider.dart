@@ -20,6 +20,9 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
 
   String getPlatformKey(String link) =>
       WebProfilePlatformUtils.detectPlatform(link);
+  void setInitialLinks(PublicProfileSocialLinks links) {
+    state = links;
+  }
 
   bool linkAlreadyExists(String link) {
     final trimmed = link.trim();

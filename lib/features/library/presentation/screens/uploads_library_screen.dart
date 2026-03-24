@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
-import '../providers/uploads_provider.dart';
-import '../providers/uploads_scroll_controller_provider.dart';
-import '../widgets/upload_track_card.dart';
+import '../../../library_profile/presentation/providers/uploads_provider.dart';
+import '../../../library_profile/presentation/providers/uploads_scroll_controller_provider.dart';
+import '../../../library_profile/presentation/widgets/upload_track_card.dart';
 
 class UploadsLibraryScreen extends ConsumerWidget {
   const UploadsLibraryScreen({super.key});

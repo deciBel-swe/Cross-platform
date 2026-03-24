@@ -24,22 +24,32 @@ import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
-import '../../features/library/data/repositories/image_repository_impl.dart'
-    as _i989;
-import '../../features/library/data/repositories/mock_track_repository_impl.dart'
-    as _i485;
-import '../../features/library/data/repositories/track_repository_impl.dart'
-    as _i637;
-import '../../features/library/domain/repositories/image_repository.dart'
-    as _i925;
-import '../../features/library/domain/repositories/track_repository.dart'
-    as _i252;
+import '../../features/library_profile/data/datasources/genre_data_source_remote.dart'
+    as _i271;
 import '../../features/library_profile/data/datasources/profile_remote_data_source.dart'
     as _i364;
+import '../../features/library_profile/data/datasources/track_remote_data_source.dart'
+    as _i226;
+import '../../features/library_profile/data/repositories/genre_repository_impl.dart'
+    as _i140;
+import '../../features/library_profile/data/repositories/image_repository_impl.dart'
+    as _i423;
+import '../../features/library_profile/data/repositories/mock_track_repository_impl.dart'
+    as _i690;
 import '../../features/library_profile/data/repositories/profile_repository_impl.dart'
     as _i997;
+import '../../features/library_profile/data/repositories/track_repository_impl.dart'
+    as _i928;
+import '../../features/library_profile/domain/repositories/genre_repository.dart'
+    as _i2;
+import '../../features/library_profile/domain/repositories/image_repository.dart'
+    as _i121;
 import '../../features/library_profile/domain/repositories/profile_repository.dart'
     as _i106;
+import '../../features/library_profile/domain/repositories/track_repository.dart'
+    as _i127;
+import '../../features/library_profile/domain/repositories/update_image.dart'
+    as _i728;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/mock_upload_repository_impl.dart'
@@ -69,21 +79,27 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i183.ImagePicker>(() => registerModule.imagePicker);
-    gh.lazySingleton<_i252.TrackRepository>(
-      () => _i485.MockTrackRepository(),
-      registerFor: {_mock},
-    );
     gh.lazySingleton<_i667.DioClient>(
       () => _i667.DioClient(
         gh<_i361.Dio>(),
         authInterceptor: gh<_i745.AuthInterceptor>(),
       ),
     );
+    gh.lazySingleton<_i226.ITrackRemoteDataSource>(
+      () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i271.IGenreRemoteDataSource>(
+      () => _i271.GenreRemoteDataSource(gh<_i667.DioClient>()),
+    );
     gh.factory<_i464.UploadRemoteDatasource>(
       () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i127.TrackRepository>(
+      () => _i690.MockTrackRepository(),
+      registerFor: {_mock},
     );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => const _i580.MockUploadRepository(),
@@ -105,8 +121,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),
     );
-    gh.factory<_i925.ImageRepository>(
-      () => _i989.ImageRepositoryImpl(gh<_i183.ImagePicker>()),
+    gh.factory<_i121.ImageRepository>(
+      () => _i423.ImageRepositoryImpl(gh<_i183.ImagePicker>()),
     );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i573.AuthRepository(
@@ -115,13 +131,21 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       registerFor: {_prod},
     );
-    gh.lazySingleton<_i252.TrackRepository>(
-      () => _i637.TrackRepositoryImpl(gh<_i534.LibraryRemoteDatasource>()),
-      registerFor: {_prod},
+    gh.lazySingleton<_i2.AllGenresRepository>(
+      () => _i140.AllGenresRepositoryImpl(
+        remoteDataSource: gh<_i271.IGenreRemoteDataSource>(),
+      ),
+    );
+    gh.lazySingleton<_i728.UpdateProfileImagesUseCase>(
+      () => _i728.UpdateProfileImagesUseCase(gh<_i106.ProfileRepository>()),
     );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i703.MockAuthRepository(gh<_i666.SecureStorageService>()),
       registerFor: {_mock},
+    );
+    gh.lazySingleton<_i127.TrackRepository>(
+      () => _i928.TrackRepositoryImpl(gh<_i534.LibraryRemoteDatasource>()),
+      registerFor: {_prod},
     );
     gh.lazySingleton<_i745.AuthInterceptor>(
       () => registerModule.getAuthInterceptor(gh<_i666.SecureStorageService>()),
