@@ -1,3 +1,6 @@
+/// Desktop Library screen — tabbed view (Likes, Playlists, Albums, Following).
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +14,8 @@ class LibraryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDesktop = _isDesktopLayout(context);
+
     void goToProfile() {
       context.push(RoutePaths.profile);
     }
@@ -20,16 +25,32 @@ class LibraryScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Library'),
-        actions: [
-          IconButton(onPressed: goToProfile, icon: const Icon(Icons.person)),
-          IconButton(onPressed: goToSettings, icon: const Icon(Icons.settings)),
-        ],
-      ),
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              title: const Text('Library'),
+              actions: [
+                IconButton(
+                  onPressed: goToProfile,
+                  icon: const Icon(Icons.person),
+                ),
+                IconButton(
+                  onPressed: goToSettings,
+                  icon: const Icon(Icons.settings),
+                ),
+              ],
+            ),
       body: const _LibraryTab(),
     );
   }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
 }
 
 class _LibraryTab extends StatelessWidget {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
+import '../utils/profile_image_path_utils.dart';
 
 class ProfileImageHeader extends StatelessWidget {
   const ProfileImageHeader({
@@ -17,6 +18,34 @@ class ProfileImageHeader extends StatelessWidget {
   final File? localCoverPic;
   final File? localProfilePic;
   final void Function(bool isProfilePic) onPickImage;
+
+  Widget _buildRemoteOrLocalImage({
+    required String imagePath,
+    required BoxFit fit,
+    required Widget fallback,
+    FilterQuality filterQuality = FilterQuality.low,
+  }) {
+    if (ProfileImagePathUtils.isRemote(imagePath)) {
+      return Image.network(
+        imagePath,
+        fit: fit,
+        filterQuality: filterQuality,
+        errorBuilder: (context, error, stackTrace) => fallback,
+      );
+    }
+
+    final localPath = ProfileImagePathUtils.localFilePath(imagePath);
+    if (localPath == null) {
+      return fallback;
+    }
+
+    return Image.file(
+      File(localPath),
+      fit: fit,
+      filterQuality: filterQuality,
+      errorBuilder: (context, error, stackTrace) => fallback,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,17 +75,16 @@ class ProfileImageHeader extends StatelessWidget {
                       filterQuality: FilterQuality.high,
                     )
                   : (user.profileDetails.coverPic != null
-                        ? Image.network(
-                            user.profileDetails.coverPic!,
+                        ? _buildRemoteOrLocalImage(
+                            imagePath: user.profileDetails.coverPic!,
                             fit: BoxFit.cover,
                             filterQuality: FilterQuality.high,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Center(
-                                  child: Icon(
-                                    Icons.add_a_photo,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
+                            fallback: const Center(
+                              child: Icon(
+                                Icons.add_a_photo,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
                           )
                         : const Center(
                             child: Icon(
@@ -88,17 +116,15 @@ class ProfileImageHeader extends StatelessWidget {
                           child: localProfilePic != null
                               ? Image.file(localProfilePic!, fit: BoxFit.cover)
                               : (user.profileDetails.profilePic != null
-                                    ? Image.network(
-                                        user.profileDetails.profilePic!,
+                                    ? _buildRemoteOrLocalImage(
+                                        imagePath:
+                                            user.profileDetails.profilePic!,
                                         fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                const Icon(
-                                                  Icons.person,
-                                                  size: 40,
-                                                  color:
-                                                      AppColors.textSecondary,
-                                                ),
+                                        fallback: const Icon(
+                                          Icons.person,
+                                          size: 40,
+                                          color: AppColors.textSecondary,
+                                        ),
                                       )
                                     : const Icon(
                                         Icons.person,

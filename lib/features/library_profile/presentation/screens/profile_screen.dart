@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
 import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
+import '../utils/profile_image_path_utils.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
@@ -278,7 +281,9 @@ class _ProfileCoverPhoto extends StatelessWidget {
     return SizedBox(
       height: coverHeight,
       width: double.infinity,
-      child: imageUrl != null
+      child: imageUrl == null
+          ? _buildPlaceholder()
+          : ProfileImagePathUtils.isRemote(imageUrl!)
           ? Image.network(
               imageUrl!,
               fit: BoxFit.cover,
@@ -289,7 +294,25 @@ class _ProfileCoverPhoto extends StatelessWidget {
                 return _buildPlaceholder();
               },
             )
-          : _buildPlaceholder(),
+          : Builder(
+              builder: (context) {
+                final localPath = ProfileImagePathUtils.localFilePath(
+                  imageUrl!,
+                );
+
+                if (localPath == null) {
+                  return _buildPlaceholder();
+                }
+
+                return Image.file(
+                  File(localPath),
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.high,
+                  errorBuilder: (context, error, stackTrace) =>
+                      _buildPlaceholder(),
+                );
+              },
+            ),
     );
   }
 

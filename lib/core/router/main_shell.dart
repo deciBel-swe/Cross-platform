@@ -1,13 +1,95 @@
+/// Main application shell — switches between desktop and mobile layouts.
+library;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/player/presentation/widgets/desktop_player_bar.dart';
 import '../theme/app_colors.dart';
+import 'desktop_header.dart';
+import 'desktop_sidebar.dart';
 
-/// SoundCloud-style bottom navigation shell.
+/// SoundCloud-style shell that wraps tabbed content.
 ///
-/// Wraps [StatefulNavigationShell] so each tab keeps its own navigation stack.
+/// - **Desktop (≥ 801 px):** sidebar + header + content + player bar.
+/// - **Mobile (< 801 px):** content + bottom navigation bar.
 class MainShell extends StatelessWidget {
   const MainShell({required this.navigationShell, super.key});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = _isDesktopLayout(context);
+
+    if (isDesktop) {
+      return _DesktopShell(navigationShell: navigationShell);
+    }
+
+    return _MobileShell(navigationShell: navigationShell);
+  }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Desktop layout
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DesktopShell extends StatelessWidget {
+  const _DesktopShell({required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Row(
+        children: [
+          // ---- Sidebar ----
+          DesktopSidebar(
+            currentIndex: navigationShell.currentIndex,
+            onTap: (index) => navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            ),
+          ),
+
+          // ---- Vertical divider ----
+          const VerticalDivider(
+            width: 1,
+            thickness: 0.5,
+            color: AppColors.divider,
+          ),
+
+          // ---- Content area ----
+          Expanded(
+            child: Column(
+              children: [
+                const DesktopHeader(),
+                Expanded(child: navigationShell),
+                const DesktopPlayerBar(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mobile layout
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MobileShell extends StatelessWidget {
+  const _MobileShell({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 

@@ -109,8 +109,12 @@ class MockProfileRepository implements ProfileRepository {
         bio: currentDetails.bio,
         city: currentDetails.city,
         country: currentDetails.country,
-        profilePic: profilePic?.path ?? currentDetails.profilePic,
-        coverPic: coverPic?.path ?? currentDetails.coverPic,
+        profilePic: profilePic != null
+            ? Uri.file(profilePic.path).toString()
+            : currentDetails.profilePic,
+        coverPic: coverPic != null
+            ? Uri.file(coverPic.path).toString()
+            : currentDetails.coverPic,
         favoriteGenres: currentDetails.favoriteGenres,
       ),
       socialLinks: _profile.socialLinks,

@@ -30,6 +30,15 @@ class AppColors {
   /// Used for nested elevated items like input chips
   static const Color surfaceVariant = Color(0xFF2A2A2A);
 
+  /// Backward-compatible darker brand tone for gradients.
+  static const Color primaryDark = Color(0xFFE64A00);
+
+  /// Backward-compatible lighter surface token.
+  static const Color surfaceLight = surfaceVariant;
+
+  /// Backward-compatible container surface token.
+  static const Color surfaceContainer = Color(0xFF242424);
+
   // ============ Typography & Icons ============
 
   /// Standard text and active icons

@@ -54,7 +54,9 @@ void main() {
       expect(find.byType(IconButton), findsOneWidget);
     });
 
-    testWidgets('renders all icons when all links exist', (tester) async {
+    testWidgets('renders only first two icons when many links exist', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTestWidget(
           const PublicProfileSocialLinks(
@@ -72,12 +74,13 @@ void main() {
 
       expect(find.byTooltip('instagram'), findsOneWidget);
       expect(find.byTooltip('twitter'), findsOneWidget);
-      expect(find.byTooltip('youtube'), findsOneWidget);
-      expect(find.byTooltip('tiktok'), findsOneWidget);
-      expect(find.byTooltip('linkedin'), findsOneWidget);
-      expect(find.byTooltip('snapchat'), findsOneWidget);
-      expect(find.byTooltip('facebook'), findsOneWidget);
-      expect(find.byTooltip('website'), findsOneWidget);
+      expect(find.byTooltip('youtube'), findsNothing);
+      expect(find.byTooltip('tiktok'), findsNothing);
+      expect(find.byTooltip('linkedin'), findsNothing);
+      expect(find.byTooltip('snapchat'), findsNothing);
+      expect(find.byTooltip('facebook'), findsNothing);
+      expect(find.byTooltip('website'), findsNothing);
+      expect(find.byType(IconButton), findsNWidgets(2));
     });
   });
 }
