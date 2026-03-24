@@ -1,20 +1,36 @@
-/// Desktop bottom player bar — UI only, no playback logic.
+/// Desktop bottom player bar wired to global track audio state.
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import '../../../library_profile/presentation/providers/uploads_provider.dart';
 
-/// Static player bar rendered at the bottom of the desktop layout.
-///
-/// All controls are placeholder-only — no audio playback wired yet.
-class DesktopPlayerBar extends StatelessWidget {
+/// Desktop player bar rendered at the bottom of the desktop layout.
+class DesktopPlayerBar extends ConsumerWidget {
   const DesktopPlayerBar({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioState = ref.watch(trackAudioProvider);
+    final audioNotifier = ref.read(trackAudioProvider.notifier);
+    final track = _resolveCurrentTrack(
+      tracks: ref.watch(uploadsProvider).valueOrNull,
+      trackId: audioState.preparedTrackId,
+    );
+
+    final displayedProgress = audioState.isDragging
+        ? (audioState.dragProgress ?? audioState.progress)
+        : audioState.progress;
+    final displayedPosition = audioState.isDragging
+        ? (audioState.dragPosition ?? audioState.position)
+        : audioState.position;
+
     return Container(
       height: AppDimensions.playerBarHeight,
       decoration: const BoxDecoration(
@@ -22,31 +38,73 @@ class DesktopPlayerBar extends StatelessWidget {
         border: Border(top: BorderSide(color: AppColors.divider, width: 0.5)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingLg),
-      child: const Row(
+      child: Row(
         children: [
-          // ---- Track info (left) ----
-          Expanded(flex: 3, child: _TrackInfo()),
-
-          // ---- Playback controls (center) ----
-          Expanded(flex: 4, child: _PlaybackControls()),
-
-          // ---- Volume & extras (right) ----
-          Expanded(flex: 3, child: _VolumeControls()),
+          Expanded(
+            flex: 3,
+            child: _TrackInfo(
+              title: track?.title ?? 'No track playing',
+              artist:
+                  track?.artist.username ??
+                  (audioState.isPrepared
+                      ? 'Selected track'
+                      : 'Select a track to start listening'),
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: _PlaybackControls(
+              isPrepared: audioState.isPrepared,
+              isPlaying: audioState.isPlaying,
+              progress: displayedProgress,
+              position: displayedPosition,
+              duration: audioState.duration,
+              onPlayPausePressed: () async {
+                if (!audioState.isPrepared) {
+                  return;
+                }
+                if (audioState.isPlaying) {
+                  await audioNotifier.pause();
+                } else {
+                  await audioNotifier.play();
+                }
+              },
+              onSeekStart: (_) => audioNotifier.onDragStart(),
+              onSeekChanged: audioNotifier.onDragUpdate,
+              onSeekEnd: audioNotifier.onDragEnd,
+            ),
+          ),
+          const Expanded(flex: 3, child: _VolumeControls()),
         ],
       ),
     );
   }
 }
 
-/// Left section: cover art, track title, artist.
+Track? _resolveCurrentTrack({required List<Track>? tracks, required int? trackId}) {
+  if (tracks == null || trackId == null) {
+    return null;
+  }
+
+  for (final track in tracks) {
+    if (track.id == trackId) {
+      return track;
+    }
+  }
+
+  return null;
+}
+
 class _TrackInfo extends StatelessWidget {
-  const _TrackInfo();
+  const _TrackInfo({required this.title, required this.artist});
+
+  final String title;
+  final String artist;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Cover art placeholder
         Container(
           width: 48,
           height: 48,
@@ -61,20 +119,20 @@ class _TrackInfo extends StatelessWidget {
           child: const Icon(Icons.music_note, color: Colors.white70, size: 24),
         ),
         const SizedBox(width: AppDimensions.paddingSm),
-        const Flexible(
+        Flexible(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'No track playing',
+                title,
                 style: AppTextStyles.cardTitle,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
-                'Select a track to start listening',
+                artist,
                 style: AppTextStyles.cardSubtitle,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
@@ -93,53 +151,70 @@ class _TrackInfo extends StatelessWidget {
   }
 }
 
-/// Center section: skip, play/pause, progress bar.
 class _PlaybackControls extends StatelessWidget {
-  const _PlaybackControls();
+  const _PlaybackControls({
+    required this.isPrepared,
+    required this.isPlaying,
+    required this.progress,
+    required this.position,
+    required this.duration,
+    required this.onPlayPausePressed,
+    required this.onSeekStart,
+    required this.onSeekChanged,
+    required this.onSeekEnd,
+  });
+
+  final bool isPrepared;
+  final bool isPlaying;
+  final double progress;
+  final Duration position;
+  final Duration duration;
+  final VoidCallback onPlayPausePressed;
+  final ValueChanged<double> onSeekStart;
+  final ValueChanged<double> onSeekChanged;
+  final ValueChanged<double> onSeekEnd;
 
   @override
   Widget build(BuildContext context) {
+    final sliderValue = progress.clamp(0.0, 1.0);
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // ---- Control buttons ----
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _ControlButton(icon: Icons.shuffle, size: 18, onPressed: () {}),
+            const _ControlButton(icon: Icons.shuffle, size: 18),
             const SizedBox(width: AppDimensions.paddingMd),
-            _ControlButton(
-              icon: Icons.skip_previous,
-              size: 24,
-              onPressed: () {},
-            ),
+            const _ControlButton(icon: Icons.skip_previous, size: 24),
             const SizedBox(width: AppDimensions.paddingSm),
-            // Play button (larger, filled)
-            Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-              ),
-              child: const Icon(
-                Icons.play_arrow,
-                color: AppColors.background,
-                size: 22,
+            GestureDetector(
+              onTap: isPrepared ? onPlayPausePressed : null,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isPrepared ? Colors.white : AppColors.surfaceVariant,
+                ),
+                child: Icon(
+                  isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: isPrepared ? AppColors.background : AppColors.textHint,
+                  size: 22,
+                ),
               ),
             ),
             const SizedBox(width: AppDimensions.paddingSm),
-            _ControlButton(icon: Icons.skip_next, size: 24, onPressed: () {}),
+            const _ControlButton(icon: Icons.skip_next, size: 24),
             const SizedBox(width: AppDimensions.paddingMd),
-            _ControlButton(icon: Icons.repeat, size: 18, onPressed: () {}),
+            const _ControlButton(icon: Icons.repeat, size: 18),
           ],
         ),
         const SizedBox(height: 4),
-        // ---- Progress bar ----
         Row(
           children: [
             Text(
-              '0:00',
+              _formatDuration(position),
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary,
                 fontSize: 11,
@@ -156,12 +231,17 @@ class _PlaybackControls extends StatelessWidget {
                   inactiveTrackColor: AppColors.surfaceLight,
                   thumbColor: AppColors.primary,
                 ),
-                child: Slider(value: 0, onChanged: (_) {}),
+                child: Slider(
+                  value: sliderValue,
+                  onChangeStart: isPrepared ? onSeekStart : null,
+                  onChanged: isPrepared ? onSeekChanged : null,
+                  onChangeEnd: isPrepared ? onSeekEnd : null,
+                ),
               ),
             ),
             const SizedBox(width: AppDimensions.paddingSm),
             Text(
-              '0:00',
+              _formatDuration(duration),
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary,
                 fontSize: 11,
@@ -174,7 +254,6 @@ class _PlaybackControls extends StatelessWidget {
   }
 }
 
-/// Right section: volume slider, queue, full screen.
 class _VolumeControls extends StatelessWidget {
   const _VolumeControls();
 
@@ -183,7 +262,7 @@ class _VolumeControls extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        _ControlButton(icon: Icons.queue_music, size: 20, onPressed: () {}),
+        const _ControlButton(icon: Icons.queue_music, size: 20),
         const SizedBox(width: AppDimensions.paddingSm),
         const Icon(Icons.volume_up, size: 20, color: AppColors.textSecondary),
         SizedBox(
@@ -205,17 +284,11 @@ class _VolumeControls extends StatelessWidget {
   }
 }
 
-/// Small icon button used for playback controls.
 class _ControlButton extends StatefulWidget {
-  const _ControlButton({
-    required this.icon,
-    required this.size,
-    required this.onPressed,
-  });
+  const _ControlButton({required this.icon, required this.size});
 
   final IconData icon;
   final double size;
-  final VoidCallback onPressed;
 
   @override
   State<_ControlButton> createState() => _ControlButtonState();
@@ -230,14 +303,18 @@ class _ControlButtonState extends State<_ControlButton> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: Icon(
-          widget.icon,
-          size: widget.size,
-          color: _isHovered ? Colors.white : AppColors.textSecondary,
-        ),
+      child: Icon(
+        widget.icon,
+        size: widget.size,
+        color: _isHovered ? Colors.white : AppColors.textSecondary,
       ),
     );
   }
+}
+
+String _formatDuration(Duration value) {
+  final totalSeconds = value.inSeconds;
+  final minutes = totalSeconds ~/ 60;
+  final seconds = totalSeconds % 60;
+  return '$minutes:${seconds.toString().padLeft(2, '0')}';
 }
