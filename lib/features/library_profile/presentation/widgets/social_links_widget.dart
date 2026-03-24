@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../domain/entities/public_profile_social_links.dart';
-import '../providers/web_profiles_order_provider.dart';
 import '../utils/web_profile_platform_utils.dart';
 
-class SocialLinksWidget extends ConsumerWidget {
-  const SocialLinksWidget({super.key, required this.socialLinks});
+class SocialLinksWidget extends StatelessWidget {
+  const SocialLinksWidget({
+    super.key,
+    required this.socialLinks,
+    this.maxVisibleLinks = 2,
+  }) : assert(maxVisibleLinks > 0);
 
   final PublicProfileSocialLinks socialLinks;
+  final int maxVisibleLinks;
 
   Future<void> _openLink(String url) async {
     final uri = Uri.parse(url);
@@ -20,61 +23,32 @@ class SocialLinksWidget extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final orderedPlatforms = ref.watch(orderedWebPlatformsProvider);
+  Widget build(BuildContext context) {
+    final orderedPlatforms = socialLinks.nonEmptyPlatforms(
+      includeSupportLink: true,
+    );
 
     if (orderedPlatforms.isEmpty) {
       return const SizedBox.shrink();
     }
+    final visiblePlatforms = orderedPlatforms.take(maxVisibleLinks).toList();
 
-    if (orderedPlatforms.length == 1) {
-      final platform = orderedPlatforms.first;
-      final link = socialLinks.valueForPlatform(platform)!;
-
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: WebProfilePlatformUtils.iconForPlatform(platform),
-            tooltip: platform,
-            onPressed: () => _openLink(link),
-          ),
-        ],
-      );
-    }
-
-    return SizedBox(
-      height: 56,
-      width: orderedPlatforms.length * 52.0,
-      child: ReorderableListView.builder(
-        scrollDirection: Axis.horizontal,
-        buildDefaultDragHandles: false,
-        onReorder: (oldIndex, newIndex) {
-          if (oldIndex < newIndex) {
-            newIndex -= 1;
-          }
-          final newList = List<String>.from(orderedPlatforms);
-          final item = newList.removeAt(oldIndex);
-          newList.insert(newIndex, item);
-
-          ref.read(webProfilesOrderProvider.notifier).updateOrder(newList);
-        },
-        itemCount: orderedPlatforms.length,
-        itemBuilder: (context, index) {
-          final platform = orderedPlatforms[index];
-          final link = socialLinks.valueForPlatform(platform)!;
-
-          return ReorderableDragStartListener(
-            key: ValueKey(platform),
-            index: index,
-            child: IconButton(
-              icon: WebProfilePlatformUtils.iconForPlatform(platform),
-              tooltip: platform,
-              onPressed: () => _openLink(link),
-            ),
-          );
-        },
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          children: [
+            for (final platform in visiblePlatforms)
+              IconButton(
+                icon: WebProfilePlatformUtils.iconForPlatform(platform),
+                tooltip: platform,
+                onPressed: () =>
+                    _openLink(socialLinks.valueForPlatform(platform)!),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
