@@ -10,7 +10,6 @@ import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
-import '../widgets/expandable_bio.dart';
 import '../widgets/media_collection.dart';
 import '../widgets/profile_icon.dart';
 import '../widgets/spotlight_section.dart';
@@ -152,16 +151,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Column(
                 children: [
                   Stack(
-                    clipBehavior: Clip.none, 
+                    clipBehavior: Clip.none,
                     children: [
                       _ProfileCoverPhoto(
                         imageUrl: user.profileDetails.coverPic,
                       ),
 
-                      const Positioned(bottom:- 32,child:  Padding(
-                        padding: EdgeInsets.only(left:AppConstants.spacingMedium),
-                        child: ProfileIcon(),
-                      )),
+                      const Positioned(
+                        bottom: -32,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: AppConstants.spacingMedium,
+                          ),
+                          child: ProfileIcon(),
+                        ),
+                      ),
                     ],
                   ),
                   Padding(
@@ -177,10 +181,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             return ActionButtons(socialLinks: socialLinks);
                           },
                         ),
-                        if (user.profileDetails.bio != null) ...[
-                          ExpandableBio(bio: user.profileDetails.bio!),
-                          const SizedBox(height: AppConstants.spacingSmall),
-                        ],
                         const SizedBox(height: AppConstants.spacingRegular),
                         Tile(
                           title: AppConstants.spotlightTitle,

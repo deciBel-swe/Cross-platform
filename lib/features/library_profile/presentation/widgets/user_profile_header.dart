@@ -2,19 +2,25 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
-
+import 'expandable_bio.dart';
 
 class UserProfileHeader extends StatelessWidget {
-  const UserProfileHeader({required this.user,super.key});
+  const UserProfileHeader({required this.user, super.key});
 
   final UserProfile user;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final locationStr = (user.profileDetails.city != null && user.profileDetails.country != null)
-        ? '${user.profileDetails.city}, ${user.profileDetails.country}'
-        : AppConstants.noLocation;
+    final city = user.profileDetails.city?.trim() ?? '';
+    final country = user.profileDetails.country?.trim() ?? '';
+    final locationStr = switch ((city.isNotEmpty, country.isNotEmpty)) {
+      (true, true) => '$city, $country',
+      (true, false) => city,
+      (false, true) => country,
+      (false, false) => AppConstants.noLocation,
+    };
+    final bio = user.profileDetails.bio?.trim() ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -26,6 +32,11 @@ class UserProfileHeader extends StatelessWidget {
             color: AppColors.onPrimary,
           ),
         ),
+        if (bio.isNotEmpty) ...[
+          const SizedBox(height: AppConstants.spacingSmall),
+          ExpandableBio(bio: bio),
+        ],
+        const SizedBox(height: AppConstants.spacingSmall),
         Text(
           locationStr,
           style: textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
@@ -40,7 +51,9 @@ class UserProfileHeader extends StatelessWidget {
               onTap: () {},
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingTiny),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.spacingTiny,
+              ),
               child: Text(
                 AppConstants.statSeparator,
                 style: textTheme.bodyMedium?.copyWith(
@@ -49,7 +62,7 @@ class UserProfileHeader extends StatelessWidget {
               ),
             ),
             _StatButton(
-              count: user.stats.following, 
+              count: user.stats.following,
               label: AppConstants.following,
               onTap: () {},
             ),
@@ -80,7 +93,9 @@ class _StatButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingTiny),
         child: RichText(
           text: TextSpan(
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
             children: [
               TextSpan(
                 text: '$count ',
