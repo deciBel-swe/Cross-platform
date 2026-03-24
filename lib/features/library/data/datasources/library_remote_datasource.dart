@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/network/dio_client.dart';
@@ -79,14 +82,7 @@ class LibraryRemoteDatasource {
   }
 
   Future<TrackPeaksModel> fetchTrackPeaks(int id) async {
-    final response = await _dioClient.get<Object?>('/tracks/$id/waveform-url');
-
-    final data = response.data;
-    if (data == null) {
-      throw Exception('Empty response');
-    }
-
-    final waveformUrl = _extractWaveformUrl(data);
+    final waveformUrl = await _resolveWaveformUrl(id);
     if (waveformUrl == null || waveformUrl.trim().isEmpty) {
       throw Exception('Empty waveformUrl');
     }
@@ -96,21 +92,190 @@ class LibraryRemoteDatasource {
     if (peaksData == null) {
       throw Exception('Empty waveform payload');
     }
+    debugPrint(
+      'WaveformDebug blob raw payload type=${peaksData.runtimeType}: $peaksData',
+    );
 
-    if (peaksData is! Map<String, dynamic>) {
+    final normalizedPayload = _normalizeTrackPeaksPayload(
+      trackId: id,
+      payload: peaksData,
+    );
+
+    if (normalizedPayload == null) {
       throw Exception('Invalid waveform payload');
     }
 
-    return TrackPeaksModel.fromJson(peaksData);
+    final normalizedPeaks = normalizedPayload['peaks'];
+    final normalizedCount = normalizedPeaks is List
+        ? normalizedPeaks.length
+        : 'unknown';
+    debugPrint(
+      'WaveformDebug blob normalized peaks (count=$normalizedCount): $normalizedPeaks',
+    );
+
+    return TrackPeaksModel.fromJson(normalizedPayload);
   }
 
-  String? _extractWaveformUrl(Object? payload) {
-    if (payload is Map<String, dynamic>) {
-      final url = payload['waveformUrl'];
-      if (url is String && url.trim().isNotEmpty) return url;
+  Future<String?> _resolveWaveformUrl(int id) async {
+    try {
+      final response = await _dioClient.get<Object?>(
+        '/tracks/$id/waveform-url',
+      );
+      final data = response.data;
+      final extracted = data == null ? null : _extractWaveformUrl(data);
+      if (extracted != null && extracted.trim().isNotEmpty) {
+        return extracted;
+      }
+    } catch (_) {}
+
+    try {
+      final track = await fetchTrackById(id);
+      final fallback = track.waveformUrl;
+      if (fallback != null && fallback.trim().isNotEmpty) {
+        return fallback;
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
+  Map<String, dynamic>? _normalizeTrackPeaksPayload({
+    required int trackId,
+    required Object payload,
+  }) {
+    if (payload is String) {
+      final decoded = _tryDecodeJson(payload);
+      if (decoded == null) return null;
+      return _normalizeTrackPeaksPayload(trackId: trackId, payload: decoded);
+    }
+
+    if (payload is List) {
+      final values = _extractNumericValues(payload);
+      if (values.isEmpty) return null;
+
+      return {
+        'trackId': trackId,
+        'duration': 0,
+        'peaks': _toModelPeaks(values),
+      };
+    }
+
+    if (payload is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final values = _extractPeaksValues(payload);
+    if (values == null || values.isEmpty) {
+      return null;
+    }
+
+    final normalizedTrackId = (payload['trackId'] as num?)?.toInt() ?? trackId;
+    final normalizedDuration =
+        (payload['duration'] as num?)?.toInt() ??
+        (payload['durationSeconds'] as num?)?.toInt() ??
+        0;
+
+    return {
+      'trackId': normalizedTrackId,
+      'duration': normalizedDuration,
+      'peaks': _toModelPeaks(values),
+    };
+  }
+
+  List<double>? _extractPeaksValues(Map<String, dynamic> payload) {
+    final directKeys = <String>['peaks', 'waveformData', 'waveform', 'samples'];
+    for (final key in directKeys) {
+      final value = payload[key];
+      if (value is List) {
+        final parsed = _extractNumericValues(value);
+        if (parsed.isNotEmpty) return parsed;
+      }
+    }
+
+    final nestedData = payload['data'];
+    if (nestedData is List) {
+      final parsed = _extractNumericValues(nestedData);
+      if (parsed.isNotEmpty) return parsed;
     }
 
     return null;
+  }
+
+  List<double> _extractNumericValues(List<dynamic> source) {
+    return source
+        .whereType<num>()
+        .map((value) => value.toDouble())
+        .where((value) => value.isFinite)
+        .toList(growable: false);
+  }
+
+  List<int> _toModelPeaks(List<double> source) {
+    if (source.isEmpty) return const <int>[];
+
+    final maxPeak = source.reduce((a, b) => a > b ? a : b);
+    if (maxPeak <= 1.0) {
+      // Preserve sub-1.0 detail because model currently stores integer peaks.
+      return source
+          .map((value) => (value * 1000).round())
+          .toList(growable: false);
+    }
+
+    return source.map((value) => value.round()).toList(growable: false);
+  }
+
+  String? _extractWaveformUrl(Object? payload) {
+    if (payload is String) {
+      final trimmed = payload.trim();
+      if (trimmed.isEmpty) return null;
+
+      if (_looksLikeJson(trimmed)) {
+        final decoded = _tryDecodeJson(trimmed);
+        if (decoded == null) return null;
+        return _extractWaveformUrl(decoded);
+      }
+
+      final unquoted = _stripWrappingQuotes(trimmed);
+      if (unquoted.isNotEmpty) {
+        return unquoted;
+      }
+      return null;
+    }
+
+    if (payload is Map<String, dynamic>) {
+      final direct = payload['waveformUrl'] ?? payload['url'];
+      if (direct is String && direct.trim().isNotEmpty) return direct;
+
+      final nested = payload['data'];
+      if (nested is Map<String, dynamic>) {
+        final nestedUrl = nested['waveformUrl'] ?? nested['url'];
+        if (nestedUrl is String && nestedUrl.trim().isNotEmpty) {
+          return nestedUrl;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  Object? _tryDecodeJson(String source) {
+    try {
+      return jsonDecode(source);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _looksLikeJson(String value) {
+    if (value.isEmpty) return false;
+    final first = value[0];
+    return first == '[' || first == '{' || first == '"';
+  }
+
+  String _stripWrappingQuotes(String value) {
+    if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
+      return value.substring(1, value.length - 1).trim();
+    }
+    return value;
   }
 
   String? _normalizeTrackStatus(Object? payload) {

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
@@ -31,6 +32,9 @@ class UploadRemoteDatasource {
             .map((value) => (value as num).toDouble().toStringAsFixed(4))
             .join(',');
         dataMap['waveformData'] = '[$waveformValues]';
+        debugPrint(
+          'WaveformDebug upload payload (count=${waveformRaw.length}): ${dataMap['waveformData']}',
+        );
       }
 
       if (tagsRaw is List) {

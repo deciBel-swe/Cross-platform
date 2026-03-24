@@ -228,7 +228,10 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         final waveformService = ref.read(waveformExtractionServiceProvider);
         waveFormData = await waveformService.extractWaveform(
           file.path,
-          noOfSamples: 8,
+          noOfSamples: 100,
+        );
+        debugPrint(
+          'WaveformDebug extracted (count=${waveFormData.length}): $waveFormData',
         );
       } catch (e) {
         waveFormData = [];
