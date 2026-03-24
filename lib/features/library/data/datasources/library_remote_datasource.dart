@@ -1,16 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/constants/mock_config.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/paginated_tracks_model.dart';
 import '../models/track_model.dart';
 import '../models/track_peaks_model.dart';
 
 /// Remote datasource for the Library feature.
-
-/// NOTE: While backend is not ready, this datasource must not hit the network
-/// when [MockConfig.useMockData] is true.
 @lazySingleton
 class LibraryRemoteDatasource {
   LibraryRemoteDatasource(this._dioClient);

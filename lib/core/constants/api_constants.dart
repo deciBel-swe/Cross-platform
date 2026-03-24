@@ -12,6 +12,7 @@ class ApiConstants {
   static const String updateProfile = '/users/me';
 
   /// Endpoint for patching the current user's social links
+  /// Note: this doesn't work now we are using patch /users/me with full profile payload, but keeping it here for reference in case we want to split social links into a separate endpoint in the future
   static const String updateSocialLinks = '/users/me/social-links';
 
   /// Step 1: Triggers Google login in browser

@@ -26,22 +26,6 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
     SocialLinksModel linksModel,
   ) async {
     try {
-      final unsupportedPlatforms = <String>[
-        if ((linksModel.facebook ?? '').trim().isNotEmpty) 'facebook',
-        if ((linksModel.youtube ?? '').trim().isNotEmpty) 'youtube',
-        if ((linksModel.tiktok ?? '').trim().isNotEmpty) 'tiktok',
-        if ((linksModel.linkedin ?? '').trim().isNotEmpty) 'linkedin',
-        if ((linksModel.snapchat ?? '').trim().isNotEmpty) 'snapchat',
-      ];
-
-      if (unsupportedPlatforms.isNotEmpty) {
-        throw ServerException(
-          'These platforms are not supported by the current API: '
-          '${unsupportedPlatforms.join(', ')}. '
-          'Supported platforms: instagram, twitter, website, supportLink.',
-        );
-      }
-
       final payload = <String, dynamic>{
         if ((linksModel.instagram ?? '').trim().isNotEmpty)
           'instagram': linksModel.instagram!.trim(),
@@ -53,9 +37,20 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
           'supportLink': linksModel.supportLink!.trim(),
       };
 
+      final currentProfile = await getUserProfile();
+      final profileDetails = currentProfile.profileDetails;
+
+      final updateMePayload = <String, dynamic>{
+        'bio': profileDetails.bio ?? '',
+        'city': profileDetails.city ?? '',
+        'country': profileDetails.country ?? '',
+        'favoriteGenres': profileDetails.favoriteGenres,
+        'socialLinks': payload,
+      };
+
       final response = await _dioClient.patch<dynamic>(
-        ApiConstants.updateSocialLinks,
-        data: payload,
+        ApiConstants.updateProfile,
+        data: updateMePayload,
       );
 
       final data = response.data as Map<String, dynamic>?;
@@ -69,7 +64,25 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         throw const ServerException('Invalid social links response format');
       }
 
-      return SocialLinksModel.fromJson(responseData);
+      var normalizedLinksPayload = _extractSocialLinksPayload(
+        responseData: responseData,
+      );
+
+      if (!_containsAllRequestedLinks(normalizedLinksPayload, payload)) {
+        final refreshedProfile = await getUserProfile();
+        final refreshedLinks =
+            refreshedProfile.socialLinks?.toJson() ?? const <String, dynamic>{};
+
+        if (!_containsAllRequestedLinks(refreshedLinks, payload)) {
+          throw const ServerException(
+            'Social links were not persisted by backend',
+          );
+        }
+
+        normalizedLinksPayload = refreshedLinks;
+      }
+
+      return SocialLinksModel.fromJson(normalizedLinksPayload);
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized to update social links');
@@ -122,17 +135,7 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       final Map<String, dynamic> responseData = data['data'] != null
           ? data['data'] as Map<String, dynamic>
           : data;
-      final Object? socialLinksDto = responseData['socialLinksDto'];
-      final List<Object?> socialLinksList = socialLinksDto is List
-          ? socialLinksDto.cast<Object?>()
-          : const <Object?>[];
-      final Map<String, dynamic>? normalizedSocialLinks =
-          socialLinksDto is Map<String, dynamic>
-          ? socialLinksDto
-          : socialLinksList.isNotEmpty &&
-                socialLinksList.first is Map<String, dynamic>
-          ? socialLinksList.first as Map<String, dynamic>
-          : null;
+      final normalizedSocialLinks = _extractProfileSocialLinks(responseData);
 
       final Map<String, dynamic> normalizedResponse = {
         ...responseData,
@@ -166,6 +169,126 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       return 'USER';
     }
     return roleValue.toString();
+  }
+
+  Map<String, dynamic> _extractSocialLinksPayload({
+    required Map<String, dynamic> responseData,
+  }) {
+    final socialLinks = responseData['socialLinks'];
+    if (socialLinks is Map<String, dynamic>) {
+      return socialLinks;
+    }
+
+    final socialLinksDto = responseData['socialLinksDto'];
+    if (socialLinksDto is Map<String, dynamic>) {
+      return socialLinksDto;
+    }
+
+    if (socialLinksDto is List) {
+      final mergedFromList = <String, dynamic>{};
+
+      for (final item in socialLinksDto.whereType<Map<String, dynamic>>()) {
+        if (item.keys.any((key) => _isSupportedSocialKey(key))) {
+          for (final entry in item.entries) {
+            if (_isSupportedSocialKey(entry.key) &&
+                entry.value is String &&
+                (entry.value as String).trim().isNotEmpty) {
+              mergedFromList[entry.key] = (entry.value as String).trim();
+            }
+          }
+          continue;
+        }
+
+        final platform =
+            item['platform']?.toString() ?? item['name']?.toString();
+        final url = item['url']?.toString() ?? item['link']?.toString();
+
+        if (platform != null &&
+            url != null &&
+            _isSupportedSocialKey(platform) &&
+            url.trim().isNotEmpty) {
+          mergedFromList[platform] = url.trim();
+        }
+      }
+
+      if (mergedFromList.isNotEmpty) {
+        return mergedFromList;
+      }
+    }
+
+    return const <String, dynamic>{};
+  }
+
+  bool _isSupportedSocialKey(String key) {
+    const supported = <String>{
+      'instagram',
+      'twitter',
+      'website',
+      'supportLink',
+    };
+    return supported.contains(key);
+  }
+
+  Map<String, dynamic>? _extractProfileSocialLinks(
+    Map<String, dynamic> responseData,
+  ) {
+    final socialLinks = responseData['socialLinks'];
+    if (socialLinks is Map<String, dynamic> && socialLinks.isNotEmpty) {
+      return socialLinks;
+    }
+
+    final socialLinksDto = responseData['socialLinksDto'];
+    if (socialLinksDto is Map<String, dynamic> && socialLinksDto.isNotEmpty) {
+      return socialLinksDto;
+    }
+
+    if (socialLinksDto is List) {
+      final mergedFromList = <String, dynamic>{};
+
+      for (final item in socialLinksDto.whereType<Map<String, dynamic>>()) {
+        if (item.keys.any((key) => _isSupportedSocialKey(key))) {
+          for (final entry in item.entries) {
+            if (_isSupportedSocialKey(entry.key) &&
+                entry.value is String &&
+                (entry.value as String).trim().isNotEmpty) {
+              mergedFromList[entry.key] = (entry.value as String).trim();
+            }
+          }
+          continue;
+        }
+
+        final platform =
+            item['platform']?.toString() ?? item['name']?.toString();
+        final url = item['url']?.toString() ?? item['link']?.toString();
+
+        if (platform != null &&
+            url != null &&
+            _isSupportedSocialKey(platform) &&
+            url.trim().isNotEmpty) {
+          mergedFromList[platform] = url.trim();
+        }
+      }
+
+      if (mergedFromList.isNotEmpty) {
+        return mergedFromList;
+      }
+    }
+
+    return null;
+  }
+
+  bool _containsAllRequestedLinks(
+    Map<String, dynamic> persisted,
+    Map<String, dynamic> requested,
+  ) {
+    for (final entry in requested.entries) {
+      final persistedValue = persisted[entry.key]?.toString().trim();
+      final requestedValue = entry.value.toString().trim();
+      if (persistedValue != requestedValue) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @override

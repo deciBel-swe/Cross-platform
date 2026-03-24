@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../providers/web_profiles_order_provider.dart';
 import '../providers/web_profiles_provider.dart';
 import '../utils/web_profile_platform_utils.dart';
@@ -30,8 +31,22 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
     return uri != null && uri.hasScheme && uri.hasAuthority;
   }
 
-  Future<void> _saveLink() async {
-    final link = _linkController.text.trim();
+  String _normalizeUrl(String rawLink) {
+    final trimmed = rawLink.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+
+    final parsed = Uri.tryParse(trimmed);
+    if (parsed != null && parsed.hasScheme) {
+      return trimmed;
+    }
+
+    return 'https://$trimmed';
+  }
+
+  Future<void> _addLink() async {
+    final link = _normalizeUrl(_linkController.text);
     final notifier = ref.read(webProfilesProvider.notifier);
     final socialLinks = ref.read(webProfilesProvider);
 
@@ -80,8 +95,7 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
       return;
     }
 
-    final synced = await notifier.saveLink(link);
-
+    final added = notifier.addLinkLocally(link);
     final platform = notifier.getPlatformKey(link);
     ref.read(webProfilesOrderProvider.notifier).addPlatformIfMissing(platform);
 
@@ -90,9 +104,9 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          synced
-              ? 'Link saved successfully'
-              : 'Failed to save link. Please try again.',
+          added
+              ? 'Link added. Tap Save at top-right to persist.'
+              : 'Failed to add link. Please try again.',
         ),
       ),
     );
@@ -144,16 +158,16 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
       return;
     }
 
+    final deleted = notifier.deleteLinkLocally(link);
     final platform = notifier.getPlatformKey(link);
-    final synced = await notifier.deleteLink(link);
     ref.read(webProfilesOrderProvider.notifier).removePlatform(platform);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          synced
-              ? 'Link deleted successfully'
+          deleted
+              ? 'Link removed. Tap Save'
               : 'Failed to delete link. Please try again.',
         ),
       ),
@@ -178,49 +192,58 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
     final socialLinks = ref.watch(webProfilesProvider);
     final orderedPlatforms = ref.watch(orderedWebPlatformsProvider);
 
-    return 
-    // Scaffold(
-      // appBar: AppBar(title: const Text('Web Profiles')),
-      // body: 
-      Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: _linkController,
-                decoration: const InputDecoration(
-                  labelText: 'Add new link',
-                  hintText: 'https://example.com',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.url,
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _saveLink,
-                  child: const Text('Save'),
-                ),
-              ),
-              const SizedBox(height: 30),
-              if (orderedPlatforms.isNotEmpty) ...[
-                const Text(
-                  'Current Links',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                ...orderedPlatforms.map((platform) {
-                  final link = socialLinks.valueForPlatform(platform)!;
-                  return _buildLinkRow(platform: platform, link: link);
-                }),
-              ],
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.background.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Web links',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
-        ),
-      // ),
+          const SizedBox(height: 6),
+          const Text(
+            'Add up to 3 links. Changes are saved from top-right Save.',
+            style: TextStyle(fontSize: 12, color: Colors.white70),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _linkController,
+            decoration: const InputDecoration(
+              labelText: 'Link URL',
+              hintText: 'https://example.com',
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.url,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _addLink,
+              icon: const Icon(Icons.add),
+              label: const Text('Add link'),
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (orderedPlatforms.isNotEmpty) ...[
+            const Text(
+              'Current links',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+            ...orderedPlatforms.map((platform) {
+              final link = socialLinks.valueForPlatform(platform)!;
+              return _buildLinkRow(platform: platform, link: link);
+            }),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -277,8 +300,22 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
     });
   }
 
+  String _normalizeUrl(String rawLink) {
+    final trimmed = rawLink.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+
+    final parsed = Uri.tryParse(trimmed);
+    if (parsed != null && parsed.hasScheme) {
+      return trimmed;
+    }
+
+    return 'https://$trimmed';
+  }
+
   Future<void> _saveInlineEdit() async {
-    final newLink = _controller.text.trim();
+    final newLink = _normalizeUrl(_controller.text);
     final notifier = ref.read(webProfilesProvider.notifier);
 
     if (!mounted) return;
@@ -328,7 +365,7 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
       return;
     }
 
-    final synced = await notifier.editLink(widget.link, newLink);
+    final edited = notifier.editLinkLocally(widget.link, newLink);
 
     setState(() {
       _isEditing = false;
@@ -339,8 +376,8 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          synced
-              ? 'Link updated successfully'
+          edited
+              ? 'Link updated. Tap Save at top-right to persist.'
               : 'Failed to update link. Please try again.',
         ),
       ),
@@ -349,12 +386,18 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          widget.platformIcon,
+          SizedBox(width: 22, child: widget.platformIcon),
           const SizedBox(width: 10),
           Expanded(
             child: _isEditing
@@ -369,12 +412,10 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
                       isDense: true,
                     ),
                   )
-                : Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Text(
-                      widget.link,
-                      style: const TextStyle(fontSize: 15),
-                    ),
+                : Text(
+                    widget.link,
+                    style: const TextStyle(fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
                   ),
           ),
           if (!_isEditing)
@@ -392,7 +433,7 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
             IconButton(
               onPressed: _saveInlineEdit,
               icon: const Icon(Icons.check, color: Colors.green),
-              tooltip: 'Save',
+              tooltip: 'Apply',
             ),
           if (_isEditing)
             IconButton(

@@ -48,6 +48,43 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
         WebProfilePlatformUtils.detectPlatform(newLink);
   }
 
+  bool addLinkLocally(String rawLink) {
+    final link = rawLink.trim();
+    if (link.isEmpty) return false;
+
+    final platform = WebProfilePlatformUtils.detectPlatform(link);
+    state = state.copyWithPlatform(platform, link);
+    return true;
+  }
+
+  bool editLinkLocally(String oldLink, String newLink) {
+    final trimmedOld = oldLink.trim();
+    final trimmedNew = newLink.trim();
+
+    if (trimmedOld.isEmpty || trimmedNew.isEmpty) return false;
+
+    final oldPlatform = WebProfilePlatformUtils.detectPlatform(trimmedOld);
+    final newPlatform = WebProfilePlatformUtils.detectPlatform(trimmedNew);
+
+    if (oldPlatform == newPlatform) {
+      state = state.copyWithPlatform(oldPlatform, trimmedNew);
+      return true;
+    }
+
+    final nextState = state.copyWithPlatform(oldPlatform, null);
+    state = nextState.copyWithPlatform(newPlatform, trimmedNew);
+    return true;
+  }
+
+  bool deleteLinkLocally(String rawLink) {
+    final link = rawLink.trim();
+    if (link.isEmpty) return false;
+
+    final platform = WebProfilePlatformUtils.detectPlatform(link);
+    state = state.copyWithPlatform(platform, null);
+    return true;
+  }
+
   Future<bool> saveLink(String rawLink) async {
     final link = rawLink.trim();
     if (link.isEmpty) return false;

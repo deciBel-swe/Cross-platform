@@ -11,10 +11,10 @@ import '../../domain/entities/user_profile.dart';
 import '../providers/profile_edit_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
-import '../widgets/genre_selector.dart'; 
-import '../widgets/profile_image_header.dart'; 
+import '../widgets/genre_selector.dart';
+import '../widgets/profile_image_header.dart';
 import '../widgets/profile_text_field.dart';
-import 'web_profiles.dart'; 
+import 'web_profiles.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -31,7 +31,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _countryController;
 
   late List<String> _selectedGenres;
-  late PublicProfileSocialLinks? _socialLinks;
   late UserProfile? _user;
 
   @override
@@ -42,8 +41,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         .read(userProfileProvider)
         .value;
     _user = userState?.fold((failure) => null, (profile) => profile);
-
-    _socialLinks = ref.read(webProfilesProvider);
 
     _bioController = TextEditingController(text: _user?.profileDetails.bio);
     _cityController = TextEditingController(text: _user?.profileDetails.city);
@@ -64,7 +61,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
-  bool _hasChanges(UserProfile? user) {
+  bool _hasChanges(
+    UserProfile? user,
+    PublicProfileSocialLinks currentSocialLinks,
+  ) {
     if (user == null) return true; // Safety check
 
     final originalBio = user.profileDetails.bio;
@@ -81,23 +81,39 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         _selectedGenres.length != originalGenres.length ||
         !_selectedGenres.every((g) => originalGenres.contains(g));
 
-    return textChanged || genresChanged;
+    final originalSocialLinks =
+        user.socialLinks ?? const PublicProfileSocialLinks();
+    final socialLinksChanged = PublicProfileSocialLinks.allPlatforms.any((
+      platform,
+    ) {
+      final original =
+          originalSocialLinks.valueForPlatform(platform)?.trim() ?? '';
+      final current =
+          currentSocialLinks.valueForPlatform(platform)?.trim() ?? '';
+      return original != current;
+    });
+
+    return textChanged || genresChanged || socialLinksChanged;
   }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (!_hasChanges(_user)) {
+    final currentSocialLinks = ref.read(webProfilesProvider);
+
+    if (!_hasChanges(_user, currentSocialLinks)) {
       context.pop();
       return;
     }
 
-    ref.read(profileEditNotifierProvider.notifier).updateGeneralInfo(
+    ref
+        .read(profileEditNotifierProvider.notifier)
+        .updateGeneralInfo(
           bio: _bioController.text.trim(),
           city: _cityController.text.trim(),
           country: _countryController.text.trim(),
           genres: _selectedGenres,
-          socialLinks: _socialLinks!, 
+          socialLinks: currentSocialLinks,
         );
   }
 
@@ -109,8 +125,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           const SnackBar(content: Text('Profile updated successfully!')),
         );
         context.pop();
-      }
-      else if (previous is AsyncLoading && next is AsyncError) {
+      } else if (previous is AsyncLoading && next is AsyncError) {
         final errorStr = next.error.toString();
         String cleanMessage = 'Failed to update profile.';
 
@@ -280,7 +295,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       },
                     ),
                     const SizedBox(height: 40),
-                    const EditProfileLinkScreen()
+                    const EditProfileLinkScreen(),
                   ],
                 ),
               ),
