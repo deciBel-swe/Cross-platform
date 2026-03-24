@@ -1,4 +1,10 @@
+/// Desktop Home screen — SoundCloud-style with horizontal carousels.
+library;
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/router/route_paths.dart';
 
 /// Empty Home page – placeholder.
 class HomeScreen extends StatelessWidget {
@@ -6,8 +12,31 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Home', style: TextStyle(fontSize: 24))),
+    final isDesktop = _isDesktopLayout(context);
+
+    return Scaffold(
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              title: const Text('Home'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.cloud_upload),
+                  onPressed: () {
+                    context.push(RoutePaths.upload);
+                  },
+                ),
+              ],
+            ),
+      body: const Center(child: Text('Home', style: TextStyle(fontSize: 24))),
     );
   }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
 }

@@ -1,8 +1,69 @@
-/// GetIt + Injectable service locator setup.
-library;
 import 'package:get_it/get_it.dart';
+import 'package:injectable/injectable.dart';
+
+import '../../features/library_profile/data/repositories/mock_genre_repository_impl.dart';
+import '../../features/library_profile/data/repositories/mock_profile_repository_impl.dart';
+import '../../features/library_profile/domain/repositories/genre_repository.dart';
+import '../../features/library_profile/domain/repositories/profile_repository.dart';
+import '../../features/settings/data/repositories/app_icon_repository_impl.dart';
+import '../../features/settings/data/repositories/mock_social_settings_repository_impl.dart';
+import '../../features/settings/data/repositories/social_settings_repository_impl.dart';
+import '../../features/settings/domain/repositories/app_icon_repository.dart';
+import '../../features/settings/domain/repositories/social_settings_repository.dart';
+import '../network/dio_client.dart';
+import '../storage/shared_prefs_service.dart';
+import 'injection.config.dart';
 
 final GetIt getIt = GetIt.instance;
 
-/// Call this before runApp() to register all dependencies.
-Future<void> configureDependencies() async {}
+@InjectableInit(
+  initializerName: 'init',
+  preferRelativeImports: true,
+  asExtension: true,
+)
+void configureDependencies({required bool useMockServices}) {
+  final environment = useMockServices ? 'mock' : Environment.prod;
+  getIt.init(environment: environment);
+  _registerManualDependencies(useMockServices: useMockServices);
+}
+
+void _registerManualDependencies({required bool useMockServices}) {
+  if (!getIt.isRegistered<SharedPrefsService>()) {
+    getIt.registerLazySingleton<SharedPrefsService>(SharedPrefsService.new);
+  }
+
+  if (!getIt.isRegistered<AppIconRepository>()) {
+    getIt.registerLazySingleton<AppIconRepository>(
+      () => AppIconRepositoryImpl(getIt<SharedPrefsService>()),
+    );
+  }
+
+  if (getIt.isRegistered<SocialSettingsRepository>()) {
+    getIt.unregister<SocialSettingsRepository>();
+  }
+
+  if (useMockServices) {
+    getIt.registerLazySingleton<SocialSettingsRepository>(
+      () => MockSocialSettingsRepository(getIt<SharedPrefsService>()),
+    );
+
+    if (getIt.isRegistered<ProfileRepository>()) {
+      getIt.unregister<ProfileRepository>();
+    }
+    getIt.registerLazySingleton<ProfileRepository>(MockProfileRepository.new);
+
+    if (getIt.isRegistered<AllGenresRepository>()) {
+      getIt.unregister<AllGenresRepository>();
+    }
+    getIt.registerLazySingleton<AllGenresRepository>(
+      MockAllGenresRepository.new,
+    );
+  } else {
+    getIt.registerLazySingleton<SocialSettingsRepository>(
+      () => SocialSettingsRepositoryImpl(
+        getIt<DioClient>(),
+        getIt<SharedPrefsService>(),
+      ),
+    );
+  }
+}
