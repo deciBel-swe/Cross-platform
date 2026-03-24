@@ -16,11 +16,11 @@ class HomeScreen extends StatelessWidget {
     final isDesktop = ResponsiveBreakpoints.of(context).isDesktop;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: isDesktop
-            ? null
-            : [
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              title: const Text('Home'),
+              actions: [
                 IconButton(
                   icon: const Icon(Icons.cloud_upload),
                   onPressed: () {
@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
               ],
-      ),
+            ),
       body: const Center(child: Text('Home', style: TextStyle(fontSize: 24))),
     );
   }

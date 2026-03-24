@@ -5,7 +5,7 @@ class AppDimensions {
   AppDimensions._();
 
   // ---- Sidebar ----
-  static const double sidebarWidth = 240;
+  static const double sidebarWidth = 200;
   static const double sidebarCollapsedWidth = 56;
   static const double sidebarItemHeight = 44;
   static const double sidebarLogoSize = 32;

@@ -26,11 +26,11 @@ class LibraryScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Library'),
-        actions: isDesktop
-            ? null
-            : [
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              title: const Text('Library'),
+              actions: [
                 IconButton(
                   onPressed: goToProfile,
                   icon: const Icon(Icons.person),
@@ -40,7 +40,7 @@ class LibraryScreen extends ConsumerWidget {
                   icon: const Icon(Icons.settings),
                 ),
               ],
-      ),
+            ),
       body: const _LibraryTab(),
     );
   }

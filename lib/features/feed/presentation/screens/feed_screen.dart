@@ -35,6 +35,13 @@ class FeedScreen extends StatelessWidget {
                 trackTitle: item.trackTitle,
                 trackArtist: item.trackArtist,
                 timeAgo: item.timeAgo,
+                genre: item.genre,
+                likes: item.likes,
+                reposts: item.reposts,
+                plays: item.plays,
+                comments: item.comments,
+                duration: item.duration,
+                waveformPeaks: item.waveformPeaks,
                 gradientColors: item.colors,
               ),
             ),
@@ -48,86 +55,86 @@ class FeedScreen extends StatelessWidget {
 // ---- Mock data ----
 
 class _MockFeed {
-  const _MockFeed({
+  _MockFeed({
     required this.userName,
     required this.action,
     required this.trackTitle,
     required this.trackArtist,
     required this.timeAgo,
+    required this.genre,
+    required this.likes,
+    required this.reposts,
+    required this.plays,
+    required this.comments,
+    required this.duration,
     required this.colors,
-  });
+  }) : waveformPeaks = _buildMockPeaks(seed: '$userName$trackTitle'.hashCode);
 
   final String userName;
   final String action;
   final String trackTitle;
   final String trackArtist;
   final String timeAgo;
+  final String genre;
+  final String likes;
+  final String reposts;
+  final String plays;
+  final String comments;
+  final String duration;
   final List<Color> colors;
+  final List<double> waveformPeaks;
 }
 
-const _mockFeedItems = [
+final _mockFeedItems = [
   _MockFeed(
-    userName: 'Aurora',
-    action: 'uploaded a new track',
-    trackTitle: 'Northern Lights',
-    trackArtist: 'Aurora',
-    timeAgo: '2h',
-    colors: [Color(0xFF006064), Color(0xFF00838F)],
+    userName: 'Bad-Bunny',
+    action: 'posted a track',
+    trackTitle: 'Super Bowl LX Halftime Show (Live)',
+    trackArtist: 'Bad Bunny, NFL',
+    timeAgo: '1 month ago',
+    genre: 'Latin',
+    likes: '6,877',
+    reposts: '296',
+    plays: '162K',
+    comments: '718',
+    duration: '13:41',
+    colors: [const Color(0xFF1E88E5), const Color(0xFFF4511E)],
   ),
   _MockFeed(
-    userName: 'SynthWave',
-    action: 'reposted',
-    trackTitle: 'Midnight Drive',
-    trackArtist: 'RetroFuture',
-    timeAgo: '3h',
-    colors: [Color(0xFF1A237E), Color(0xFF0D47A1)],
+    userName: 'Gunna',
+    action: 'posted a track',
+    trackTitle: 'wgft (Remix) [feat. Chris Brown]',
+    trackArtist: 'Gunna',
+    timeAgo: '2 months ago',
+    genre: 'Rap/Hip Hop',
+    likes: '17.9K',
+    reposts: '144',
+    plays: '705K',
+    comments: '195',
+    duration: '3:07',
+    colors: [const Color(0xFF3E2723), const Color(0xFF6D4C41)],
   ),
   _MockFeed(
-    userName: 'ChillHop',
-    action: 'liked',
-    trackTitle: 'Ocean Breeze',
-    trackArtist: 'LoFi Beats',
-    timeAgo: '5h',
-    colors: [Color(0xFF00695C), Color(0xFF00897B)],
-  ),
-  _MockFeed(
-    userName: 'EDM Collective',
-    action: 'uploaded a new track',
-    trackTitle: 'Bass Drop 2.0',
-    trackArtist: 'EDM Collective',
-    timeAgo: '8h',
-    colors: [Color(0xFFD50000), Color(0xFFFF1744)],
-  ),
-  _MockFeed(
-    userName: 'JazzLounge',
-    action: 'reposted',
-    trackTitle: 'After Midnight Session',
-    trackArtist: 'Smooth Jazz Trio',
-    timeAgo: '12h',
-    colors: [Color(0xFF311B92), Color(0xFF512DA8)],
-  ),
-  _MockFeed(
-    userName: 'IndieMix',
-    action: 'liked',
-    trackTitle: 'Feel Good Inc.',
-    trackArtist: 'IndieMix',
-    timeAgo: '1d',
-    colors: [Color(0xFF1B5E20), Color(0xFF4CAF50)],
-  ),
-  _MockFeed(
-    userName: 'TechnoLab',
-    action: 'uploaded a new track',
-    trackTitle: 'Dark Matter v2',
-    trackArtist: 'TechnoLab',
-    timeAgo: '1d',
-    colors: [Color(0xFF212121), Color(0xFF424242)],
-  ),
-  _MockFeed(
-    userName: 'Bon Iver',
-    action: 'reposted',
-    trackTitle: 'Skinny Love Remix',
-    trackArtist: 'FanArtist',
-    timeAgo: '2d',
-    colors: [Color(0xFF1A237E), Color(0xFF283593)],
+    userName: 'Gunna',
+    action: 'posted a track',
+    trackTitle: 'at my purest (feat. Offset)',
+    trackArtist: 'Gunna',
+    timeAgo: '7 months ago',
+    genre: 'Rap/Hip Hop',
+    likes: '26.2K',
+    reposts: '182',
+    plays: '1.52M',
+    comments: '230',
+    duration: '3:13',
+    colors: [const Color(0xFF37474F), const Color(0xFF263238)],
   ),
 ];
+
+List<double> _buildMockPeaks({required int seed, int count = 220}) {
+  final baseSeed = seed.abs() + 17;
+  return List<double>.generate(count, (index) {
+    final rawValue = ((baseSeed + (index * 37)) % 100) / 100;
+    final folded = rawValue <= 0.5 ? rawValue : (1 - rawValue);
+    return (folded * 1.8).clamp(0.06, 1.0);
+  });
+}
