@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -14,6 +15,8 @@ class LibraryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDesktop = ResponsiveBreakpoints.of(context).isDesktop;
+
     void goToProfile() {
       context.push(RoutePaths.profile);
     }
@@ -25,10 +28,18 @@ class LibraryScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Library'),
-        actions: [
-          IconButton(onPressed: goToProfile, icon: const Icon(Icons.person)),
-          IconButton(onPressed: goToSettings, icon: const Icon(Icons.settings)),
-        ],
+        actions: isDesktop
+            ? null
+            : [
+                IconButton(
+                  onPressed: goToProfile,
+                  icon: const Icon(Icons.person),
+                ),
+                IconButton(
+                  onPressed: goToSettings,
+                  icon: const Icon(Icons.settings),
+                ),
+              ],
       ),
       body: const _LibraryTab(),
     );

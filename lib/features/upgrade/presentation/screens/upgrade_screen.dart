@@ -24,7 +24,7 @@ class UpgradeScreen extends StatelessWidget {
           const SizedBox(height: AppDimensions.paddingXl),
 
           // ---- Feature comparison ----
-          Text('Why Upgrade?', style: AppTextStyles.sectionTitle),
+          const Text('Why Upgrade?', style: AppTextStyles.sectionTitle),
           const SizedBox(height: AppDimensions.paddingMd),
 
           const _FeatureRow(
@@ -120,11 +120,7 @@ class _UpgradeHero extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primaryDark,
-            Color(0xFF1A0500),
-          ],
+          colors: [AppColors.primary, AppColors.primaryDark, Color(0xFF1A0500)],
         ),
       ),
       child: Column(

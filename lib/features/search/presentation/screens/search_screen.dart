@@ -19,7 +19,7 @@ class SearchScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(AppDimensions.paddingLg),
         children: [
-          Text('Search', style: AppTextStyles.sectionTitle),
+          const Text('Search', style: AppTextStyles.sectionTitle),
           const SizedBox(height: AppDimensions.paddingMd),
 
           // ---- Search field ----
@@ -27,7 +27,7 @@ class SearchScreen extends StatelessWidget {
 
           const SizedBox(height: AppDimensions.paddingXl),
 
-          Text('Browse Categories', style: AppTextStyles.sectionTitle),
+          const Text('Browse Categories', style: AppTextStyles.sectionTitle),
           const SizedBox(height: AppDimensions.paddingMd),
 
           // ---- Genre grid ----
@@ -36,8 +36,8 @@ class SearchScreen extends StatelessWidget {
               final crossAxisCount = constraints.maxWidth > 900
                   ? 4
                   : constraints.maxWidth > 600
-                      ? 3
-                      : 2;
+                  ? 3
+                  : 2;
 
               return GridView.builder(
                 shrinkWrap: true,
@@ -77,7 +77,7 @@ class _LargeSearchField extends StatelessWidget {
         style: const TextStyle(fontSize: 15, color: Colors.white),
         decoration: InputDecoration(
           hintText: 'What do you want to listen to?',
-          hintStyle: TextStyle(fontSize: 15, color: Colors.white38),
+          hintStyle: const TextStyle(fontSize: 15, color: Colors.white38),
           prefixIcon: const Icon(Icons.search, color: Colors.white38),
           filled: true,
           fillColor: AppColors.surfaceLight,

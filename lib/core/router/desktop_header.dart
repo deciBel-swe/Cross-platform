@@ -2,9 +2,11 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_dimensions.dart';
+import 'route_paths.dart';
 
 /// Top header bar rendered above the content area on desktop.
 class DesktopHeader extends StatelessWidget {
@@ -14,9 +16,7 @@ class DesktopHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: AppDimensions.headerHeight,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingLg,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingLg),
       decoration: const BoxDecoration(
         color: AppColors.background,
         border: Border(
@@ -70,7 +70,7 @@ class _SearchField extends StatelessWidget {
           style: const TextStyle(fontSize: 13, color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Search for artists, tracks, albums...',
-            hintStyle: TextStyle(fontSize: 13, color: Colors.white38),
+            hintStyle: const TextStyle(fontSize: 13, color: Colors.white38),
             prefixIcon: const Icon(
               Icons.search,
               size: 20,
@@ -145,10 +145,64 @@ class _UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const CircleAvatar(
-      radius: 16,
-      backgroundColor: AppColors.surfaceLight,
-      child: Icon(Icons.person, size: 20, color: AppColors.textSecondary),
+    return PopupMenuButton<_UserMenuAction>(
+      tooltip: 'Account',
+      offset: const Offset(0, 40),
+      color: AppColors.surfaceVariant,
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        side: const BorderSide(color: AppColors.borderLight, width: 0.5),
+      ),
+      onSelected: (value) {
+        switch (value) {
+          case _UserMenuAction.profile:
+            context.push(RoutePaths.profile);
+          case _UserMenuAction.settings:
+            context.push(RoutePaths.settings);
+        }
+      },
+      itemBuilder: (context) => const [
+        PopupMenuItem<_UserMenuAction>(
+          value: _UserMenuAction.profile,
+          child: _UserMenuItemLabel(
+            icon: Icons.person_outline,
+            text: 'Profile',
+          ),
+        ),
+        PopupMenuItem<_UserMenuAction>(
+          value: _UserMenuAction.settings,
+          child: _UserMenuItemLabel(
+            icon: Icons.settings_outlined,
+            text: 'Settings',
+          ),
+        ),
+      ],
+      child: const CircleAvatar(
+        radius: 16,
+        backgroundColor: AppColors.surfaceLight,
+        child: Icon(Icons.person, size: 20, color: AppColors.textSecondary),
+      ),
     );
   }
 }
+
+class _UserMenuItemLabel extends StatelessWidget {
+  const _UserMenuItemLabel({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppColors.textPrimary),
+        const SizedBox(width: AppDimensions.paddingSm),
+        Text(text, style: const TextStyle(color: AppColors.textPrimary)),
+      ],
+    );
+  }
+}
+
+enum _UserMenuAction { profile, settings }

@@ -19,13 +19,9 @@ class DesktopPlayerBar extends StatelessWidget {
       height: AppDimensions.playerBarHeight,
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.divider, width: 0.5),
-        ),
+        border: Border(top: BorderSide(color: AppColors.divider, width: 0.5)),
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingLg,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingLg),
       child: const Row(
         children: [
           // ---- Track info (left) ----
@@ -65,7 +61,7 @@ class _TrackInfo extends StatelessWidget {
           child: const Icon(Icons.music_note, color: Colors.white70, size: 24),
         ),
         const SizedBox(width: AppDimensions.paddingSm),
-        Flexible(
+        const Flexible(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +72,7 @@ class _TrackInfo extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Text(
                 'Select a track to start listening',
                 style: AppTextStyles.cardSubtitle,
@@ -110,11 +106,7 @@ class _PlaybackControls extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _ControlButton(
-              icon: Icons.shuffle,
-              size: 18,
-              onPressed: () {},
-            ),
+            _ControlButton(icon: Icons.shuffle, size: 18, onPressed: () {}),
             const SizedBox(width: AppDimensions.paddingMd),
             _ControlButton(
               icon: Icons.skip_previous,
@@ -137,17 +129,9 @@ class _PlaybackControls extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppDimensions.paddingSm),
-            _ControlButton(
-              icon: Icons.skip_next,
-              size: 24,
-              onPressed: () {},
-            ),
+            _ControlButton(icon: Icons.skip_next, size: 24, onPressed: () {}),
             const SizedBox(width: AppDimensions.paddingMd),
-            _ControlButton(
-              icon: Icons.repeat,
-              size: 18,
-              onPressed: () {},
-            ),
+            _ControlButton(icon: Icons.repeat, size: 18, onPressed: () {}),
           ],
         ),
         const SizedBox(height: 4),
@@ -164,14 +148,10 @@ class _PlaybackControls extends StatelessWidget {
             const SizedBox(width: AppDimensions.paddingSm),
             Expanded(
               child: SliderTheme(
-                data: SliderThemeData(
+                data: const SliderThemeData(
                   trackHeight: 3,
-                  thumbShape: const RoundSliderThumbShape(
-                    enabledThumbRadius: 5,
-                  ),
-                  overlayShape: const RoundSliderOverlayShape(
-                    overlayRadius: 10,
-                  ),
+                  thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5),
+                  overlayShape: RoundSliderOverlayShape(overlayRadius: 10),
                   activeTrackColor: AppColors.primary,
                   inactiveTrackColor: AppColors.surfaceLight,
                   thumbColor: AppColors.primary,
@@ -203,24 +183,16 @@ class _VolumeControls extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        _ControlButton(
-          icon: Icons.queue_music,
-          size: 20,
-          onPressed: () {},
-        ),
+        _ControlButton(icon: Icons.queue_music, size: 20, onPressed: () {}),
         const SizedBox(width: AppDimensions.paddingSm),
-        const Icon(
-          Icons.volume_up,
-          size: 20,
-          color: AppColors.textSecondary,
-        ),
+        const Icon(Icons.volume_up, size: 20, color: AppColors.textSecondary),
         SizedBox(
           width: 100,
           child: SliderTheme(
-            data: SliderThemeData(
+            data: const SliderThemeData(
               trackHeight: 3,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5),
+              overlayShape: RoundSliderOverlayShape(overlayRadius: 10),
               activeTrackColor: Colors.white,
               inactiveTrackColor: AppColors.surfaceLight,
               thumbColor: Colors.white,
