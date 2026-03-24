@@ -2,7 +2,6 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -48,7 +47,7 @@ class FeedItem extends StatelessWidget {
     final colors =
         gradientColors ??
         const [AppColors.surfaceLight, AppColors.surfaceContainer];
-    final isDesktop = ResponsiveBreakpoints.of(context).isDesktop;
+    final isDesktop = _isDesktopLayout(context);
 
     if (!isDesktop) {
       return _MobileFeedItem(
@@ -189,6 +188,14 @@ class FeedItem extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
 }
 
 class _MobileFeedItem extends StatelessWidget {

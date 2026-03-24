@@ -3,7 +3,6 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../../core/router/route_paths.dart';
 
@@ -13,7 +12,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.of(context).isDesktop;
+    final isDesktop = _isDesktopLayout(context);
 
     return Scaffold(
       appBar: isDesktop
@@ -32,4 +31,12 @@ class HomeScreen extends StatelessWidget {
       body: const Center(child: Text('Home', style: TextStyle(fontSize: 24))),
     );
   }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
 }

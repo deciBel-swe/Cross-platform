@@ -3,7 +3,6 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../features/player/presentation/widgets/desktop_player_bar.dart';
 import '../theme/app_colors.dart';
@@ -21,7 +20,7 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.of(context).isDesktop;
+    final isDesktop = _isDesktopLayout(context);
 
     if (isDesktop) {
       return _DesktopShell(navigationShell: navigationShell);
@@ -29,6 +28,14 @@ class MainShell extends StatelessWidget {
 
     return _MobileShell(navigationShell: navigationShell);
   }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
