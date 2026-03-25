@@ -9,7 +9,7 @@ part 'post_comment_response_model.g.dart';
 @freezed
 class PostCommentResponseModel with _$PostCommentResponseModel {
   const factory PostCommentResponseModel({
-    required int id,
+    @JsonKey(name: 'id') required int commentId,
     required CommentUserModel user,
     required String body,
     int? timestampSeconds,
@@ -23,7 +23,7 @@ class PostCommentResponseModel with _$PostCommentResponseModel {
 extension PostCommentResponseModelX on PostCommentResponseModel {
   Comment toEntity() {
     return Comment(
-      id: id,
+      id: commentId,
       user: user.toEntity(),
       body: body,
       timestampSeconds: timestampSeconds,

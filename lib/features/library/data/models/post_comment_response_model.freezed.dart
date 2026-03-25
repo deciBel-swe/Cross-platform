@@ -23,7 +23,7 @@ PostCommentResponseModel _$PostCommentResponseModelFromJson(
 
 /// @nodoc
 mixin _$PostCommentResponseModel {
-  int get id => throw _privateConstructorUsedError;
+  int get commentId => throw _privateConstructorUsedError;
   CommentUserModel get user => throw _privateConstructorUsedError;
   String get body => throw _privateConstructorUsedError;
   int? get timestampSeconds => throw _privateConstructorUsedError;
@@ -47,7 +47,7 @@ abstract class $PostCommentResponseModelCopyWith<$Res> {
   ) = _$PostCommentResponseModelCopyWithImpl<$Res, PostCommentResponseModel>;
   @useResult
   $Res call({
-    int id,
+    int commentId,
     CommentUserModel user,
     String body,
     int? timestampSeconds,
@@ -75,7 +75,7 @@ class _$PostCommentResponseModelCopyWithImpl<
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? commentId = null,
     Object? user = null,
     Object? body = null,
     Object? timestampSeconds = freezed,
@@ -83,9 +83,9 @@ class _$PostCommentResponseModelCopyWithImpl<
   }) {
     return _then(
       _value.copyWith(
-            id: null == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
+            commentId: null == commentId
+                ? _value.commentId
+                : commentId // ignore: cast_nullable_to_non_nullable
                       as int,
             user: null == user
                 ? _value.user
@@ -129,7 +129,7 @@ abstract class _$$PostCommentResponseModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int id,
+    int commentId,
     CommentUserModel user,
     String body,
     int? timestampSeconds,
@@ -158,7 +158,7 @@ class __$$PostCommentResponseModelImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
+    Object? commentId = null,
     Object? user = null,
     Object? body = null,
     Object? timestampSeconds = freezed,
@@ -166,9 +166,9 @@ class __$$PostCommentResponseModelImplCopyWithImpl<$Res>
   }) {
     return _then(
       _$PostCommentResponseModelImpl(
-        id: null == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
+        commentId: null == commentId
+            ? _value.commentId
+            : commentId // ignore: cast_nullable_to_non_nullable
                   as int,
         user: null == user
             ? _value.user
@@ -195,7 +195,7 @@ class __$$PostCommentResponseModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
   const _$PostCommentResponseModelImpl({
-    required this.id,
+    required this.commentId,
     required this.user,
     required this.body,
     this.timestampSeconds,
@@ -206,7 +206,7 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
       _$$PostCommentResponseModelImplFromJson(json);
 
   @override
-  final int id;
+  final int commentId;
   @override
   final CommentUserModel user;
   @override
@@ -218,7 +218,7 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
 
   @override
   String toString() {
-    return 'PostCommentResponseModel(id: $id, user: $user, body: $body, timestampSeconds: $timestampSeconds, createdAt: $createdAt)';
+    return 'PostCommentResponseModel(commentId: $commentId, user: $user, body: $body, timestampSeconds: $timestampSeconds, createdAt: $createdAt)';
   }
 
   @override
@@ -226,7 +226,8 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$PostCommentResponseModelImpl &&
-            (identical(other.id, id) || other.id == id) &&
+            (identical(other.commentId, commentId) ||
+                other.commentId == commentId) &&
             (identical(other.user, user) || other.user == user) &&
             (identical(other.body, body) || other.body == body) &&
             (identical(other.timestampSeconds, timestampSeconds) ||
@@ -237,8 +238,14 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, user, body, timestampSeconds, createdAt);
+  int get hashCode => Object.hash(
+    runtimeType,
+    commentId,
+    user,
+    body,
+    timestampSeconds,
+    createdAt,
+  );
 
   /// Create a copy of PostCommentResponseModel
   /// with the given fields replaced by the non-null parameter values.
@@ -259,7 +266,7 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
 
 abstract class _PostCommentResponseModel implements PostCommentResponseModel {
   const factory _PostCommentResponseModel({
-    required final int id,
+    required final int commentId,
     required final CommentUserModel user,
     required final String body,
     final int? timestampSeconds,
@@ -270,7 +277,7 @@ abstract class _PostCommentResponseModel implements PostCommentResponseModel {
       _$PostCommentResponseModelImpl.fromJson;
 
   @override
-  int get id;
+  int get commentId;
   @override
   CommentUserModel get user;
   @override
