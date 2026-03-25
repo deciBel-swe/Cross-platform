@@ -322,7 +322,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // DESKTOP: Use local HTTP server loopback
       final completer = Completer<LoginResponseModel>();
 
-      const clientId = ApiConstants.googleDesktopClientId;
+      final clientId = ApiConstants.googleDesktopClientId;
       const redirectUri = ApiConstants.googleDesktopRedirectUri;
 
       final authUrl = Uri.parse(

@@ -30,7 +30,7 @@ class MockAuthRepository implements IAuthRepository {
 
     if (isMobile) {
       // --- MOBILE: Use official Google Sign In SDK (In-App Popup)
-      const String clientId = ApiConstants.googleMobileClientId;
+      final clientId = ApiConstants.googleMobileClientId;
 
       await g_sign_in.GoogleSignIn.instance.initialize(
         clientId: clientId,

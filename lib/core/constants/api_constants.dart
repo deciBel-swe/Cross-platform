@@ -3,6 +3,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiConstants {
   ApiConstants._();
 
+  static String _requiredEnv(String key) {
+    final value = dotenv.env[key]?.trim();
+    if (value == null || value.isEmpty) {
+      throw StateError('Missing required environment variable: $key');
+    }
+    return value;
+  }
+
   static const String _defaultBaseUrl = 'https://decibel.foo/api';
 
   static String get baseUrl {
@@ -41,16 +49,9 @@ class ApiConstants {
   static const String googleAuthUrl =
       'https://accounts.google.com/o/oauth2/v2/auth';
   static const String googleDesktopRedirectUri = 'http://localhost:8081';
-  // devops requested this change ana msh mas2ol
-  // static const String googleDesktopRedirectUri =
-  //     'https://decibel.foo/oauth/callback';
 
-  // static const String googleMobileClientId =
-  //     '767709617177-l61vbedk9lanvrgirt6e0840a4kijs6u.apps.googleusercontent.com';
-  static const String googleMobileClientId =
-      '32707752970-iogrei2270q4qni8eicn9r8osb1006mr.apps.googleusercontent.com';
-  // static const String googleDesktopClientId =
-  //       '767709617177-ljng08734ds2qv9m7qcrpccpe6igu9if.apps.googleusercontent.com';
-  static const String googleDesktopClientId =
-      '32707752970-h86ssrpl5a1vt717qfop1n5080hpqu6l.apps.googleusercontent.com';
+  static String get googleMobileClientId =>
+      _requiredEnv('GOOGLE_MOBILE_CLIENT_ID');
+  static String get googleDesktopClientId =>
+      _requiredEnv('GOOGLE_DESKTOP_CLIENT_ID');
 }
