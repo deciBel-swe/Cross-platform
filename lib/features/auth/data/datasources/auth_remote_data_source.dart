@@ -289,15 +289,10 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
     if (isMobile) {
       try {
-        // v7+ API: Initialize the singleton instance.
-        // CRITICAL: We DO NOT pass the clientId parameter here for Android.
-        // We only pass the Web Client ID into serverClientId to get the backend auth code.
         await g_sign_in.GoogleSignIn.instance.initialize(
           serverClientId: ApiConstants.googleDesktopClientId,
         );
-
-        // NOTE: Do not call signOut() here. Doing so immediately before authenticate()
-        // causes the Android Credential Manager to crash with "[16] Account reauth failed".
+        // I removed the signOut call as it causes crashes from google credential center for some weird reason
 
         // Trigger the Android 14 Credential Manager bottom sheet
         final account = await g_sign_in.GoogleSignIn.instance.authenticate(
@@ -327,7 +322,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       // DESKTOP: Use local HTTP server loopback
       final completer = Completer<LoginResponseModel>();
 
-      const clientId = ApiConstants.googleDesktopClientId;
+      final clientId = ApiConstants.googleDesktopClientId;
       const redirectUri = ApiConstants.googleDesktopRedirectUri;
 
       final authUrl = Uri.parse(
