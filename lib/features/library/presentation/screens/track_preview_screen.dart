@@ -9,6 +9,7 @@ import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
 import '../../../library_profile/presentation/widgets/track_preview_waveform_section.dart';
+import '../widgets/track_comment_input_bar.dart';
 
 class TrackPreviewScreen extends ConsumerWidget {
   const TrackPreviewScreen({super.key, required this.trackId});
@@ -145,6 +146,7 @@ class TrackPreviewScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
+                      const TrackCommentInputBar(),
                     ],
                   ),
                 ),
