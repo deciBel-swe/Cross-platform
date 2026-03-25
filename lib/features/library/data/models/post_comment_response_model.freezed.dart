@@ -23,6 +23,7 @@ PostCommentResponseModel _$PostCommentResponseModelFromJson(
 
 /// @nodoc
 mixin _$PostCommentResponseModel {
+  @JsonKey(name: 'id')
   int get commentId => throw _privateConstructorUsedError;
   CommentUserModel get user => throw _privateConstructorUsedError;
   String get body => throw _privateConstructorUsedError;
@@ -47,7 +48,7 @@ abstract class $PostCommentResponseModelCopyWith<$Res> {
   ) = _$PostCommentResponseModelCopyWithImpl<$Res, PostCommentResponseModel>;
   @useResult
   $Res call({
-    int commentId,
+    @JsonKey(name: 'id') int commentId,
     CommentUserModel user,
     String body,
     int? timestampSeconds,
@@ -129,7 +130,7 @@ abstract class _$$PostCommentResponseModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int commentId,
+    @JsonKey(name: 'id') int commentId,
     CommentUserModel user,
     String body,
     int? timestampSeconds,
@@ -195,7 +196,7 @@ class __$$PostCommentResponseModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
   const _$PostCommentResponseModelImpl({
-    required this.commentId,
+    @JsonKey(name: 'id') required this.commentId,
     required this.user,
     required this.body,
     this.timestampSeconds,
@@ -206,6 +207,7 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
       _$$PostCommentResponseModelImplFromJson(json);
 
   @override
+  @JsonKey(name: 'id')
   final int commentId;
   @override
   final CommentUserModel user;
@@ -266,7 +268,7 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
 
 abstract class _PostCommentResponseModel implements PostCommentResponseModel {
   const factory _PostCommentResponseModel({
-    required final int commentId,
+    @JsonKey(name: 'id') required final int commentId,
     required final CommentUserModel user,
     required final String body,
     final int? timestampSeconds,
@@ -277,6 +279,7 @@ abstract class _PostCommentResponseModel implements PostCommentResponseModel {
       _$PostCommentResponseModelImpl.fromJson;
 
   @override
+  @JsonKey(name: 'id')
   int get commentId;
   @override
   CommentUserModel get user;

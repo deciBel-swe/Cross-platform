@@ -24,7 +24,7 @@ PostCommentRequestModel _$PostCommentRequestModelFromJson(
 /// @nodoc
 mixin _$PostCommentRequestModel {
   String get body => throw _privateConstructorUsedError;
-  int? get timeStampedseconds => throw _privateConstructorUsedError;
+  int? get timeStampseconds => throw _privateConstructorUsedError;
 
   /// Serializes this PostCommentRequestModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -43,7 +43,7 @@ abstract class $PostCommentRequestModelCopyWith<$Res> {
     $Res Function(PostCommentRequestModel) then,
   ) = _$PostCommentRequestModelCopyWithImpl<$Res, PostCommentRequestModel>;
   @useResult
-  $Res call({String body, int? timeStampedseconds});
+  $Res call({String body, int? timeStampseconds});
 }
 
 /// @nodoc
@@ -63,16 +63,16 @@ class _$PostCommentRequestModelCopyWithImpl<
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? body = null, Object? timeStampedseconds = freezed}) {
+  $Res call({Object? body = null, Object? timeStampseconds = freezed}) {
     return _then(
       _value.copyWith(
             body: null == body
                 ? _value.body
                 : body // ignore: cast_nullable_to_non_nullable
                       as String,
-            timeStampedseconds: freezed == timeStampedseconds
-                ? _value.timeStampedseconds
-                : timeStampedseconds // ignore: cast_nullable_to_non_nullable
+            timeStampseconds: freezed == timeStampseconds
+                ? _value.timeStampseconds
+                : timeStampseconds // ignore: cast_nullable_to_non_nullable
                       as int?,
           )
           as $Val,
@@ -89,7 +89,7 @@ abstract class _$$PostCommentRequestModelImplCopyWith<$Res>
   ) = __$$PostCommentRequestModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String body, int? timeStampedseconds});
+  $Res call({String body, int? timeStampseconds});
 }
 
 /// @nodoc
@@ -109,16 +109,16 @@ class __$$PostCommentRequestModelImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? body = null, Object? timeStampedseconds = freezed}) {
+  $Res call({Object? body = null, Object? timeStampseconds = freezed}) {
     return _then(
       _$PostCommentRequestModelImpl(
         body: null == body
             ? _value.body
             : body // ignore: cast_nullable_to_non_nullable
                   as String,
-        timeStampedseconds: freezed == timeStampedseconds
-            ? _value.timeStampedseconds
-            : timeStampedseconds // ignore: cast_nullable_to_non_nullable
+        timeStampseconds: freezed == timeStampseconds
+            ? _value.timeStampseconds
+            : timeStampseconds // ignore: cast_nullable_to_non_nullable
                   as int?,
       ),
     );
@@ -130,7 +130,7 @@ class __$$PostCommentRequestModelImplCopyWithImpl<$Res>
 class _$PostCommentRequestModelImpl implements _PostCommentRequestModel {
   const _$PostCommentRequestModelImpl({
     required this.body,
-    this.timeStampedseconds,
+    this.timeStampseconds,
   });
 
   factory _$PostCommentRequestModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -139,11 +139,11 @@ class _$PostCommentRequestModelImpl implements _PostCommentRequestModel {
   @override
   final String body;
   @override
-  final int? timeStampedseconds;
+  final int? timeStampseconds;
 
   @override
   String toString() {
-    return 'PostCommentRequestModel(body: $body, timeStampedseconds: $timeStampedseconds)';
+    return 'PostCommentRequestModel(body: $body, timeStampseconds: $timeStampseconds)';
   }
 
   @override
@@ -152,13 +152,13 @@ class _$PostCommentRequestModelImpl implements _PostCommentRequestModel {
         (other.runtimeType == runtimeType &&
             other is _$PostCommentRequestModelImpl &&
             (identical(other.body, body) || other.body == body) &&
-            (identical(other.timeStampedseconds, timeStampedseconds) ||
-                other.timeStampedseconds == timeStampedseconds));
+            (identical(other.timeStampseconds, timeStampseconds) ||
+                other.timeStampseconds == timeStampseconds));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, body, timeStampedseconds);
+  int get hashCode => Object.hash(runtimeType, body, timeStampseconds);
 
   /// Create a copy of PostCommentRequestModel
   /// with the given fields replaced by the non-null parameter values.
@@ -180,7 +180,7 @@ class _$PostCommentRequestModelImpl implements _PostCommentRequestModel {
 abstract class _PostCommentRequestModel implements PostCommentRequestModel {
   const factory _PostCommentRequestModel({
     required final String body,
-    final int? timeStampedseconds,
+    final int? timeStampseconds,
   }) = _$PostCommentRequestModelImpl;
 
   factory _PostCommentRequestModel.fromJson(Map<String, dynamic> json) =
@@ -189,7 +189,7 @@ abstract class _PostCommentRequestModel implements PostCommentRequestModel {
   @override
   String get body;
   @override
-  int? get timeStampedseconds;
+  int? get timeStampseconds;
 
   /// Create a copy of PostCommentRequestModel
   /// with the given fields replaced by the non-null parameter values.

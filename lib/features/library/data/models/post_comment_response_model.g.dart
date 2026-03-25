@@ -9,7 +9,7 @@ part of 'post_comment_response_model.dart';
 _$PostCommentResponseModelImpl _$$PostCommentResponseModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$PostCommentResponseModelImpl(
-  commentId: (json['commentId'] as num).toInt(),
+  commentId: (json['id'] as num).toInt(),
   user: CommentUserModel.fromJson(json['user'] as Map<String, dynamic>),
   body: json['body'] as String,
   timestampSeconds: (json['timestampSeconds'] as num?)?.toInt(),
@@ -19,7 +19,7 @@ _$PostCommentResponseModelImpl _$$PostCommentResponseModelImplFromJson(
 Map<String, dynamic> _$$PostCommentResponseModelImplToJson(
   _$PostCommentResponseModelImpl instance,
 ) => <String, dynamic>{
-  'commentId': instance.commentId,
+  'id': instance.commentId,
   'user': instance.user,
   'body': instance.body,
   'timestampSeconds': instance.timestampSeconds,
