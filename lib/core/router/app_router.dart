@@ -21,6 +21,7 @@ import '../../features/library_profile/presentation/screens/profile_screen.dart'
 import '../../features/library_profile/presentation/screens/web_profiles.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
+import '../../features/settings/presentation/screens/blocked_users_screen.dart';
 import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/social_settings_screen.dart';
@@ -173,6 +174,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                                 const ChangeAppIconScreen(),
                           ),
                         ],
+                      ),
+                      GoRoute(
+                        path: 'blocked-users',
+                        builder: (context, state) => const BlockedUsersScreen(),
                       ),
                     ],
                   ),

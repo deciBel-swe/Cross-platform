@@ -20,7 +20,8 @@ void main() async {
   } catch (_) {
     useMockServices = true;
   }
-
+  debugPrint('+++++++++++++++++++++++++++');
+  debugPrint('Using Mock Services: $useMockServices');
   // Configure desktop window constraints.
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
     await windowManager.ensureInitialized();

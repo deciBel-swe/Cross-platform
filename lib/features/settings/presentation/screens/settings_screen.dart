@@ -14,6 +14,8 @@ class SettingsScreen extends ConsumerWidget {
   static const String _basicSettingsSubtitle = 'Core app preferences';
   static const String _socalSettingsTitle = 'Social Settings';
   static const String _socalSettingsSubtitle = 'Privacy Settings';
+  static const String _blockedListTitle = 'Blocked list';
+  static const String _blockedListSubTitle = 'view your blocked list';
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
@@ -30,6 +32,11 @@ class SettingsScreen extends ConsumerWidget {
             title: _socalSettingsTitle,
             subtitle: _socalSettingsSubtitle,
             onTap: () => context.push(RoutePaths.socialSettings),
+          ),
+          _SettingsNavigationTile(
+            title: _blockedListTitle,
+            subtitle: _blockedListSubTitle,
+            onTap: () => context.push(RoutePaths.blockedUsers),
           ),
           const SizedBox(height: 32),
           ElevatedButton(
