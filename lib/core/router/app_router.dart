@@ -18,6 +18,7 @@ import '../../features/library/presentation/screens/track_preview_screen.dart';
 import '../../features/library/presentation/screens/uploads_library_screen.dart';
 import '../../features/library_profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/profile_screen.dart';
+import '../../features/library_profile/presentation/screens/public_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/web_profiles.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
@@ -89,6 +90,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      // Public profile route — pushed as an overlay over any tab.
+      GoRoute(
+        path: '${RoutePaths.publicProfileBase}/:userId',
+        builder: (context, state) {
+          final userId = int.parse(state.pathParameters['userId']!);
+          return PublicProfileScreen(userId: userId);
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
