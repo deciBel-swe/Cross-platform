@@ -14,6 +14,7 @@ import '../../features/auth/presentation/screens/start_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
+import '../../features/library/presentation/screens/following_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
 import '../../features/library/presentation/screens/uploads_library_screen.dart';
 import '../../features/library_profile/presentation/screens/edit_profile_screen.dart';
@@ -126,60 +127,65 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: RoutePaths.library,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: LibraryScreen()),
-                routes: [
-                  GoRoute(
-                    path: 'uploads',
-                    builder: (context, state) => const UploadsLibraryScreen(),
-                  ),
-                  GoRoute(
-                    path: 'track-preview/:trackId',
-                    redirect: (context, state) {
-                      final raw = state.pathParameters['trackId'];
-                      final parsed = int.tryParse(raw ?? '');
-                      if (parsed == null) {
-                        return RoutePaths.library;
-                      }
-                      return null;
-                    },
-                    builder: (context, state) {
-                      final trackId = int.parse(
-                        state.pathParameters['trackId']!,
-                      );
-                      return TrackPreviewScreen(trackId: trackId);
-                    },
-                  ),
-                  GoRoute(
-                    path: 'settings',
-                    builder: (context, state) => const SettingsScreen(),
-                    routes: [
-                      GoRoute(
-                        path: 'social-settings',
-                        builder: (context, state) =>
-                            const SocialSettingsScreen(),
-                      ),
-                      GoRoute(
-                        path: 'basic-settings',
-                        builder: (context, state) =>
-                            const BasicSettingsScreen(),
-                        routes: [
-                          GoRoute(
-                            path: 'change-app-icon',
-                            builder: (context, state) =>
-                                const ChangeAppIconScreen(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
+  routes: [
+    GoRoute(
+      path: RoutePaths.library,
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: LibraryScreen()),
+      routes: [
+        GoRoute(
+          path: 'following',
+          builder: (context, state) => const FollowingScreen(),
+        ),
+        
+        GoRoute(
+          path: 'uploads',
+          builder: (context, state) => const UploadsLibraryScreen(),
+        ),
+        GoRoute(
+          path: 'track-preview/:trackId',
+          redirect: (context, state) {
+            final raw = state.pathParameters['trackId'];
+            final parsed = int.tryParse(raw ?? '');
+            if (parsed == null) {
+              return RoutePaths.library;
+            }
+            return null;
+          },
+          builder: (context, state) {
+            final trackId = int.parse(
+              state.pathParameters['trackId']!,
+            );
+            return TrackPreviewScreen(trackId: trackId);
+          },
+        ),
+        GoRoute(
+          path: 'settings',
+          builder: (context, state) => const SettingsScreen(),
+          routes: [
+            GoRoute(
+              path: 'social-settings',
+              builder: (context, state) =>
+                  const SocialSettingsScreen(),
+            ),
+            GoRoute(
+              path: 'basic-settings',
+              builder: (context, state) =>
+                  const BasicSettingsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'change-app-icon',
+                  builder: (context, state) =>
+                      const ChangeAppIconScreen(),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
+  ],
+),
           StatefulShellBranch(
             routes: [
               GoRoute(

@@ -24,6 +24,12 @@ import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
+import '../../features/library/data/datasources/social_graph_remote_datasource.dart'
+    as _i237;
+import '../../features/library/data/repositories/social_graph_repository_impl.dart'
+    as _i645;
+import '../../features/library/domain/repositories/social_graph_repository.dart'
+    as _i1006;
 import '../../features/library_profile/data/datasources/genre_data_source_remote.dart'
     as _i271;
 import '../../features/library_profile/data/datasources/profile_remote_data_source.dart'
@@ -97,6 +103,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i237.SocialGraphRemoteDatasource>(
+      () => _i237.SocialGraphRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i690.MockTrackRepository(),
       registerFor: {_mock},
@@ -130,6 +139,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i666.SecureStorageService>(),
       ),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i1006.SocialGraphRepository>(
+      () => _i645.SocialGraphRepositoryImpl(
+        gh<_i237.SocialGraphRemoteDatasource>(),
+      ),
     );
     gh.lazySingleton<_i2.AllGenresRepository>(
       () => _i140.AllGenresRepositoryImpl(

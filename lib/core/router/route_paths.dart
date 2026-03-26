@@ -11,6 +11,7 @@ class RoutePaths {
   static const String discover = '/discover';
   static const String search = '/search';
   static const String library = '/library';
+  static const String libraryFollowing = '/library/following';
   static const String settings = '/library/settings';
   static const String basicSettings = '/library/settings/basic-settings';
   static const String changeAppIcon =
