@@ -17,6 +17,7 @@ class RoutePaths {
   static const String changeAppIcon =
       '/library/settings/basic-settings/change-app-icon';
   static const String socialSettings = '/library/settings/social-settings';
+  static const String blockedUsers ='/library/settings/social-settings/blocked';
   static const String upgrade = '/upgrade';
   static const String player = '/player';
   static const String profile = '/profile';

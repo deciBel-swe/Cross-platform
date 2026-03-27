@@ -56,6 +56,12 @@ import '../../features/library_profile/domain/repositories/track_repository.dart
     as _i127;
 import '../../features/library_profile/domain/repositories/update_image.dart'
     as _i728;
+import '../../features/settings/data/datasources/blocked_users_remote_datasource.dart'
+    as _i688;
+import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
+    as _i292;
+import '../../features/settings/domain/repositories/blocked_users_repository.dart'
+    as _i288;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/mock_upload_repository_impl.dart'
@@ -106,6 +112,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i237.SocialGraphRemoteDatasource>(
       () => _i237.SocialGraphRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i688.BlockedUsersRemoteDatasource>(
+      () => _i688.BlockedUsersRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i690.MockTrackRepository(),
       registerFor: {_mock},
@@ -152,6 +161,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i728.UpdateProfileImagesUseCase>(
       () => _i728.UpdateProfileImagesUseCase(gh<_i106.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i288.BlockedUsersRepository>(
+      () => _i292.BlockedUsersRepositoryImpl(
+        gh<_i688.BlockedUsersRemoteDatasource>(),
+      ),
     );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i703.MockAuthRepository(gh<_i666.SecureStorageService>()),

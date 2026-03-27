@@ -57,7 +57,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the Provider that now returns an Either<Failure, UserProfile>
     final userProfileAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
@@ -86,7 +85,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: AppConstants.spacingRegular),
                 Text(
-                  'Oops! Something went wrong.', // Fallback text from feat/prof-state
+                  'Oops! Something went wrong.',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppColors.onPrimary,
                     fontWeight: FontWeight.bold,
@@ -159,7 +158,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       _ProfileCoverPhoto(
                         imageUrl: user.profileDetails.coverPic,
                       ),
-
                       const Positioned(
                         bottom: -32,
                         child: Padding(
@@ -284,35 +282,36 @@ class _ProfileCoverPhoto extends StatelessWidget {
       child: imageUrl == null
           ? _buildPlaceholder()
           : ProfileImagePathUtils.isRemote(imageUrl!)
-          ? Image.network(
-              imageUrl!,
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
-              errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return _buildPlaceholder();
-              },
-            )
-          : Builder(
-              builder: (context) {
-                final localPath = ProfileImagePathUtils.localFilePath(
+              ? Image.network(
                   imageUrl!,
-                );
-
-                if (localPath == null) {
-                  return _buildPlaceholder();
-                }
-
-                return Image.file(
-                  File(localPath),
                   fit: BoxFit.cover,
                   filterQuality: FilterQuality.high,
                   errorBuilder: (context, error, stackTrace) =>
                       _buildPlaceholder(),
-                );
-              },
-            ),
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return _buildPlaceholder();
+                  },
+                )
+              : Builder(
+                  builder: (context) {
+                    final localPath = ProfileImagePathUtils.localFilePath(
+                      imageUrl!,
+                    );
+
+                    if (localPath == null) {
+                      return _buildPlaceholder();
+                    }
+
+                    return Image.file(
+                      File(localPath),
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildPlaceholder(),
+                    );
+                  },
+                ),
     );
   }
 

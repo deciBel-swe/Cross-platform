@@ -25,6 +25,7 @@ import '../../features/settings/presentation/screens/basic_settings_screen.dart'
 import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/social_settings_screen.dart';
+import '../../features/settings/presentation/screens/blocked_users_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/upload/presentation/screens/upload_screen.dart';
 import 'go_router_refresh_stream.dart';
@@ -164,10 +165,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           builder: (context, state) => const SettingsScreen(),
           routes: [
             GoRoute(
-              path: 'social-settings',
-              builder: (context, state) =>
-                  const SocialSettingsScreen(),
-            ),
+  path: 'social-settings',
+  builder: (context, state) => const SocialSettingsScreen(),
+  routes: [
+    GoRoute(
+      path: 'blocked',
+      builder: (context, state) => const BlockedUsersScreen(),
+    ),
+  ],
+),
             GoRoute(
               path: 'basic-settings',
               builder: (context, state) =>
