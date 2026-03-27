@@ -8,12 +8,14 @@ import '../providers/user_profile_provider.dart';
 import '../utils/profile_image_path_utils.dart';
 
 class ProfileIcon extends ConsumerWidget {
-  const ProfileIcon({super.key});
+  const ProfileIcon({super.key, this.userId});
+
+  final int? userId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedImage = ref
-        .watch(userProfileProvider)
+        .watch(userProfileProvider(userId))
         .value
         ?.fold(
           (failure) => null,
@@ -29,49 +31,49 @@ class ProfileIcon extends ConsumerWidget {
           child: selectedImage == null
               ? const Icon(Icons.person, size: 64, color: AppColors.outline)
               : ProfileImagePathUtils.isRemote(selectedImage)
-              ? ClipOval(
-                  child: Image.network(
-                    selectedImage,
-                    width: 128,
-                    height: 128,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.person,
-                      size: 64,
-                      color: AppColors.outline,
-                    ),
-                  ),
-                )
-              : Builder(
-                  builder: (context) {
-                    final localPath = ProfileImagePathUtils.localFilePath(
-                      selectedImage,
-                    );
-
-                    if (localPath == null) {
-                      return const Icon(
-                        Icons.person,
-                        size: 64,
-                        color: AppColors.outline,
-                      );
-                    }
-
-                    return ClipOval(
-                      child: Image.file(
-                        File(localPath),
+                  ? ClipOval(
+                      child: Image.network(
+                        selectedImage,
                         width: 128,
                         height: 128,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.person,
+                          size: 64,
+                          color: AppColors.outline,
+                        ),
+                      ),
+                    )
+                  : Builder(
+                      builder: (context) {
+                        final localPath = ProfileImagePathUtils.localFilePath(
+                          selectedImage,
+                        );
+
+                        if (localPath == null) {
+                          return const Icon(
+                            Icons.person,
+                            size: 64,
+                            color: AppColors.outline,
+                          );
+                        }
+
+                        return ClipOval(
+                          child: Image.file(
+                            File(localPath),
+                            width: 128,
+                            height: 128,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
                               Icons.person,
                               size: 64,
                               color: AppColors.outline,
                             ),
-                      ),
-                    );
-                  },
-                ),
+                          ),
+                        );
+                      },
+                    ),
         ),
       ),
     );

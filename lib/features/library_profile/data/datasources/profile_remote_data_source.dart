@@ -11,6 +11,7 @@ import '../models/user_profile_model.dart';
 abstract class IProfileRemoteDataSource {
   Future<SocialLinksModel> updateSocialLinks(SocialLinksModel linksModel);
   Future<UserProfileModel> getUserProfile();
+  Future<UserProfileModel> getPublicProfile(int userId);
   Future<bool> updateProfile(Map<String, dynamic> updateData);
   Future<bool> updateProfileImages({File? profilePic, File? coverPic});
 }
@@ -160,6 +161,71 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
       throw ServerException('Failed to parse user profile data: $e');
+    }
+  }
+
+  @override
+  Future<UserProfileModel> getPublicProfile(int userId) async {
+    try {
+      final response = await _dioClient.get<dynamic>(
+        '/users/$userId',
+      );
+
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null) {
+        throw const ServerException('Received empty public profile response');
+      }
+
+      final Map<String, dynamic> responseData = data['data'] != null
+          ? data['data'] as Map<String, dynamic>
+          : data;
+
+      final Map<String, dynamic> profile =
+          (responseData['profile'] as Map<String, dynamic>?) ??
+              const <String, dynamic>{};
+
+      final Map<String, dynamic> stats =
+          (responseData['stats'] as Map<String, dynamic>?) ??
+              const <String, dynamic>{};
+
+      final Map<String, dynamic>? socialLinks =
+          responseData['socialLinks'] as Map<String, dynamic>?;
+
+      final Map<String, dynamic> normalizedResponse = <String, dynamic>{
+        'id': responseData['id'] ?? 0,
+        'Role': 'USER',
+        'email': '',
+        'username': responseData['username'] ?? '',
+        'emailVerified': true,
+        'tier': responseData['tier'] ?? 'FREE',
+        'profile': {
+          'bio': profile['bio'],
+          'city': profile['Location'] ?? profile['city'],
+          'country': null,
+          'profilePic': profile['avatarUrl'],
+          'coverPic': profile['coverPhotoUrl'],
+          'favoriteGenres': profile['favoriteGenres'] ?? const <dynamic>[],
+        },
+        'socialLinks': socialLinks,
+        'privacySettings': {
+          'isPrivate': false,
+          'showHistory': true,
+        },
+        'stats': {
+          'followers': (stats['followersCount'] as num?)?.toInt() ?? 0,
+          'following': (stats['followingCount'] as num?)?.toInt() ?? 0,
+          'tracksCount': (stats['trackCount'] as num?)?.toInt() ?? 0,
+        },
+      };
+
+      return UserProfileModel.fromJson(normalizedResponse);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw const ServerException('Public profile not found.');
+      }
+      throw ServerException(e.message ?? 'Unknown server error');
+    } catch (e) {
+      throw ServerException('Failed to parse public profile data: $e');
     }
   }
 

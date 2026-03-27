@@ -38,8 +38,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.initState();
 
     final Either<Failure, UserProfile>? userState = ref
-        .read(userProfileProvider)
-        .value;
+    .read(userProfileProvider(null))
+    .value;
     _user = userState?.fold((failure) => null, (profile) => profile);
 
     _bioController = TextEditingController(text: _user?.profileDetails.bio);

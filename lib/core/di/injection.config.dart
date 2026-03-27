@@ -26,6 +26,8 @@ import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
 import '../../features/library_profile/data/datasources/genre_data_source_remote.dart'
     as _i271;
+import '../../features/library_profile/data/datasources/moderation_remote_data_source.dart'
+    as _i269;
 import '../../features/library_profile/data/datasources/profile_remote_data_source.dart'
     as _i364;
 import '../../features/library_profile/data/datasources/track_remote_data_source.dart'
@@ -36,6 +38,8 @@ import '../../features/library_profile/data/repositories/image_repository_impl.d
     as _i423;
 import '../../features/library_profile/data/repositories/mock_track_repository_impl.dart'
     as _i690;
+import '../../features/library_profile/data/repositories/moderation_repository_impl.dart'
+    as _i810;
 import '../../features/library_profile/data/repositories/profile_repository_impl.dart'
     as _i997;
 import '../../features/library_profile/data/repositories/track_repository_impl.dart'
@@ -44,6 +48,8 @@ import '../../features/library_profile/domain/repositories/genre_repository.dart
     as _i2;
 import '../../features/library_profile/domain/repositories/image_repository.dart'
     as _i121;
+import '../../features/library_profile/domain/repositories/moderation_repository.dart'
+    as _i11;
 import '../../features/library_profile/domain/repositories/profile_repository.dart'
     as _i106;
 import '../../features/library_profile/domain/repositories/track_repository.dart'
@@ -101,6 +107,9 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i690.MockTrackRepository(),
       registerFor: {_mock},
     );
+    gh.lazySingleton<_i269.IModerationRemoteDataSource>(
+      () => _i269.ModerationRemoteDataSource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => const _i580.MockUploadRepository(),
       registerFor: {_mock},
@@ -146,6 +155,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i928.TrackRepositoryImpl(gh<_i534.LibraryRemoteDatasource>()),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i11.ModerationRepository>(
+      () => _i810.ModerationRepositoryImpl(
+        gh<_i269.IModerationRemoteDataSource>(),
+      ),
     );
     gh.lazySingleton<_i745.AuthInterceptor>(
       () => registerModule.getAuthInterceptor(gh<_i666.SecureStorageService>()),

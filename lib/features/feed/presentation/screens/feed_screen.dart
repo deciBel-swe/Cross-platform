@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../widgets/feed_item.dart';
+import 'package:go_router/go_router.dart';
 
 /// Activity feed showing recent actions from followed users.
 class FeedScreen extends StatelessWidget {
@@ -29,36 +30,50 @@ class FeedScreen extends StatelessWidget {
           AppDimensions.paddingLg,
         ),
         children: [
-          if (isDesktop) ...[
-            const Text('Your Feed', style: AppTextStyles.sectionTitle),
-            const SizedBox(height: AppDimensions.paddingSm),
-            const Text(
-              'Hear the latest from people you follow.',
-              style: AppTextStyles.bodyMedium,
-            ),
-            const SizedBox(height: AppDimensions.paddingLg),
-          ],
-          ..._mockFeedItems.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
-              child: FeedItem(
-                userName: item.userName,
-                action: item.action,
-                trackTitle: item.trackTitle,
-                trackArtist: item.trackArtist,
-                timeAgo: item.timeAgo,
-                genre: item.genre,
-                likes: item.likes,
-                reposts: item.reposts,
-                plays: item.plays,
-                comments: item.comments,
-                duration: item.duration,
-                waveformPeaks: item.waveformPeaks,
-                gradientColors: item.colors,
-              ),
-            ),
-          ),
-        ],
+  // ✅ ADD THIS BUTTON
+  Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: ElevatedButton(
+      onPressed: () {
+        context.push('/users/123');
+        // OR if using GoRouter:
+        // context.push('/users/123');
+      },
+      child: const Text('Open Public Profile'),
+    ),
+  ),
+
+  if (isDesktop) ...[
+    const Text('Your Feed', style: AppTextStyles.sectionTitle),
+    const SizedBox(height: AppDimensions.paddingSm),
+    const Text(
+      'Hear the latest from people you follow.',
+      style: AppTextStyles.bodyMedium,
+    ),
+    const SizedBox(height: AppDimensions.paddingLg),
+  ],
+
+  ..._mockFeedItems.map(
+    (item) => Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
+      child: FeedItem(
+        userName: item.userName,
+        action: item.action,
+        trackTitle: item.trackTitle,
+        trackArtist: item.trackArtist,
+        timeAgo: item.timeAgo,
+        genre: item.genre,
+        likes: item.likes,
+        reposts: item.reposts,
+        plays: item.plays,
+        comments: item.comments,
+        duration: item.duration,
+        waveformPeaks: item.waveformPeaks,
+        gradientColors: item.colors,
+      ),
+    ),
+  ),
+],
       ),
     );
   }

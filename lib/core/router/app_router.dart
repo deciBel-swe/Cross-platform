@@ -87,10 +87,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
-        path: RoutePaths.register,
-        builder: (context, state) => const RegisterScreen(),
-      ),
-      StatefulShellRoute.indexedStack(
+  path: RoutePaths.register,
+  builder: (context, state) => const RegisterScreen(),
+),
+GoRoute(
+  path: '/users/:userId',
+  builder: (context, state) {
+    final userId = int.tryParse(state.pathParameters['userId'] ?? '');
+    if (userId == null) {
+      return const ProfileScreen();
+    }
+    return ProfileScreen(userId: userId);
+  },
+),
+StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),
         branches: [

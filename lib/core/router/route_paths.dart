@@ -25,5 +25,6 @@ class RoutePaths {
   static const String editWebLink = '/profile/edit-web-link';
   static const String trackPreviewBase = '/library/track-preview';
 
+  static String publicProfile(int userId) => '/users/$userId';
   static String trackPreview(int trackId) => '$trackPreviewBase/$trackId';
 }
