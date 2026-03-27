@@ -51,6 +51,14 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
       },
     );
   }
+
+  Future<void> getComments() async {
+    final result = await _repository.getComments(trackId: _trackId);
+
+    result.fold((failure) {}, (comments) {
+      state = state.copyWith(comments: comments);
+    });
+  }
 }
 
 final trackCommentsProvider =

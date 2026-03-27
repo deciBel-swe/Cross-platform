@@ -34,4 +34,10 @@ class TrackCommentsRepository implements ITrackCommentsRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<Comment>>> getComments({required int trackId}) {
+    // TODO: implement getComments
+    throw UnimplementedError();
+  }
 }

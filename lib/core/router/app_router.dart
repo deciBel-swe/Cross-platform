@@ -1,7 +1,7 @@
 /// GoRouter configuration – all app routes defined here.
 library;
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,10 +30,13 @@ import 'go_router_refresh_stream.dart';
 import 'main_shell.dart';
 import 'route_paths.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = GoRouterRefreshStream(ref);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: RoutePaths.home,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
@@ -138,6 +141,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'track-preview/:trackId',
+                    parentNavigatorKey: _rootNavigatorKey,
                     redirect: (context, state) {
                       final raw = state.pathParameters['trackId'];
                       final parsed = int.tryParse(raw ?? '');

@@ -9,4 +9,5 @@ abstract class ITrackCommentsRepository {
     required String body,
     required int? timestampSeconds,
   });
+  Future<Either<Failure, List<Comment>>> getComments({required int trackId});
 }

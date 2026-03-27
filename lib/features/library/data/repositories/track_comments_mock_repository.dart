@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -35,5 +36,23 @@ class TrackCommentsMockRepository implements ITrackCommentsRepository {
 
     _comments.insert(0, newComment);
     return Right(newComment);
+  }
+
+  @override
+  Future<Either<Failure, List<Comment>>> getComments({
+    required int trackId,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+
+    try {
+      final comments = mockTrackComments.map((comment) {
+        debugPrint(comment.toString());
+
+        return comment.toEntity();
+      }).toList();
+      return Right(comments);
+    } catch (e) {
+      return const Left(ServerFailure('Failed to load comments'));
+    }
   }
 }
