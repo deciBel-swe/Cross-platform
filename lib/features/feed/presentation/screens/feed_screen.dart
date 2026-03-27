@@ -2,63 +2,201 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../providers/following_feed_provider.dart';
 import '../widgets/feed_item.dart';
 
 /// Activity feed showing recent actions from followed users.
-class FeedScreen extends StatelessWidget {
+class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
+
+  @override
+  ConsumerState<FeedScreen> createState() => _FeedScreenState();
+}
+
+class _FeedScreenState extends ConsumerState<FeedScreen> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    final position = _scrollController.position;
+    final threshold = position.maxScrollExtent * 0.8;
+
+    if (position.pixels >= threshold) {
+      ref.read(followingFeedProvider.notifier).loadMore();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDesktop = _isDesktopLayout(context);
+    final feedAsync = ref.watch(followingFeedProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: isDesktop
-          ? null
-          : AppBar(centerTitle: true, title: const _MobileFeedTabs()),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
-          isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
-          isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
-          AppDimensions.paddingLg,
-        ),
-        children: [
-          if (isDesktop) ...[
-            const Text('Your Feed', style: AppTextStyles.sectionTitle),
-            const SizedBox(height: AppDimensions.paddingSm),
-            const Text(
-              'Hear the latest from people you follow.',
-              style: AppTextStyles.bodyMedium,
+          ? AppBar(
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              title: const Text('Your Feed'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () {
+                    ref.read(followingFeedProvider.notifier).refresh();
+                  },
+                ),
+              ],
+            )
+          : AppBar(
+              centerTitle: true,
+              title: const _MobileFeedTabs(),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () {
+                    ref.read(followingFeedProvider.notifier).refresh();
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: AppDimensions.paddingLg),
-          ],
-          ..._mockFeedItems.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
-              child: FeedItem(
-                userName: item.userName,
-                action: item.action,
-                trackTitle: item.trackTitle,
-                trackArtist: item.trackArtist,
-                timeAgo: item.timeAgo,
-                genre: item.genre,
-                likes: item.likes,
-                reposts: item.reposts,
-                plays: item.plays,
-                comments: item.comments,
-                duration: item.duration,
-                waveformPeaks: item.waveformPeaks,
-                gradientColors: item.colors,
-              ),
+      body: feedAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (error, _) => Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop
+                  ? AppDimensions.paddingLg
+                  : AppDimensions.paddingMd,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.wifi_off_rounded,
+                  color: AppColors.textMuted,
+                  size: 54,
+                ),
+                const SizedBox(height: AppDimensions.paddingMd),
+                const Text(
+                  'Failed to load following feed.',
+                  style: AppTextStyles.sectionTitle,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppDimensions.paddingSm),
+                TextButton(
+                  onPressed: () {
+                    ref.read(followingFeedProvider.notifier).refresh();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+        data: (items) => RefreshIndicator(
+          onRefresh: () => ref.read(followingFeedProvider.notifier).refresh(),
+          child: items.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    isDesktop
+                        ? AppDimensions.paddingLg
+                        : AppDimensions.paddingMd,
+                    isDesktop
+                        ? AppDimensions.paddingLg
+                        : AppDimensions.paddingMd,
+                    isDesktop
+                        ? AppDimensions.paddingLg
+                        : AppDimensions.paddingMd,
+                    AppDimensions.paddingLg,
+                  ),
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.18),
+                    const Icon(
+                      Icons.people_outline_rounded,
+                      color: AppColors.textMuted,
+                      size: 72,
+                    ),
+                    const SizedBox(height: AppDimensions.paddingMd),
+                    const Text(
+                      "That’s it — ready to follow more people?",
+                      style: AppTextStyles.sectionTitle,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                )
+              : ListView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    isDesktop
+                        ? AppDimensions.paddingLg
+                        : AppDimensions.paddingMd,
+                    isDesktop
+                        ? AppDimensions.paddingLg
+                        : AppDimensions.paddingMd,
+                    isDesktop
+                        ? AppDimensions.paddingLg
+                        : AppDimensions.paddingMd,
+                    AppDimensions.paddingLg,
+                  ),
+                  children: [
+                    if (isDesktop) ...[
+                      const SizedBox(height: AppDimensions.paddingSm),
+                      const Text(
+                        'Hear the latest from people you follow.',
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                      const SizedBox(height: AppDimensions.paddingLg),
+                    ],
+                    ...items.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppDimensions.paddingSm,
+                        ),
+                        child: FeedItem(
+                          userName: item.userName,
+                          action: item.action,
+                          trackTitle: item.trackTitle,
+                          trackArtist: item.trackArtist,
+                          timeAgo: item.timeAgo,
+                          genre: item.genre,
+                          likes: item.likes,
+                          reposts: item.reposts,
+                          plays: item.plays,
+                          comments: item.comments,
+                          duration: item.duration,
+                          waveformPeaks: item.waveformPeaks,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -70,93 +208,6 @@ bool _isDesktopLayout(BuildContext context) {
     return false;
   }
   return mediaQuery.size.width >= 801;
-}
-
-// ---- Mock data ----
-
-class _MockFeed {
-  _MockFeed({
-    required this.userName,
-    required this.action,
-    required this.trackTitle,
-    required this.trackArtist,
-    required this.timeAgo,
-    required this.genre,
-    required this.likes,
-    required this.reposts,
-    required this.plays,
-    required this.comments,
-    required this.duration,
-    required this.colors,
-  }) : waveformPeaks = _buildMockPeaks(seed: '$userName$trackTitle'.hashCode);
-
-  final String userName;
-  final String action;
-  final String trackTitle;
-  final String trackArtist;
-  final String timeAgo;
-  final String genre;
-  final String likes;
-  final String reposts;
-  final String plays;
-  final String comments;
-  final String duration;
-  final List<Color> colors;
-  final List<double> waveformPeaks;
-}
-
-final _mockFeedItems = [
-  _MockFeed(
-    userName: 'Bad-Bunny',
-    action: 'posted a track',
-    trackTitle: 'Super Bowl LX Halftime Show (Live)',
-    trackArtist: 'Bad Bunny, NFL',
-    timeAgo: '1 month ago',
-    genre: 'Latin',
-    likes: '6,877',
-    reposts: '296',
-    plays: '162K',
-    comments: '718',
-    duration: '13:41',
-    colors: [const Color(0xFF1E88E5), const Color(0xFFF4511E)],
-  ),
-  _MockFeed(
-    userName: 'Gunna',
-    action: 'posted a track',
-    trackTitle: 'wgft (Remix) [feat. Chris Brown]',
-    trackArtist: 'Gunna',
-    timeAgo: '2 months ago',
-    genre: 'Rap/Hip Hop',
-    likes: '17.9K',
-    reposts: '144',
-    plays: '705K',
-    comments: '195',
-    duration: '3:07',
-    colors: [const Color(0xFF3E2723), const Color(0xFF6D4C41)],
-  ),
-  _MockFeed(
-    userName: 'Gunna',
-    action: 'posted a track',
-    trackTitle: 'at my purest (feat. Offset)',
-    trackArtist: 'Gunna',
-    timeAgo: '7 months ago',
-    genre: 'Rap/Hip Hop',
-    likes: '26.2K',
-    reposts: '182',
-    plays: '1.52M',
-    comments: '230',
-    duration: '3:13',
-    colors: [const Color(0xFF37474F), const Color(0xFF263238)],
-  ),
-];
-
-List<double> _buildMockPeaks({required int seed, int count = 220}) {
-  final baseSeed = seed.abs() + 17;
-  return List<double>.generate(count, (index) {
-    final rawValue = ((baseSeed + (index * 37)) % 100) / 100;
-    final folded = rawValue <= 0.5 ? rawValue : (1 - rawValue);
-    return (folded * 1.8).clamp(0.06, 1.0);
-  });
 }
 
 class _MobileFeedTabs extends StatelessWidget {
