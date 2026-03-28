@@ -10,8 +10,10 @@ import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
 import '../notifiers/track_comment_notifier.dart';
+import 'active_comments_overlay.dart';
 import 'interactive_waveform.dart';
 import 'track_comment_input_bar.dart';
+import 'track_comments_bottom_sheet.dart';
 
 class TrackPreviewContent extends ConsumerWidget {
   const TrackPreviewContent({
@@ -68,7 +70,17 @@ class TrackPreviewContent extends ConsumerWidget {
                               artistName: track.artist.username,
                               tagLabel: 'Behind this track',
                             ),
+
                             const Spacer(),
+
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              child: ActiveCommentsOverlay(trackId: trackId),
+                            ),
+                            const SizedBox(height: 12),
+
                             if (isReady)
                               InteractiveWaveform(
                                 peaks: peaks as List<double>,
@@ -123,12 +135,17 @@ class TrackPreviewContent extends ConsumerWidget {
           ),
         ),
         BottomBarWidget(
-          isLiked:
-              isReady, // Passed down from previous logic or link to real data later
+          isLiked: isReady,
           likeCount: 28,
           commentCount: 3,
           onLikePressed: () {},
-          onCommentPressed: () {},
+          onCommentPressed: () {
+            TrackCommentsBottomSheet.show(
+              context,
+              trackId: trackId,
+              track: track,
+            );
+          },
           onSharePressed: () {},
           onPlaylistAddPressed: () {},
           onMoreOptionsPressed: () {},

@@ -8,6 +8,7 @@ abstract class ITrackCommentsRepository {
     required int trackId,
     required String body,
     required int? timestampSeconds,
+    int? commentid,
   });
   Future<Either<Failure, List<Comment>>> getComments({required int trackId});
 }

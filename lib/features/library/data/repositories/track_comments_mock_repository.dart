@@ -25,7 +25,7 @@ class TrackCommentsMockRepository implements ITrackCommentsRepository {
     required String body,
     int? timestampSeconds,
   }) async {
-    await Future<Void>.delayed(const Duration(milliseconds: 800));
+    await Future<void>.delayed(const Duration(milliseconds: 800));
 
     final serverId = _liveComments.length + 101;
 
@@ -46,7 +46,7 @@ class TrackCommentsMockRepository implements ITrackCommentsRepository {
   Future<Either<Failure, List<Comment>>> getComments({
     required int trackId,
   }) async {
-    await Future<Void>.delayed(const Duration(milliseconds: 400));
+    await Future<void>.delayed(const Duration(milliseconds: 400));
 
     try {
       // Return the live list, not the static fixture

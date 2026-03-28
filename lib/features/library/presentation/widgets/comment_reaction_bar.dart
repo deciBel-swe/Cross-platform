@@ -29,8 +29,6 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Row(
       children: [
         Expanded(
