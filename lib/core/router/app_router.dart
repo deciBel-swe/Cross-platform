@@ -2,7 +2,6 @@
 library;
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -214,20 +213,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
-      path: '/profile-image',
-      pageBuilder: (context, state) {
-        final imagePath = state.extra as String?;
-        return CustomTransitionPage(
-          key: state.pageKey,
-          opaque: false, 
-          barrierColor: AppColors.background.withValues(alpha: 0.9), 
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          child: FullscreenImagePage(imagePath: imagePath),
-        );
-      },
-    ),
+        path: '/profile-image',
+        pageBuilder: (context, state) {
+          final imagePath = state.extra as String?;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            opaque: false,
+            barrierColor: AppColors.background.withValues(alpha: 0.9),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+            child: FullscreenImagePage(imagePath: imagePath),
+          );
+        },
+      ),
     ],
   );
 });
