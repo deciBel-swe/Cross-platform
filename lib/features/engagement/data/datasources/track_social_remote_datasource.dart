@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../library/data/models/paginated_tracks_model.dart';
 
 @injectable
 class TrackSocialRemoteDatasource {
@@ -12,6 +13,26 @@ class TrackSocialRemoteDatasource {
   Future<void> likeTrack(String trackId) async {
     try {
       await _dioClient.post<dynamic>('/api/tracks/$trackId/like');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  Future<PaginatedTracksModel> getLikedTracks({
+    int page = 0,
+    int size = 10,
+  }) async {
+    try {
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/users/me/liked-tracks',
+        queryParams: {'page': page, 'size': size},
+      );
+
+      final data = response.data;
+      if (data == null) {
+        throw const ServerException('No data returned from server.');
+      }
+      return PaginatedTracksModel.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }

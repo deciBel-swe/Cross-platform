@@ -29,8 +29,17 @@ class TrackModel with _$TrackModel {
     required DateTime createdAt,
   }) = _TrackModel;
 
-  factory TrackModel.fromJson(Map<String, dynamic> json) =>
-      _$TrackModelFromJson(json);
+  factory TrackModel.fromJson(Map<String, dynamic> json) {
+    // Handle alternative keys from different endpoints
+    final map = Map<String, dynamic>.from(json);
+    if (!map.containsKey('createdAt') && map.containsKey('uploadDate')) {
+      map['createdAt'] = map['uploadDate'];
+    }
+    if (!map.containsKey('state')) {
+      map['state'] = 'FINISHED';
+    }
+    return _$TrackModelFromJson(map);
+  }
 
   factory TrackModel.fromJsonString(String jsonString) =>
       TrackModel.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
