@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 import '../../../library_profile/presentation/providers/track_repository_provider.dart';
