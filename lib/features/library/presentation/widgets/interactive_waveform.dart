@@ -6,6 +6,7 @@ import '../state/track_audio_state.dart';
 
 class InteractiveWaveform extends StatelessWidget {
   const InteractiveWaveform({
+    super.key,
     required this.peaks,
     required this.audioState,
     required this.audioNotifier,

@@ -1,10 +1,8 @@
-import 'package:croppy/croppy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../domain/entities/comment.dart';
-import '../notifiers/track_audio_notifier.dart';
 
 /// Displays a single comment, including user info, timestamp, and content.
 class TrackCommentTile extends ConsumerWidget {
@@ -16,7 +14,14 @@ class TrackCommentTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final timeFormatted = _formatTimeAgo(comment.createdAt);
-    final timestampFormatted = _formatTimestamp(comment.timestampSeconds!);
+
+    // Ensure we handle null timestamp safely
+    final timestampSeconds = comment.timestampSeconds ?? 0;
+    final timestampFormatted = _formatTimestamp(timestampSeconds);
+
+    // Logic for Image Handling
+    final avatarUrl = comment.user.avatarUrl;
+    final hasValidUrl = avatarUrl != null && avatarUrl.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -26,14 +31,19 @@ class TrackCommentTile extends ConsumerWidget {
           CircleAvatar(
             radius: 18,
             backgroundColor: theme.colorScheme.surfaceContainerHighest,
-            backgroundImage:
-                comment.user.avatarUrl != null &&
-                    comment.user.avatarUrl!.isNotEmpty
-                ? NetworkImage(comment.user.avatarUrl!)
+
+            // 1. Only provide the provider if the URL is valid
+            backgroundImage: hasValidUrl ? NetworkImage(avatarUrl) : null,
+
+            // If there is no image, there MUST be no error handler.
+            onBackgroundImageError: hasValidUrl
+                ? (exception, stackTrace) {
+                    debugPrint('Image failed: $exception');
+                  }
                 : null,
-            child:
-                comment.user.avatarUrl == null &&
-                    comment.user.avatarUrl!.isEmpty
+
+            // 3. Fallback UI
+            child: !hasValidUrl
                 ? Icon(
                     Icons.person,
                     size: 20,
@@ -46,104 +56,30 @@ class TrackCommentTile extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      comment.user.username,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.8,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      "at",
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Material(
-                      child: InkWell(
-                        child: Text(
-                          ' $timestampFormatted',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.secondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        onTap: () {
-                          ref
-                              .read(trackAudioProvider.notifier)
-                              .seek(
-                                Duration(seconds: comment.timestampSeconds!),
-                              );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '• $timeFormatted',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                    ),
-                  ],
+                _CommentHeader(
+                  username: comment.user.username,
+                  timestamp: timestampFormatted,
+                  timeAgo: timeFormatted,
+                  onTimestampTap: () {
+                    ref
+                        .read(trackAudioProvider.notifier)
+                        .seek(Duration(seconds: timestampSeconds));
+                  },
                 ),
                 const SizedBox(height: 6),
                 Text(comment.body, style: theme.textTheme.bodyMedium),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text(
-                      'Reply',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(
-                      Icons.more_vert,
-                      size: 14,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ],
-                ),
+                const _CommentActions(),
               ],
             ),
           ),
-          Column(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.favorite_border, size: 18),
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  // TODO(decibel): Implement comment liking functionality
-                },
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '0', // TODO(decibel): Replace with actual comment like count
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
-          ),
+          const _LikeSection(count: '0'),
         ],
       ),
     );
   }
 
+  // Formatting helpers kept private to the widget
   String _formatTimestamp(int seconds) {
     final minutes = seconds ~/ 60;
     final remainingSeconds = seconds % 60;
@@ -157,5 +93,105 @@ class TrackCommentTile extends ConsumerWidget {
     if (difference.inHours > 0) return '${difference.inHours}h';
     if (difference.inMinutes > 0) return '${difference.inMinutes}m';
     return 'Just now';
+  }
+}
+
+/// Private sub-widget for the header row to keep main build clean
+class _CommentHeader extends StatelessWidget {
+  const _CommentHeader({
+    required this.username,
+    required this.timestamp,
+    required this.timeAgo,
+    required this.onTimestampTap,
+  });
+
+  final String username;
+  final String timestamp;
+  final String timeAgo;
+  final VoidCallback onTimestampTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fadedTextStyle = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+    );
+
+    return Row(
+      children: [
+        Text(
+          username,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text("at", style: fadedTextStyle),
+        const SizedBox(width: 4),
+        GestureDetector(
+          onTap: onTimestampTap,
+          child: Text(
+            timestamp,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.secondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text('• $timeAgo', style: fadedTextStyle),
+      ],
+    );
+  }
+}
+
+class _CommentActions extends StatelessWidget {
+  const _CommentActions();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final actionStyle = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.bold,
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+    );
+
+    return Row(
+      children: [
+        Text('Reply', style: actionStyle),
+        const SizedBox(width: 16),
+        Icon(
+          Icons.more_vert,
+          size: 14,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
+      ],
+    );
+  }
+}
+
+class _LikeSection extends StatelessWidget {
+  const _LikeSection({required this.count});
+  final String count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.onSurface.withValues(alpha: 0.6);
+
+    return Column(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.favorite_border, size: 18),
+          color: color,
+          constraints: const BoxConstraints(),
+          padding: EdgeInsets.zero,
+          onPressed: () {},
+        ),
+        const SizedBox(height: 4),
+        Text(count, style: theme.textTheme.labelSmall?.copyWith(color: color)),
+      ],
+    );
   }
 }

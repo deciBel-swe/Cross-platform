@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 
 class CommentReactionBar extends StatefulWidget {
-  const CommentReactionBar({super.key, this.onSendTap, this.onReactionTap});
+  const CommentReactionBar({
+    super.key,
+    this.onSendTap,
+    this.onReactionTap,
+    this.timestamp,
+    this.userAvatarUrl,
+  });
 
+  final String? timestamp;
+  final String? userAvatarUrl;
   final ValueChanged<String>? onSendTap;
   final ValueChanged<String>? onReactionTap;
 
@@ -23,7 +31,6 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // ValueListenableBuilder ensures the UI updates the exact millisecond the text changes
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: _controller,
       builder: (context, value, child) {
@@ -31,19 +38,20 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
 
         return Row(
           children: [
+            _UserAvatar(imageUrl: widget.userAvatarUrl),
+            const SizedBox(width: 12),
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(100),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
                 ),
-                child: Container(
-                  height: 50,
+                child: SizedBox(
+                  height: 48,
                   child: Row(
                     children: [
                       Expanded(
@@ -53,15 +61,24 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
                             color: Colors.white,
                             fontSize: 15,
                           ),
-                          decoration: const InputDecoration.collapsed(
-                            hintText: 'Drop a commen...',
-                            hintStyle: TextStyle(color: Colors.white38),
+                          decoration: InputDecoration.collapsed(
+                            hintText: widget.timestamp != null
+                                ? 'Comment at'
+                                : 'Drop a comment...',
+                            hintStyle: const TextStyle(color: Colors.white54),
                           ),
                         ),
                       ),
-                      // Emojis disappear smoothly when text is present
-                      if (!hasText) ...[
-                        const SizedBox(width: 8),
+                      if (widget.timestamp != null && !hasText) ...[
+                        Text(
+                          widget.timestamp!,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ] else if (!hasText) ...[
                         _ReactionButton(
                           emoji: '🔥',
                           onTap: () => widget.onReactionTap?.call('🔥'),
@@ -82,7 +99,6 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
                 ),
               ),
             ),
-            // Send button appears when typing
             if (hasText) ...[
               const SizedBox(width: 10),
               GestureDetector(
@@ -102,7 +118,7 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
                   child: const Icon(
                     Icons.send_rounded,
                     color: Colors.black,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
               ),
@@ -110,6 +126,39 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
           ],
         );
       },
+    );
+  }
+}
+
+class _UserAvatar extends StatelessWidget {
+  const _UserAvatar({this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: 0.1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: imageUrl != null && imageUrl!.trim().isNotEmpty
+          ? Image.network(
+              imageUrl!,
+              fit: BoxFit.cover,
+              // Intercepts the 404 or any HTTP failure silently
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(
+                  Icons.person,
+                  size: 20,
+                  color: Colors.white54,
+                );
+              },
+            )
+          : const Icon(Icons.person, size: 20, color: Colors.white54),
     );
   }
 }
@@ -125,7 +174,7 @@ class _ReactionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Text(emoji, style: const TextStyle(fontSize: 20)),
+      child: Text(emoji, style: const TextStyle(fontSize: 18)),
     );
   }
 }
