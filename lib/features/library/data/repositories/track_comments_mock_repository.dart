@@ -1,7 +1,6 @@
-import 'dart:async';
+import 'dart:ffi';
 
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -14,27 +13,32 @@ import '../models/post_comment_response_model.dart';
 @Environment("mock")
 @LazySingleton(as: ITrackCommentsRepository)
 class TrackCommentsMockRepository implements ITrackCommentsRepository {
-  final List<Comment> _comments = mockTrackComments
+  // Local state to simulate a database
+  final List<Comment> _liveComments = mockTrackComments
       .map((comment) => comment.toEntity())
       .toList();
 
   @override
   Future<Either<Failure, Comment>> postComment({
+    int? commentid, // Temporary ID from Notifier
     required int trackId,
     required String body,
     int? timestampSeconds,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await Future<Void>.delayed(const Duration(milliseconds: 800));
+
+    final serverId = _liveComments.length + 101;
 
     final newComment = Comment(
-      id: _comments.isEmpty ? 1 : _comments.first.id + 1,
+      commentid: serverId,
       user: mockCommentUser.toEntity(),
       body: body,
       timestampSeconds: timestampSeconds,
       createdAt: DateTime.now(),
     );
 
-    _comments.insert(0, newComment);
+    _liveComments.insert(0, newComment);
+
     return Right(newComment);
   }
 
@@ -42,17 +46,13 @@ class TrackCommentsMockRepository implements ITrackCommentsRepository {
   Future<Either<Failure, List<Comment>>> getComments({
     required int trackId,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await Future<Void>.delayed(const Duration(milliseconds: 400));
 
     try {
-      final comments = mockTrackComments.map((comment) {
-        debugPrint(comment.toString());
-
-        return comment.toEntity();
-      }).toList();
-      return Right(comments);
+      // Return the live list, not the static fixture
+      return Right(List.from(_liveComments));
     } catch (e) {
-      return const Left(ServerFailure('Failed to load comments'));
+      return const Left(ServerFailure('Mock: Failed to load comments'));
     }
   }
 }

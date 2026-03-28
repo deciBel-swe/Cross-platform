@@ -23,7 +23,7 @@ class PostCommentResponseModel with _$PostCommentResponseModel {
 extension PostCommentResponseModelX on PostCommentResponseModel {
   Comment toEntity() {
     return Comment(
-      id: commentId,
+      commentid: commentId,
       user: user.toEntity(),
       body: body,
       timestampSeconds: timestampSeconds,

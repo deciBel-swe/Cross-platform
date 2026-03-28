@@ -16,6 +16,7 @@ class TrackCommentsRepository implements ITrackCommentsRepository {
   final TrackCommentsRemoteDataSource _remoteDatasource;
   @override
   Future<Either<Failure, Comment>> postComment({
+    int? commentid,
     required int trackId,
     required String body,
     int? timestampSeconds,
@@ -29,6 +30,7 @@ class TrackCommentsRepository implements ITrackCommentsRepository {
         trackId: trackId,
         request: req,
       );
+
       return Right(comment.toEntity());
     } catch (e) {
       return Left(ServerFailure(e.toString()));
