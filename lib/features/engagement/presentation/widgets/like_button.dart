@@ -33,14 +33,10 @@ class _LikeButtonState extends ConsumerState<LikeButton> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(trackSocialProvider.notifier)
-          .initializeTrack(
+          .mergeTrack(
             widget.trackId,
-            TrackSocialData(
-              isLiked: widget.isLiked,
-              likeCount: widget.likeCount,
-              isReposted: false,
-              repostCount: 0,
-            ),
+            isLiked: widget.isLiked,
+            likeCount: widget.likeCount,
           );
     });
   }

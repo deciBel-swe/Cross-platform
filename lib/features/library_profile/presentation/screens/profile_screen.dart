@@ -204,7 +204,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         const RepostButton(
                           trackId: '1234',
-                          isReposted: false,
+                          isReposted: true,
                           repostCount: 0,
                           iconSize: 32,
                           fontSize: 18,

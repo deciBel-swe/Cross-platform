@@ -34,36 +34,79 @@ class _RepostButtonState extends ConsumerState<RepostButton> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(trackSocialProvider.notifier)
-          .initializeTrack(
+          .mergeTrack(
             widget.trackId,
-            TrackSocialData(
-              isLiked: false,
-              likeCount: 0,
-              isReposted: widget.isReposted,
-              repostCount: widget.repostCount,
-            ),
+            isReposted: widget.isReposted,
+            repostCount: widget.repostCount,
           );
     });
+  }
+
+  void _handleTap(BuildContext context, bool isCurrentlyReposted) {
+    if (isCurrentlyReposted) {
+      showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppConstants.buttonRadius * 2),
+          ),
+          title: const Text(
+            'Remove repost?',
+            style: TextStyle(color: AppColors.onPrimary),
+          ),
+          content: const Text(
+            'This will be removed from your profile and timeline.',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text(
+                'Remove',
+                style: TextStyle(color: AppColors.primary),
+              ),
+            ),
+          ],
+        ),
+      ).then((confirmed) {
+        if (confirmed == true) {
+          ref
+              .read(trackSocialProvider.notifier)
+              .toggleAction(widget.trackId, SocialActionType.repost);
+        }
+      });
+    } else {
+      ref
+          .read(trackSocialProvider.notifier)
+          .toggleAction(widget.trackId, SocialActionType.repost);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final providerState = ref.watch(trackSocialProvider);
     final trackData = providerState.trackStates[widget.trackId];
+    final isCurrentlyReposted = trackData?.isReposted ?? widget.isReposted;
     final isLoading = providerState.loadingKeys.contains(
       'repost_${widget.trackId}',
     );
 
     return SocialActionButton(
-      isActive: trackData?.isReposted ?? widget.isReposted,
+      isActive: isCurrentlyReposted,
       count: trackData?.repostCount ?? widget.repostCount,
       isLoading: isLoading,
       activeIcon: Icons.repeat,
       inactiveIcon: Icons.repeat,
       activeColor: AppColors.primary,
-      onToggle: () => ref
-          .read(trackSocialProvider.notifier)
-          .toggleAction(widget.trackId, SocialActionType.repost),
+      onToggle: () => _handleTap(context, isCurrentlyReposted),
       iconSize: widget.iconSize ?? AppConstants.iconSizeMedium,
       fontSize: widget.fontSize ?? AppConstants.fontSizeRegular,
     );

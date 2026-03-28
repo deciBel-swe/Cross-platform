@@ -22,6 +22,35 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
     state = state.copyWith(trackStates: newTrackStates);
   }
 
+  void mergeTrack(
+    String trackId, {
+    bool? isLiked,
+    int? likeCount,
+    bool? isReposted,
+    int? repostCount,
+  }) {
+    final newTrackStates = Map<String, TrackSocialData>.from(state.trackStates);
+    final existing = newTrackStates[trackId];
+
+    if (existing == null) {
+      newTrackStates[trackId] = TrackSocialData(
+        isLiked: isLiked ?? false,
+        likeCount: likeCount ?? 0,
+        isReposted: isReposted ?? false,
+        repostCount: repostCount ?? 0,
+      );
+    } else {
+      newTrackStates[trackId] = existing.copyWith(
+        isLiked: isLiked ?? existing.isLiked,
+        likeCount: likeCount ?? existing.likeCount,
+        isReposted: isReposted ?? existing.isReposted,
+        repostCount: repostCount ?? existing.repostCount,
+      );
+    }
+
+    state = state.copyWith(trackStates: newTrackStates);
+  }
+
   Future<void> toggleAction(String trackId, SocialActionType actionType) async {
     final trackData = state.trackStates[trackId];
     if (trackData == null) return;
