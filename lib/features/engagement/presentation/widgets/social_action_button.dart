@@ -91,7 +91,7 @@ class _SocialActionButtonState extends State<SocialActionButton>
               key: ValueKey<int>(widget.count),
               style: TextStyle(
                 color: widget.isLoading
-                    ? AppColors.primary
+                    ? AppColors.onPrimary
                     : AppColors.onPrimary,
                 fontSize: widget.fontSize,
               ),

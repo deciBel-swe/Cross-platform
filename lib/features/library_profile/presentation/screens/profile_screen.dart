@@ -194,21 +194,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           onButtonPressed: () =>
                               context.push(RoutePaths.editProfile),
                         ),
-                        const Text('like and repost buttons:'),
-                        const LikeButton(
-                          trackId: '1234',
-                          isLiked: false,
-                          likeCount: 0,
-                          iconSize: 32,
-                          fontSize: 18,
-                        ),
-                        const RepostButton(
-                          trackId: '1234',
-                          isReposted: true,
-                          repostCount: 0,
-                          iconSize: 32,
-                          fontSize: 18,
-                        ),
                         TopTracksSection(userId: user.id),
                         const SizedBox(height: AppConstants.spacingLarge),
                         const MediaCollection(),
