@@ -1,0 +1,70 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../domain/models/track_action_data.dart';
+import '../notifiers/track_action_notifier.dart';
+import 'social_action_button.dart';
+
+class LikeButton extends ConsumerStatefulWidget {
+  const LikeButton({
+    super.key,
+    required this.trackId,
+    required this.isLiked,
+    required this.likeCount,
+    this.iconSize,
+    this.fontSize,
+  });
+  final String trackId;
+  final bool isLiked;
+  final int likeCount;
+  final double? iconSize;
+  final double? fontSize;
+
+  @override
+  ConsumerState<LikeButton> createState() => _LikeButtonState();
+}
+
+class _LikeButtonState extends ConsumerState<LikeButton> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(trackSocialProvider.notifier)
+          .initializeTrack(
+            widget.trackId,
+            TrackSocialData(
+              isLiked: widget.isLiked,
+              likeCount: widget.likeCount,
+              isReposted: false,
+              repostCount: 0,
+            ),
+          );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final providerState = ref.watch(trackSocialProvider);
+    final trackData = providerState.trackStates[widget.trackId];
+    final isLoading = providerState.loadingKeys.contains(
+      'like_${widget.trackId}',
+    );
+
+    return SocialActionButton(
+      isActive: trackData?.isLiked ?? widget.isLiked,
+      count: trackData?.likeCount ?? widget.likeCount,
+      isLoading: isLoading,
+      activeIcon: Icons.favorite,
+      inactiveIcon: Icons.favorite_border,
+      activeColor: AppColors.primary,
+      onToggle: () => ref
+          .read(trackSocialProvider.notifier)
+          .toggleAction(widget.trackId, SocialActionType.like),
+      iconSize: widget.iconSize ?? AppConstants.iconSizeMedium,
+      fontSize: widget.fontSize ?? AppConstants.fontSizeRegular,
+    );
+  }
+}

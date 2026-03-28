@@ -22,6 +22,12 @@ import '../../features/auth/data/repositories/mock_auth_repository.dart'
     as _i703;
 import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
+import '../../features/engagement/data/datasources/track_social_remote_datasource.dart'
+    as _i459;
+import '../../features/engagement/data/repositories/track_social_repository_impl.dart'
+    as _i529;
+import '../../features/engagement/domain/repositories/track_social_repository.dart'
+    as _i590;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
 import '../../features/library_profile/data/datasources/genre_data_source_remote.dart'
@@ -94,6 +100,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i464.UploadRemoteDatasource>(
       () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.factory<_i459.TrackSocialRemoteDatasource>(
+      () => _i459.TrackSocialRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
@@ -110,6 +119,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i107.IAuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i590.ITrackSocialRepository>(
+      () => _i529.TrackSocialRepositoryImpl(
+        gh<_i459.TrackSocialRemoteDatasource>(),
+      ),
     );
     gh.lazySingleton<_i106.ProfileRepository>(
       () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),

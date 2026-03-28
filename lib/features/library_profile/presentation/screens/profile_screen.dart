@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../engagement/presentation/widgets/like_button.dart';
+import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../domain/entities/user_profile.dart';
 import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
@@ -191,6 +193,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           buttonText: AppConstants.edit,
                           onButtonPressed: () =>
                               context.push(RoutePaths.editProfile),
+                        ),
+                        const Text('like and repost buttons:'),
+                        const LikeButton(
+                          trackId: '1234',
+                          isLiked: false,
+                          likeCount: 0,
+                          iconSize: 32,
+                          fontSize: 18,
+                        ),
+                        const RepostButton(
+                          trackId: '1234',
+                          isReposted: false,
+                          repostCount: 0,
+                          iconSize: 32,
+                          fontSize: 18,
                         ),
                         TopTracksSection(userId: user.id),
                         const SizedBox(height: AppConstants.spacingLarge),
