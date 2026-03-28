@@ -56,9 +56,8 @@ class TrackSocialRemoteDatasource {
       // Server returned an HTTP error status
       case DioExceptionType.badResponse:
         final status = e.response?.statusCode;
-        final serverMessage =
-            e.response?.data?['message'] as String? ??
-            e.response?.data?['error'] as String?;
+        final body = e.response?.data as Map<String, dynamic>?;
+        final serverMessage = body?['message'] as String?;
 
         return switch (status) {
           401 => const AuthException('Session expired. Please log in again.'),
@@ -87,4 +86,3 @@ class TrackSocialRemoteDatasource {
     }
   }
 }
-
