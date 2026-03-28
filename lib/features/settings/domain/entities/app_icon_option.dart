@@ -1,5 +1,16 @@
 /// Available app icon options.
-enum AppIconOption { classic, black, white, style1, style2, style3, style4, style5, style6White, style6Black }
+enum AppIconOption {
+  classic,
+  black,
+  white,
+  style1,
+  style2,
+  style3,
+  style4,
+  style5,
+  style6White,
+  style6Black,
+}
 
 extension AppIconOptionX on AppIconOption {
   String get storageKey => name;

@@ -18,7 +18,9 @@ class GenreRemoteDataSource implements IGenreRemoteDataSource {
   @override
   Future<List<String>> getGenres() async {
     try {
-      final response = await _dioClient.get<dynamic>(ApiConstants.genresEndpoint);
+      final response = await _dioClient.get<dynamic>(
+        ApiConstants.genresEndpoint,
+      );
       final data = response.data;
 
       // 2. Check if it's a Map before accessing the 'data' key

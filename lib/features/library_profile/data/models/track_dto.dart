@@ -6,18 +6,18 @@ part 'track_dto.g.dart';
 
 @freezed
 class TrackDto with _$TrackDto {
-
   const factory TrackDto({
     required int id,
     required String title,
-    required Map<String, dynamic> artist, 
+    required Map<String, dynamic> artist,
     String? coverUrl,
     @Default(0) int playCount,
     @Default(0) int likeCount,
   }) = _TrackDto;
   const TrackDto._();
 
-  factory TrackDto.fromJson(Map<String, dynamic> json) => _$TrackDtoFromJson(json);
+  factory TrackDto.fromJson(Map<String, dynamic> json) =>
+      _$TrackDtoFromJson(json);
 
   // Maps the DTO to the Domain Entity
   Track toEntity() {
