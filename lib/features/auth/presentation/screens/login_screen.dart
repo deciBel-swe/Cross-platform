@@ -169,7 +169,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 // ---- Continue button (white) ----
                 ElevatedButton(
-                  onPressed: null, // TODO(auth): enable once local/WebView auth is wired up
+                  onPressed:
+                      null, // TODO(auth): enable once local/WebView auth is wired up
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.onPrimary,
                     foregroundColor: AppColors.onBackground,

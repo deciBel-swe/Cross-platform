@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+
 class GenreSelector extends StatelessWidget {
   const GenreSelector({
     super.key,
@@ -11,7 +12,6 @@ class GenreSelector extends StatelessWidget {
   final List<String> availableGenres;
   final List<String> selectedGenres;
   final void Function(String genre, bool isSelected) onGenreToggled;
-
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +38,10 @@ class GenreSelector extends StatelessWidget {
               backgroundColor: AppColors.surface,
               selectedColor: AppColors.google,
               checkmarkColor: AppColors.onPrimary,
-              labelStyle: const TextStyle(color:  AppColors.onPrimary ),
-              side: BorderSide(color: isSelected ? AppColors.google : Colors.transparent),
+              labelStyle: const TextStyle(color: AppColors.onPrimary),
+              side: BorderSide(
+                color: isSelected ? AppColors.google : Colors.transparent,
+              ),
             );
           }).toList(),
         ),

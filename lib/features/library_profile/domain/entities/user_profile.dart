@@ -3,9 +3,11 @@ import 'public_profile_social_links.dart';
 
 // Use JsonValue so Freezed knows how to map the uppercase API response
 
-enum UserTier { 
-  @JsonValue('FREE') free, 
-  @JsonValue('PRO') pro,
+enum UserTier {
+  @JsonValue('FREE')
+  free,
+  @JsonValue('PRO')
+  pro,
 }
 
 class UserProfile {
@@ -53,10 +55,7 @@ class UserProfileDetails {
 }
 
 class PrivacySettings {
-  const PrivacySettings({
-    required this.isPrivate,
-    required this.showHistory,
-  });
+  const PrivacySettings({required this.isPrivate, required this.showHistory});
 
   final bool isPrivate;
   final bool showHistory;

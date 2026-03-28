@@ -17,7 +17,6 @@ class ProfileTextField extends StatelessWidget {
   final int? maxLength;
   final String? Function(String?)? validator;
 
-
   @override
   Widget build(BuildContext context) {
     return TextFormField(

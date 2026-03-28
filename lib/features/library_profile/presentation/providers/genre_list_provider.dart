@@ -6,7 +6,7 @@ import '../../../../core/errors/failures.dart';
 import '../../domain/repositories/genre_repository.dart';
 import '../notifiers/genre_list_notifier.dart';
 
-  final allGenreRepositoryProvider = Provider<AllGenresRepository>((ref) {
+final allGenreRepositoryProvider = Provider<AllGenresRepository>((ref) {
   return getIt<AllGenresRepository>(); // This must match exactly!
 });
 final allGenreListProvider =
