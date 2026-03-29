@@ -27,8 +27,6 @@ mixin _$CreatePlaylistRequest {
   String? get description => throw _privateConstructorUsedError;
   String get type => throw _privateConstructorUsedError;
   bool get isPrivate => throw _privateConstructorUsedError;
-  @JsonKey(name: 'CoverArt')
-  String? get coverArt => throw _privateConstructorUsedError;
 
   /// Serializes this CreatePlaylistRequest to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -47,13 +45,7 @@ abstract class $CreatePlaylistRequestCopyWith<$Res> {
     $Res Function(CreatePlaylistRequest) then,
   ) = _$CreatePlaylistRequestCopyWithImpl<$Res, CreatePlaylistRequest>;
   @useResult
-  $Res call({
-    String title,
-    String? description,
-    String type,
-    bool isPrivate,
-    @JsonKey(name: 'CoverArt') String? coverArt,
-  });
+  $Res call({String title, String? description, String type, bool isPrivate});
 }
 
 /// @nodoc
@@ -78,7 +70,6 @@ class _$CreatePlaylistRequestCopyWithImpl<
     Object? description = freezed,
     Object? type = null,
     Object? isPrivate = null,
-    Object? coverArt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -98,10 +89,6 @@ class _$CreatePlaylistRequestCopyWithImpl<
                 ? _value.isPrivate
                 : isPrivate // ignore: cast_nullable_to_non_nullable
                       as bool,
-            coverArt: freezed == coverArt
-                ? _value.coverArt
-                : coverArt // ignore: cast_nullable_to_non_nullable
-                      as String?,
           )
           as $Val,
     );
@@ -117,13 +104,7 @@ abstract class _$$CreatePlaylistRequestImplCopyWith<$Res>
   ) = __$$CreatePlaylistRequestImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({
-    String title,
-    String? description,
-    String type,
-    bool isPrivate,
-    @JsonKey(name: 'CoverArt') String? coverArt,
-  });
+  $Res call({String title, String? description, String type, bool isPrivate});
 }
 
 /// @nodoc
@@ -145,7 +126,6 @@ class __$$CreatePlaylistRequestImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? type = null,
     Object? isPrivate = null,
-    Object? coverArt = freezed,
   }) {
     return _then(
       _$CreatePlaylistRequestImpl(
@@ -165,10 +145,6 @@ class __$$CreatePlaylistRequestImplCopyWithImpl<$Res>
             ? _value.isPrivate
             : isPrivate // ignore: cast_nullable_to_non_nullable
                   as bool,
-        coverArt: freezed == coverArt
-            ? _value.coverArt
-            : coverArt // ignore: cast_nullable_to_non_nullable
-                  as String?,
       ),
     );
   }
@@ -182,7 +158,6 @@ class _$CreatePlaylistRequestImpl implements _CreatePlaylistRequest {
     this.description,
     this.type = 'PLAYLIST',
     this.isPrivate = true,
-    @JsonKey(name: 'CoverArt') this.coverArt,
   });
 
   factory _$CreatePlaylistRequestImpl.fromJson(Map<String, dynamic> json) =>
@@ -198,13 +173,10 @@ class _$CreatePlaylistRequestImpl implements _CreatePlaylistRequest {
   @override
   @JsonKey()
   final bool isPrivate;
-  @override
-  @JsonKey(name: 'CoverArt')
-  final String? coverArt;
 
   @override
   String toString() {
-    return 'CreatePlaylistRequest(title: $title, description: $description, type: $type, isPrivate: $isPrivate, coverArt: $coverArt)';
+    return 'CreatePlaylistRequest(title: $title, description: $description, type: $type, isPrivate: $isPrivate)';
   }
 
   @override
@@ -217,15 +189,13 @@ class _$CreatePlaylistRequestImpl implements _CreatePlaylistRequest {
                 other.description == description) &&
             (identical(other.type, type) || other.type == type) &&
             (identical(other.isPrivate, isPrivate) ||
-                other.isPrivate == isPrivate) &&
-            (identical(other.coverArt, coverArt) ||
-                other.coverArt == coverArt));
+                other.isPrivate == isPrivate));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, title, description, type, isPrivate, coverArt);
+      Object.hash(runtimeType, title, description, type, isPrivate);
 
   /// Create a copy of CreatePlaylistRequest
   /// with the given fields replaced by the non-null parameter values.
@@ -251,7 +221,6 @@ abstract class _CreatePlaylistRequest implements CreatePlaylistRequest {
     final String? description,
     final String type,
     final bool isPrivate,
-    @JsonKey(name: 'CoverArt') final String? coverArt,
   }) = _$CreatePlaylistRequestImpl;
 
   factory _CreatePlaylistRequest.fromJson(Map<String, dynamic> json) =
@@ -265,9 +234,6 @@ abstract class _CreatePlaylistRequest implements CreatePlaylistRequest {
   String get type;
   @override
   bool get isPrivate;
-  @override
-  @JsonKey(name: 'CoverArt')
-  String? get coverArt;
 
   /// Create a copy of CreatePlaylistRequest
   /// with the given fields replaced by the non-null parameter values.

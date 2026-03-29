@@ -10,7 +10,6 @@ class CreatePlaylistRequest with _$CreatePlaylistRequest {
     String? description,
     @Default('PLAYLIST') String type,
     @Default(true) bool isPrivate,
-    @JsonKey(name: 'CoverArt') String? coverArt,
   }) = _CreatePlaylistRequest;
 
   factory CreatePlaylistRequest.fromJson(Map<String, dynamic> json) =>

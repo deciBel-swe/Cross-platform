@@ -13,7 +13,6 @@ _$CreatePlaylistRequestImpl _$$CreatePlaylistRequestImplFromJson(
   description: json['description'] as String?,
   type: json['type'] as String? ?? 'PLAYLIST',
   isPrivate: json['isPrivate'] as bool? ?? true,
-  coverArt: json['CoverArt'] as String?,
 );
 
 Map<String, dynamic> _$$CreatePlaylistRequestImplToJson(
@@ -23,5 +22,4 @@ Map<String, dynamic> _$$CreatePlaylistRequestImplToJson(
   'description': instance.description,
   'type': instance.type,
   'isPrivate': instance.isPrivate,
-  'CoverArt': instance.coverArt,
 };
