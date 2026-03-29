@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/create_playlist_request.dart';
@@ -26,7 +27,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     try {
       // TODO: the playlist title cannot exceed 100 char
       final response = await _dioClient.post<dynamic>(
-        '/api/playlists',
+        ApiConstants.playlists,
         data: request.toJson(),
       );
       final responseData = response.data as Map<String, dynamic>;
@@ -45,7 +46,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   ) async {
     try {
       final response = await _dioClient.patch<dynamic>(
-        '/api/playlists/$playListId',
+        '${ApiConstants.playlists}/$playListId',
         data: request.toJson(),
       );
       final responseData = response.data as Map<String, dynamic>;
@@ -61,7 +62,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   Future<void> deletePlayList(int playListId) async {
     try {
       await _dioClient.delete<dynamic>(
-        '/api/playlist/$playListId',
+        '${ApiConstants.playlists}/$playListId',
       ); // 204 no content
     } on DioException catch (error) {
       throw ServerException(error.message ?? 'Failed to delete playlist');
