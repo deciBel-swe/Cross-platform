@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
@@ -8,10 +10,14 @@ import '../models/create_playlist_request.dart';
 import '../models/playlist_model.dart';
 
 abstract class IPlaylistRemoteDataSource {
-  Future<PlaylistModel> createPlaylist(CreatePlaylistRequest request);
+  Future<PlaylistModel> createPlaylist(
+    CreatePlaylistRequest request,
+    File? coverImage,
+  );
   Future<PlaylistModel> updatePlaylist(
     int playListId,
     CreatePlaylistRequest request,
+    File? coverImage,
   );
   Future<void> deletePlayList(int playListId);
 }
@@ -23,9 +29,26 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   final DioClient _dioClient;
 
   @override
-  Future<PlaylistModel> createPlaylist(CreatePlaylistRequest request) async {
+  Future<PlaylistModel> createPlaylist(
+    CreatePlaylistRequest request,
+    File? coverImage,
+  ) async {
     try {
       // TODO: the playlist title cannot exceed 100 char
+
+      final dataMap = request.toJson();
+      final formData = FormData.fromMap(dataMap);
+
+      if (coverImage != null) {
+        final imageName = coverImage.path.split('/').last;
+        formData.files.add(
+          MapEntry(
+            'CoverArt',
+            await MultipartFile.fromFile(coverImage.path, filename: imageName),
+          ),
+        );
+      }
+
       final response = await _dioClient.post<dynamic>(
         ApiConstants.playlists,
         data: request.toJson(),
@@ -43,8 +66,22 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   Future<PlaylistModel> updatePlaylist(
     int playListId,
     CreatePlaylistRequest request,
+    File? coverImage,
   ) async {
     try {
+      final dataMap = request.toJson();
+      final formData = FormData.fromMap(dataMap);
+
+      if (coverImage != null) {
+        final imageName = coverImage.path.split('/').last;
+        formData.files.add(
+          MapEntry(
+            'CoverArt',
+            await MultipartFile.fromFile(coverImage.path, filename: imageName),
+          ),
+        );
+      }
+
       final response = await _dioClient.patch<dynamic>(
         '${ApiConstants.playlists}/$playListId',
         data: request.toJson(),

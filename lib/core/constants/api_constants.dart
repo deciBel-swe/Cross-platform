@@ -41,7 +41,7 @@ class ApiConstants {
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
 
-  /// Base endpoint for playlist operations 
+  /// Base endpoint for playlist operations
   static const String playlists = '/api/playlists/';
 
   // Dio Timeout constants
