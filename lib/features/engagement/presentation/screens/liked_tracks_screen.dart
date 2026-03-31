@@ -121,7 +121,7 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
       index,
       (context, animation) => SizeTransition(
         sizeFactor: animation.drive(
-          CurveTween(curve: const Interval(0.0, 0.5, curve: Curves.easeOut)),
+          CurveTween(curve: const Interval(0.0, 0.5, curve: Curves.easeInOut)),
         ),
         child: SlideTransition(
           position: animation.drive(
@@ -129,7 +129,9 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
               begin: const Offset(1, 0), // Slide out to the right
               end: Offset.zero,
             ).chain(
-              CurveTween(curve: const Interval(0.5, 1.0, curve: Curves.easeIn)),
+              CurveTween(
+                curve: const Interval(0.5, 1.0, curve: Curves.easeInOut),
+              ),
             ),
           ),
           child: LikedTrackTile(
