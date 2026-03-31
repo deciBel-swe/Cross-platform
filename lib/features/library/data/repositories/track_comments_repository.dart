@@ -13,7 +13,7 @@ import '../models/post_comment_response_model.dart';
 @LazySingleton(as: ITrackCommentsRepository)
 class TrackCommentsRepository implements ITrackCommentsRepository {
   TrackCommentsRepository(this._remoteDatasource);
-  final TrackCommentsRemoteDataSource _remoteDatasource;
+  final ITrackCommentsRemoteDataSource _remoteDatasource;
   @override
   Future<Either<Failure, Comment>> postComment({
     int? commentid,

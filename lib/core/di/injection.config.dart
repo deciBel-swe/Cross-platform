@@ -71,8 +71,8 @@ import '../network/interceptors/auth_interceptor.dart' as _i745;
 import '../storage/secure_storage_service.dart' as _i666;
 import 'register_module.dart' as _i291;
 
-const String _prod = 'prod';
 const String _mock = 'mock';
+const String _prod = 'prod';
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -87,12 +87,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i183.ImagePicker>(() => registerModule.imagePicker);
-    gh.lazySingleton<_i226.ITrackCommentsRepository>(
-      () => _i229.TrackCommentsRepository(
-        gh<_i688.TrackCommentsRemoteDataSource>(),
-      ),
-      registerFor: {_prod},
-    );
     gh.lazySingleton<_i667.DioClient>(
       () => _i667.DioClient(
         gh<_i361.Dio>(),
@@ -144,6 +138,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i121.ImageRepository>(
       () => _i423.ImageRepositoryImpl(gh<_i183.ImagePicker>()),
+    );
+    gh.lazySingleton<_i226.ITrackCommentsRepository>(
+      () => _i229.TrackCommentsRepository(
+        gh<_i688.ITrackCommentsRemoteDataSource>(),
+      ),
+      registerFor: {_prod},
     );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i573.AuthRepository(
