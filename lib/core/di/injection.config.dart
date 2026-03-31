@@ -24,6 +24,14 @@ import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
+import '../../features/library/data/datasources/track_comments_remote_data_source.dart'
+    as _i688;
+import '../../features/library/data/repositories/track_comments_mock_repository.dart'
+    as _i238;
+import '../../features/library/data/repositories/track_comments_repository.dart'
+    as _i229;
+import '../../features/library/domain/repositories/i_track_comments_repository.dart'
+    as _i226;
 import '../../features/library_profile/data/datasources/genre_data_source_remote.dart'
     as _i271;
 import '../../features/library_profile/data/datasources/profile_remote_data_source.dart'
@@ -63,8 +71,8 @@ import '../network/interceptors/auth_interceptor.dart' as _i745;
 import '../storage/secure_storage_service.dart' as _i666;
 import 'register_module.dart' as _i291;
 
-const String _mock = 'mock';
 const String _prod = 'prod';
+const String _mock = 'mock';
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -79,14 +87,27 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i183.ImagePicker>(() => registerModule.imagePicker);
+    gh.lazySingleton<_i226.ITrackCommentsRepository>(
+      () => _i229.TrackCommentsRepository(
+        gh<_i688.TrackCommentsRemoteDataSource>(),
+      ),
+      registerFor: {_prod},
+    );
     gh.lazySingleton<_i667.DioClient>(
       () => _i667.DioClient(
         gh<_i361.Dio>(),
         authInterceptor: gh<_i745.AuthInterceptor>(),
       ),
     );
+    gh.lazySingleton<_i688.ITrackCommentsRemoteDataSource>(
+      () => _i688.TrackCommentsRemoteDataSource(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i226.ITrackCommentsRepository>(
+      () => _i238.TrackCommentsMockRepository(),
+      registerFor: {_mock},
     );
     gh.lazySingleton<_i271.IGenreRemoteDataSource>(
       () => _i271.GenreRemoteDataSource(gh<_i667.DioClient>()),
