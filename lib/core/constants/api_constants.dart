@@ -45,6 +45,10 @@ class ApiConstants {
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;
 
+  static const String tracks = '/tracks';
+  static const String comments = '/comments';
+  static const String replies = '/replies';
+
   // Google OAuth specific constants
   static const String googleAuthUrl =
       'https://accounts.google.com/o/oauth2/v2/auth';

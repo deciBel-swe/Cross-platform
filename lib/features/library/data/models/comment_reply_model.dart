@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../domain/entities/comment_reply.dart';
 import 'comment_user_model.dart';
 
 part 'comment_reply_model.freezed.dart';
@@ -16,4 +17,15 @@ class CommentReplyModel with _$CommentReplyModel {
 
   factory CommentReplyModel.fromJson(Map<String, dynamic> json) =>
       _$CommentReplyModelFromJson(json);
+}
+
+extension CommentReplyModelX on CommentReplyModel {
+  CommentReply toEntity() {
+    return CommentReply(
+      commentId: commentId,
+      user: user.toEntity(),
+      body: body,
+      createdAt: createdAt,
+    );
+  }
 }
