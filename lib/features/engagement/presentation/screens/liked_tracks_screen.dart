@@ -5,7 +5,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/models/track_action_data.dart';
 import '../notifiers/liked_tracks_notifier.dart';
-import '../notifiers/liked_tracks_scroll_controller_provider.dart';
 import '../notifiers/track_action_notifier.dart';
 import '../widgets/liked_track_tile.dart';
 
@@ -19,14 +18,36 @@ class LikedTracksScreen extends ConsumerStatefulWidget {
 class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   final List<Track> _localTracks = [];
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+
     final initialTracks = ref.read(likedTracksProvider).valueOrNull;
     if (initialTracks != null && initialTracks.isNotEmpty) {
       _localTracks.addAll(initialTracks);
     }
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    const delta = 200.0;
+    if (maxScroll - currentScroll <= delta) {
+      ref.read(likedTracksProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _syncTracks(List<Track> incomingTracks) {
@@ -133,7 +154,6 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
   @override
   Widget build(BuildContext context) {
     final asyncTracks = ref.watch(likedTracksProvider);
-    final scrollController = ref.watch(likedTracksScrollControllerProvider);
 
     ref.listen<AsyncValue<List<Track>>>(likedTracksProvider, (previous, next) {
       if (next.hasValue && !next.isLoading && !next.hasError) {
@@ -191,7 +211,7 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
                 ref.read(likedTracksProvider.notifier).refreshAll(),
             child: AnimatedList(
               key: _listKey,
-              controller: scrollController,
+              controller: _scrollController,
               initialItemCount: _localTracks.length,
               physics: const AlwaysScrollableScrollPhysics(),
               itemBuilder: (context, index, animation) {
