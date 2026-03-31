@@ -14,13 +14,8 @@ final likedTracksScrollControllerProvider =
 
         final maxScroll = controller.position.maxScrollExtent;
         final currentScroll = controller.position.pixels;
-        final delta =
-            MediaQueryData.fromView(
-              WidgetsBinding.instance.window,
-            ).size.height *
-            0.25;
-
-        // Load more when within 25% of a screen height from the bottom
+        // Load more when within 200 pixels from the bottom
+        const delta = 200.0;
         if (maxScroll - currentScroll <= delta) {
           ref.read(likedTracksProvider.notifier).loadMore();
         }

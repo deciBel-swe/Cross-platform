@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../engagement/domain/models/track_action_data.dart';
-import '../../../engagement/presentation/notifiers/liked_tracks_notifier.dart';
-import '../../../engagement/presentation/notifiers/liked_tracks_scroll_controller_provider.dart';
-import '../../../engagement/presentation/notifiers/track_action_notifier.dart';
-import '../../../engagement/presentation/widgets/liked_track_tile.dart';
-import '../../domain/entities/track.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../domain/models/track_action_data.dart';
+import '../notifiers/liked_tracks_notifier.dart';
+import '../notifiers/liked_tracks_scroll_controller_provider.dart';
+import '../notifiers/track_action_notifier.dart';
+import '../widgets/liked_track_tile.dart';
 
 class LikedTracksScreen extends ConsumerStatefulWidget {
   const LikedTracksScreen({super.key});
@@ -29,8 +30,17 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
   }
 
   void _syncTracks(List<Track> incomingTracks) {
-    if (incomingTracks.length == _localTracks.length)
-      return; // Assume no change
+    bool isSame = false;
+    if (incomingTracks.length == _localTracks.length) {
+      isSame = true;
+      for (int i = 0; i < incomingTracks.length; i++) {
+        if (incomingTracks[i].id != _localTracks[i].id) {
+          isSame = false;
+          break;
+        }
+      }
+    }
+    if (isSame) return;
 
     if (incomingTracks.isEmpty) {
       final oldLength = _localTracks.length;
@@ -132,7 +142,12 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your Likes')),
+      appBar: AppBar(
+        title: const Text('Your Likes'),
+        backgroundColor: AppColors.background,
+        //dont change color when scrolling
+        scrolledUnderElevation: 0,
+      ),
       body: asyncTracks.when(
         skipLoadingOnRefresh: false,
         data: (tracks) {
@@ -180,8 +195,9 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
               initialItemCount: _localTracks.length,
               physics: const AlwaysScrollableScrollPhysics(),
               itemBuilder: (context, index, animation) {
-                if (index >= _localTracks.length)
+                if (index >= _localTracks.length) {
                   return const SizedBox.shrink();
+                }
                 final track = _localTracks[index];
 
                 return FadeTransition(

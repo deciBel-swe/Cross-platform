@@ -45,10 +45,10 @@ class LikedTrackTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppConstants.buttonRadius),
         boxShadow: [
           if (!isDark)
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+            const BoxShadow(
+              color: AppColors.onBackground,
               blurRadius: 8,
-              offset: const Offset(0, 2),
+              offset: Offset(0, 2),
             ),
         ],
       ),

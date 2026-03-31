@@ -32,7 +32,8 @@ class LikedTracksNotifier extends AsyncNotifier<List<Track>> {
   }
 
   Future<void> refreshAll() async {
-    state = const AsyncValue.loading();
+    // Note: Do not emit AsyncValue.loading() here to prevent the UI from Unmounting 
+    // the AnimatedList and throwing exceptions while RefreshIndicator is spinning.
     state = await AsyncValue.guard(() => _fetchInitial());
   }
 
