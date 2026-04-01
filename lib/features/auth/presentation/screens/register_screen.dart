@@ -2,28 +2,44 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
 
 /// Register screen: OAuth buttons, divider, email + date of birth + gender
 /// fields, and a white Continue button.
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _dateController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _countryController = TextEditingController();
+
   String? _selectedGender;
+  DateTime? _selectedDateOfBirth;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
     _emailController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
     _dateController.dispose();
+    _cityController.dispose();
+    _countryController.dispose();
     super.dispose();
   }
 
@@ -36,10 +52,72 @@ class _RegisterScreenState extends State<RegisterScreen> {
       lastDate: now,
     );
     if (picked != null) {
+      _selectedDateOfBirth = picked;
       _dateController.text =
           '${picked.month.toString().padLeft(2, '0')}/'
           '${picked.day.toString().padLeft(2, '0')}/'
           '${picked.year}';
+    }
+  }
+
+  Future<void> _handleRegister() async {
+    final email = _emailController.text.trim();
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+    final city = _cityController.text.trim();
+    final country = _countryController.text.trim();
+
+    if (email.isEmpty || username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email, username, and password are required.'),
+        ),
+      );
+      return;
+    }
+
+    if (_selectedDateOfBirth == null || _selectedGender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Date of birth and gender are required.')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    try {
+      await ref
+          .read(authStateProvider.notifier)
+          .registerWithEmailPassword(
+            email: email,
+            username: username,
+            password: password,
+            dateOfBirth: _selectedDateOfBirth!,
+            gender: _selectedGender!,
+            city: city.isEmpty ? null : city,
+            country: country.isEmpty ? null : country,
+            captchaToken: ApiConstants.recaptchaSiteKey,
+          );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Account created successfully.')),
+      );
+      context.go(RoutePaths.login);
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -68,6 +146,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authState = ref.watch(authStateProvider);
+    final isAuthLoading = authState.isLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -93,8 +173,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: AppColors.google,
                     size: 24,
                   ),
+                  isLoading: isAuthLoading,
                   onPressed: () {
-                    // TODO(auth): implement Google sign-in
+                    ref.read(authStateProvider.notifier).loginWithGoogle();
                   },
                 ),
                 const SizedBox(height: 12),
@@ -151,6 +232,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 16),
 
+                TextField(
+                  controller: _usernameController,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Username'),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Password'),
+                ),
+
+                const SizedBox(height: 16),
+
                 // ---- Date of birth field ----
                 TextField(
                   controller: _dateController,
@@ -202,18 +306,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onChanged: (value) => setState(() => _selectedGender = value),
                 ),
 
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: _cityController,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('City (optional)'),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: _countryController,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Country (optional)'),
+                ),
+
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Protected by reCAPTCHA.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
                 const SizedBox(height: 32),
 
                 // ---- Continue button (white) ----
                 ElevatedButton(
-                  onPressed: () {
-                    // TODO(auth): implement account creation
-                  },
+                  onPressed: _isSubmitting ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.onPrimary,
                     foregroundColor: AppColors.onBackground,
                   ),
-                  child: const Text('Continue'),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Continue'),
                 ),
 
                 const SizedBox(height: 32),

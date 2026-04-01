@@ -21,6 +21,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email and password are required.')),
+      );
+      return;
+    }
+
+    await ref
+        .read(authStateProvider.notifier)
+        .loginWithEmailPassword(email: email, password: password);
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -168,13 +184,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 // ---- Continue button (white) ----
                 ElevatedButton(
-                  onPressed:
-                      null, // TODO(auth): enable once local/WebView auth is wired up
+                  onPressed: isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.onPrimary,
                     foregroundColor: AppColors.onBackground,
                   ),
-                  child: const Text('Continue'),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Continue'),
                 ),
 
                 const SizedBox(height: 32),
