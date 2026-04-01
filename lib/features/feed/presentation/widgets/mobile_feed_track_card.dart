@@ -19,6 +19,8 @@ class MobileFeedTrackCard extends StatelessWidget {
     required this.duration,
     required this.likeCount,
     required this.repostCount,
+    required this.isLiked,
+    required this.isReposted,
     required this.commentCount,
     required this.gradientColors,
   });
@@ -29,6 +31,8 @@ class MobileFeedTrackCard extends StatelessWidget {
   final String duration;
   final int likeCount;
   final int repostCount;
+  final bool isLiked;
+  final bool isReposted;
   final int commentCount;
   final List<Color> gradientColors;
 
@@ -70,6 +74,8 @@ class MobileFeedTrackCard extends StatelessWidget {
                 trackId: trackId,
                 initialLikeCount: likeCount,
                 initialRepostCount: repostCount,
+                initialIsLiked: isLiked,
+                initialIsReposted: isReposted,
                 commentCount: commentCount,
               ),
             ),
@@ -146,12 +152,16 @@ class _MobileRightActions extends ConsumerWidget {
     required this.trackId,
     required this.initialLikeCount,
     required this.initialRepostCount,
+    required this.initialIsLiked,
+    required this.initialIsReposted,
     required this.commentCount,
   });
 
   final int trackId;
   final int initialLikeCount;
   final int initialRepostCount;
+  final bool initialIsLiked;
+  final bool initialIsReposted;
   final int commentCount;
 
   String _formatCount(int number) {
@@ -168,10 +178,10 @@ class _MobileRightActions extends ConsumerWidget {
     final trackSocialState = ref.watch(trackSocialProvider);
     final socialData = trackSocialState.trackStates[trackId.toString()];
 
-    final isLiked = socialData?.isLiked ?? false;
+    final isLiked = socialData?.isLiked ?? initialIsLiked;
     final likeCount = socialData?.likeCount ?? initialLikeCount;
     
-    final isReposted = socialData?.isReposted ?? false;
+    final isReposted = socialData?.isReposted ?? initialIsReposted;
     final repostCount = socialData?.repostCount ?? initialRepostCount;
 
     return Column(

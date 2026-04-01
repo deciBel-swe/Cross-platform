@@ -26,6 +26,8 @@ class TrackModel with _$TrackModel {
     @Default(0) int playCount,
     @Default(0) int likeCount,
     @Default(0) int repostCount,
+    @Default(false) bool isLiked,
+    @Default(false) bool isReposted,
     required DateTime createdAt,
   }) = _TrackModel;
 
@@ -52,6 +54,8 @@ extension TrackModelX on TrackModel {
       playCount: playCount,
       likeCount: likeCount,
       repostCount: repostCount,
+      isLiked: isLiked,
+      isReposted: isReposted,
       createdAt: createdAt,
     );
   }

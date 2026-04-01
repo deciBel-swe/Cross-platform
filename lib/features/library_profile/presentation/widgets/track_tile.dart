@@ -34,7 +34,7 @@ class TrackTile extends ConsumerWidget {
 
     final trackSocialState = ref.watch(trackSocialProvider);
     final socialData = trackSocialState.trackStates[track.id.toString()];
-    final isLiked = socialData?.isLiked ?? false;
+    final isLiked = socialData?.isLiked ?? track.isLiked;
 
     return InkWell(
       onTap: onTap,

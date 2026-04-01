@@ -51,6 +51,8 @@ class FeedScreen extends StatelessWidget {
                 genre: item.genre,
                 likeCount: item.likeCount,
                 repostCount: item.repostCount,
+                isLiked: item.isLiked,
+                isReposted: item.isReposted,
                 plays: item.plays,
                 commentCount: item.commentCount,
                 duration: item.duration,
@@ -86,6 +88,8 @@ class _MockFeed {
     required this.genre,
     required this.likeCount,
     required this.repostCount,
+    required this.isLiked,
+    required this.isReposted,
     required this.plays,
     required this.commentCount,
     required this.duration,
@@ -101,6 +105,8 @@ class _MockFeed {
   final String genre;
   final int likeCount;
   final int repostCount;
+  final bool isLiked;
+  final bool isReposted;
   final String plays;
   final int commentCount;
   final String duration;
@@ -119,6 +125,8 @@ final _mockFeedItems = [
     genre: 'Latin',
     likeCount: 6877,
     repostCount: 296,
+    isLiked: false,
+    isReposted: false,
     plays: '162K',
     commentCount: 718,
     duration: '13:41',
@@ -134,6 +142,8 @@ final _mockFeedItems = [
     genre: 'Rap/Hip Hop',
     likeCount: 17900,
     repostCount: 144,
+    isLiked: true,
+    isReposted: false,
     plays: '705K',
     commentCount: 195,
     duration: '3:07',
@@ -149,6 +159,8 @@ final _mockFeedItems = [
     genre: 'Rap/Hip Hop',
     likeCount: 26200,
     repostCount: 182,
+    isLiked: false,
+    isReposted: true,
     plays: '1.52M',
     commentCount: 230,
     duration: '3:13',
