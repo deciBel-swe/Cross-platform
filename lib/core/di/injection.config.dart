@@ -22,6 +22,12 @@ import '../../features/auth/data/repositories/mock_auth_repository.dart'
     as _i703;
 import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
+import '../../features/feed/data/datasources/following_feed_remote_datasource.dart'
+    as _i701;
+import '../../features/feed/data/repositories/following_feed_repository_impl.dart'
+    as _i732;
+import '../../features/feed/domain/repositories/following_feed_repository.dart'
+    as _i714;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
 import '../../features/library_profile/data/datasources/genre_data_source_remote.dart'
@@ -94,6 +100,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i464.UploadRemoteDatasource>(
       () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i701.FollowingFeedRemoteDatasource>(
+      () => _i701.FollowingFeedRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
@@ -113,6 +122,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i106.ProfileRepository>(
       () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i714.FollowingFeedRepository>(
+      () => _i732.FollowingFeedRepositoryImpl(
+        gh<_i701.FollowingFeedRemoteDatasource>(),
+      ),
     );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
