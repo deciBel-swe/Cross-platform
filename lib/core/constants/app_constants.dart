@@ -21,6 +21,8 @@ class AppConstants {
 
   static const double buttonRadius = 8.0;
 
+  static const String cancel = 'Cancel';
+
   static const String edit = 'Edit';
 
   static const String errorExceptionPrefix = 'Exception: ';
@@ -46,7 +48,11 @@ class AppConstants {
 
   static const double fontSizeMedium = 16.0;
 
+  static const double fontSizeRegular = 14.0;
+
   static const double fontSizeSmall = 12.0;
+
+  static const double iconSizeMedium = 20.0;
 
   static const double spacingExtraLarge = 24.0;
 
@@ -106,6 +112,13 @@ class AppConstants {
   static const String following = 'following';
 
   static const String noLocation = 'No location';
+
+  static const String remove = 'Remove';
+
+  static const String repostRemoveMessage =
+      'This will be removed from your profile and timeline.';
+
+  static const String repostRemoveTitle = 'Remove repost?';
 
   static const double profileHeaderTopOffset = 120.0;
 
