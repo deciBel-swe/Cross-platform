@@ -35,7 +35,8 @@ class _TrackCardState extends State<TrackCard> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = widget.gradientColors ??
+    final colors =
+        widget.gradientColors ??
         [AppColors.surfaceLight, AppColors.surfaceContainer];
 
     return MouseRegion(
@@ -50,10 +51,7 @@ class _TrackCardState extends State<TrackCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ---- Artwork ----
-              _Artwork(
-                isHovered: _isHovered,
-                gradientColors: colors,
-              ),
+              _Artwork(isHovered: _isHovered, gradientColors: colors),
               const SizedBox(height: AppDimensions.paddingSm),
               // ---- Title ----
               Text(
@@ -80,10 +78,7 @@ class _TrackCardState extends State<TrackCard> {
 
 /// Square artwork placeholder with gradient and play overlay on hover.
 class _Artwork extends StatelessWidget {
-  const _Artwork({
-    required this.isHovered,
-    required this.gradientColors,
-  });
+  const _Artwork({required this.isHovered, required this.gradientColors});
 
   final bool isHovered;
   final List<Color> gradientColors;
@@ -108,11 +103,7 @@ class _Artwork extends StatelessWidget {
                 ),
               ),
               child: const Center(
-                child: Icon(
-                  Icons.music_note,
-                  color: Colors.white24,
-                  size: 48,
-                ),
+                child: Icon(Icons.music_note, color: Colors.white24, size: 48),
               ),
             ),
 

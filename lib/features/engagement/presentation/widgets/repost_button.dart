@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/track_engager.dart';
 import '../../domain/models/track_action_data.dart';
 import '../notifiers/track_action_notifier.dart';
 import 'social_action_button.dart';
+import 'track_engagers_bottom_sheet.dart';
 
 class RepostButton extends ConsumerStatefulWidget {
   const RepostButton({
@@ -107,6 +109,11 @@ class _RepostButtonState extends ConsumerState<RepostButton> {
       inactiveIcon: Icons.repeat,
       activeColor: AppColors.primary,
       onToggle: () => _handleTap(context, isCurrentlyReposted),
+      onCountTap: () => showTrackEngagersSheet(
+        context,
+        trackId: widget.trackId,
+        type: EngagerType.reposters,
+      ),
       iconSize: widget.iconSize ?? AppConstants.iconSizeMedium,
       fontSize: widget.fontSize ?? AppConstants.fontSizeRegular,
     );

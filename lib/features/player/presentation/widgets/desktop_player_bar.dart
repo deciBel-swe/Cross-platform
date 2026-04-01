@@ -81,7 +81,10 @@ class DesktopPlayerBar extends ConsumerWidget {
   }
 }
 
-Track? _resolveCurrentTrack({required List<Track>? tracks, required int? trackId}) {
+Track? _resolveCurrentTrack({
+  required List<Track>? tracks,
+  required int? trackId,
+}) {
   if (tracks == null || trackId == null) {
     return null;
   }

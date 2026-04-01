@@ -32,7 +32,7 @@ class FullscreenImagePage extends StatelessWidget {
       return Image.network(
         path,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => 
+        errorBuilder: (context, error, stackTrace) =>
             const Icon(Icons.broken_image, size: 100, color: Colors.white),
       );
     }
@@ -43,7 +43,7 @@ class FullscreenImagePage extends StatelessWidget {
       return Image.file(
         File(localPath),
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => 
+        errorBuilder: (context, error, stackTrace) =>
             const Icon(Icons.broken_image, size: 100, color: Colors.white),
       );
     }
@@ -54,7 +54,8 @@ class FullscreenImagePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent, // Lets the GoRouter barrierColor show
+      backgroundColor:
+          Colors.transparent, // Lets the GoRouter barrierColor show
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

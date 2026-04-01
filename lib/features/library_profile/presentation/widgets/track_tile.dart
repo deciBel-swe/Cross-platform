@@ -130,13 +130,15 @@ class TrackTile extends ConsumerWidget {
 
                       // Interactive Like Heart
                       GestureDetector(
-                        onTap: () => ref.read(trackSocialProvider.notifier).toggleAction(
-                          track.id, 
-                          SocialActionType.like,
-                          initialLikeCount: track.likeCount,
-                          initialRepostCount: track.repostCount,
-                          initialIsLiked: isLiked,
-                        ),
+                        onTap: () => ref
+                            .read(trackSocialProvider.notifier)
+                            .toggleAction(
+                              track.id,
+                              SocialActionType.like,
+                              initialLikeCount: track.likeCount,
+                              initialRepostCount: track.repostCount,
+                              initialIsLiked: isLiked,
+                            ),
                         behavior: HitTestBehavior
                             .opaque, // Ensures the padding is clickable
                         child: Padding(

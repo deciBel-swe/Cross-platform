@@ -59,7 +59,7 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
   }) async {
     final trackKey = trackId.toString();
     var trackData = state.trackStates[trackKey];
-    
+
     if (trackData == null) {
       trackData = TrackSocialData(
         isLiked: initialIsLiked,
@@ -67,7 +67,9 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
         isReposted: initialIsReposted,
         repostCount: initialRepostCount,
       );
-      state = state.copyWith(trackStates: {...state.trackStates, trackKey: trackData});
+      state = state.copyWith(
+        trackStates: {...state.trackStates, trackKey: trackData},
+      );
     }
 
     final bool wasActive = actionType == SocialActionType.like

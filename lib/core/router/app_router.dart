@@ -1,7 +1,6 @@
 /// GoRouter configuration – all app routes defined here.
 library;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

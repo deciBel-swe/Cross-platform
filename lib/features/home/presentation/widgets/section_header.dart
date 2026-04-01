@@ -8,11 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 
 /// Displays a section title with an optional "See all" action.
 class SectionHeader extends StatelessWidget {
-  const SectionHeader({
-    super.key,
-    required this.title,
-    this.onSeeAll,
-  });
+  const SectionHeader({super.key, required this.title, this.onSeeAll});
 
   final String title;
   final VoidCallback? onSeeAll;
@@ -23,8 +19,7 @@ class SectionHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: AppTextStyles.sectionTitle),
-        if (onSeeAll != null)
-          _SeeAllButton(onPressed: onSeeAll!),
+        if (onSeeAll != null) _SeeAllButton(onPressed: onSeeAll!),
       ],
     );
   }
