@@ -10,6 +10,7 @@ part 'post_comment_response_model.g.dart';
 class PostCommentResponseModel with _$PostCommentResponseModel {
   const factory PostCommentResponseModel({
     @JsonKey(name: 'id') required int commentId,
+    @Default(0) int replycount,
     required CommentUserModel user,
     required String body,
     int? timestampSeconds,
@@ -23,6 +24,8 @@ class PostCommentResponseModel with _$PostCommentResponseModel {
 extension PostCommentResponseModelX on PostCommentResponseModel {
   Comment toEntity() {
     return Comment(
+      replycount: replycount,
+
       commentid: commentId,
       user: user.toEntity(),
       body: body,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import '../../data/datasources/track_comments_mock_fixtures.dart';
 import '../../domain/entities/comment.dart';
 import '../../domain/entities/comment_reply.dart';
 import '../../domain/entities/comment_user.dart';
@@ -22,14 +23,30 @@ import '../state/track_comment_state.dart';
 class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
   late final int _trackId;
   late final ITrackCommentsRepository _repository;
+  final Set<int> _cancelledDeletions = {};
 
   @override
   TrackCommentsState build(int trackId) {
     _trackId = trackId;
     _repository = ref.read(commentRepositoryProvider);
 
-    return const TrackCommentsState(
-      comments: [],
+    final fixtureComment = TrackCommentsMockFixtures.mockTrackComments.first;
+
+    final initialTestComment = Comment(
+      commentid: fixtureComment.commentId,
+      timestampSeconds: fixtureComment.timestampSeconds,
+      body: fixtureComment.body,
+      createdAt: fixtureComment.createdAt,
+      replycount: fixtureComment.replycount,
+      user: CommentUser(
+        id: fixtureComment.user.id,
+        username: fixtureComment.user.username,
+        avatarUrl: fixtureComment.user.avatarUrl,
+      ),
+    );
+
+    return TrackCommentsState(
+      comments: [initialTestComment],
       isSubmitting: false,
       selectedTimestampSeconds: null,
       isLoadingComments: false,
@@ -37,6 +54,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
       repliesByCommentId: {},
       expandedCommentIds: {},
       deletingCommentId: null,
+      sortOption: CommentSortOption.newest,
     );
   }
 
@@ -63,14 +81,16 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
       (failure) {
         state = state.copyWith(isLoadingComments: false);
       },
-      (comments) {
-        final sortedComments = [...comments]
-          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      (newComments) {
+        final Map<int, Comment> mergedMap = {
+          for (var c in state.comments) c.commentid: c,
+          for (var c in newComments) c.commentid: c,
+        };
 
-        state = state.copyWith(
-          comments: sortedComments,
-          isLoadingComments: false,
-        );
+        final mergedList = mergedMap.values.toList();
+        _applySorting(mergedList, state.sortOption);
+
+        state = state.copyWith(comments: mergedList, isLoadingComments: false);
       },
     );
   }
@@ -111,7 +131,6 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     );
   }
 
-  /// Collapses (hides) replies for a given comment in the UI.
   void collapseReplies(int commentId) {
     final updatedExpandedIds = Set<int>.from(state.expandedCommentIds)
       ..remove(commentId);
@@ -124,39 +143,51 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
   /// - Removes the comment immediately from UI
   /// - Calls the API
   /// - Restores previous state if the request fails
-  Future<void> deleteComment(int commentId) async {
-    state = state.copyWith(deletingCommentId: commentId);
-
-    final previousComments = List<Comment>.from(state.comments);
-
+  void requestDeletion(Comment comment, Duration undoDelay) {
     state = state.copyWith(
-      comments: state.comments.where((c) => c.commentid != commentId).toList(),
+      comments: state.comments
+          .where((c) => c.commentid != comment.commentid)
+          .toList(),
     );
 
-    final result = await _repository.deleteComment(commentId: commentId);
+    Future.delayed(undoDelay, () async {
+      if (_cancelledDeletions.contains(comment.commentid)) {
+        _cancelledDeletions.remove(comment.commentid);
+        return;
+      }
 
-    result.fold(
-      (failure) {
-        state = state.copyWith(
-          comments: previousComments,
-          deletingCommentId: null,
-        );
-      },
-      (_) {
-        final updatedRepliesMap = Map<int, List<CommentReply>>.from(
-          state.repliesByCommentId,
-        )..remove(commentId);
+      state = state.copyWith(deletingCommentId: comment.commentid);
 
-        final updatedExpandedIds = Set<int>.from(state.expandedCommentIds)
-          ..remove(commentId);
+      final result = await _repository.deleteComment(
+        commentId: comment.commentid,
+      );
 
-        state = state.copyWith(
-          repliesByCommentId: updatedRepliesMap,
-          expandedCommentIds: updatedExpandedIds,
-          deletingCommentId: null,
-        );
-      },
-    );
+      result.fold(
+        (failure) {
+          restoreComment(comment);
+          state = state.copyWith(deletingCommentId: null);
+        },
+        (_) {
+          final updatedRepliesMap = Map<int, List<CommentReply>>.from(
+            state.repliesByCommentId,
+          )..remove(comment.commentid);
+
+          final updatedExpandedIds = Set<int>.from(state.expandedCommentIds)
+            ..remove(comment.commentid);
+
+          state = state.copyWith(
+            repliesByCommentId: updatedRepliesMap,
+            expandedCommentIds: updatedExpandedIds,
+            deletingCommentId: null,
+          );
+        },
+      );
+    });
+  }
+
+  void undoDeletion(Comment comment) {
+    _cancelledDeletions.add(comment.commentid);
+    restoreComment(comment);
   }
 
   /// Posts a new comment with optimistic UI update.
@@ -180,6 +211,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     final tempId = DateTime.now().millisecondsSinceEpoch;
 
     final optimisticComment = Comment(
+      replycount: 0,
       commentid: tempId,
       timestampSeconds: selectedTimestamp,
       body: body.trim(),
@@ -192,11 +224,10 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     );
 
     final previousComments = state.comments;
+    final newList = [optimisticComment, ...previousComments];
+    _applySorting(newList, state.sortOption);
 
-    state = state.copyWith(
-      comments: [optimisticComment, ...previousComments],
-      isSubmitting: true,
-    );
+    state = state.copyWith(comments: newList, isSubmitting: true);
 
     final result = await _repository.postComment(
       commentid: tempId,
@@ -210,28 +241,58 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
         state = state.copyWith(comments: previousComments, isSubmitting: false);
       },
       (serverComment) {
-        state = state.copyWith(
-          comments: state.comments
-              .map((c) => c.commentid == tempId ? serverComment : c)
-              .toList(),
-          isSubmitting: false,
-        );
+        final mergedList = state.comments
+            .map((c) => c.commentid == tempId ? serverComment : c)
+            .toList();
+        _applySorting(mergedList, state.sortOption);
+
+        state = state.copyWith(comments: mergedList, isSubmitting: false);
       },
     );
   }
+
+  /// Restores a deleted comment (Undo feature)
+  void restoreComment(Comment comment) {
+    if (state.comments.any((c) => c.commentid == comment.commentid)) return;
+
+    final updatedList = [...state.comments, comment];
+    _applySorting(updatedList, state.sortOption);
+
+    state = state.copyWith(comments: updatedList);
+  }
+
+  void changeSortOption(CommentSortOption newOption) {
+    if (state.sortOption == newOption) return;
+
+    final sortedList = List<Comment>.from(state.comments);
+    _applySorting(sortedList, newOption);
+
+    state = state.copyWith(sortOption: newOption, comments: sortedList);
+  }
+
+  void _applySorting(List<Comment> list, CommentSortOption option) {
+    switch (option) {
+      case CommentSortOption.newest:
+        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        break;
+      case CommentSortOption.oldest:
+        list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        break;
+      case CommentSortOption.trackTime:
+        list.sort(
+          (a, b) =>
+              (a.timestampSeconds ?? 0).compareTo(b.timestampSeconds ?? 0),
+        );
+        break;
+    }
+  }
 }
 
-/// Provides the comment notifier for a specific track.
-/// Key = trackId
 final trackCommentsProvider =
     NotifierProvider.family<TrackCommentNotifier, TrackCommentsState, int>(
       TrackCommentNotifier.new,
     );
 
-/// Returns comments that match the current playback timestamp.
-///
-/// Used to show floating comments on waveform.
-/// Filters comments by exact second and sorts them chronologically.
 final currentActiveCommentsProvider = Provider.family<List<Comment>, int>((
   ref,
   trackId,

@@ -7,13 +7,14 @@ class TrackCommentsMockFixtures {
   static const Duration mockDelay = Duration(milliseconds: 800);
 
   static const CommentUserModel mockCommentUser = CommentUserModel(
-    id: 1,
-    username: 'tarek',
+    id: 0,
+    username: 'mock_user_free',
     avatarUrl: '',
   );
 
   static final PostCommentResponseModel mockPostedComment =
       PostCommentResponseModel(
+        replycount: 1,
         commentId: 101,
         user: mockCommentUser,
         body: 'This part is fire 🔥',
@@ -23,6 +24,7 @@ class TrackCommentsMockFixtures {
 
   static final List<PostCommentResponseModel> mockTrackComments = [
     PostCommentResponseModel(
+      replycount: 3,
       commentId: 101,
       user: mockCommentUser,
       body: 'This part is fire 🔥',
@@ -30,6 +32,7 @@ class TrackCommentsMockFixtures {
       createdAt: DateTime.parse('2026-03-25T14:15:22.123Z'),
     ),
     PostCommentResponseModel(
+      replycount: 2,
       commentId: 102,
       user: const CommentUserModel(id: 2, username: 'sarah', avatarUrl: ''),
       body: 'Love this transition',
@@ -37,6 +40,7 @@ class TrackCommentsMockFixtures {
       createdAt: DateTime.parse('2026-03-25T14:16:10.000Z'),
     ),
     PostCommentResponseModel(
+      replycount: 3,
       commentId: 103,
       user: const CommentUserModel(id: 3, username: 'hasna', avatarUrl: ''),
       body: 'Crazy drop here',
@@ -44,6 +48,7 @@ class TrackCommentsMockFixtures {
       createdAt: DateTime.parse('2026-03-25T14:16:45.000Z'),
     ),
     PostCommentResponseModel(
+      replycount: 3,
       commentId: 104,
       user: const CommentUserModel(id: 4, username: 'dissolve', avatarUrl: ''),
       body: 'Replaying this part again',
@@ -124,7 +129,7 @@ class TrackCommentsMockFixtures {
           'username': 'karim',
           'avatarUrl': 'https://i.pravatar.cc/150?u=karim',
         },
-        'body': 'Maybe reduce the bass slightly too',
+        'body': 'real',
         'createdAt': '2026-03-31T10:14:00.000Z',
       },
     ],

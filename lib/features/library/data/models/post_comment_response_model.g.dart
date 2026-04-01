@@ -10,6 +10,7 @@ _$PostCommentResponseModelImpl _$$PostCommentResponseModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$PostCommentResponseModelImpl(
   commentId: (json['id'] as num).toInt(),
+  replycount: (json['replycount'] as num?)?.toInt() ?? 0,
   user: CommentUserModel.fromJson(json['user'] as Map<String, dynamic>),
   body: json['body'] as String,
   timestampSeconds: (json['timestampSeconds'] as num?)?.toInt(),
@@ -20,6 +21,7 @@ Map<String, dynamic> _$$PostCommentResponseModelImplToJson(
   _$PostCommentResponseModelImpl instance,
 ) => <String, dynamic>{
   'id': instance.commentId,
+  'replycount': instance.replycount,
   'user': instance.user,
   'body': instance.body,
   'timestampSeconds': instance.timestampSeconds,

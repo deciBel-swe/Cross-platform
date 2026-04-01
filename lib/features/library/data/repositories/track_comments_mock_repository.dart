@@ -28,9 +28,9 @@ class TrackCommentsMockRepository implements ITrackCommentsRepository {
   }) async {
     await Future<void>.delayed(TrackCommentsMockFixtures.mockDelay);
 
-    final serverId = _liveComments.length + 101;
-
+    final serverId = DateTime.now().millisecondsSinceEpoch;
     final newComment = Comment(
+      replycount: 0,
       commentid: serverId,
       user: TrackCommentsMockFixtures.mockCommentUser.toEntity(),
       body: body,

@@ -82,73 +82,89 @@ class _TrackCommentsBottomSheetState
 
     final commentsState = ref.watch(trackCommentsProvider(widget.trackId));
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.75,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              TrackCommentsHeader(commentCount: commentsState.comments.length),
-              const Divider(height: 1, color: Colors.white12),
-              TrackCommentsContextTile(track: widget.track),
-              const Divider(height: 1, color: Colors.white12),
-
-              Expanded(
-                child: commentsState.comments.isEmpty
-                    ? Center(
-                        child: Text(
-                          'Be the first to comment!',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.6,
-                            ),
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: scrollController,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: commentsState.comments.length,
-                        itemBuilder: (context, index) {
-                          final comment = commentsState.comments[index];
-                          return TrackCommentTile(
-                            key: ValueKey(comment.commentid),
-                            comment: comment,
-                          );
-                        },
-                      ),
-              ),
-
-              // Input Bar Area
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  child: CommentReactionBar(
-                    timestamp: _staticFormattedTime,
-                    onSendTap: (content) {
-                      ref
-                          .read(trackCommentsProvider(widget.trackId).notifier)
-                          .postComment(content);
-                    },
-                    onReactionTap: (emoji) {
-                      ref
-                          .read(trackCommentsProvider(widget.trackId).notifier)
-                          .postComment(emoji);
-                    },
-                  ),
+    return ScaffoldMessenger(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        resizeToAvoidBottomInset: false,
+        body: DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
               ),
-            ],
-          ),
-        );
-      },
+              child: Column(
+                children: [
+                  TrackCommentsHeader(
+                    trackId: widget.trackId,
+                    commentCount: commentsState.comments.length,
+                  ),
+                  const Divider(height: 1, color: Colors.white12),
+                  TrackCommentsContextTile(track: widget.track),
+                  const Divider(height: 1, color: Colors.white12),
+
+                  Expanded(
+                    child: commentsState.comments.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Be the first to comment!',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            controller: scrollController,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            itemCount: commentsState.comments.length,
+                            itemBuilder: (context, index) {
+                              final comment = commentsState.comments[index];
+                              return TrackCommentTile(
+                                key: ValueKey(comment.commentid),
+                                comment: comment,
+                                trackId: widget.trackId,
+                              );
+                            },
+                          ),
+                  ),
+
+                  // Input Bar Area
+                  SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      child: CommentReactionBar(
+                        timestamp: _staticFormattedTime,
+                        onSendTap: (content) {
+                          ref
+                              .read(
+                                trackCommentsProvider(widget.trackId).notifier,
+                              )
+                              .postComment(content);
+                        },
+                        onReactionTap: (emoji) {
+                          ref
+                              .read(
+                                trackCommentsProvider(widget.trackId).notifier,
+                              )
+                              .postComment(emoji);
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
