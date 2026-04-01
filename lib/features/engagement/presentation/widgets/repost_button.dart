@@ -17,7 +17,7 @@ class RepostButton extends ConsumerStatefulWidget {
     this.fontSize,
   });
 
-  final String trackId;
+  final int trackId;
   final bool isReposted;
   final int repostCount;
   final double? iconSize;
@@ -52,25 +52,25 @@ class _RepostButtonState extends ConsumerState<RepostButton> {
             borderRadius: BorderRadius.circular(AppConstants.buttonRadius * 2),
           ),
           title: const Text(
-            'Remove repost?',
+            AppConstants.repostRemoveTitle,
             style: TextStyle(color: AppColors.onPrimary),
           ),
           content: const Text(
-            'This will be removed from your profile and timeline.',
+            AppConstants.repostRemoveMessage,
             style: TextStyle(color: AppColors.textSecondary),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
               child: const Text(
-                'Cancel',
+                AppConstants.cancel,
                 style: TextStyle(color: AppColors.textSecondary),
               ),
             ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(true),
               child: const Text(
-                'Remove',
+                AppConstants.remove,
                 style: TextStyle(color: AppColors.primary),
               ),
             ),
@@ -93,7 +93,7 @@ class _RepostButtonState extends ConsumerState<RepostButton> {
   @override
   Widget build(BuildContext context) {
     final providerState = ref.watch(trackSocialProvider);
-    final trackData = providerState.trackStates[widget.trackId];
+    final trackData = providerState.trackStates[widget.trackId.toString()];
     final isCurrentlyReposted = trackData?.isReposted ?? widget.isReposted;
     final isLoading = providerState.loadingKeys.contains(
       'repost_${widget.trackId}',

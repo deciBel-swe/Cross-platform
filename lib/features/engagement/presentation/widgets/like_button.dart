@@ -16,7 +16,7 @@ class LikeButton extends ConsumerStatefulWidget {
     this.iconSize,
     this.fontSize,
   });
-  final String trackId;
+  final int trackId;
   final bool isLiked;
   final int likeCount;
   final double? iconSize;
@@ -44,7 +44,7 @@ class _LikeButtonState extends ConsumerState<LikeButton> {
   @override
   Widget build(BuildContext context) {
     final providerState = ref.watch(trackSocialProvider);
-    final trackData = providerState.trackStates[widget.trackId];
+    final trackData = providerState.trackStates[widget.trackId.toString()];
     final isLoading = providerState.loadingKeys.contains(
       'like_${widget.trackId}',
     );

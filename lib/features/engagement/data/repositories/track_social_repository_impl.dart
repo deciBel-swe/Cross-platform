@@ -9,15 +9,14 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
   final TrackSocialRemoteDatasource _datasource;
 
   @override
-  Future<void> likeTrack(String trackId) => _datasource.likeTrack(trackId);
+  Future<void> likeTrack(int trackId) => _datasource.likeTrack(trackId);
 
   @override
-  Future<void> unlikeTrack(String trackId) => _datasource.unlikeTrack(trackId);
+  Future<void> unlikeTrack(int trackId) => _datasource.unlikeTrack(trackId);
 
   @override
-  Future<void> repostTrack(String trackId) => _datasource.repostTrack(trackId);
+  Future<void> repostTrack(int trackId) => _datasource.repostTrack(trackId);
 
   @override
-  Future<void> unrepostTrack(String trackId) =>
-      _datasource.unrepostTrack(trackId);
+  Future<void> unrepostTrack(int trackId) => _datasource.unrepostTrack(trackId);
 }

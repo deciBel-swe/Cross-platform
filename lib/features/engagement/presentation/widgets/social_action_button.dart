@@ -90,9 +90,7 @@ class _SocialActionButtonState extends State<SocialActionButton>
               '${widget.count}',
               key: ValueKey<int>(widget.count),
               style: TextStyle(
-                color: widget.isLoading
-                    ? AppColors.onPrimary
-                    : AppColors.onPrimary,
+                color: AppColors.onPrimary,
                 fontSize: widget.fontSize,
               ),
             ),

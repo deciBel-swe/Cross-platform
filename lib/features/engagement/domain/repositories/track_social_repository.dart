@@ -1,6 +1,6 @@
 abstract class ITrackSocialRepository {
-  Future<void> likeTrack(String trackId);
-  Future<void> unlikeTrack(String trackId);
-  Future<void> repostTrack(String trackId);
-  Future<void> unrepostTrack(String trackId);
+  Future<void> likeTrack(int trackId);
+  Future<void> unlikeTrack(int trackId);
+  Future<void> repostTrack(int trackId);
+  Future<void> unrepostTrack(int trackId);
 }

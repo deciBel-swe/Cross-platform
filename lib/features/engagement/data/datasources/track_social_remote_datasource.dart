@@ -9,33 +9,33 @@ class TrackSocialRemoteDatasource {
   const TrackSocialRemoteDatasource(this._dioClient);
   final DioClient _dioClient;
 
-  Future<void> likeTrack(String trackId) async {
+  Future<void> likeTrack(int trackId) async {
     try {
-      await _dioClient.post<dynamic>('/api/tracks/$trackId/like');
+      await _dioClient.post<dynamic>('/tracks/$trackId/like');
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  Future<void> unlikeTrack(String trackId) async {
+  Future<void> unlikeTrack(int trackId) async {
     try {
-      await _dioClient.delete<dynamic>('/api/tracks/$trackId/like');
+      await _dioClient.delete<dynamic>('/tracks/$trackId/like');
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  Future<void> repostTrack(String trackId) async {
+  Future<void> repostTrack(int trackId) async {
     try {
-      await _dioClient.post<dynamic>('/api/tracks/$trackId/repost');
+      await _dioClient.post<dynamic>('/tracks/$trackId/repost');
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  Future<void> unrepostTrack(String trackId) async {
+  Future<void> unrepostTrack(int trackId) async {
     try {
-      await _dioClient.delete<dynamic>('/api/tracks/$trackId/repost');
+      await _dioClient.delete<dynamic>('/tracks/$trackId/repost');
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -56,8 +56,10 @@ class TrackSocialRemoteDatasource {
       // Server returned an HTTP error status
       case DioExceptionType.badResponse:
         final status = e.response?.statusCode;
-        final body = e.response?.data as Map<String, dynamic>?;
-        final serverMessage = body?['message'] as String?;
+        final responseData = e.response?.data;
+        final body = responseData is Map<String, dynamic> ? responseData : null;
+        final serverMessage =
+            body?['message'] as String? ?? body?['error'] as String?;
 
         return switch (status) {
           401 => const AuthException('Session expired. Please log in again.'),
