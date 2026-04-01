@@ -100,7 +100,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - .env
     - assets/icon/
     - assets/background/
     - assets/background/desktop/
