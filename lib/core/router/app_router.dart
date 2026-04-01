@@ -1,7 +1,7 @@
 /// GoRouter configuration – all app routes defined here.
 library;
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,6 +17,7 @@ import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
 import '../../features/library/presentation/screens/uploads_library_screen.dart';
 import '../../features/library_profile/presentation/screens/edit_profile_screen.dart';
+import '../../features/library_profile/presentation/screens/fullscreen_image_screen.dart';
 import '../../features/library_profile/presentation/screens/profile_screen.dart';
 import '../../features/library_profile/presentation/screens/web_profiles.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
@@ -26,6 +27,7 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/social_settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/upload/presentation/screens/upload_screen.dart';
+import '../theme/app_colors.dart';
 import 'go_router_refresh_stream.dart';
 import 'main_shell.dart';
 import 'route_paths.dart';
@@ -209,6 +211,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/profile-image',
+        pageBuilder: (context, state) {
+          final imagePath = state.extra as String?;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            opaque: false,
+            barrierColor: AppColors.background.withValues(alpha: 0.9),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+            child: FullscreenImagePage(imagePath: imagePath),
+          );
+        },
       ),
     ],
   );
