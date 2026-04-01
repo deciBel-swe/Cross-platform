@@ -237,7 +237,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           milliseconds: AppConstants.appBarAnimationDurationMs,
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
           children: [
             Container(
               width: AppConstants.appBarAvatarSize,
@@ -249,11 +249,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: const ProfileIcon(),
             ),
             const SizedBox(width: 10),
-            Text(
-              user.username,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.onPrimary,
+            Flexible(
+              child: Text(
+                user.username,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onPrimary,
+                ),
               ),
             ),
           ],

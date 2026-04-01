@@ -1,10 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 import '../../../library_profile/presentation/providers/track_repository_provider.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_peaks.dart';
-import '../../domain/entities/track_status.dart';
 
 // This notifier fetches both the track details and its peaks (if available) for a given track ID.
 class TrackPreviewNotifier
@@ -20,16 +20,14 @@ class TrackPreviewNotifier
       (value) => value,
     );
 
-    if (track.state != TrackStatus.finished) {
-      return (track: track, trackPeaks: null);
-    }
-
     final peaksResult = await repository.fetchTrackPeaksById(track.id);
 
-    final trackPeaks = peaksResult.fold<TrackPeaks?>(
-      (failure) => null,
-      (value) => value,
-    );
+    final trackPeaks = peaksResult.fold<TrackPeaks?>((failure) {
+      debugPrint(
+        'TrackPreviewNotifier: waveform fetch failed for track ${track.id}: ${failure.message}',
+      );
+      return null;
+    }, (value) => value);
 
     return (track: track, trackPeaks: trackPeaks);
   }
