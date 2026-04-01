@@ -22,6 +22,8 @@ import '../../features/auth/data/repositories/mock_auth_repository.dart'
     as _i703;
 import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
+import '../../features/engagement/data/datasources/follow_remote_data_source.dart'
+    as _i485;
 import '../../features/engagement/data/datasources/track_social_remote_datasource.dart'
     as _i459;
 import '../../features/engagement/data/repositories/mock_track_social_repository_impl.dart'
@@ -46,6 +48,8 @@ import '../../features/library_profile/data/datasources/profile_remote_data_sour
     as _i364;
 import '../../features/library_profile/data/datasources/track_remote_data_source.dart'
     as _i226;
+import '../../features/library_profile/data/repositories/follow_repository_impl.dart'
+    as _i880;
 import '../../features/library_profile/data/repositories/genre_repository_impl.dart'
     as _i140;
 import '../../features/library_profile/data/repositories/image_repository_impl.dart'
@@ -107,6 +111,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i880.FollowRepositoryImpl>(
+      () => _i880.FollowRepositoryImpl(gh<InvalidType>()),
+    );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i238.TrackCommentsMockRepository(),
       registerFor: {_mock},
@@ -140,6 +147,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i107.IAuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i485.IFollowRemoteDataSource>(
+      () => _i485.FollowRemoteDataSource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i106.ProfileRepository>(
       () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
