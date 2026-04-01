@@ -7,7 +7,7 @@ part 'post_comment_request_model.g.dart';
 class PostCommentRequestModel with _$PostCommentRequestModel {
   const factory PostCommentRequestModel({
     required String body,
-    int? timeStampseconds,
+    @JsonKey(name: 'timestampSeconds') int? timeStampseconds,
   }) = _PostCommentRequestModel;
 
   factory PostCommentRequestModel.fromJson(Map<String, dynamic> json) =>

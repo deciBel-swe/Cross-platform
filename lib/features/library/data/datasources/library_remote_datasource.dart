@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
@@ -97,11 +99,58 @@ class LibraryRemoteDatasource {
       throw Exception('Empty waveform payload');
     }
 
-    if (peaksData is! Map<String, dynamic>) {
-      throw Exception('Invalid waveform payload');
+    return _parseTrackPeaksPayload(trackId: id, payload: peaksData);
+  }
+
+  TrackPeaksModel _parseTrackPeaksPayload({
+    required int trackId,
+    required Object payload,
+  }) {
+    if (payload is Map<String, dynamic>) {
+      final peaks = _extractNumericPeaks(payload['peaks']);
+      if (peaks != null) {
+        final duration = (payload['duration'] as num?)?.toInt() ?? peaks.length;
+        return TrackPeaksModel(
+          trackId: trackId,
+          duration: duration,
+          peaks: peaks,
+        );
+      }
     }
 
-    return TrackPeaksModel.fromJson(peaksData);
+    final directPeaks = _extractNumericPeaks(payload);
+    if (directPeaks != null) {
+      return TrackPeaksModel(
+        trackId: trackId,
+        duration: directPeaks.length,
+        peaks: directPeaks,
+      );
+    }
+
+    if (payload is String) {
+      final decoded = jsonDecode(payload);
+      final decodedPeaks = _extractNumericPeaks(decoded);
+      if (decodedPeaks != null) {
+        return TrackPeaksModel(
+          trackId: trackId,
+          duration: decodedPeaks.length,
+          peaks: decodedPeaks,
+        );
+      }
+    }
+
+    throw Exception('Invalid waveform payload');
+  }
+
+  List<int>? _extractNumericPeaks(Object? payload) {
+    if (payload is! List) {
+      return null;
+    }
+
+    return payload
+        .whereType<num>()
+        .map((value) => (value.toDouble().clamp(0.0, 1.0) * 1000).round())
+        .toList(growable: false);
   }
 
   String? _extractWaveformUrl(Object? payload) {

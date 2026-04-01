@@ -89,7 +89,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i183.ImagePicker>(() => registerModule.imagePicker);
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i229.TrackCommentsRepository(
-        gh<_i688.TrackCommentsRemoteDataSource>(),
+        gh<_i688.ITrackCommentsRemoteDataSource>(),
       ),
       registerFor: {_prod},
     );
