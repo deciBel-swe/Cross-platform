@@ -135,10 +135,10 @@ class TrackPreviewContent extends ConsumerWidget {
           ),
         ),
         BottomBarWidget(
-          isLiked: isReady,
-          likeCount: 28,
+          trackId: trackId,
+          initialLikeCount: track.likeCount,
+          initialRepostCount: track.repostCount,
           commentCount: 3,
-          onLikePressed: () {},
           onCommentPressed: () {
             TrackCommentsBottomSheet.show(
               context,
@@ -147,7 +147,6 @@ class TrackPreviewContent extends ConsumerWidget {
             );
           },
           onSharePressed: () {},
-          onPlaylistAddPressed: () {},
           onMoreOptionsPressed: () {},
         ),
       ],

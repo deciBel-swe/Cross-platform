@@ -66,10 +66,6 @@ class TopTracksSection extends ConsumerWidget {
                     debugPrint('Options for: ${track.title}');
                     // TODO: Open bottom sheet
                   },
-                  onLikePressed: () {
-                    debugPrint('Liked: ${track.title}');
-                    // TODO: Call like provider
-                  },
                 );
               },
             );
