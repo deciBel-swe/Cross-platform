@@ -24,6 +24,7 @@ PostCommentRequestModel _$PostCommentRequestModelFromJson(
 /// @nodoc
 mixin _$PostCommentRequestModel {
   String get body => throw _privateConstructorUsedError;
+  @JsonKey(name: 'timestampSeconds')
   int? get timeStampseconds => throw _privateConstructorUsedError;
 
   /// Serializes this PostCommentRequestModel to a JSON map.
@@ -43,7 +44,10 @@ abstract class $PostCommentRequestModelCopyWith<$Res> {
     $Res Function(PostCommentRequestModel) then,
   ) = _$PostCommentRequestModelCopyWithImpl<$Res, PostCommentRequestModel>;
   @useResult
-  $Res call({String body, int? timeStampseconds});
+  $Res call({
+    String body,
+    @JsonKey(name: 'timestampSeconds') int? timeStampseconds,
+  });
 }
 
 /// @nodoc
@@ -89,7 +93,10 @@ abstract class _$$PostCommentRequestModelImplCopyWith<$Res>
   ) = __$$PostCommentRequestModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String body, int? timeStampseconds});
+  $Res call({
+    String body,
+    @JsonKey(name: 'timestampSeconds') int? timeStampseconds,
+  });
 }
 
 /// @nodoc
@@ -130,7 +137,7 @@ class __$$PostCommentRequestModelImplCopyWithImpl<$Res>
 class _$PostCommentRequestModelImpl implements _PostCommentRequestModel {
   const _$PostCommentRequestModelImpl({
     required this.body,
-    this.timeStampseconds,
+    @JsonKey(name: 'timestampSeconds') this.timeStampseconds,
   });
 
   factory _$PostCommentRequestModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -139,6 +146,7 @@ class _$PostCommentRequestModelImpl implements _PostCommentRequestModel {
   @override
   final String body;
   @override
+  @JsonKey(name: 'timestampSeconds')
   final int? timeStampseconds;
 
   @override
@@ -180,7 +188,7 @@ class _$PostCommentRequestModelImpl implements _PostCommentRequestModel {
 abstract class _PostCommentRequestModel implements PostCommentRequestModel {
   const factory _PostCommentRequestModel({
     required final String body,
-    final int? timeStampseconds,
+    @JsonKey(name: 'timestampSeconds') final int? timeStampseconds,
   }) = _$PostCommentRequestModelImpl;
 
   factory _PostCommentRequestModel.fromJson(Map<String, dynamic> json) =
@@ -189,6 +197,7 @@ abstract class _PostCommentRequestModel implements PostCommentRequestModel {
   @override
   String get body;
   @override
+  @JsonKey(name: 'timestampSeconds')
   int? get timeStampseconds;
 
   /// Create a copy of PostCommentRequestModel

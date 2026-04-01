@@ -3,7 +3,7 @@ import 'package:injectable/injectable.dart';
 import '../../domain/repositories/track_social_repository.dart';
 import '../datasources/track_social_remote_datasource.dart';
 
-@LazySingleton(as: ITrackSocialRepository)
+@LazySingleton(as: ITrackSocialRepository, env: [Environment.prod])
 class TrackSocialRepositoryImpl implements ITrackSocialRepository {
   const TrackSocialRepositoryImpl(this._datasource);
   final TrackSocialRemoteDatasource _datasource;
