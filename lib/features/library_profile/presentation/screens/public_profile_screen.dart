@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/public_profile.dart';
-import '../providers/follow_state_provider.dart';
+import '../../../engagement/presentation/providers/follow_state_provider.dart';
+import '../../../engagement/presentation/widgets/follow_button.dart';
 import '../providers/public_profile_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/expandable_bio.dart';
-import '../widgets/follow_button.dart';
 import '../widgets/social_links_widget.dart';
 import '../widgets/spotlight_section.dart';
 

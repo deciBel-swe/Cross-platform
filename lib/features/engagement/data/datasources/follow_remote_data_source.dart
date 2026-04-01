@@ -4,8 +4,8 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../features/library_profile/data/models/public_profile_model.dart';
 import '../models/follow_response_model.dart';
-import '../models/public_profile_model.dart';
 
 /// Contract for remote follow-related API calls.
 ///

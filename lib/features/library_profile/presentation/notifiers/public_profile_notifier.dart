@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/public_profile.dart';
-import '../providers/follow_state_provider.dart';
+import '../../../engagement/presentation/providers/follow_state_provider.dart';
 
 /// Fetches and manages the public profile data for a given userId.
 ///

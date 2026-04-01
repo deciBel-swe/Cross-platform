@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/errors/failures.dart';
-import '../../domain/entities/public_profile.dart';
-import '../../domain/entities/public_profile_social_links.dart';
+import '../../../../features/library_profile/domain/entities/public_profile.dart';
+import '../../../../features/library_profile/domain/entities/public_profile_social_links.dart';
 import '../../domain/repositories/follow_repository.dart';
 
 /// In-memory mock implementation of [FollowRepository].

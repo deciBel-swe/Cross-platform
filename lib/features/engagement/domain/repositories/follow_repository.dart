@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/errors/failures.dart';
-import '../entities/public_profile.dart';
+import '../../../../features/library_profile/domain/entities/public_profile.dart';
 
 /// Contract for follow-related operations and public-profile fetching.
 ///

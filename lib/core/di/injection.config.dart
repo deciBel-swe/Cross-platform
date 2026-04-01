@@ -22,10 +22,10 @@ import '../../features/auth/data/repositories/mock_auth_repository.dart'
     as _i703;
 import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
+import '../../features/engagement/data/datasources/follow_remote_data_source.dart'
+    as _i485;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
-import '../../features/library_profile/data/datasources/follow_remote_data_source.dart'
-    as _i946;
 import '../../features/library_profile/data/datasources/genre_data_source_remote.dart'
     as _i271;
 import '../../features/library_profile/data/datasources/profile_remote_data_source.dart'
@@ -44,8 +44,6 @@ import '../../features/library_profile/data/repositories/profile_repository_impl
     as _i997;
 import '../../features/library_profile/data/repositories/track_repository_impl.dart'
     as _i928;
-import '../../features/library_profile/domain/repositories/follow_repository.dart'
-    as _i74;
 import '../../features/library_profile/domain/repositories/genre_repository.dart'
     as _i2;
 import '../../features/library_profile/domain/repositories/image_repository.dart'
@@ -94,6 +92,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i880.FollowRepositoryImpl>(
+      () => _i880.FollowRepositoryImpl(gh<InvalidType>()),
+    );
     gh.lazySingleton<_i271.IGenreRemoteDataSource>(
       () => _i271.GenreRemoteDataSource(gh<_i667.DioClient>()),
     );
@@ -116,6 +117,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i107.IAuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i485.IFollowRemoteDataSource>(
+      () => _i485.FollowRemoteDataSource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i106.ProfileRepository>(
       () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
@@ -141,12 +145,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i140.AllGenresRepositoryImpl(
         remoteDataSource: gh<_i271.IGenreRemoteDataSource>(),
       ),
-    );
-    gh.lazySingleton<_i946.IFollowRemoteDataSource>(
-      () => _i946.FollowRemoteDataSource(gh<_i667.DioClient>()),
-    );
-    gh.lazySingleton<_i74.FollowRepository>(
-      () => _i880.FollowRepositoryImpl(gh<_i946.IFollowRemoteDataSource>()),
     );
     gh.lazySingleton<_i728.UpdateProfileImagesUseCase>(
       () => _i728.UpdateProfileImagesUseCase(gh<_i106.ProfileRepository>()),
