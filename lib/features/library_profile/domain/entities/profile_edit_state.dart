@@ -1,7 +1,6 @@
 import 'dart:io';
 
 class ProfileEditState {
-
   ProfileEditState({
     this.localProfilePic,
     this.localCoverPic,
@@ -23,7 +22,7 @@ class ProfileEditState {
       localProfilePic: localProfilePic ?? this.localProfilePic,
       localCoverPic: localCoverPic ?? this.localCoverPic,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage, 
+      errorMessage: errorMessage,
     );
   }
 }

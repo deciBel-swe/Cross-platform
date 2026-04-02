@@ -8,8 +8,6 @@ part 'paginated_comments_response_model.g.dart';
 
 @freezed
 class PaginatedCommentsResponseModel with _$PaginatedCommentsResponseModel {
-  const PaginatedCommentsResponseModel._();
-
   const factory PaginatedCommentsResponseModel({
     @Default([]) List<PostCommentResponseModel> content,
     int? pageNumber,
@@ -18,6 +16,8 @@ class PaginatedCommentsResponseModel with _$PaginatedCommentsResponseModel {
     int? totalPages,
     bool? isLast,
   }) = _PaginatedCommentsResponseModel;
+
+  const PaginatedCommentsResponseModel._();
 
   factory PaginatedCommentsResponseModel.fromJson(Map<String, dynamic> json) =>
       _$PaginatedCommentsResponseModelFromJson(json);

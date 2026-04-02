@@ -55,6 +55,7 @@ class TrackCommentsHeader extends ConsumerWidget {
     ThemeData theme,
     CommentSortOption currentSort,
   ) {
+    // ignore: inference_failure_on_function_invocation
     showModalBottomSheet(
       context: context,
       backgroundColor: theme.colorScheme.surface,

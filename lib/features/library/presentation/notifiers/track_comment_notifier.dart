@@ -70,8 +70,9 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
   /// Supports pagination using [page] and [size].
   /// Updates the state with sorted comments (oldest → newest).
   Future<void> loadComments({bool loadMore = false, int size = 20}) async {
-    if (state.isLoadingComments || (loadMore && state.isLastCommentsPage))
+    if (state.isLoadingComments || (loadMore && state.isLastCommentsPage)) {
       return;
+    }
 
     final nextPage = loadMore ? state.currentCommentsPage + 1 : 0;
     state = state.copyWith(isLoadingComments: true);

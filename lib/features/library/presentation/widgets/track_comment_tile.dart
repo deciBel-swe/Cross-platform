@@ -9,6 +9,9 @@ import '../notifiers/track_comment_notifier.dart';
 import 'comment_header.dart';
 import 'comment_replies_section.dart';
 import 'like_section.dart';
+import 'track_comment_avatar.dart';
+import 'track_comment_formatters.dart';
+import 'track_comment_options_sheet.dart';
 
 class TrackCommentTile extends ConsumerWidget {
   const TrackCommentTile({
@@ -28,13 +31,14 @@ class TrackCommentTile extends ConsumerWidget {
     final isOwner =
         authState is AuthAuthenticated && authState.user.id == comment.user.id;
 
-    final timeFormatted = _formatTimeAgo(comment.createdAt);
+    final timeFormatted = TrackCommentFormatters.formatTimeAgo(
+      comment.createdAt,
+    );
     final timestampSeconds = comment.timestampSeconds ?? 0;
-    final timestampFormatted = _formatTimestamp(timestampSeconds);
+    final timestampFormatted = TrackCommentFormatters.formatTimestamp(
+      timestampSeconds,
+    );
     const undoDuration = Duration(seconds: 4);
-
-    final avatarUrl = comment.user.avatarUrl;
-    final hasValidUrl = avatarUrl != null && avatarUrl.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -44,22 +48,7 @@ class TrackCommentTile extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                backgroundImage: hasValidUrl ? NetworkImage(avatarUrl) : null,
-                onBackgroundImageError: hasValidUrl
-                    ? (exception, stackTrace) =>
-                          debugPrint('Image failed: $exception')
-                    : null,
-                child: !hasValidUrl
-                    ? Icon(
-                        Icons.person,
-                        size: 20,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      )
-                    : null,
-              ),
+              TrackCommentAvatar(avatarUrl: comment.user.avatarUrl),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -99,10 +88,11 @@ class TrackCommentTile extends ConsumerWidget {
                             onTap: () async {
                               final messenger = ScaffoldMessenger.of(context);
 
-                              final shouldDelete = await _showOptions(
-                                context,
-                                theme,
-                              );
+                              final shouldDelete =
+                                  await showTrackCommentOptionsSheet(
+                                    context,
+                                    theme,
+                                  );
 
                               if (shouldDelete == true) {
                                 await Future<void>.delayed(
@@ -171,53 +161,4 @@ class TrackCommentTile extends ConsumerWidget {
       ),
     );
   }
-
-  Future<bool?> _showOptions(BuildContext context, ThemeData theme) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: theme.colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(
-                Icons.delete_outline,
-                color: Colors.redAccent,
-              ),
-              title: const Text(
-                'Delete comment',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext, true);
-              },
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-String _formatTimestamp(int seconds) {
-  final minutes = seconds ~/ 60;
-  final remainingSeconds = seconds % 60;
-  return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
-}
-
-String _formatTimeAgo(DateTime date) {
-  final difference = DateTime.now().difference(date);
-  if (difference.inDays > 7) return '${difference.inDays ~/ 7}w';
-  if (difference.inDays > 0) return '${difference.inDays}d';
-  if (difference.inHours > 0) return '${difference.inHours}h';
-  if (difference.inMinutes > 0) return '${difference.inMinutes}m';
-  return 'Just now';
 }

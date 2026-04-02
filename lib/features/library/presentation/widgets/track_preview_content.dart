@@ -9,11 +9,11 @@ import '../../../library_profile/presentation/widgets/track_preview_background.d
 import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
-import '../notifiers/track_comment_notifier.dart';
 import 'active_comments_overlay.dart';
-import 'comment_reaction_bar.dart';
 import 'interactive_waveform.dart';
 import 'track_comments_bottom_sheet.dart';
+import 'track_preview_input_section.dart';
+import 'waveform_not_ready.dart';
 
 class TrackPreviewContent extends ConsumerWidget {
   const TrackPreviewContent({
@@ -85,9 +85,9 @@ class TrackPreviewContent extends ConsumerWidget {
                                 audioNotifier: audioNotifier,
                               )
                             else
-                              const _WaveformNotReady(),
+                              const WaveformNotReady(),
                             const SizedBox(height: 16),
-                            _TrackPreviewInputSection(trackId: trackId),
+                            TrackPreviewInputSection(trackId: trackId),
                           ],
                         ),
                       ),
@@ -130,130 +130,6 @@ class TrackPreviewContent extends ConsumerWidget {
         }
       },
       child: contentColumn,
-    );
-  }
-}
-
-class _TrackPreviewInputSection extends ConsumerStatefulWidget {
-  final int trackId;
-  const _TrackPreviewInputSection({required this.trackId});
-
-  @override
-  ConsumerState<_TrackPreviewInputSection> createState() =>
-      _TrackPreviewInputSectionState();
-}
-
-class _TrackPreviewInputSectionState
-    extends ConsumerState<_TrackPreviewInputSection> {
-  final MentionTextEditingController _commentController =
-      MentionTextEditingController();
-  final FocusNode _focusNode = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _commentController.addListener(() {
-      if (_commentController.text.isEmpty) {
-        final state = ref.read(trackCommentsProvider(widget.trackId));
-        if (state.activeReplyCommentId != null) {
-          ref
-              .read(trackCommentsProvider(widget.trackId).notifier)
-              .clearReplyMode();
-        }
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _commentController.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final commentsState = ref.watch(trackCommentsProvider(widget.trackId));
-    final notifier = ref.read(trackCommentsProvider(widget.trackId).notifier);
-
-    ref.listen(trackCommentsProvider(widget.trackId), (prev, next) {
-      if (prev?.activeReplyCommentId != null &&
-          next.activeReplyCommentId == null) {
-        _commentController.clear();
-      }
-
-      if (next.replyPrefillText != null &&
-          next.replyPrefillText != prev?.replyPrefillText) {
-        _commentController.text = next.replyPrefillText!;
-        _commentController.selection = TextSelection.fromPosition(
-          TextPosition(offset: _commentController.text.length),
-        );
-        _focusNode.requestFocus();
-      }
-    });
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (commentsState.activeReplyCommentId != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Row(
-                children: [
-                  const Text(
-                    'Replying...',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      _commentController.clear();
-                      notifier.clearReplyMode();
-                      _focusNode.unfocus();
-                    },
-                    child: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          CommentReactionBar(
-            controller: _commentController,
-            focusNode: _focusNode,
-            onSendTap: (content) {
-              notifier.handleSubmit(content);
-              _commentController.clear();
-              _focusNode.unfocus();
-            },
-            onReactionTap: (emoji) {
-              notifier.handleSubmit(emoji);
-              _commentController.clear();
-              _focusNode.unfocus();
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WaveformNotReady extends StatelessWidget {
-  const _WaveformNotReady();
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Text(
-        'Waveform is not ready yet.',
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-      ),
     );
   }
 }

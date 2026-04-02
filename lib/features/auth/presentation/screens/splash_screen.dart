@@ -17,10 +17,7 @@ class SplashScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Center logo
-            Image.asset(
-              AppAssets.whiteLogo,
-              height: 120,
-            ),
+            Image.asset(AppAssets.whiteLogo, height: 120),
             const SizedBox(height: 24),
             // Optional: loading indicator
             const CircularProgressIndicator(

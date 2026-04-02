@@ -49,7 +49,10 @@ class SocialSettingsRepositoryImpl implements SocialSettingsRepository {
   Future<void> updateSocialSettings(SocialSettings settings) async {
     try {
       // Attempt to save to the cloud
-      await _api.put<void>(ApiConstants.userProfilePrivacy, data: settings.toJson());
+      await _api.put<void>(
+        ApiConstants.userProfilePrivacy,
+        data: settings.toJson(),
+      );
 
       // Only if the Cloud save works, we update the local cache
       await _cache.setString(_cacheKeyIsPrivate, settings.isPrivate.toString());

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'track_comment_avatar.dart';
 
 class CommentReactionBar extends StatelessWidget {
   const CommentReactionBar({
@@ -29,7 +30,7 @@ class CommentReactionBar extends StatelessWidget {
 
         return Row(
           children: [
-            _UserAvatar(imageUrl: userAvatarUrl),
+            TrackCommentAvatar(avatarUrl: userAvatarUrl),
             const SizedBox(width: 12),
             Expanded(
               child: Container(
@@ -121,38 +122,6 @@ class CommentReactionBar extends StatelessWidget {
   }
 }
 
-class _UserAvatar extends StatelessWidget {
-  const _UserAvatar({this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: 0.1),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: imageUrl != null && imageUrl!.trim().isNotEmpty
-          ? Image.network(
-              imageUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.person,
-                  size: 20,
-                  color: Colors.white54,
-                );
-              },
-            )
-          : const Icon(Icons.person, size: 20, color: Colors.white54),
-    );
-  }
-}
-
 class _ReactionButton extends StatelessWidget {
   const _ReactionButton({required this.emoji, this.onTap});
 
@@ -165,48 +134,6 @@ class _ReactionButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Text(emoji, style: const TextStyle(fontSize: 18)),
-    );
-  }
-}
-
-class MentionTextEditingController extends TextEditingController {
-  @override
-  TextSpan buildTextSpan({
-    required BuildContext context,
-    TextStyle? style,
-    required bool withComposing,
-  }) {
-    if (!text.startsWith('@')) {
-      return TextSpan(text: text, style: style);
-    }
-
-    final int firstSpaceIndex = text.indexOf(' ');
-
-    if (firstSpaceIndex == -1) {
-      return TextSpan(
-        text: text,
-        style: style?.copyWith(
-          color: Colors.blueAccent,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    }
-
-    final String mention = text.substring(0, firstSpaceIndex);
-    final String rest = text.substring(firstSpaceIndex);
-
-    return TextSpan(
-      style: style,
-      children: [
-        TextSpan(
-          text: mention,
-          style: style?.copyWith(
-            color: Colors.blueAccent,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        TextSpan(text: rest, style: style),
-      ],
     );
   }
 }

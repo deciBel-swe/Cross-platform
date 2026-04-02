@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CommentActions extends StatelessWidget {
-  const CommentActions();
+  const CommentActions({super.key});
 
   @override
   Widget build(BuildContext context) {

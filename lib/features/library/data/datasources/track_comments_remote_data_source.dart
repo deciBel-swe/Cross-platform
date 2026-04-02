@@ -2,9 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
+import '../models/comment_reply_model.dart';
 import '../models/paginated_comments_response_model.dart';
 import '../models/paginated_replies_response_model.dart';
-import '../models/comment_reply_model.dart';
 import '../models/post_comment_request_model.dart';
 import '../models/post_comment_response_model.dart';
 

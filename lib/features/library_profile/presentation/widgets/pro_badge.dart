@@ -20,7 +20,7 @@ class ProBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppConstants.badgeBorderRadius),
       ),
       child: const Row(
-        mainAxisSize: MainAxisSize.min, 
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _GoldScallopedStar(),
@@ -50,9 +50,7 @@ class _GoldScallopedStar extends StatelessWidget {
       width: AppConstants.badgeSealSize,
       height: AppConstants.badgeSealSize,
       child: CustomPaint(
-        painter: _ScallopedBadgePainter(
-          badgeColor: AppColors.proBadge,
-        ),
+        painter: _ScallopedBadgePainter(badgeColor: AppColors.proBadge),
         child: Center(
           // Optical Nudge applied here
           child: Transform.translate(
@@ -72,7 +70,7 @@ class _GoldScallopedStar extends StatelessWidget {
 /// A CustomPainter that draws a scalloped seal (rosette).
 class _ScallopedBadgePainter extends CustomPainter {
   _ScallopedBadgePainter({required this.badgeColor});
-  
+
   final Color badgeColor;
 
   @override
@@ -83,7 +81,7 @@ class _ScallopedBadgePainter extends CustomPainter {
 
     final center = Offset(size.width / 2, size.height / 2);
     final outerRadius = size.width / 2;
-    final innerRadius = outerRadius * AppConstants.badgeInnerRadiusRatio; 
+    final innerRadius = outerRadius * AppConstants.badgeInnerRadiusRatio;
 
     final path = Path();
     const angleStep = (math.pi * 2) / (AppConstants.badgeSealPoints * 2);

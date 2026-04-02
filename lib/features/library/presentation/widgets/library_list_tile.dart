@@ -33,7 +33,8 @@ class _LibraryListTileState extends State<LibraryListTile> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = widget.gradientColors ??
+    final colors =
+        widget.gradientColors ??
         [AppColors.surfaceLight, AppColors.surfaceContainer];
 
     return MouseRegion(
@@ -59,8 +60,7 @@ class _LibraryListTileState extends State<LibraryListTile> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.radiusSm),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,

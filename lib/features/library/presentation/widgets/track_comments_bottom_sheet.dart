@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../domain/entities/track.dart';
 import '../notifiers/track_comment_notifier.dart';
-import 'comment_reaction_bar.dart';
+import '../utils/mention_text_editing_controller.dart';
 import 'track_comment_tile.dart';
 import 'track_comments_context_tile.dart';
 import 'track_comments_header.dart';
+import 'track_comments_input_area.dart';
 
 class TrackCommentsBottomSheet extends ConsumerStatefulWidget {
   const TrackCommentsBottomSheet({
@@ -130,51 +132,12 @@ class _TrackCommentsBottomSheetState
               ),
             ),
           ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: Column(
-                children: [
-                  if (commentsState.activeReplyCommentId != null)
-                    Row(
-                      children: [
-                        const Text(
-                          'Replying...',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: () {
-                            _commentController.clear();
-                            notifier.clearReplyMode();
-                            _focusNode.unfocus();
-                          },
-                          child: const Icon(
-                            Icons.close,
-                            size: 18,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  CommentReactionBar(
-                    controller: _commentController,
-                    focusNode: _focusNode,
-                    timestamp: _staticFormattedTime,
-                    onSendTap: (val) {
-                      notifier.handleSubmit(val);
-                      _commentController.clear();
-                      _focusNode.unfocus();
-                    },
-                    onReactionTap: (val) {
-                      notifier.handleSubmit(val);
-                      _commentController.clear();
-                      _focusNode.unfocus();
-                    },
-                  ),
-                ],
-              ),
-            ),
+          TrackCommentsInputArea(
+            controller: _commentController,
+            focusNode: _focusNode,
+            notifier: notifier,
+            staticFormattedTime: _staticFormattedTime,
+            isReplying: commentsState.activeReplyCommentId != null,
           ),
         ],
       ),
