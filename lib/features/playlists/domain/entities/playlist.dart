@@ -16,6 +16,7 @@ class Playlist {
     this.description,
     required this.type,
     required this.isPrivate,
+    required this.isLiked,
     this.coverArt,
     required this.owner,
     required this.tracks,
@@ -26,6 +27,7 @@ class Playlist {
   final String? description;
   final String type;
   final bool isPrivate;
+  final bool isLiked;
   final String? coverArt;
   final PlaylistOwner owner;
   final List<Track> tracks;

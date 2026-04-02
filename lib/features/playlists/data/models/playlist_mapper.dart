@@ -13,6 +13,7 @@ extension PlaylistModelX on PlaylistModel {
     description: description,
     type: type,
     isPrivate: isPrivate,
+    isLiked: isLiked,
     coverArt: coverArt,
     owner: owner.toEntity(),
     tracks: tracks.map((track) => track.toEntity()).toList(),

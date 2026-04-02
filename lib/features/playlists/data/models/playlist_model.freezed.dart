@@ -195,6 +195,7 @@ mixin _$PlaylistModel {
   String? get description => throw _privateConstructorUsedError;
   String get type => throw _privateConstructorUsedError;
   bool get isPrivate => throw _privateConstructorUsedError;
+  bool get isLiked => throw _privateConstructorUsedError;
   @JsonKey(name: 'CoverArt')
   String? get coverArt => throw _privateConstructorUsedError;
   OwnerModel get owner => throw _privateConstructorUsedError;
@@ -223,6 +224,7 @@ abstract class $PlaylistModelCopyWith<$Res> {
     String? description,
     String type,
     bool isPrivate,
+    bool isLiked,
     @JsonKey(name: 'CoverArt') String? coverArt,
     OwnerModel owner,
     List<TrackModel> tracks,
@@ -251,6 +253,7 @@ class _$PlaylistModelCopyWithImpl<$Res, $Val extends PlaylistModel>
     Object? description = freezed,
     Object? type = null,
     Object? isPrivate = null,
+    Object? isLiked = null,
     Object? coverArt = freezed,
     Object? owner = null,
     Object? tracks = null,
@@ -276,6 +279,10 @@ class _$PlaylistModelCopyWithImpl<$Res, $Val extends PlaylistModel>
             isPrivate: null == isPrivate
                 ? _value.isPrivate
                 : isPrivate // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isLiked: null == isLiked
+                ? _value.isLiked
+                : isLiked // ignore: cast_nullable_to_non_nullable
                       as bool,
             coverArt: freezed == coverArt
                 ? _value.coverArt
@@ -320,6 +327,7 @@ abstract class _$$PlaylistModelImplCopyWith<$Res>
     String? description,
     String type,
     bool isPrivate,
+    bool isLiked,
     @JsonKey(name: 'CoverArt') String? coverArt,
     OwnerModel owner,
     List<TrackModel> tracks,
@@ -348,6 +356,7 @@ class __$$PlaylistModelImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? type = null,
     Object? isPrivate = null,
+    Object? isLiked = null,
     Object? coverArt = freezed,
     Object? owner = null,
     Object? tracks = null,
@@ -373,6 +382,10 @@ class __$$PlaylistModelImplCopyWithImpl<$Res>
         isPrivate: null == isPrivate
             ? _value.isPrivate
             : isPrivate // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isLiked: null == isLiked
+            ? _value.isLiked
+            : isLiked // ignore: cast_nullable_to_non_nullable
                   as bool,
         coverArt: freezed == coverArt
             ? _value.coverArt
@@ -400,6 +413,7 @@ class _$PlaylistModelImpl implements _PlaylistModel {
     this.description,
     required this.type,
     this.isPrivate = false,
+    this.isLiked = false,
     @JsonKey(name: 'CoverArt') this.coverArt,
     required this.owner,
     final List<TrackModel> tracks = const [],
@@ -420,6 +434,9 @@ class _$PlaylistModelImpl implements _PlaylistModel {
   @JsonKey()
   final bool isPrivate;
   @override
+  @JsonKey()
+  final bool isLiked;
+  @override
   @JsonKey(name: 'CoverArt')
   final String? coverArt;
   @override
@@ -435,7 +452,7 @@ class _$PlaylistModelImpl implements _PlaylistModel {
 
   @override
   String toString() {
-    return 'PlaylistModel(id: $id, title: $title, description: $description, type: $type, isPrivate: $isPrivate, coverArt: $coverArt, owner: $owner, tracks: $tracks)';
+    return 'PlaylistModel(id: $id, title: $title, description: $description, type: $type, isPrivate: $isPrivate, isLiked: $isLiked, coverArt: $coverArt, owner: $owner, tracks: $tracks)';
   }
 
   @override
@@ -450,6 +467,7 @@ class _$PlaylistModelImpl implements _PlaylistModel {
             (identical(other.type, type) || other.type == type) &&
             (identical(other.isPrivate, isPrivate) ||
                 other.isPrivate == isPrivate) &&
+            (identical(other.isLiked, isLiked) || other.isLiked == isLiked) &&
             (identical(other.coverArt, coverArt) ||
                 other.coverArt == coverArt) &&
             (identical(other.owner, owner) || other.owner == owner) &&
@@ -465,6 +483,7 @@ class _$PlaylistModelImpl implements _PlaylistModel {
     description,
     type,
     isPrivate,
+    isLiked,
     coverArt,
     owner,
     const DeepCollectionEquality().hash(_tracks),
@@ -491,6 +510,7 @@ abstract class _PlaylistModel implements PlaylistModel {
     final String? description,
     required final String type,
     final bool isPrivate,
+    final bool isLiked,
     @JsonKey(name: 'CoverArt') final String? coverArt,
     required final OwnerModel owner,
     final List<TrackModel> tracks,
@@ -509,6 +529,8 @@ abstract class _PlaylistModel implements PlaylistModel {
   String get type;
   @override
   bool get isPrivate;
+  @override
+  bool get isLiked;
   @override
   @JsonKey(name: 'CoverArt')
   String? get coverArt;

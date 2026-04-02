@@ -10,10 +10,16 @@ import '../models/create_playlist_request.dart';
 import '../models/playlist_model.dart';
 
 abstract class IPlaylistRemoteDataSource {
-  Future<PlaylistModel> createPlaylist(
-    CreatePlaylistRequest request,
-    File? coverImage,
-  );
+  Future<PlaylistModel> getPlaylistDetails(int playlistId);
+
+  Future<List<PlaylistModel>> getUserPlaylists({int page = 0, int size = 20});
+
+  Future<PlaylistModel> reorderTracks(int playlistId, List<int> trackIds);
+
+  Future<PlaylistModel> createPlaylist(CreatePlaylistRequest request);
+
+  Future<String> getPlaylistSecretLink(int playlistId);
+
   Future<PlaylistModel> updatePlaylist(
     int playListId,
     CreatePlaylistRequest request,
@@ -29,29 +35,67 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   final DioClient _dioClient;
 
   @override
-  Future<PlaylistModel> createPlaylist(
-    CreatePlaylistRequest request,
-    File? coverImage,
-  ) async {
+  Future<String> getPlaylistSecretLink(int playlistId) async {
     try {
-      // TODO: the playlist title cannot exceed 100 char
+      final response = await _dioClient.get<dynamic>(
+        ApiConstants.getPlaylistSecretLink(playlistId),
+      );
 
-      final dataMap = request.toJson();
-      final formData = FormData.fromMap(dataMap);
-
-      if (coverImage != null) {
-        final imageName = coverImage.path.split('/').last;
-        formData.files.add(
-          MapEntry(
-            'CoverArt',
-            await MultipartFile.fromFile(coverImage.path, filename: imageName),
-          ),
-        );
+      final responseData = response.data as Map<String, dynamic>;
+      
+      // check lowercase "secretLink" just in case your backend uses standard JSON camelCase.
+      final secretLink = responseData['SecretLink'] ?? responseData['secretLink'];
+      
+      if (secretLink != null) {
+        return secretLink as String;
+      } else {
+        throw const ServerException('Secret link not found in response payload');
       }
+    } on DioException catch (error) {
+      throw ServerException(error.message ?? 'Failed to fetch playlist secret link');
+    } catch (error) {
+      throw ServerException('Failed to parse secret link response: $error');
+    }
+  }
 
+  @override
+  Future<PlaylistModel> getPlaylistDetails(int playlistId) async {
+    try {
+      final response = await _dioClient.get<dynamic>(
+        '${ApiConstants.myPlaylists}/$playlistId',
+      );
+
+      final responseData = response.data as Map<String, dynamic>;
+      return PlaylistModel.fromJson(
+        responseData,
+      ); // Parses id, title, and the tracks array
+    } on DioException catch (error) {
+      throw ServerException(error.message ?? 'Failed to fetch playlist tracks');
+    }
+  }
+
+  @override
+  Future<PlaylistModel> reorderTracks(
+    int playlistId,
+    List<int> trackIds,
+  ) async {
+    final response = await _dioClient.patch<dynamic>(
+      ApiConstants.updateTracksOrder(playlistId),
+      data: {"trackIds": trackIds},
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+
+    // The API returns the updated Playlist object
+    return PlaylistModel.fromJson(responseData);
+  }
+
+  @override
+  Future<PlaylistModel> createPlaylist(CreatePlaylistRequest request) async {
+    try {
       final response = await _dioClient.post<dynamic>(
         ApiConstants.playlists,
-        data: request.toJson(),
+        data: request,
       );
       final responseData = response.data as Map<String, dynamic>;
       return PlaylistModel.fromJson(responseData);
@@ -59,6 +103,28 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       throw ServerException(error.message ?? 'Failed to create playlist');
     } catch (error) {
       throw ServerException('Failed to parse create playlist response: $error');
+    }
+  }
+
+  @override
+  Future<List<PlaylistModel>> getUserPlaylists({
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      final response = await _dioClient.get<List<dynamic>>(
+        ApiConstants.myPlaylists,
+        queryParams: {'page': page, 'size': size},
+      );
+
+      final data = response.data ?? [];
+      return data
+          .map((json) => PlaylistModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (error) {
+      throw ServerException(error.message ?? 'Failed to fetch playlists');
+    } catch (error) {
+      throw ServerException('Failed to parse playlists response: $error');
     }
   }
 
@@ -84,7 +150,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
 
       final response = await _dioClient.patch<dynamic>(
         '${ApiConstants.playlists}/$playListId',
-        data: request.toJson(),
+        data: request,
       );
       final responseData = response.data as Map<String, dynamic>;
       return PlaylistModel.fromJson(responseData);

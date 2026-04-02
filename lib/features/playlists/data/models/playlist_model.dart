@@ -22,6 +22,7 @@ class PlaylistModel with _$PlaylistModel {
     String? description,
     required String type,
     @Default(false) bool isPrivate,
+    @Default(false) bool isLiked,
     @JsonKey(name: 'CoverArt') String? coverArt,
     required OwnerModel owner,
     @Default([]) List<TrackModel> tracks,

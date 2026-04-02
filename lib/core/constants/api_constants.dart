@@ -42,7 +42,27 @@ class ApiConstants {
   static const String userProfileImage = '/users/me/images';
 
   /// Base endpoint for playlist operations
-  static const String playlists = '/api/playlists/';
+  static const String playlists = '/playlists/';
+
+  /// Endpoint to get the current authenticated user's playlists
+  static const String myPlaylists = '/users/me/playlists';
+
+  /// Endpoint for operations on a specific playlist for the current user
+  static String myPlaylist(int id) => '/users/me/playlists/$id';
+
+  /// Endpoint to get playlists created by a specific user ID
+  static String userPublicPlaylists(int userId) => '/users/$userId/playlists';
+
+  /// Endpoint for liked playlists
+  static const String likedPlaylists = '/users/me/playlists/liked';
+
+  /// Endpoint for playlist's tracks reordering
+  static String updateTracksOrder(int playlistId) =>
+      '/playlists/$playlistId/tracks/reorder';
+
+  // Endpoint for getting the playlist secret link
+  static String getPlaylistSecretLink(int playlistId) =>
+      '${ApiConstants.playlists}/$playlistId/secret-link';
 
   // Dio Timeout constants
   static const int connectTimeout = 30000;

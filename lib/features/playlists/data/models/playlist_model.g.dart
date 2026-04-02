@@ -22,6 +22,7 @@ _$PlaylistModelImpl _$$PlaylistModelImplFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String?,
       type: json['type'] as String,
       isPrivate: json['isPrivate'] as bool? ?? false,
+      isLiked: json['isLiked'] as bool? ?? false,
       coverArt: json['CoverArt'] as String?,
       owner: OwnerModel.fromJson(json['owner'] as Map<String, dynamic>),
       tracks:
@@ -38,6 +39,7 @@ Map<String, dynamic> _$$PlaylistModelImplToJson(_$PlaylistModelImpl instance) =>
       'description': instance.description,
       'type': instance.type,
       'isPrivate': instance.isPrivate,
+      'isLiked': instance.isLiked,
       'CoverArt': instance.coverArt,
       'owner': instance.owner,
       'tracks': instance.tracks,
