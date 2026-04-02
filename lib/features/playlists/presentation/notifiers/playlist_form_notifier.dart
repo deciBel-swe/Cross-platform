@@ -1,29 +1,44 @@
 import 'dart:async';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mime/mime.dart';
 
-import '../../../../core/di/injection.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
+import '../../data/repositories/mock_playlist_repository.dart';
+import '../../domain/entities/playlist.dart';
 import '../../domain/entities/playlist_metadata.dart';
 import '../../domain/repositories/i_playlist_repository.dart';
+import '../providers/user_playlists_provider.dart';
 
 final playlistRepositoryProvider = Provider<IPlaylistRepository>((ref) {
-  return getIt<IPlaylistRepository>();
+  //return getIt<IPlaylistRepository>();
+  return MockPlaylistRepository();
 });
 
 /// Provider for the Create/Update Playlist form state
-final playlistFormProvider =
-    AsyncNotifierProvider.autoDispose<PlaylistFormNotifier, PlaylistMetadata>(
+final playlistFormProvider = AsyncNotifierProvider.autoDispose
+    .family<PlaylistFormNotifier, PlaylistMetadata, Playlist?>(
       PlaylistFormNotifier.new,
     );
 
 /// Manage the state of the playlist form and handles submission
-class PlaylistFormNotifier extends AutoDisposeAsyncNotifier<PlaylistMetadata> {
+class PlaylistFormNotifier
+    extends AutoDisposeFamilyAsyncNotifier<PlaylistMetadata, Playlist?> {
   @override
-  FutureOr<PlaylistMetadata> build() async {
+  FutureOr<PlaylistMetadata> build(Playlist? arg) async {
+    // EDIT MODE: If a playlist was passed in, pre-fill the form
+    if (arg != null) {
+      return PlaylistMetadata(
+        title: arg.title,
+        description: arg.description ?? '',
+        isPrivate: arg.isPrivate,
+        coverImage: null,
+      );
+    }
+    // CREATE MODE: Initialize an empty form
     final prefService = ref.read(sharedPrefsServiceProvider);
-
     final savedIsPrivate = await prefService.getLastPrivacySettings();
 
     return PlaylistMetadata(
@@ -41,8 +56,17 @@ class PlaylistFormNotifier extends AutoDisposeAsyncNotifier<PlaylistMetadata> {
     }
   }
 
-  void updateTitle(String title) =>
-      _updateState((state) => state.copyWith(title: title));
+  void updateTitle(String title) {
+    if (title.length > 100) {
+      state = AsyncValue<PlaylistMetadata>.error(
+        "Playlist Title Can't exceed 100 characters",
+        StackTrace.current,
+      ).copyWithPrevious(state);
+      return;
+    }
+
+    _updateState((state) => state.copyWith(title: title));
+  }
 
   void updateDescription(String desc) =>
       _updateState((state) => state.copyWith(description: desc));
@@ -52,8 +76,12 @@ class PlaylistFormNotifier extends AutoDisposeAsyncNotifier<PlaylistMetadata> {
     _updateState((state) => state.copyWith(isPrivate: isPrivate));
 
     // 2. Save it to local storage in the background
-    final prefsService = ref.read(sharedPrefsServiceProvider);
-    await prefsService.saveLastPrivacySettings(isPrivate);
+    // Only save to defaults if we are in Create mode (not editing an existing playlist)
+    // ignore: dead_code, unnecessary_null_comparison
+    if (arg == null) {
+      final prefsService = ref.read(sharedPrefsServiceProvider);
+      await prefsService.saveLastPrivacySettings(isPrivate);
+    }
   }
 
   Future<void> pickCoverImage() async {
@@ -107,7 +135,16 @@ class PlaylistFormNotifier extends AutoDisposeAsyncNotifier<PlaylistMetadata> {
     final repository = ref.read(playlistRepositoryProvider);
 
     // 2. Send the draft to the backend
-    final result = await repository.createPlaylist(currentState);
+    Either<Failure, Playlist> result;
+
+    //Decide whether to Create or Update based on the parameter
+    // ignore: unnecessary_null_comparison
+    if (arg != null) {
+      result = await repository.updatePlaylist(arg!.id, currentState);
+      // ignore: dead_code
+    } else {
+      result = await repository.createPlaylist(currentState);
+    }
 
     // 3. Handle the Either response cleanly using fold
     return result.fold(
@@ -120,11 +157,29 @@ class PlaylistFormNotifier extends AutoDisposeAsyncNotifier<PlaylistMetadata> {
         return false;
       },
       (newPlaylist) {
-        // TODO: add the library playlist Provider here when its finished.
+        ref.invalidate(userPlaylistsProvider);
 
-        state = AsyncData(PlaylistMetadata(isPrivate: currentState.isPrivate));
+        state = AsyncData(
+          PlaylistMetadata(
+            title: '',
+            description: '',
+            coverImage: null,
+            isPrivate: currentState.isPrivate,
+          ),
+        );
         return true;
       },
     );
+  }
+
+  /// Checks if the current form state differs from the initial playlist data
+  bool get hasChanges {
+    final currentState = state.value;
+    if (currentState == null || arg == null) return false;
+
+    return currentState.title != arg!.title ||
+        currentState.description != (arg!.description ?? '') ||
+        currentState.isPrivate != arg!.isPrivate ||
+        currentState.coverImage != null;
   }
 }
