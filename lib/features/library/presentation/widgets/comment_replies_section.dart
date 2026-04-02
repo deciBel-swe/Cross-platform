@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/entities/comment.dart';
 import '../notifiers/track_comment_notifier.dart';
 import 'comment_reply_item.dart';
@@ -10,6 +11,7 @@ class CommentRepliesSection extends ConsumerWidget {
     required this.comment,
     required this.trackId,
   });
+
   final Comment comment;
   final int trackId;
 
@@ -18,22 +20,30 @@ class CommentRepliesSection extends ConsumerWidget {
     final state = ref.watch(trackCommentsProvider(trackId));
 
     final isExpanded = state.expandedCommentIds.contains(comment.commentid);
-    final replies = state.repliesByCommentId[comment.commentid] ?? [];
-    final isLoading = state.isLoadingReplies && isExpanded && replies.isEmpty;
+    final paginatedData = state.repliesByCommentId[comment.commentid];
+    final replies = paginatedData?.content ?? [];
+
+    final isInitialLoading =
+        state.isLoadingReplies && isExpanded && replies.isEmpty;
+    final isPaginating =
+        state.isLoadingReplies && isExpanded && replies.isNotEmpty;
+
+    final displayReplyCount =
+        paginatedData?.totalElements ?? comment.replycount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!isExpanded && comment.replycount > 0)
+        if (!isExpanded && displayReplyCount > 0)
           _buildActionButton(
             onTap: () => ref
                 .read(trackCommentsProvider(trackId).notifier)
-                .loadReplies(comment.commentid),
-            label: 'View ${comment.replycount} replies',
+                .loadReplies(comment.commentid, page: 0),
+            label: 'View $displayReplyCount replies',
             showLine: true,
           ),
 
-        if (isLoading)
+        if (isInitialLoading)
           const Padding(
             padding: EdgeInsets.only(left: 72, top: 12, bottom: 12),
             child: SizedBox(
@@ -47,21 +57,48 @@ class CommentRepliesSection extends ConsumerWidget {
           ),
 
         if (isExpanded) ...[
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: replies.length,
-            itemBuilder: (context, index) =>
-                CommentReplyItem(reply: replies[index]),
-          ),
+          if (replies.isNotEmpty)
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: replies.length,
+              itemBuilder: (context, index) =>
+                  CommentReplyItem(reply: replies[index]),
+            ),
 
-          _buildActionButton(
-            onTap: () => ref
-                .read(trackCommentsProvider(trackId).notifier)
-                .collapseReplies(comment.commentid),
-            label: 'Hide replies',
-            showLine: false,
-          ),
+          if (paginatedData != null && !(paginatedData.isLast ?? true))
+            if (isPaginating)
+              const Padding(
+                padding: EdgeInsets.only(left: 72, top: 12, bottom: 12),
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.grey,
+                  ),
+                ),
+              )
+            else
+              _buildActionButton(
+                onTap: () {
+                  final nextPage = (paginatedData.pageNumber ?? 0) + 1;
+                  ref
+                      .read(trackCommentsProvider(trackId).notifier)
+                      .loadReplies(comment.commentid, page: nextPage);
+                },
+                label: 'View more replies',
+                showLine: true,
+              ),
+
+          if (!isInitialLoading)
+            _buildActionButton(
+              onTap: () => ref
+                  .read(trackCommentsProvider(trackId).notifier)
+                  .collapseReplies(comment.commentid),
+              label: 'Hide replies',
+              showLine: false,
+            ),
         ],
       ],
     );

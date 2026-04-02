@@ -197,7 +197,7 @@ class __$$PaginatedCommentsResponseModelImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$PaginatedCommentsResponseModelImpl
-    implements _PaginatedCommentsResponseModel {
+    extends _PaginatedCommentsResponseModel {
   const _$PaginatedCommentsResponseModelImpl({
     final List<PostCommentResponseModel> content = const [],
     this.pageNumber,
@@ -205,7 +205,8 @@ class _$PaginatedCommentsResponseModelImpl
     this.totalElements,
     this.totalPages,
     this.isLast,
-  }) : _content = content;
+  }) : _content = content,
+       super._();
 
   factory _$PaginatedCommentsResponseModelImpl.fromJson(
     Map<String, dynamic> json,
@@ -285,7 +286,7 @@ class _$PaginatedCommentsResponseModelImpl
 }
 
 abstract class _PaginatedCommentsResponseModel
-    implements PaginatedCommentsResponseModel {
+    extends PaginatedCommentsResponseModel {
   const factory _PaginatedCommentsResponseModel({
     final List<PostCommentResponseModel> content,
     final int? pageNumber,
@@ -294,6 +295,7 @@ abstract class _PaginatedCommentsResponseModel
     final int? totalPages,
     final bool? isLast,
   }) = _$PaginatedCommentsResponseModelImpl;
+  const _PaginatedCommentsResponseModel._() : super._();
 
   factory _PaginatedCommentsResponseModel.fromJson(Map<String, dynamic> json) =
       _$PaginatedCommentsResponseModelImpl.fromJson;

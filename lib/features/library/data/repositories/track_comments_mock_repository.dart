@@ -4,9 +4,10 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/comment.dart';
 import '../../domain/entities/comment_reply.dart';
+import '../../domain/entities/paginated_comment_reply.dart';
+import '../../domain/entities/paginated_comments.dart';
 import '../../domain/repositories/i_track_comments_repository.dart';
 import '../datasources/track_comments_mock_fixtures.dart';
-import '../models/comment_reply_model.dart';
 import '../models/comment_user_model.dart';
 import '../models/paginated_replies_response_model.dart';
 import '../models/post_comment_response_model.dart';
@@ -44,7 +45,7 @@ class TrackCommentsMockRepository implements ITrackCommentsRepository {
   }
 
   @override
-  Future<Either<Failure, List<Comment>>> getComments({
+  Future<Either<Failure, PaginatedComments>> getComments({
     required int trackId,
     int page = 0,
     int size = 20,
@@ -52,14 +53,22 @@ class TrackCommentsMockRepository implements ITrackCommentsRepository {
     await Future<void>.delayed(TrackCommentsMockFixtures.mockDelay);
 
     try {
-      return Right(List<Comment>.from(_liveComments));
+      final paginatedComments = PaginatedComments(
+        content: List<Comment>.from(_liveComments),
+        pageNumber: page,
+        pageSize: size,
+        totalElements: _liveComments.length,
+        totalPages: 1,
+        isLast: true,
+      );
+      return Right(paginatedComments);
     } catch (e) {
       return const Left(ServerFailure('Mock: Failed to load comments'));
     }
   }
 
   @override
-  Future<Either<Failure, List<CommentReply>>> getReplies({
+  Future<Either<Failure, PaginatedReplies>> getReplies({
     required int commentId,
     int page = 0,
     int size = 20,
@@ -71,13 +80,45 @@ class TrackCommentsMockRepository implements ITrackCommentsRepository {
         TrackCommentsMockFixtures.mockRepliesResponse,
       );
 
-      final replies = response.content
-          .map((reply) => reply.toEntity())
-          .toList();
-
-      return Right(replies);
+      return Right(response.toEntity());
     } catch (e) {
       return const Left(ServerFailure('Mock: Failed to load replies'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CommentReply>> postReply({
+    required int commentId,
+    required String body,
+  }) async {
+    await Future<void>.delayed(TrackCommentsMockFixtures.mockDelay);
+
+    try {
+      final serverId = DateTime.now().millisecondsSinceEpoch;
+
+      final newReply = CommentReply(
+        commentId: serverId,
+        user: TrackCommentsMockFixtures.mockCommentUser.toEntity(),
+        body: body,
+        createdAt: DateTime.now(),
+      );
+
+      final index = _liveComments.indexWhere((c) => c.commentid == commentId);
+      if (index != -1) {
+        final comment = _liveComments[index];
+        _liveComments[index] = Comment(
+          commentid: comment.commentid,
+          user: comment.user,
+          body: comment.body,
+          timestampSeconds: comment.timestampSeconds,
+          createdAt: comment.createdAt,
+          replycount: comment.replycount + 1,
+        );
+      }
+
+      return Right(newReply);
+    } catch (e) {
+      return const Left(ServerFailure('Mock: Failed to post reply'));
     }
   }
 

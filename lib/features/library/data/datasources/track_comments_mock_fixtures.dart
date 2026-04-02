@@ -132,10 +132,130 @@ class TrackCommentsMockFixtures {
         'body': 'real',
         'createdAt': '2026-03-31T10:14:00.000Z',
       },
+      {
+        'id': 14,
+        'user': {
+          'id': 106,
+          'username': 'omar',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=omar',
+        },
+        'body': 'can u share the preset?',
+        'createdAt': '2026-03-31T10:15:00.000Z',
+      },
+      {
+        'id': 15,
+        'user': {
+          'id': 107,
+          'username': 'lara',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=lara',
+        },
+        'body': 'Insane work 🔥',
+        'createdAt': '2026-03-31T10:16:00.000Z',
+      },
+      {
+        'id': 16,
+        'user': {
+          'id': 108,
+          'username': 'ahmed',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=ahmed',
+        },
+        'body': 'this is so good',
+        'createdAt': '2026-03-31T10:17:00.000Z',
+      },
+      {
+        'id': 17,
+        'user': {
+          'id': 109,
+          'username': 'fatima',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=fatima',
+        },
+        'body': 'wow',
+        'createdAt': '2026-03-31T10:18:00.000Z',
+      },
+      {
+        'id': 18,
+        'user': {
+          'id': 110,
+          'username': 'youssef',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=youssef',
+        },
+        'body': 'keep it up',
+        'createdAt': '2026-03-31T10:19:00.000Z',
+      },
+      {
+        'id': 19,
+        'user': {
+          'id': 111,
+          'username': 'nada',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=nada',
+        },
+        'body': 'amazing!',
+        'createdAt': '2026-03-31T10:20:00.000Z',
+      },
+      {
+        'id': 20,
+        'user': {
+          'id': 112,
+          'username': 'mahmoud',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=mahmoud',
+        },
+        'body': 'what synth did you use?',
+        'createdAt': '2026-03-31T10:21:00.000Z',
+      },
+      {
+        'id': 21,
+        'user': {
+          'id': 113,
+          'username': 'layla',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=layla',
+        },
+        'body': 'the bass is heavy',
+        'createdAt': '2026-03-31T10:22:00.000Z',
+      },
+      {
+        'id': 22,
+        'user': {
+          'id': 114,
+          'username': 'khaled',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=khaled',
+        },
+        'body': 'dope',
+        'createdAt': '2026-03-31T10:23:00.000Z',
+      },
+      {
+        'id': 23,
+        'user': {
+          'id': 115,
+          'username': 'hoda',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=hoda',
+        },
+        'body': 'can\'t stop listening',
+        'createdAt': '2026-03-31T10:24:00.000Z',
+      },
+      {
+        'id': 24,
+        'user': {
+          'id': 116,
+          'username': 'ramy',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=ramy',
+        },
+        'body': 'needs more cowbell',
+        'createdAt': '2026-03-31T10:25:00.000Z',
+      },
+      {
+        'id': 25,
+        'user': {
+          'id': 117,
+          'username': 'samy',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=samy',
+        },
+        'body': 'perfect track',
+        'createdAt': '2026-03-31T10:26:00.000Z',
+      },
     ],
     'pageNumber': 0,
     'pageSize': 20,
-    'totalElements': 3,
+    'totalElements': 15,
     'totalPages': 1,
     'isLast': true,
   };

@@ -82,7 +82,9 @@ class TrackCommentTile extends ConsumerWidget {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () {},
+                          onTap: () => ref
+                              .read(trackCommentsProvider(trackId).notifier)
+                              .setReplyingTo(comment),
                           child: Text(
                             'Reply',
                             style: theme.textTheme.labelLarge?.copyWith(

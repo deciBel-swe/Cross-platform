@@ -4,6 +4,8 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/comment.dart';
 import '../../domain/entities/comment_reply.dart';
+import '../../domain/entities/paginated_comment_reply.dart';
+import '../../domain/entities/paginated_comments.dart';
 import '../../domain/repositories/i_track_comments_repository.dart'
     show ITrackCommentsRepository;
 import '../datasources/track_comments_remote_data_source.dart';
@@ -43,7 +45,7 @@ class TrackCommentsRepository implements ITrackCommentsRepository {
   }
 
   @override
-  Future<Either<Failure, List<Comment>>> getComments({
+  Future<Either<Failure, PaginatedComments>> getComments({
     required int trackId,
     int page = 0,
     int size = 20,
@@ -55,18 +57,14 @@ class TrackCommentsRepository implements ITrackCommentsRepository {
         size: size,
       );
 
-      final comments = response.content
-          .map((comment) => comment.toEntity())
-          .toList();
-
-      return Right(comments);
+      return Right(response.toEntity());
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, List<CommentReply>>> getReplies({
+  Future<Either<Failure, PaginatedReplies>> getReplies({
     required int commentId,
     int page = 0,
     int size = 20,
@@ -78,11 +76,24 @@ class TrackCommentsRepository implements ITrackCommentsRepository {
         size: size,
       );
 
-      final replies = response.content
-          .map((reply) => reply.toEntity())
-          .toList();
+      return Right(response.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 
-      return Right(replies);
+  @override
+  Future<Either<Failure, CommentReply>> postReply({
+    required int commentId,
+    required String body,
+  }) async {
+    try {
+      final response = await _remoteDatasource.postReply(
+        commentId: commentId,
+        body: body,
+      );
+
+      return Right(response.toEntity());
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

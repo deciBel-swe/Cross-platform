@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../models/paginated_comments_response_model.dart';
 import '../models/paginated_replies_response_model.dart';
+import '../models/comment_reply_model.dart';
 import '../models/post_comment_request_model.dart';
 import '../models/post_comment_response_model.dart';
 
@@ -11,6 +12,11 @@ abstract class ITrackCommentsRemoteDataSource {
   Future<PostCommentResponseModel> postComment({
     required int trackId,
     required PostCommentRequestModel request,
+  });
+
+  Future<CommentReplyModel> postReply({
+    required int commentId,
+    required String body,
   });
 
   Future<PaginatedCommentsResponseModel> getComments({
@@ -63,6 +69,34 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
   }
 
   @override
+  Future<CommentReplyModel> postReply({
+    required int commentId,
+    required String body,
+  }) async {
+    try {
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '${ApiConstants.comments}/$commentId${ApiConstants.replies}',
+        data: {'body': body},
+      );
+
+      final data = response.data;
+      if (data == null) {
+        throw Exception('Empty response');
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return CommentReplyModel.fromJson(data);
+      }
+
+      throw Exception(
+        'Failed to post reply. Status code: ${response.statusCode}',
+      );
+    } on DioException catch (error) {
+      throw Exception('Error occurred while posting reply: ${error.message}');
+    }
+  }
+
+  @override
   Future<PaginatedCommentsResponseModel> getComments({
     required int trackId,
     int page = 0,
@@ -70,7 +104,8 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
   }) async {
     try {
       final response = await _dioClient.get<Map<String, dynamic>>(
-        '${ApiConstants.tracks}/$trackId${ApiConstants.comments}?page=$page&size=$size',
+        '${ApiConstants.tracks}/$trackId${ApiConstants.comments}',
+        queryParameters: {'page': page, 'size': size},
       );
 
       final data = response.data;
@@ -100,7 +135,8 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
   }) async {
     try {
       final response = await _dioClient.get<Map<String, dynamic>>(
-        '${ApiConstants.comments}/$commentId${ApiConstants.replies}?page=$page&size=$size',
+        '${ApiConstants.comments}/$commentId${ApiConstants.replies}',
+        queryParameters: {'page': page, 'size': size},
       );
 
       final data = response.data;
@@ -127,7 +163,8 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
         '${ApiConstants.comments}/$commentId',
       );
 
-      if (response.statusCode == 204) {
+      // Checking for 204 No Content or 200 OK
+      if (response.statusCode == 204 || response.statusCode == 200) {
         return;
       }
 
