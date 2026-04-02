@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../engagement/domain/models/track_action_data.dart';
-import '../../../engagement/presentation/notifiers/track_action_notifier.dart';
+import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../library/domain/entities/track.dart';
 
 class TrackTile extends ConsumerWidget {
@@ -130,13 +130,15 @@ class TrackTile extends ConsumerWidget {
 
                       // Interactive Like Heart
                       GestureDetector(
-                        onTap: () => ref.read(trackSocialProvider.notifier).toggleAction(
-                          track.id, 
-                          SocialActionType.like,
-                          initialLikeCount: track.likeCount,
-                          initialRepostCount: track.repostCount,
-                          initialIsLiked: isLiked,
-                        ),
+                        onTap: () => ref
+                            .read(trackSocialProvider.notifier)
+                            .toggleAction(
+                              track.id,
+                              SocialActionType.like,
+                              initialLikeCount: track.likeCount,
+                              initialRepostCount: track.repostCount,
+                              initialIsLiked: isLiked,
+                            ),
                         behavior: HitTestBehavior
                             .opaque, // Ensures the padding is clickable
                         child: Padding(

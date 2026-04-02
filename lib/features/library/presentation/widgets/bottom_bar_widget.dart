@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../engagement/domain/models/track_action_data.dart';
-import '../../../engagement/presentation/notifiers/track_action_notifier.dart';
+import '../../../engagement/presentation/widgets/like_button.dart';
+import '../../../engagement/presentation/widgets/repost_button.dart';
 
 class BottomBarWidget extends ConsumerWidget {
   const BottomBarWidget({
@@ -10,6 +10,8 @@ class BottomBarWidget extends ConsumerWidget {
     required this.trackId,
     required this.initialLikeCount,
     required this.initialRepostCount,
+    required this.isLiked,
+    required this.isReposted,
     required this.commentCount,
     required this.onCommentPressed,
     required this.onSharePressed,
@@ -19,6 +21,8 @@ class BottomBarWidget extends ConsumerWidget {
   final int trackId;
   final int initialLikeCount;
   final int initialRepostCount;
+  final bool isLiked;
+  final bool isReposted;
   final int commentCount;
   final VoidCallback onCommentPressed;
   final VoidCallback onSharePressed;
@@ -26,14 +30,6 @@ class BottomBarWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trackSocialState = ref.watch(trackSocialProvider);
-    final socialData = trackSocialState.trackStates[trackId.toString()];
-
-    final isLiked = socialData?.isLiked ?? false;
-    final likeCount = socialData?.likeCount ?? initialLikeCount;
-
-    final isReposted = socialData?.isReposted ?? false;
-    final repostCount = socialData?.repostCount ?? initialRepostCount;
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
@@ -47,33 +43,17 @@ class BottomBarWidget extends ConsumerWidget {
           mainAxisSize: MainAxisSize.max,
           children: [
             Expanded(
-              child: _buildTextIconButton(
-                icon: isLiked ? Icons.favorite : Icons.favorite_border,
-                text: _formatCount(likeCount),
-                onTap: () => ref.read(trackSocialProvider.notifier).toggleAction(
-                  trackId, 
-                  SocialActionType.like,
-                  initialLikeCount: initialLikeCount,
-                  initialRepostCount: initialRepostCount,
-                  initialIsLiked: isLiked,
-                  initialIsReposted: isReposted,
-                ),
-                activeColor: isLiked ? Colors.red : Colors.white,
+              child: LikeButton(
+                trackId: trackId,
+                isLiked: isLiked,
+                likeCount: initialLikeCount,
               ),
             ),
             Expanded(
-              child: _buildTextIconButton(
-                icon: Icons.repeat,
-                text: _formatCount(repostCount),
-                onTap: () => ref.read(trackSocialProvider.notifier).toggleAction(
-                  trackId, 
-                  SocialActionType.repost,
-                  initialLikeCount: initialLikeCount,
-                  initialRepostCount: initialRepostCount,
-                  initialIsLiked: isLiked,
-                  initialIsReposted: isReposted,
-                ),
-                activeColor: isReposted ? const Color(0xFFFF5500) : Colors.white,
+              child: RepostButton(
+                trackId: trackId,
+                isReposted: isReposted,
+                repostCount: initialRepostCount,
               ),
             ),
             Expanded(

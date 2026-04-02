@@ -18,21 +18,31 @@ class TrackCommentsContextTile extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              track.coverUrl ?? '',
-              width: 48,
-              height: 48,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
-                width: 48,
-                height: 48,
-                color: theme.colorScheme.surfaceContainerHighest,
-                child: Icon(
-                  Icons.music_note,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
+            child: track.coverUrl != null && track.coverUrl!.isNotEmpty
+                ? Image.network(
+                    track.coverUrl!,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      width: 48,
+                      height: 48,
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.music_note,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  )
+                : Container(
+                    width: 48,
+                    height: 48,
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.music_note,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(

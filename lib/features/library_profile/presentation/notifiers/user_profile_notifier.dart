@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/injection.dart'; 
+import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/public_profile_social_links.dart';
 import '../../domain/entities/user_profile.dart';
@@ -13,7 +13,6 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
 });
 
 class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
-  
   @override
   Future<Either<Failure, UserProfile>> build() async {
     // This runs automatically when the provider is first watched.
@@ -23,9 +22,12 @@ class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
   void updateState(UserProfile newUser) {
     state = AsyncData(Right(newUser));
   }
+
   Future<void> refreshProfile() async {
-    final minLoadTime = Future<void>.delayed(const Duration(milliseconds: 1500));
-    
+    final minLoadTime = Future<void>.delayed(
+      const Duration(milliseconds: 1500),
+    );
+
     final fetchTask = _fetchProfile();
 
     final results = await Future.wait([fetchTask, minLoadTime]);
@@ -36,7 +38,7 @@ class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
     newResult.fold(
       (failure) {
         if (oldState != null && oldState.isRight()) {
-          return; 
+          return;
         } else {
           state = AsyncData(Left(failure));
         }
@@ -45,7 +47,8 @@ class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
         state = AsyncData(Right(profile));
       },
     );
-  }  
+  }
+
   Future<Either<Failure, UserProfile>> _fetchProfile() async {
     final repository = ref.read(profileRepositoryProvider);
 
@@ -61,7 +64,7 @@ class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
             .setInitialLinks(
               profile.socialLinks ?? const PublicProfileSocialLinks(),
             );
-            
+
         return Right(profile);
       },
     );

@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../domain/entities/comment.dart';
 import '../../domain/entities/comment_user.dart';
 import '../../domain/repositories/i_track_comments_repository.dart';
@@ -42,8 +40,11 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     }
 
     final authUser = authState.user;
-
     final tempId = DateTime.now().millisecondsSinceEpoch;
+
+    // Use avatarUrl only when non-null and non-empty
+    final avatarUrl =
+        authUser.avatarUrl?.isNotEmpty == true ? authUser.avatarUrl : null;
 
     final optimisticComment = Comment(
       commentid: tempId,
@@ -53,7 +54,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
       user: CommentUser(
         id: authUser.id,
         username: authUser.username,
-        avatarUrl: authUser.avatarUrl!.isEmpty ? authUser.avatarUrl : '',
+        avatarUrl: avatarUrl,
       ),
     );
 
@@ -66,7 +67,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
 
     // 4. Call Repository
     final result = await _repository.postComment(
-      commentid: tempId, // Pass tempId
+      commentid: tempId,
       trackId: _trackId,
       body: body.trim(),
       timestampSeconds: selectedTimestamp,
@@ -89,30 +90,3 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     );
   }
 }
-
-final trackCommentsProvider =
-    NotifierProvider.family<TrackCommentNotifier, TrackCommentsState, int>(
-      TrackCommentNotifier.new,
-    );
-final currentActiveCommentsProvider = Provider.family<List<Comment>, int>((
-  ref,
-  trackId,
-) {
-  // 1. Get the current second from the audio player
-  final audioState = ref.watch(trackAudioProvider);
-  final currentSecond = (audioState.duration.inSeconds * audioState.progress)
-      .round();
-
-  // 2. Get all comments for this track
-  final commentsState = ref.watch(trackCommentsProvider(trackId));
-
-  // 3. Filter comments that match the exact current second
-  final activeComments = commentsState.comments
-      .where((c) => c.timestampSeconds == currentSecond)
-      .toList();
-
-  // 4. Sort them by creation time to ensure consistent ordering (oldest to newest)
-  activeComments.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-  return activeComments;
-});

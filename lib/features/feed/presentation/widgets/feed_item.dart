@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../engagement/domain/models/track_action_data.dart';
-import '../../../engagement/presentation/notifiers/track_action_notifier.dart';
+import '../../../engagement/presentation/widgets/like_button.dart';
+import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
 import 'mobile_feed_track_card.dart';
 
@@ -430,50 +430,27 @@ class _DesktopFeedActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trackSocialState = ref.watch(trackSocialProvider);
-    final socialData = trackSocialState.trackStates[trackId.toString()];
-
-    final isLiked = socialData?.isLiked ?? initialIsLiked;
-    final likeCount = socialData?.likeCount ?? initialLikeCount;
-
-    final isReposted = socialData?.isReposted ?? initialIsReposted;
-    final repostCount = socialData?.repostCount ?? initialRepostCount;
-
     return Row(
       children: [
-        _InteractiveMetricPill(
-          icon: isLiked ? Icons.favorite : Icons.favorite_border,
-          value: _formatCount(likeCount),
-          iconColor: isLiked ? Colors.red : AppColors.textPrimary,
-          onTap: () => ref.read(trackSocialProvider.notifier).toggleAction(
-            trackId, 
-            SocialActionType.like,
-            initialLikeCount: initialLikeCount,
-            initialRepostCount: initialRepostCount,
-            initialIsLiked: isLiked,
-            initialIsReposted: isReposted,
-          ),
+        LikeButton(
+          trackId: trackId,
+          isLiked: initialIsLiked,
+          likeCount: initialLikeCount,
+          iconSize: 18,
+          fontSize: 13,
         ),
         const SizedBox(width: AppDimensions.paddingSm),
-        _InteractiveMetricPill(
-          icon: Icons.repeat,
-          value: _formatCount(repostCount),
-          iconColor: isReposted ? const Color(0xFFFF5500) : AppColors.textSecondary,
-          onTap: () => ref.read(trackSocialProvider.notifier).toggleAction(
-            trackId, 
-            SocialActionType.repost,
-            initialLikeCount: initialLikeCount,
-            initialRepostCount: initialRepostCount,
-            initialIsLiked: isLiked,
-            initialIsReposted: isReposted,
-          ),
+        RepostButton(
+          trackId: trackId,
+          isReposted: initialIsReposted,
+          repostCount: initialRepostCount,
+          iconSize: 18,
+          fontSize: 13,
         ),
         const SizedBox(width: AppDimensions.paddingSm),
         const _IconSquareButton(icon: Icons.ios_share_outlined),
         const SizedBox(width: AppDimensions.paddingSm),
-        const _IconSquareButton(
-          icon: Icons.content_copy_outlined,
-        ),
+        const _IconSquareButton(icon: Icons.content_copy_outlined),
         const SizedBox(width: AppDimensions.paddingSm),
         const _IconSquareButton(icon: Icons.more_horiz),
         const Spacer(),
@@ -503,43 +480,6 @@ class _DesktopFeedActions extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _InteractiveMetricPill extends StatelessWidget {
-  const _InteractiveMetricPill({
-    required this.icon,
-    required this.value,
-    required this.iconColor,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String value;
-  final Color iconColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-      child: Container(
-        height: 34,
-        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingSm),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 17, color: iconColor),
-            const SizedBox(width: AppDimensions.paddingSm),
-            Text(value, style: AppTextStyles.cardTitle),
-          ],
-        ),
-      ),
     );
   }
 }

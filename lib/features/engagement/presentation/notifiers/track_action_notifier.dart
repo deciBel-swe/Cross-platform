@@ -1,14 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../domain/models/track_action_data.dart';
 import '../../domain/repositories/track_social_repository.dart';
+import '../providers/track_social_provider.dart';
 import '../states/track_social_state.dart';
-
-final trackSocialRepositoryProvider = Provider<ITrackSocialRepository>(
-  (ref) => getIt<ITrackSocialRepository>(),
-);
 
 class TrackSocialNotifier extends Notifier<TrackSocialState> {
   late final ITrackSocialRepository _repository;
@@ -59,7 +55,7 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
   }) async {
     final trackKey = trackId.toString();
     var trackData = state.trackStates[trackKey];
-    
+
     if (trackData == null) {
       trackData = TrackSocialData(
         isLiked: initialIsLiked,
@@ -67,7 +63,9 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
         isReposted: initialIsReposted,
         repostCount: initialRepostCount,
       );
-      state = state.copyWith(trackStates: {...state.trackStates, trackKey: trackData});
+      state = state.copyWith(
+        trackStates: {...state.trackStates, trackKey: trackData},
+      );
     }
 
     final bool wasActive = actionType == SocialActionType.like
@@ -128,8 +126,3 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
     state = state.copyWith(trackStates: newTrackStates);
   }
 }
-
-final trackSocialProvider =
-    NotifierProvider<TrackSocialNotifier, TrackSocialState>(
-      () => TrackSocialNotifier(),
-    );

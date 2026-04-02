@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
+import '../models/paginated_engagers_model.dart';
 
 @injectable
 class TrackSocialRemoteDatasource {
@@ -36,6 +37,40 @@ class TrackSocialRemoteDatasource {
   Future<void> unrepostTrack(int trackId) async {
     try {
       await _dioClient.delete<dynamic>('/tracks/$trackId/repost');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Fetches the paginated list of users who liked [trackId].
+  Future<PaginatedEngagersModel> fetchTrackLikers({
+    required int trackId,
+    required int page,
+    required int size,
+  }) async {
+    try {
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/tracks/$trackId/like',
+        queryParams: {'page': page, 'size': size},
+      );
+      return PaginatedEngagersModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Fetches the paginated list of users who reposted [trackId].
+  Future<PaginatedEngagersModel> fetchTrackReposters({
+    required int trackId,
+    required int page,
+    required int size,
+  }) async {
+    try {
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/tracks/$trackId/reposters',
+        queryParams: {'page': page, 'size': size},
+      );
+      return PaginatedEngagersModel.fromJson(response.data!);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }

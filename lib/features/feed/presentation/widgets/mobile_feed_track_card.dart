@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../engagement/domain/models/track_action_data.dart';
-import '../../../engagement/presentation/notifiers/track_action_notifier.dart';
+import '../../../engagement/presentation/widgets/like_button.dart';
+import '../../../engagement/presentation/widgets/repost_button.dart';
 
 /// Reusable mobile feed track card matching the native-style post layout.
 class MobileFeedTrackCard extends StatelessWidget {
@@ -175,76 +175,31 @@ class _MobileRightActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trackSocialState = ref.watch(trackSocialProvider);
-    final socialData = trackSocialState.trackStates[trackId.toString()];
-
-    final isLiked = socialData?.isLiked ?? initialIsLiked;
-    final likeCount = socialData?.likeCount ?? initialLikeCount;
-    
-    final isReposted = socialData?.isReposted ?? initialIsReposted;
-    final repostCount = socialData?.repostCount ?? initialRepostCount;
-
     return Column(
       children: [
         const Icon(Icons.volume_off_outlined, color: AppColors.textPrimary),
         const SizedBox(height: AppDimensions.paddingMd),
-        
-        // LIKE BUTTON
-        GestureDetector(
-          onTap: () => ref.read(trackSocialProvider.notifier).toggleAction(
-            trackId, 
-            SocialActionType.like,
-            initialLikeCount: initialLikeCount,
-            initialRepostCount: initialRepostCount,
-            initialIsLiked: isLiked,
-            initialIsReposted: isReposted,
-          ),
-          child: Column(
-            children: [
-              Icon(
-                isLiked ? Icons.favorite : Icons.favorite_border,
-                color: isLiked ? Colors.red : AppColors.textPrimary,
-                size: 32,
-              ),
-              const SizedBox(height: AppDimensions.paddingXs),
-              Text(
-                _formatCount(likeCount),
-                style: AppTextStyles.cardTitle.copyWith(color: AppColors.textPrimary),
-              ),
-            ],
-          ),
-        ),
-        
-        const SizedBox(height: AppDimensions.paddingMd),
-        
-        // REPOST BUTTON
-        GestureDetector(
-          onTap: () => ref.read(trackSocialProvider.notifier).toggleAction(
-            trackId, 
-            SocialActionType.repost,
-            initialLikeCount: initialLikeCount,
-            initialRepostCount: initialRepostCount,
-            initialIsLiked: isLiked,
-            initialIsReposted: isReposted,
-          ),
-          child: Column(
-            children: [
-              Icon(
-                Icons.repeat,
-                color: isReposted ? const Color(0xFFFF5500) : AppColors.textPrimary,
-                size: 32,
-              ),
-              const SizedBox(height: AppDimensions.paddingXs),
-              Text(
-                _formatCount(repostCount),
-                style: AppTextStyles.cardTitle.copyWith(color: AppColors.textPrimary),
-              ),
-            ],
-          ),
+
+        LikeButton(
+          trackId: trackId,
+          isLiked: initialIsLiked,
+          likeCount: initialLikeCount,
+          iconSize: 32,
+          fontSize: 14,
         ),
 
         const SizedBox(height: AppDimensions.paddingMd),
-        
+
+        RepostButton(
+          trackId: trackId,
+          isReposted: initialIsReposted,
+          repostCount: initialRepostCount,
+          iconSize: 32,
+          fontSize: 14,
+        ),
+
+        const SizedBox(height: AppDimensions.paddingMd),
+
         // COMMENT BUTTON
         GestureDetector(
           onTap: () {
@@ -260,7 +215,9 @@ class _MobileRightActions extends ConsumerWidget {
               const SizedBox(height: AppDimensions.paddingXs),
               Text(
                 _formatCount(commentCount),
-                style: AppTextStyles.cardTitle.copyWith(color: AppColors.textPrimary),
+                style: AppTextStyles.cardTitle.copyWith(
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),

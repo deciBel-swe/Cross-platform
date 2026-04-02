@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/comment.dart';
-import '../notifiers/track_comment_notifier.dart';
+import '../providers/track_comment_provider.dart';
 
 class ActiveCommentsOverlay extends ConsumerWidget {
   const ActiveCommentsOverlay({super.key, required this.trackId});
@@ -40,7 +40,6 @@ class ActiveCommentsOverlay extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // User Avatar
           CircleAvatar(
             radius: 18,
             backgroundColor: Colors.grey[800],
@@ -50,8 +49,8 @@ class ActiveCommentsOverlay extends ConsumerWidget {
                 ? NetworkImage(comment.user.avatarUrl!)
                 : null,
             child:
-                comment.user.avatarUrl != null &&
-                    comment.user.avatarUrl!.isEmpty
+                (comment.user.avatarUrl == null ||
+                    comment.user.avatarUrl!.isEmpty)
                 ? const Icon(Icons.person, size: 18, color: Colors.white54)
                 : null,
           ),

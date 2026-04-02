@@ -23,11 +23,8 @@ class ProfileIcon extends ConsumerWidget {
           width: 128,
           height: 128,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const Icon(
-            Icons.person,
-            size: 64,
-            color: AppColors.outline,
-          ),
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.person, size: 64, color: AppColors.outline),
         ),
       );
     }
@@ -43,11 +40,8 @@ class ProfileIcon extends ConsumerWidget {
         width: 128,
         height: 128,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => const Icon(
-          Icons.person,
-          size: 64,
-          color: AppColors.outline,
-        ),
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.person, size: 64, color: AppColors.outline),
       ),
     );
   }
