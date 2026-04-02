@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/auth_validators.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
 
@@ -67,12 +68,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final city = _cityController.text.trim();
     final country = _countryController.text.trim();
 
-    if (email.isEmpty || username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email, username, and password are required.'),
-        ),
-      );
+    if (username.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Username is required.')));
+      return;
+    }
+
+    final emailValidation = AuthValidators.validateEmail(email);
+    if (emailValidation != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(emailValidation)));
+      return;
+    }
+
+    final passwordValidation = AuthValidators.validatePassword(password);
+    if (passwordValidation != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(passwordValidation)));
       return;
     }
 

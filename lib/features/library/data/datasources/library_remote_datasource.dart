@@ -283,7 +283,9 @@ class LibraryRemoteDatasource {
     final raw = switch (payload) {
       String value => value,
       Map<String, dynamic> map =>
-        map['status']?.toString() ?? map['state']?.toString(),
+        map['trackState']?.toString() ??
+            map['status']?.toString() ??
+            map['state']?.toString(),
       _ => null,
     };
 

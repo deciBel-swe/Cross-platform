@@ -3,6 +3,8 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/utils/auth_validators.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
@@ -25,10 +27,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email and password are required.')),
-      );
+    final emailValidation = AuthValidators.validateEmail(email);
+    if (emailValidation != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(emailValidation)));
+      return;
+    }
+
+    final passwordValidation = AuthValidators.validatePassword(password);
+    if (passwordValidation != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(passwordValidation)));
       return;
     }
 

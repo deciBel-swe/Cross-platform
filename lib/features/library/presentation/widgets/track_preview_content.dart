@@ -33,6 +33,7 @@ class TrackPreviewContent extends ConsumerWidget {
     final audioState = ref.watch(trackAudioProvider);
     final audioNotifier = ref.read(trackAudioProvider.notifier);
     final playbackUi = ref.watch(trackPreviewPlaybackUiStateProvider);
+    final commentsState = ref.watch(trackCommentsProvider(trackId));
 
     final isReady = trackPeaks != null;
     final peaks = isReady
@@ -140,7 +141,7 @@ class TrackPreviewContent extends ConsumerWidget {
           initialRepostCount: track.repostCount,
           isLiked: track.isLiked,
           isReposted: track.isReposted,
-          commentCount: 3,
+          commentCount: commentsState.comments.length,
           onCommentPressed: () {
             TrackCommentsBottomSheet.show(
               context,

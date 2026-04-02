@@ -193,12 +193,12 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     }
   }
 
-  Future<void> refreshTrack(int trackId) async {
-    if (_isDisposed) return;
+  Future<bool> refreshTrack(int trackId) async {
+    if (_isDisposed) return false;
     final repo = ref.read(trackRepositoryProvider);
     final userId = _activeUserId;
     if (userId == null) {
-      return;
+      return false;
     }
 
     final result = await repo.fetchTracks(
@@ -207,7 +207,8 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       size: _pageSize,
     );
 
-    if (_isDisposed) return;
+    if (_isDisposed) return false;
+    var didUpdate = false;
     result.fold((l) => null, (paginated) {
       final Track? track = paginated.content
           .where((item) => item.id == trackId)
@@ -236,6 +237,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       ];
       if (_isDisposed) return;
       state = AsyncData(updated);
+      didUpdate = true;
 
       final userId = _activeUserId;
       if (userId != null) {
@@ -249,6 +251,67 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
       _syncProcessingPolling(updated);
     });
+
+    return didUpdate;
+  }
+
+  void _setLocalTrackState(int trackId, TrackStatus stateValue) {
+    if (_isDisposed) return;
+
+    final currentTracks = state.valueOrNull ?? const <Track>[];
+    if (currentTracks.isEmpty) return;
+
+    var didChange = false;
+    final updated = [
+      for (final track in currentTracks)
+        if (track.id == trackId)
+          if (track.state == stateValue)
+            track
+          else
+            Track(
+              id: track.id,
+              title: track.title,
+              artist: track.artist,
+              trackUrl: track.trackUrl,
+              coverUrl: track.coverUrl,
+              waveformUrl: track.waveformUrl,
+              genre: track.genre,
+              tags: track.tags,
+              state: stateValue,
+              releaseDate: track.releaseDate,
+              playCount: track.playCount,
+              likeCount: track.likeCount,
+              repostCount: track.repostCount,
+              isLiked: track.isLiked,
+              isReposted: track.isReposted,
+              createdAt: track.createdAt,
+            )
+        else
+          track,
+    ];
+
+    for (var i = 0; i < currentTracks.length; i++) {
+      if (!identical(currentTracks[i], updated[i])) {
+        didChange = true;
+        break;
+      }
+    }
+
+    if (!didChange) return;
+
+    state = AsyncData(updated);
+
+    final userId = _activeUserId;
+    if (userId != null) {
+      final cached = _memoryCacheByUser[userId];
+      _memoryCacheByUser[userId] = (
+        tracks: updated,
+        currentPage: cached?.currentPage ?? _currentPage,
+        isLastPage: cached?.isLastPage ?? _isLastPage,
+      );
+    }
+
+    _syncProcessingPolling(updated);
   }
 
   void _syncProcessingPolling(List<Track> tracks) {
@@ -324,7 +387,10 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
               case 'FINISHED':
                 // Refresh once to pull final waveform URL/state from track list endpoint.
                 _terminalStatusTrackIds.add(id);
-                await refreshTrack(id);
+                final refreshed = await refreshTrack(id);
+                if (!refreshed) {
+                  _setLocalTrackState(id, TrackStatus.finished);
+                }
                 break;
               case 'FAILED':
                 // Terminal failed status should stop repeated polling.
