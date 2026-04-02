@@ -26,10 +26,14 @@ import '../../features/engagement/data/datasources/follow_remote_data_source.dar
     as _i485;
 import '../../features/engagement/data/datasources/track_social_remote_datasource.dart'
     as _i459;
+import '../../features/engagement/data/repositories/follow_repository_impl.dart'
+    as _i666;
 import '../../features/engagement/data/repositories/mock_track_social_repository_impl.dart'
     as _i872;
 import '../../features/engagement/data/repositories/track_social_repository_impl.dart'
     as _i529;
+import '../../features/engagement/domain/repositories/follow_repository.dart'
+    as _i557;
 import '../../features/engagement/domain/repositories/track_social_repository.dart'
     as _i590;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
@@ -48,8 +52,6 @@ import '../../features/library_profile/data/datasources/profile_remote_data_sour
     as _i364;
 import '../../features/library_profile/data/datasources/track_remote_data_source.dart'
     as _i226;
-import '../../features/library_profile/data/repositories/follow_repository_impl.dart'
-    as _i880;
 import '../../features/library_profile/data/repositories/genre_repository_impl.dart'
     as _i140;
 import '../../features/library_profile/data/repositories/image_repository_impl.dart'
@@ -110,9 +112,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
-    );
-    gh.lazySingleton<_i880.FollowRepositoryImpl>(
-      () => _i880.FollowRepositoryImpl(gh<InvalidType>()),
     );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i238.TrackCommentsMockRepository(),
@@ -201,6 +200,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i745.AuthInterceptor>(
       () => registerModule.getAuthInterceptor(gh<_i666.SecureStorageService>()),
+    );
+    gh.lazySingleton<_i557.FollowRepository>(
+      () => _i666.FollowRepositoryImpl(gh<_i485.IFollowRemoteDataSource>()),
     );
     return this;
   }

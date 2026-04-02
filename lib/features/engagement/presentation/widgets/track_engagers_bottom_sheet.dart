@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/track_engager.dart';
 import '../notifiers/track_engagers_notifier.dart';
+import '../providers/follow_state_provider.dart';
 
 class TrackEngagersBottomSheet extends ConsumerStatefulWidget {
   const TrackEngagersBottomSheet({
@@ -183,46 +186,56 @@ class _EngagerTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.white10,
-            backgroundImage: user.avatarUrl != null
-                ? NetworkImage(user.avatarUrl!)
-                : null,
-            child: user.avatarUrl == null
-                ? const Icon(Icons.person, color: Colors.white54)
-                : null,
+          GestureDetector(
+            onTap: () => context.push(RoutePaths.publicProfile(user.id)),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: Colors.white10,
+              backgroundImage: user.avatarUrl != null
+                  ? NetworkImage(user.avatarUrl!)
+                  : null,
+              child: user.avatarUrl == null
+                  ? const Icon(Icons.person, color: Colors.white54)
+                  : null,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      user.username,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+            child: GestureDetector(
+              onTap: () => context.push(RoutePaths.publicProfile(user.id)),
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        user.username,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    if (user.tier == 'PRO') ...[
-                      const SizedBox(width: 4),
-                      const _ProBadge(),
+                      if (user.tier == 'PRO') ...[
+                        const SizedBox(width: 4),
+                        const _ProBadge(),
+                      ],
                     ],
-                  ],
-                ),
-                Text(
-                  'Artist', // Placeholder for now
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.white54,
                   ),
-                ),
-              ],
+                  Text(
+                    'Artist', // Placeholder for now
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: Colors.white54,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          _FollowButton(isFollowing: user.isFollowing),
+          _FollowButton(
+            userId: user.id,
+            initialFollowing: user.isFollowing,
+          ),
         ],
       ),
     );
@@ -252,44 +265,56 @@ class _ProBadge extends StatelessWidget {
   }
 }
 
-class _FollowButton extends StatefulWidget {
-  const _FollowButton({required this.isFollowing});
+class _FollowButton extends ConsumerStatefulWidget {
+  const _FollowButton({
+    required this.userId,
+    required this.initialFollowing,
+  });
 
-  final bool isFollowing;
+  final int userId;
+  final bool initialFollowing;
 
   @override
-  State<_FollowButton> createState() => _FollowButtonState();
+  ConsumerState<_FollowButton> createState() => _FollowButtonState();
 }
 
-class _FollowButtonState extends State<_FollowButton> {
-  late bool _isFollowing;
-
+class _FollowButtonState extends ConsumerState<_FollowButton> {
   @override
   void initState() {
     super.initState();
-    _isFollowing = widget.isFollowing;
+    // Synchronize the global follow state with the search result item.
+    // If we already have a newer state for this user globally, this call
+    // will be ignored by the notifier if it's already set.
+    Future.microtask(() {
+      ref
+          .read(followStateProvider(widget.userId).notifier)
+          .setInitialState(widget.initialFollowing);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch the global follow state for this user.
+    final isFollowing =
+        ref.watch(followStateProvider(widget.userId)).valueOrNull ??
+        widget.initialFollowing;
+
     return OutlinedButton(
       onPressed: () {
-        setState(() {
-          _isFollowing = !_isFollowing;
-        });
+        ref.read(followStateProvider(widget.userId).notifier).toggleFollow();
       },
       style: OutlinedButton.styleFrom(
         side: BorderSide(
-          color: _isFollowing ? Colors.white24 : AppColors.primary,
+          color: isFollowing ? Colors.white24 : AppColors.primary,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16),
         minimumSize: const Size(0, 32),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
       child: Text(
-        _isFollowing ? 'Following' : 'Follow',
+        isFollowing ? 'Following' : 'Follow',
         style: TextStyle(
-          color: _isFollowing ? Colors.white70 : AppColors.primary,
+          color: isFollowing ? Colors.white70 : AppColors.primary,
           fontSize: 12,
         ),
       ),
