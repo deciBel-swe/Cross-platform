@@ -131,7 +131,7 @@ extension GetItInjectableX on _i174.GetIt {
       registerFor: {_mock},
     );
     gh.lazySingleton<_i590.ITrackSocialRepository>(
-      () => const _i872.MockTrackSocialRepository(),
+      () => _i872.MockTrackSocialRepository(),
       registerFor: {_mock},
     );
     gh.lazySingleton<_i43.IUploadRepository>(
