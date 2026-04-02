@@ -39,64 +39,75 @@ class TrackPreviewContent extends ConsumerWidget {
         ? ref.watch(trackPreviewNormalizedPeaksProvider(trackId))
         : null;
 
-    final contentColumn = Column(
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(32),
-            ),
-            child: Stack(
-              children: [
-                TrackPreviewBackground(
-                  imageUrl: track.coverUrl,
-                  isBlurred: isReady ? playbackUi.shouldBlurBackground : true,
-                ),
-                SafeArea(
-                  bottom: false,
-                  child: CustomScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    slivers: [
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 8),
-                            const TrackPreviewTopBar(),
-                            const SizedBox(height: 16),
-                            TrackPreviewInfo(
-                              title: track.title,
-                              artistName: track.artist.username,
-                              tagLabel: 'Behind this track',
-                            ),
-                            const Spacer(),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              child: ActiveCommentsOverlay(trackId: trackId),
-                            ),
-                            const SizedBox(height: 12),
-                            if (isReady)
-                              InteractiveWaveform(
-                                peaks: peaks as List<double>,
-                                audioState: audioState,
-                                audioNotifier: audioNotifier,
-                              )
-                            else
-                              const WaveformNotReady(),
-                            const SizedBox(height: 16),
-                            TrackPreviewInputSection(trackId: trackId),
-                          ],
-                        ),
+    final mainArea = ClipRRect(
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+      child: Stack(
+        children: [
+          TrackPreviewBackground(
+            imageUrl: track.coverUrl,
+            isBlurred: isReady ? playbackUi.shouldBlurBackground : true,
+          ),
+          SafeArea(
+            bottom: false,
+            child: CustomScrollView(
+              physics: const ClampingScrollPhysics(),
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      const TrackPreviewTopBar(),
+                      const SizedBox(height: 16),
+                      TrackPreviewInfo(
+                        title: track.title,
+                        artistName: track.artist.username,
+                        tagLabel: 'Behind this track',
                       ),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: ActiveCommentsOverlay(trackId: trackId),
+                      ),
+                      const SizedBox(height: 12),
+                      if (isReady)
+                        InteractiveWaveform(
+                          peaks: peaks!,
+                          audioState: audioState,
+                          audioNotifier: audioNotifier,
+                        )
+                      else
+                        const WaveformNotReady(),
+                      const SizedBox(height: 16),
+                      TrackPreviewInputSection(trackId: trackId),
                     ],
                   ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+
+    return Column(
+      children: [
+        Expanded(
+          child: isReady
+              ? TrackPreviewPlaybackOverlay(
+                  showPlayIcon: playbackUi.showPlayIcon,
+                  onToggle: () async {
+                    if (audioState.isPreparing) return;
+                    if (audioState.isPlaying) {
+                      await audioNotifier.pause();
+                    } else {
+                      await audioNotifier.play();
+                    }
+                  },
+                  child: mainArea,
+                )
+              : mainArea,
         ),
         BottomBarWidget(
           isLiked: isReady,
@@ -115,21 +126,6 @@ class TrackPreviewContent extends ConsumerWidget {
           onMoreOptionsPressed: () {},
         ),
       ],
-    );
-
-    if (!isReady) return contentColumn;
-
-    return TrackPreviewPlaybackOverlay(
-      showPlayIcon: playbackUi.showPlayIcon,
-      onToggle: () async {
-        if (audioState.isPreparing) return;
-        if (audioState.isPlaying) {
-          await audioNotifier.pause();
-        } else {
-          await audioNotifier.play();
-        }
-      },
-      child: contentColumn,
     );
   }
 }
