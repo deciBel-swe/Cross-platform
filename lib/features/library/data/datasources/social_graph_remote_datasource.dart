@@ -1,5 +1,7 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/paginated_following_users_model.dart';
 
@@ -15,7 +17,7 @@ class SocialGraphRemoteDatasource {
     int size = 20,
   }) async {
     final response = await _dioClient.get<Map<String, dynamic>>(
-      '/users/$userId/following',
+      ApiConstants.followingByUser(userId),
       queryParams: <String, Object?>{
         'page': page,
         'size': size,
@@ -24,7 +26,7 @@ class SocialGraphRemoteDatasource {
 
     final data = response.data;
     if (data == null) {
-      throw Exception('Empty following response');
+      throw const ServerException('Empty following response');
     }
 
     return PaginatedFollowingUsersModel.fromJson(data);

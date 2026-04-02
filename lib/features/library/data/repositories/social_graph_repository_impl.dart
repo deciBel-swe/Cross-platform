@@ -1,9 +1,10 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/errors/exceptions.dart';
+import '../../domain/entities/following_user.dart';
 import '../../domain/entities/paginated_following_users.dart';
 import '../../domain/repositories/social_graph_repository.dart';
 import '../datasources/social_graph_remote_datasource.dart';
-import '../models/paginated_following_users_model.dart';
 
 @LazySingleton(as: SocialGraphRepository)
 class SocialGraphRepositoryImpl implements SocialGraphRepository {
@@ -18,15 +19,35 @@ class SocialGraphRepositoryImpl implements SocialGraphRepository {
     int size = 20,
   }) async {
     try {
-      final result = await _remoteDatasource.getFollowingUsers(
+      final model = await _remoteDatasource.getFollowingUsers(
         userId: userId,
         page: page,
         size: size,
       );
 
-      return result.toEntity();
-    } catch (e) {
-      throw Exception('Failed to fetch following users');
+      // manual mapping (clean architecture)
+      return PaginatedFollowingUsers(
+        content: model.content
+            .map(
+              (userModel) => FollowingUser(
+                id: userModel.id,
+                username: userModel.username,
+                avatarUrl: userModel.avatarUrl,
+                tier: userModel.tier,
+                isFollowing: userModel.isFollowing,
+              ),
+            )
+            .toList(),
+        pageNumber: model.pageNumber,
+        pageSize: model.pageSize,
+        totalElements: model.totalElements,
+        totalPages: model.totalPages,
+        isLast: model.isLast,
+      );
+    } on AppException {
+      rethrow;
+    } catch (_) {
+      throw const ServerException('Failed to fetch following users');
     }
   }
 }

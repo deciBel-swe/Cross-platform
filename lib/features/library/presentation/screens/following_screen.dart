@@ -9,6 +9,11 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../providers/following_provider.dart';
 import '../widgets/following_user_tile.dart';
 
+const double _appBarFontSize = 26;
+const double _errorTitleFontSize = 20;
+const double _emptyTitleFontSize = 22;
+const double _sectionTitleFontSize = 18;
+
 class FollowingScreen extends ConsumerStatefulWidget {
   const FollowingScreen({super.key});
 
@@ -59,7 +64,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
   title: Text(
     'Following',
     style: AppTextStyles.headlineMedium.copyWith(
-      fontSize: 26,
+      fontSize: _appBarFontSize,
       fontWeight: FontWeight.w700,
     ),
   ),
@@ -102,7 +107,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                         Text(
                           'Failed to load following users.',
                           style: AppTextStyles.headlineMedium.copyWith(
-                            fontSize: 20,
+                            fontSize: _errorTitleFontSize,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -140,7 +145,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                         Text(
                           'You are not following anyone yet.',
                           style: AppTextStyles.headlineMedium.copyWith(
-                            fontSize: 22,
+                            fontSize: _emptyTitleFontSize,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -213,7 +218,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                                 Text(
                                   'People who follow you back',
                                   style: AppTextStyles.headlineMedium.copyWith(
-                                    fontSize: 18,
+                                    fontSize: _sectionTitleFontSize,
                                   ),
                                 ),
                                 const SizedBox(height: 4),

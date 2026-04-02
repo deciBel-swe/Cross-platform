@@ -6,6 +6,9 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/following_user.dart';
 import '../../../library_profile/presentation/widgets/pro_badge.dart';
 
+
+const double _usernameFontSize = 18;
+
 class FollowingUserTile extends StatelessWidget {
   const FollowingUserTile({
     required this.user,
@@ -59,7 +62,7 @@ class FollowingUserTile extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTextStyles.headlineMedium.copyWith(
-                              fontSize: 18,
+                              fontSize: _usernameFontSize,
                               fontWeight: FontWeight.w700,
                             ),
                           ),

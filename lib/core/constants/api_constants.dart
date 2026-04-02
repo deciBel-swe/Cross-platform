@@ -31,6 +31,8 @@ class ApiConstants {
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
 
+  static String followingByUser(int userId) => '/users/$userId/following';
+  
   // Dio Timeout constants
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;
