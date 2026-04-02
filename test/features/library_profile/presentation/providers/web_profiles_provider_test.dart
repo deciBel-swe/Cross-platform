@@ -49,9 +49,10 @@ void main() {
     test('saveLink updates state and calls repository', () async {
       final notifier = getNotifier();
       const link = 'https://instagram.com/test';
-      
-      when(() => mockRepository.updateSocialLinks(any()))
-          .thenAnswer((_) async => const Right(PublicProfileSocialLinks(instagram: link)));
+
+      when(() => mockRepository.updateSocialLinks(any())).thenAnswer(
+        (_) async => const Right(PublicProfileSocialLinks(instagram: link)),
+      );
 
       final result = await notifier.saveLink(link);
 
@@ -63,9 +64,10 @@ void main() {
     test('saveLink rolls back state on repository failure', () async {
       final notifier = getNotifier();
       const link = 'https://instagram.com/test';
-      
-      when(() => mockRepository.updateSocialLinks(any()))
-          .thenAnswer((_) async => const Left(TestFailure('Error')));
+
+      when(
+        () => mockRepository.updateSocialLinks(any()),
+      ).thenAnswer((_) async => const Left(TestFailure('Error')));
 
       final result = await notifier.saveLink(link);
 
@@ -77,9 +79,15 @@ void main() {
       final notifier = getNotifier();
       const oldLink = 'https://instagram.com/old';
       const newLink = 'https://instagram.com/new';
-      
-      when(() => mockRepository.updateSocialLinks(any()))
-          .thenAnswer((_) async => Right(const PublicProfileSocialLinks().copyWithPlatform('instagram', newLink)));
+
+      when(() => mockRepository.updateSocialLinks(any())).thenAnswer(
+        (_) async => Right(
+          const PublicProfileSocialLinks().copyWithPlatform(
+            'instagram',
+            newLink,
+          ),
+        ),
+      );
 
       await notifier.saveLink(oldLink);
       final result = await notifier.editLink(oldLink, newLink);
@@ -92,9 +100,12 @@ void main() {
       final notifier = getNotifier();
       const oldLink = 'https://instagram.com/test';
       const newLink = 'https://youtube.com/@new';
-      
-      when(() => mockRepository.updateSocialLinks(any()))
-          .thenAnswer((_) async => Right(const PublicProfileSocialLinks().copyWithPlatform('youtube', newLink)));
+
+      when(() => mockRepository.updateSocialLinks(any())).thenAnswer(
+        (_) async => Right(
+          const PublicProfileSocialLinks().copyWithPlatform('youtube', newLink),
+        ),
+      );
 
       await notifier.saveLink(oldLink);
       final result = await notifier.editLink(oldLink, newLink);
@@ -107,9 +118,10 @@ void main() {
     test('deleteLink clears the correct platform', () async {
       final notifier = getNotifier();
       const link = 'https://instagram.com/test';
-      
-      when(() => mockRepository.updateSocialLinks(any()))
-          .thenAnswer((_) async => const Right(PublicProfileSocialLinks()));
+
+      when(
+        () => mockRepository.updateSocialLinks(any()),
+      ).thenAnswer((_) async => const Right(PublicProfileSocialLinks()));
 
       await notifier.saveLink(link);
       final result = await notifier.deleteLink(link);
@@ -121,27 +133,40 @@ void main() {
     test('linkAlreadyExists returns true for matching link', () async {
       final notifier = getNotifier();
       const link = ' https://instagram.com/test  ';
-      
-      when(() => mockRepository.updateSocialLinks(any()))
-          .thenAnswer((_) async => const Right(PublicProfileSocialLinks(instagram: 'https://instagram.com/test')));
+
+      when(() => mockRepository.updateSocialLinks(any())).thenAnswer(
+        (_) async => const Right(
+          PublicProfileSocialLinks(instagram: 'https://instagram.com/test'),
+        ),
+      );
 
       await notifier.saveLink(link);
-      
+
       expect(notifier.linkAlreadyExists('https://instagram.com/test'), isTrue);
-      expect(notifier.linkAlreadyExists('https://instagram.com/other'), isFalse);
+      expect(
+        notifier.linkAlreadyExists('https://instagram.com/other'),
+        isFalse,
+      );
     });
 
     test('platformAlreadyExists returns true for matching platform', () async {
       final notifier = getNotifier();
       const link = 'https://instagram.com/test';
-      
-      when(() => mockRepository.updateSocialLinks(any()))
-          .thenAnswer((_) async => const Right(PublicProfileSocialLinks(instagram: link)));
+
+      when(() => mockRepository.updateSocialLinks(any())).thenAnswer(
+        (_) async => const Right(PublicProfileSocialLinks(instagram: link)),
+      );
 
       await notifier.saveLink(link);
-      
-      expect(notifier.platformAlreadyExists('https://instagram.com/another'), isTrue);
-      expect(notifier.platformAlreadyExists('https://youtube.com/@test'), isFalse);
+
+      expect(
+        notifier.platformAlreadyExists('https://instagram.com/another'),
+        isTrue,
+      );
+      expect(
+        notifier.platformAlreadyExists('https://youtube.com/@test'),
+        isFalse,
+      );
     });
 
     test('getPlatformKey returns correct platform using utils', () {

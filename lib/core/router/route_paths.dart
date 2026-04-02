@@ -26,4 +26,8 @@ class RoutePaths {
   static const String trackPreviewBase = '/library/track-preview';
 
   static String trackPreview(int trackId) => '$trackPreviewBase/$trackId';
+
+  /// Public profile screen for viewing another user's profile.
+  static const String publicProfileBase = '/user';
+  static String publicProfile(int userId) => '$publicProfileBase/$userId';
 }

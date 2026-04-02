@@ -12,6 +12,7 @@ class SocialActionButton extends StatefulWidget {
     required this.inactiveIcon,
     required this.activeColor,
     required this.onToggle,
+    this.onCountTap,
     this.iconSize = AppConstants.iconSizeMedium,
     this.fontSize = AppConstants.fontSizeRegular,
   });
@@ -22,6 +23,7 @@ class SocialActionButton extends StatefulWidget {
   final IconData inactiveIcon;
   final Color activeColor;
   final VoidCallback onToggle;
+  final VoidCallback? onCountTap;
   final double iconSize;
   final double fontSize;
 
@@ -61,13 +63,13 @@ class _SocialActionButtonState extends State<SocialActionButton>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.isLoading ? null : _handleTap,
-      behavior: HitTestBehavior.opaque,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ScaleTransition(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: widget.isLoading ? null : _handleTap,
+          behavior: HitTestBehavior.opaque,
+          child: ScaleTransition(
             scale: _scaleAnimation,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
@@ -83,8 +85,12 @@ class _SocialActionButtonState extends State<SocialActionButton>
               ),
             ),
           ),
-          const SizedBox(width: AppConstants.spacingSmall),
-          AnimatedSwitcher(
+        ),
+        const SizedBox(width: AppConstants.spacingSmall),
+        GestureDetector(
+          onTap: widget.onCountTap,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
             child: Text(
               '${widget.count}',
@@ -95,8 +101,8 @@ class _SocialActionButtonState extends State<SocialActionButton>
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

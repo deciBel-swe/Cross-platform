@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/network/dio_client.dart';
 import '../models/post_comment_request_model.dart';
 import '../models/post_comment_response_model.dart';
 
@@ -15,7 +15,7 @@ abstract class ITrackCommentsRemoteDataSource {
 class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
   TrackCommentsRemoteDataSource(this._dioClient);
 
-  final Dio _dioClient;
+  final DioClient _dioClient;
 
   @override
   Future<PostCommentResponseModel> postComment({
@@ -40,8 +40,8 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
       throw Exception(
         'Failed to post comment. Status code: ${response.statusCode}',
       );
-    } on DioException catch (error) {
-      throw Exception('Error occurred while posting comment: ${error.message}');
+    } catch (e) {
+      throw Exception('Error occurred while posting comment: $e');
     }
   }
 }

@@ -41,6 +41,12 @@ class ApiConstants {
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
 
+  /// Fetches a public user profile by ID: GET /users/{userId}
+  static String publicProfile(int userId) => '/users/$userId';
+
+  /// Follows or unfollows a user: POST|DELETE /users/{userId}/follow
+  static String followUser(int userId) => '/users/$userId/follow';
+
   // Dio Timeout constants
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;

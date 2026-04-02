@@ -68,6 +68,8 @@ void main() {
           playCount: 10,
           likeCount: 5,
           repostCount: 0,
+          isLiked: false,
+          isReposted: false,
           createdAt: DateTime.now(),
         ),
       ];
@@ -176,6 +178,8 @@ void main() {
             playCount: 0,
             likeCount: 0,
             repostCount: 0,
+            isLiked: false,
+            isReposted: false,
             createdAt: DateTime.now(),
           ),
         ],
@@ -200,6 +204,8 @@ void main() {
             playCount: 0,
             likeCount: 0,
             repostCount: 0,
+            isLiked: false,
+            isReposted: false,
             createdAt: DateTime.now(),
           ),
         ],
@@ -266,6 +272,8 @@ void main() {
         playCount: 0,
         likeCount: 0,
         repostCount: 0,
+        isLiked: false,
+        isReposted: false,
         createdAt: DateTime.now(),
       );
 

@@ -52,6 +52,8 @@ void main() {
       playCount: 0,
       likeCount: 0,
       repostCount: 0,
+      isLiked: false,
+      isReposted: false,
       createdAt: DateTime(2025, 1, 1),
     );
   }

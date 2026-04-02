@@ -6,7 +6,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/public_profile_social_links.dart';
-import '../../domain/entities/user_profile.dart'; 
+import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';
 import '../models/user_profile_model.dart';
@@ -67,8 +67,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
         ...?(bio != null ? {'bio': bio} : null),
         ...?(city != null ? {'city': city} : null),
         ...?(country != null ? {'country': country} : null),
-        ...?(favoriteGenres != null ? {'favoriteGenres': favoriteGenres} : null),
-        ...?(socialLinks != null ? {'socialLinks': socialLinks.toModel().toJson()} : null),
+        ...?(favoriteGenres != null
+            ? {'favoriteGenres': favoriteGenres}
+            : null),
+        ...?(socialLinks != null
+            ? {'socialLinks': socialLinks.toModel().toJson()}
+            : null),
       };
 
       final success = await _remoteDataSource.updateProfile(updateData);
@@ -80,7 +84,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     }
   }
 
- @override
+  @override
   Future<Either<Failure, bool>> updateImages({
     File? profilePic,
     File? coverPic,
@@ -90,7 +94,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
         profilePic: profilePic,
         coverPic: coverPic,
       );
-      
+
       return Right(success);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

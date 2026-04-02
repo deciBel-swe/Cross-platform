@@ -11,7 +11,7 @@ _$CommentUserModelImpl _$$CommentUserModelImplFromJson(
 ) => _$CommentUserModelImpl(
   id: (json['id'] as num).toInt(),
   username: json['username'] as String,
-  avatarUrl: json['avatarUrl'] as String,
+  avatarUrl: json['avatarUrl'] as String?,
 );
 
 Map<String, dynamic> _$$CommentUserModelImplToJson(

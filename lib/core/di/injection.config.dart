@@ -22,10 +22,18 @@ import '../../features/auth/data/repositories/mock_auth_repository.dart'
     as _i703;
 import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
+import '../../features/engagement/data/datasources/follow_remote_data_source.dart'
+    as _i485;
 import '../../features/engagement/data/datasources/track_social_remote_datasource.dart'
     as _i459;
+import '../../features/engagement/data/repositories/follow_repository_impl.dart'
+    as _i666;
+import '../../features/engagement/data/repositories/mock_track_social_repository_impl.dart'
+    as _i872;
 import '../../features/engagement/data/repositories/track_social_repository_impl.dart'
     as _i529;
+import '../../features/engagement/domain/repositories/follow_repository.dart'
+    as _i557;
 import '../../features/engagement/domain/repositories/track_social_repository.dart'
     as _i590;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
@@ -77,8 +85,8 @@ import '../network/interceptors/auth_interceptor.dart' as _i745;
 import '../storage/secure_storage_service.dart' as _i666;
 import 'register_module.dart' as _i291;
 
-const String _prod = 'prod';
 const String _mock = 'mock';
+const String _prod = 'prod';
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -93,20 +101,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i183.ImagePicker>(() => registerModule.imagePicker);
-    gh.lazySingleton<_i226.ITrackCommentsRepository>(
-      () => _i229.TrackCommentsRepository(
-        gh<_i688.ITrackCommentsRemoteDataSource>(),
-      ),
-      registerFor: {_prod},
-    );
     gh.lazySingleton<_i667.DioClient>(
       () => _i667.DioClient(
         gh<_i361.Dio>(),
         authInterceptor: gh<_i745.AuthInterceptor>(),
       ),
-    );
-    gh.lazySingleton<_i688.ITrackCommentsRemoteDataSource>(
-      () => _i688.TrackCommentsRemoteDataSource(gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
@@ -118,17 +117,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i271.IGenreRemoteDataSource>(
       () => _i271.GenreRemoteDataSource(gh<_i667.DioClient>()),
     );
-    gh.factory<_i464.UploadRemoteDatasource>(
-      () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
-    );
     gh.factory<_i459.TrackSocialRemoteDatasource>(
       () => _i459.TrackSocialRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.factory<_i464.UploadRemoteDatasource>(
+      () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i690.MockTrackRepository(),
+      registerFor: {_mock},
+    );
+    gh.lazySingleton<_i590.ITrackSocialRepository>(
+      () => _i872.MockTrackSocialRepository(),
       registerFor: {_mock},
     );
     gh.lazySingleton<_i43.IUploadRepository>(
@@ -141,10 +144,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i107.IAuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSource(gh<_i667.DioClient>()),
     );
-    gh.lazySingleton<_i590.ITrackSocialRepository>(
-      () => _i529.TrackSocialRepositoryImpl(
-        gh<_i459.TrackSocialRemoteDatasource>(),
-      ),
+    gh.lazySingleton<_i485.IFollowRemoteDataSource>(
+      () => _i485.FollowRemoteDataSource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i106.ProfileRepository>(
       () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
@@ -158,6 +159,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i121.ImageRepository>(
       () => _i423.ImageRepositoryImpl(gh<_i183.ImagePicker>()),
+    );
+    gh.lazySingleton<_i590.ITrackSocialRepository>(
+      () => _i529.TrackSocialRepositoryImpl(
+        gh<_i459.TrackSocialRemoteDatasource>(),
+      ),
+      registerFor: {_prod},
     );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i573.AuthRepository(
@@ -174,6 +181,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i728.UpdateProfileImagesUseCase>(
       () => _i728.UpdateProfileImagesUseCase(gh<_i106.ProfileRepository>()),
     );
+    gh.lazySingleton<_i688.ITrackCommentsRemoteDataSource>(
+      () => _i688.TrackCommentsRemoteDataSource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i703.MockAuthRepository(gh<_i666.SecureStorageService>()),
       registerFor: {_mock},
@@ -184,6 +194,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i745.AuthInterceptor>(
       () => registerModule.getAuthInterceptor(gh<_i666.SecureStorageService>()),
+    );
+    gh.lazySingleton<_i557.FollowRepository>(
+      () => _i666.FollowRepositoryImpl(gh<_i485.IFollowRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i226.ITrackCommentsRepository>(
+      () => _i229.TrackCommentsRepository(
+        gh<_i688.ITrackCommentsRemoteDataSource>(),
+      ),
+      registerFor: {_prod},
     );
     return this;
   }

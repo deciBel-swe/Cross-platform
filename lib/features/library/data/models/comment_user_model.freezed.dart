@@ -23,7 +23,7 @@ CommentUserModel _$CommentUserModelFromJson(Map<String, dynamic> json) {
 mixin _$CommentUserModel {
   int get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
-  String get avatarUrl => throw _privateConstructorUsedError;
+  String? get avatarUrl => throw _privateConstructorUsedError;
 
   /// Serializes this CommentUserModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -42,7 +42,7 @@ abstract class $CommentUserModelCopyWith<$Res> {
     $Res Function(CommentUserModel) then,
   ) = _$CommentUserModelCopyWithImpl<$Res, CommentUserModel>;
   @useResult
-  $Res call({int id, String username, String avatarUrl});
+  $Res call({int id, String username, String? avatarUrl});
 }
 
 /// @nodoc
@@ -62,7 +62,7 @@ class _$CommentUserModelCopyWithImpl<$Res, $Val extends CommentUserModel>
   $Res call({
     Object? id = null,
     Object? username = null,
-    Object? avatarUrl = null,
+    Object? avatarUrl = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -74,10 +74,10 @@ class _$CommentUserModelCopyWithImpl<$Res, $Val extends CommentUserModel>
                 ? _value.username
                 : username // ignore: cast_nullable_to_non_nullable
                       as String,
-            avatarUrl: null == avatarUrl
+            avatarUrl: freezed == avatarUrl
                 ? _value.avatarUrl
                 : avatarUrl // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
           )
           as $Val,
     );
@@ -93,7 +93,7 @@ abstract class _$$CommentUserModelImplCopyWith<$Res>
   ) = __$$CommentUserModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int id, String username, String avatarUrl});
+  $Res call({int id, String username, String? avatarUrl});
 }
 
 /// @nodoc
@@ -112,7 +112,7 @@ class __$$CommentUserModelImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? username = null,
-    Object? avatarUrl = null,
+    Object? avatarUrl = freezed,
   }) {
     return _then(
       _$CommentUserModelImpl(
@@ -124,10 +124,10 @@ class __$$CommentUserModelImplCopyWithImpl<$Res>
             ? _value.username
             : username // ignore: cast_nullable_to_non_nullable
                   as String,
-        avatarUrl: null == avatarUrl
+        avatarUrl: freezed == avatarUrl
             ? _value.avatarUrl
             : avatarUrl // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
       ),
     );
   }
@@ -139,7 +139,7 @@ class _$CommentUserModelImpl implements _CommentUserModel {
   const _$CommentUserModelImpl({
     required this.id,
     required this.username,
-    required this.avatarUrl,
+    this.avatarUrl,
   });
 
   factory _$CommentUserModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -150,7 +150,7 @@ class _$CommentUserModelImpl implements _CommentUserModel {
   @override
   final String username;
   @override
-  final String avatarUrl;
+  final String? avatarUrl;
 
   @override
   String toString() {
@@ -194,7 +194,7 @@ abstract class _CommentUserModel implements CommentUserModel {
   const factory _CommentUserModel({
     required final int id,
     required final String username,
-    required final String avatarUrl,
+    final String? avatarUrl,
   }) = _$CommentUserModelImpl;
 
   factory _CommentUserModel.fromJson(Map<String, dynamic> json) =
@@ -205,7 +205,7 @@ abstract class _CommentUserModel implements CommentUserModel {
   @override
   String get username;
   @override
-  String get avatarUrl;
+  String? get avatarUrl;
 
   /// Create a copy of CommentUserModel
   /// with the given fields replaced by the non-null parameter values.

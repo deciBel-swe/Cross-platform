@@ -116,10 +116,7 @@ extension ProfileDetailsModelX on ProfileDetailsModel {
 
 extension PrivacySettingsModelX on PrivacySettingsModel {
   PrivacySettings toEntity() {
-    return PrivacySettings(
-      isPrivate: isPrivate,
-      showHistory: showHistory,
-    );
+    return PrivacySettings(isPrivate: isPrivate, showHistory: showHistory);
   }
 }
 
@@ -148,6 +145,7 @@ extension SocialLinksModelX on SocialLinksModel {
     );
   }
 }
+
 extension PublicProfileSocialLinksX on PublicProfileSocialLinks {
   SocialLinksModel toModel() {
     return SocialLinksModel(
