@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../domain/entities/track.dart';
-import '../notifiers/track_comment_notifier.dart';
+import '../providers/track_comment_provider.dart';
 import 'track_comment_input_bar.dart';
 import 'track_comment_tile.dart';
 import 'track_comments_context_tile.dart';

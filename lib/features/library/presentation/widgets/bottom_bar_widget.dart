@@ -10,6 +10,8 @@ class BottomBarWidget extends ConsumerWidget {
     required this.trackId,
     required this.initialLikeCount,
     required this.initialRepostCount,
+    required this.isLiked,
+    required this.isReposted,
     required this.commentCount,
     required this.onCommentPressed,
     required this.onSharePressed,
@@ -19,6 +21,8 @@ class BottomBarWidget extends ConsumerWidget {
   final int trackId;
   final int initialLikeCount;
   final int initialRepostCount;
+  final bool isLiked;
+  final bool isReposted;
   final int commentCount;
   final VoidCallback onCommentPressed;
   final VoidCallback onSharePressed;
@@ -41,14 +45,14 @@ class BottomBarWidget extends ConsumerWidget {
             Expanded(
               child: LikeButton(
                 trackId: trackId,
-                isLiked: false, // Will be initialized by widget
+                isLiked: isLiked,
                 likeCount: initialLikeCount,
               ),
             ),
             Expanded(
               child: RepostButton(
                 trackId: trackId,
-                isReposted: false, // Will be initialized by widget
+                isReposted: isReposted,
                 repostCount: initialRepostCount,
               ),
             ),

@@ -1,14 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../domain/models/track_action_data.dart';
 import '../../domain/repositories/track_social_repository.dart';
+import '../providers/track_social_provider.dart';
 import '../states/track_social_state.dart';
-
-final trackSocialRepositoryProvider = Provider<ITrackSocialRepository>(
-  (ref) => getIt<ITrackSocialRepository>(),
-);
 
 class TrackSocialNotifier extends Notifier<TrackSocialState> {
   late final ITrackSocialRepository _repository;
@@ -130,8 +126,3 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
     state = state.copyWith(trackStates: newTrackStates);
   }
 }
-
-final trackSocialProvider =
-    NotifierProvider<TrackSocialNotifier, TrackSocialState>(
-      () => TrackSocialNotifier(),
-    );

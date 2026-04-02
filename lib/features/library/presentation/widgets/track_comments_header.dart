@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Displays the top bar of the comments bottom sheet, showing the total count.
 class TrackCommentsHeader extends StatelessWidget {
@@ -20,7 +21,7 @@ class TrackCommentsHeader extends StatelessWidget {
               Icons.close,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
           ),
           Text(
             '$commentCount comments',

@@ -9,9 +9,16 @@ import '../../domain/repositories/track_social_repository.dart';
 @Environment('mock')
 @LazySingleton(as: ITrackSocialRepository)
 class MockTrackSocialRepository implements ITrackSocialRepository {
-  const MockTrackSocialRepository();
+  MockTrackSocialRepository();
 
   static const Duration _mockDelay = Duration(milliseconds: 250);
+
+  /// In-memory like state keyed by trackId.
+  /// Persists for the entire app session — cleared only on hot restart.
+  final Map<int, bool> _likedTracks = {};
+
+  /// In-memory repost state keyed by trackId.
+  final Map<int, bool> _repostedTracks = {};
 
   static const List<TrackEngager> _mockLikers = [
     TrackEngager(id: 201, username: 'dj_nova', tier: 'PRO', isFollowing: true),
@@ -65,21 +72,25 @@ class MockTrackSocialRepository implements ITrackSocialRepository {
   @override
   Future<void> likeTrack(int trackId) async {
     await Future<void>.delayed(_mockDelay);
+    _likedTracks[trackId] = true;
   }
 
   @override
   Future<void> unlikeTrack(int trackId) async {
     await Future<void>.delayed(_mockDelay);
+    _likedTracks[trackId] = false;
   }
 
   @override
   Future<void> repostTrack(int trackId) async {
     await Future<void>.delayed(_mockDelay);
+    _repostedTracks[trackId] = true;
   }
 
   @override
   Future<void> unrepostTrack(int trackId) async {
     await Future<void>.delayed(_mockDelay);
+    _repostedTracks[trackId] = false;
   }
 
   @override

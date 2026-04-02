@@ -38,8 +38,10 @@ class TrackCommentsRepository implements ITrackCommentsRepository {
   }
 
   @override
-  Future<Either<Failure, List<Comment>>> getComments({required int trackId}) {
-    // TODO: implement getComments
-    throw UnimplementedError();
+  Future<Either<Failure, List<Comment>>> getComments({
+    required int trackId,
+  }) async {
+    // TODO(decibel): implement getComments once the endpoint is ready
+    return const Left(ServerFailure('getComments is not yet implemented'));
   }
 }

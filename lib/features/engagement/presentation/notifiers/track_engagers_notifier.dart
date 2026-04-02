@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/paginated_engagers.dart';
 import '../../domain/entities/track_engager.dart';
-import '../notifiers/track_action_notifier.dart';
+import '../providers/track_social_provider.dart';
 
 typedef EngagerParams = ({int trackId, EngagerType type});
 

@@ -9,7 +9,7 @@ import '../../../library_profile/presentation/widgets/track_preview_background.d
 import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
-import '../notifiers/track_comment_notifier.dart';
+import '../providers/track_comment_provider.dart';
 import 'active_comments_overlay.dart';
 import 'interactive_waveform.dart';
 import 'track_comment_input_bar.dart';
@@ -138,6 +138,8 @@ class TrackPreviewContent extends ConsumerWidget {
           trackId: trackId,
           initialLikeCount: track.likeCount,
           initialRepostCount: track.repostCount,
+          isLiked: track.isLiked,
+          isReposted: track.isReposted,
           commentCount: 3,
           onCommentPressed: () {
             TrackCommentsBottomSheet.show(

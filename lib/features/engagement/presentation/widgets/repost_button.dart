@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/track_engager.dart';
 import '../../domain/models/track_action_data.dart';
-import '../notifiers/track_action_notifier.dart';
+import '../providers/track_social_provider.dart';
 import 'social_action_button.dart';
 import 'track_engagers_bottom_sheet.dart';
 
@@ -63,14 +64,14 @@ class _RepostButtonState extends ConsumerState<RepostButton> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
+              onPressed: () => ctx.pop(false),
               child: const Text(
                 AppConstants.cancel,
                 style: TextStyle(color: AppColors.textSecondary),
               ),
             ),
             TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
+              onPressed: () => ctx.pop(true),
               child: const Text(
                 AppConstants.remove,
                 style: TextStyle(color: AppColors.primary),
