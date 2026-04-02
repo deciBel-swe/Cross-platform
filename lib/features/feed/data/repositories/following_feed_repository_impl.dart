@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 
 import '../../domain/entities/following_feed_item.dart';
+import '../../domain/entities/paginated_following_feed.dart';
 import '../../domain/repositories/following_feed_repository.dart';
 import '../datasources/following_feed_remote_datasource.dart';
 
@@ -11,7 +12,7 @@ class FollowingFeedRepositoryImpl implements FollowingFeedRepository {
   final FollowingFeedRemoteDatasource _remoteDatasource;
 
   @override
-  Future<List<FollowingFeedItem>> getFollowingFeed({
+  Future<PaginatedFollowingFeed> getFollowingFeed({
     int page = 0,
     int size = 20,
   }) async {
@@ -23,34 +24,24 @@ class FollowingFeedRepositoryImpl implements FollowingFeedRepository {
     final List<dynamic> content =
         (data['content'] as List<dynamic>?) ?? <dynamic>[];
 
-    return content.map((item) {
+    final items = content.map((item) {
       final Map<String, dynamic> json = item as Map<String, dynamic>;
       final Map<String, dynamic> artist =
           (json['artist'] as Map<String, dynamic>?) ?? <String, dynamic>{};
 
-      final String userName =
-          (artist['username'] ?? 'Unknown User').toString();
-
-      final String trackTitle =
-          (json['title'] ?? 'Untitled Track').toString();
-
-      final String trackArtist = userName;
-
-      final String genre =
-          (json['genre'] ?? 'Unknown').toString();
-
+      final String userName = (artist['username'] ?? 'Unknown User').toString();
+      final String trackTitle = (json['title'] ?? 'Untitled Track').toString();
+      final String genre = (json['genre'] ?? 'Unknown').toString();
       final int playCount = (json['playCount'] as int?) ?? 0;
       final int likeCount = (json['likeCount'] as int?) ?? 0;
       final int repostCount = (json['repostCount'] as int?) ?? 0;
-
-      final String uploadDate =
-          (json['uploadDate'] ?? '').toString();
+      final String uploadDate = (json['uploadDate'] ?? '').toString();
 
       return FollowingFeedItem(
         userName: userName,
         action: 'posted a track',
         trackTitle: trackTitle,
-        trackArtist: trackArtist,
+        trackArtist: userName,
         timeAgo: _timeAgoFromUploadDate(uploadDate),
         genre: genre,
         likes: likeCount.toString(),
@@ -63,6 +54,12 @@ class FollowingFeedRepositoryImpl implements FollowingFeedRepository {
         ),
       );
     }).toList();
+
+    return PaginatedFollowingFeed(
+      items: items,
+      pageNumber: (data['pageNumber'] as int?) ?? page,
+      isLast: (data['isLast'] as bool?) ?? false,
+    );
   }
 }
 
@@ -71,12 +68,12 @@ String _timeAgoFromUploadDate(String uploadDate) {
     return 'Recently';
   }
 
-  final DateTime? parsed = DateTime.tryParse(uploadDate);
+  final parsed = DateTime.tryParse(uploadDate);
   if (parsed == null) {
     return 'Recently';
   }
 
-  final Duration diff = DateTime.now().difference(parsed);
+  final diff = DateTime.now().difference(parsed);
 
   if (diff.inMinutes < 1) {
     return 'Just now';

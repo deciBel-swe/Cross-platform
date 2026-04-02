@@ -41,6 +41,8 @@ class ApiConstants {
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
 
+  static const String feedEndpoint = '/feed';
+
   // Dio Timeout constants
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;

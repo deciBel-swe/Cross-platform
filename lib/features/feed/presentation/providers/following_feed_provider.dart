@@ -6,6 +6,8 @@ import '../../data/repositories/following_feed_mock_repository.dart';
 import '../../domain/entities/following_feed_item.dart';
 import '../../domain/repositories/following_feed_repository.dart';
 
+import '../../domain/entities/paginated_following_feed.dart';
+
 final followingFeedRepositoryProvider =
     Provider<FollowingFeedRepository>((ref) {
   final useMock = dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
@@ -30,20 +32,24 @@ class FollowingFeedNotifier extends AsyncNotifier<List<FollowingFeedItem>> {
 
   @override
   Future<List<FollowingFeedItem>> build() async {
-    return _fetchFeed();
+    final result = await _fetchFeed();
+    _hasReachedEnd = result.isLast;
+    return result.items;
   }
 
-  Future<List<FollowingFeedItem>> _fetchFeed() async {
-    final repo = ref.read(followingFeedRepositoryProvider);
-    return repo.getFollowingFeed(page: _page, size: _pageSize);
-  }
+Future<PaginatedFollowingFeed> _fetchFeed() async {
+  final repo = ref.read(followingFeedRepositoryProvider);
+  return repo.getFollowingFeed(page: _page, size: _pageSize);
+}
 
   Future<void> refresh() async {
     _page = 0;
     _hasReachedEnd = false;
     state = const AsyncLoading();
-    final data = await _fetchFeed();
-    state = AsyncData(data);
+
+    final result = await _fetchFeed();
+    _hasReachedEnd = result.isLast;
+    state = AsyncData(result.items);
   }
 
   Future<void> loadMore() async {
@@ -54,16 +60,17 @@ class FollowingFeedNotifier extends AsyncNotifier<List<FollowingFeedItem>> {
     _isLoadingMore = true;
     _page++;
 
-    final repo = ref.read(followingFeedRepositoryProvider);
-    final newItems = await repo.getFollowingFeed(page: _page, size: _pageSize);
+    try {
+      final result = await _fetchFeed();
+      _hasReachedEnd = result.isLast;
 
-    if (newItems.isEmpty) {
-      _hasReachedEnd = true;
+      final current = state.value ?? <FollowingFeedItem>[];
+      state = AsyncData([...current, ...result.items]);
+    } catch (_) {
+      _page--;
+      rethrow;
+    } finally {
+      _isLoadingMore = false;
     }
-
-    final current = state.value ?? <FollowingFeedItem>[];
-    state = AsyncData([...current, ...newItems]);
-
-    _isLoadingMore = false;
   }
 }

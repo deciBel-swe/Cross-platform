@@ -1,7 +1,7 @@
-import '../entities/following_feed_item.dart';
+import '../entities/paginated_following_feed.dart';
 
 abstract class FollowingFeedRepository {
-  Future<List<FollowingFeedItem>> getFollowingFeed({
+  Future<PaginatedFollowingFeed> getFollowingFeed({
     int page = 0,
     int size = 20,
   });
