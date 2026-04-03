@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/entities/public_profile.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
+import '../../domain/entities/public_profile.dart';
 
 /// Fetches and manages the public profile data for a given userId.
 ///
@@ -21,16 +21,13 @@ class PublicProfileNotifier extends FamilyAsyncNotifier<PublicProfile, int> {
     final repository = ref.read(followRepositoryProvider);
     final result = await repository.getPublicProfile(arg);
 
-    return result.fold(
-      (failure) => throw failure,
-      (profile) {
-        // Seed the follow state provider with the initial value from the profile.
-        ref
-            .read(followStateProvider(arg).notifier)
-            .setInitialState(profile.isFollowing);
-        return profile;
-      },
-    );
+    return result.fold((failure) => throw failure, (profile) {
+      // Seed the follow state provider with the initial value from the profile.
+      ref
+          .read(followStateProvider(arg).notifier)
+          .setInitialState(profile.isFollowing);
+      return profile;
+    });
   }
 
   /// Re-fetches the public profile data and updates state accordingly.
