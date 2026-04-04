@@ -13,7 +13,7 @@ android {
     signingConfigs {
         create("shared") {
             // Path goes up from 'app' to 'android' folder
-            storeFile = file("../signing/shared-debug.keystore")
+            storeFile = file("../signings/shared-debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
