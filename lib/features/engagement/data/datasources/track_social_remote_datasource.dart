@@ -55,6 +55,26 @@ class TrackSocialRemoteDatasource {
     }
   }
 
+  Future<PaginatedTracksModel> getRepostedTracks({
+    int page = 0,
+    int size = 10,
+  }) async {
+    try {
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '/users/me/repost',
+        queryParams: {'page': page, 'size': size},
+      );
+
+      final data = response.data;
+      if (data == null) {
+        throw const ServerException('No data returned from server.');
+      }
+      return PaginatedTracksModel.fromJson(data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
   Future<void> unrepostTrack(int trackId) async {
     try {
       await _dioClient.delete<dynamic>('/tracks/$trackId/repost');

@@ -10,17 +10,67 @@ import '../../domain/models/track_action_data.dart';
 import '../notifiers/liked_tracks_notifier.dart';
 import '../providers/track_social_provider.dart';
 
-class LikedTracksScreen extends ConsumerStatefulWidget {
+class LikedTracksScreen extends StatelessWidget {
   const LikedTracksScreen({super.key});
 
   @override
-  ConsumerState<LikedTracksScreen> createState() => _LikedTracksScreenState();
+  Widget build(BuildContext context) {
+    return const TrackCollectionScreen(
+      collectionType: TrackCollectionType.liked,
+      title: 'Your Likes',
+      emptyStateMessage: 'Tracks you like will appear here.',
+      emptyStateIcon: Icons.favorite_rounded,
+      errorPrefix: 'Failed to load likes',
+      removeAction: SocialActionType.like,
+    );
+  }
 }
 
-class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
+class RepostedTracksScreen extends StatelessWidget {
+  const RepostedTracksScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const TrackCollectionScreen(
+      collectionType: TrackCollectionType.reposted,
+      title: 'Your Reposts',
+      emptyStateMessage: 'Tracks you repost will appear here.',
+      emptyStateIcon: Icons.repeat_rounded,
+      errorPrefix: 'Failed to load reposts',
+      removeAction: SocialActionType.repost,
+    );
+  }
+}
+
+class TrackCollectionScreen extends ConsumerStatefulWidget {
+  const TrackCollectionScreen({
+    super.key,
+    required this.collectionType,
+    required this.title,
+    required this.emptyStateMessage,
+    required this.emptyStateIcon,
+    required this.errorPrefix,
+    required this.removeAction,
+  });
+
+  final TrackCollectionType collectionType;
+  final String title;
+  final String emptyStateMessage;
+  final IconData emptyStateIcon;
+  final String errorPrefix;
+  final SocialActionType removeAction;
+
+  @override
+  ConsumerState<TrackCollectionScreen> createState() =>
+      _TrackCollectionScreenState();
+}
+
+class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   final List<Track> _localTracks = [];
   late final ScrollController _scrollController;
+
+  TrackCollectionType get _collectionType => widget.collectionType;
 
   @override
   void initState() {
@@ -28,7 +78,9 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
 
-    final initialTracks = ref.read(likedTracksProvider).valueOrNull;
+    final initialTracks = ref
+        .read(trackCollectionProvider(_collectionType))
+        .valueOrNull;
     if (initialTracks != null && initialTracks.isNotEmpty) {
       _localTracks.addAll(initialTracks);
     }
@@ -41,7 +93,7 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
     final currentScroll = _scrollController.position.pixels;
     const delta = 200.0;
     if (maxScroll - currentScroll <= delta) {
-      ref.read(likedTracksProvider.notifier).loadMore();
+      ref.read(trackCollectionProvider(_collectionType).notifier).loadMore();
     }
   }
 
@@ -116,7 +168,7 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
     }
   }
 
-  void _handleUnlike(Track track, int index) {
+  void _handleRemoveFromCollection(Track track, int index) {
     // 1. Remove from local list & animate
     final removedTrack = _localTracks.removeAt(index);
     _listKey.currentState?.removeItem(
@@ -145,18 +197,21 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
     // 2. Perform actual API call via TrackSocialNotifier
     ref
         .read(trackSocialProvider.notifier)
-        .toggleAction(track.id, SocialActionType.like);
+        .toggleAction(track.id, widget.removeAction);
 
-    // 3. Optimistic update: notify LikedTracksNotifier to remove it from state
+    // 3. Optimistic update: notify collection notifier to remove it from state
     // so it doesn't reappear on partial refresh.
-    ref.read(likedTracksProvider.notifier).removeTrackLocal(track.id);
+    ref
+        .read(trackCollectionProvider(_collectionType).notifier)
+        .removeTrackLocal(track.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    final asyncTracks = ref.watch(likedTracksProvider);
+    final provider = trackCollectionProvider(_collectionType);
+    final asyncTracks = ref.watch(provider);
 
-    ref.listen<AsyncValue<List<Track>>>(likedTracksProvider, (previous, next) {
+    ref.listen<AsyncValue<List<Track>>>(provider, (previous, next) {
       if (next.hasValue && !next.isLoading && !next.hasError) {
         _syncTracks(next.value!);
       }
@@ -164,7 +219,7 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Likes'),
+        title: Text(widget.title),
         backgroundColor: AppColors.background,
         //dont change color when scrolling
         scrolledUnderElevation: 0,
@@ -174,8 +229,7 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
         data: (tracks) {
           if (tracks.isEmpty && _localTracks.isEmpty) {
             return RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(likedTracksProvider.notifier).refreshAll(),
+              onRefresh: () => ref.read(provider.notifier).refreshAll(),
               child: Stack(
                 children: [
                   ListView(
@@ -187,13 +241,13 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.favorite_rounded,
+                          widget.emptyStateIcon,
                           size: 64,
                           color: Theme.of(context).disabledColor,
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "Tracks you like will appear here.",
+                          widget.emptyStateMessage,
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(
                                 color: Theme.of(context).disabledColor,
@@ -208,8 +262,7 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: () =>
-                ref.read(likedTracksProvider.notifier).refreshAll(),
+            onRefresh: () => ref.read(provider.notifier).refreshAll(),
             child: AnimatedList(
               key: _listKey,
               controller: _scrollController,
@@ -227,7 +280,8 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
                     track: track,
                     onTap: () =>
                         context.push(RoutePaths.trackPreview(track.id)),
-                    onMorePressed: () => _handleUnlike(track, index),
+                    onMorePressed: () =>
+                        _handleRemoveFromCollection(track, index),
                   ),
                 );
               },
@@ -241,10 +295,9 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.grey),
               const SizedBox(height: 16),
-              Text('Failed to load likes: $error'),
+              Text('${widget.errorPrefix}: $error'),
               TextButton(
-                onPressed: () =>
-                    ref.read(likedTracksProvider.notifier).refreshAll(),
+                onPressed: () => ref.read(provider.notifier).refreshAll(),
                 child: const Text('Retry'),
               ),
             ],

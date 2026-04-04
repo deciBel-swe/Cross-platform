@@ -161,6 +161,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     builder: (context, state) => const LikedTracksScreen(),
                   ),
                   GoRoute(
+                    path: 'reposts',
+                    builder: (context, state) => const RepostedTracksScreen(),
+                  ),
+                  GoRoute(
                     path: 'track-preview/:trackId',
                     parentNavigatorKey: _rootNavigatorKey,
                     redirect: (context, state) {

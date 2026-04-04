@@ -85,6 +85,22 @@ class MockTrackSocialRepository implements ITrackSocialRepository {
   }
 
   @override
+  Future<PaginatedTracks> getRepostedTracks({
+    int page = 0,
+    int size = 20,
+  }) async {
+    await Future<void>.delayed(_mockDelay);
+    return PaginatedTracks(
+      content: <Track>[],
+      pageNumber: page,
+      pageSize: size,
+      totalElements: 0,
+      totalPages: 0,
+      isLast: true,
+    );
+  }
+
+  @override
   Future<void> likeTrack(int trackId) async {
     await Future<void>.delayed(_mockDelay);
     _likedTracks[trackId] = true;

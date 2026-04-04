@@ -21,6 +21,15 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
   }
 
   @override
+  Future<PaginatedTracks> getRepostedTracks({
+    int page = 0,
+    int size = 20,
+  }) async {
+    final model = await _datasource.getRepostedTracks(page: page, size: size);
+    return model.toEntity();
+  }
+
+  @override
   Future<void> likeTrack(int trackId) => _datasource.likeTrack(trackId);
 
   @override
