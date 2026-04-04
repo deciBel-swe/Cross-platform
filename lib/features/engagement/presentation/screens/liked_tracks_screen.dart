@@ -197,7 +197,14 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
     // 2. Perform actual API call via TrackSocialNotifier
     ref
         .read(trackSocialProvider.notifier)
-        .toggleAction(track.id, widget.removeAction);
+        .toggleAction(
+          track.id,
+          widget.removeAction,
+          initialLikeCount: track.likeCount,
+          initialRepostCount: track.repostCount,
+          initialIsLiked: track.isLiked,
+          initialIsReposted: track.isReposted,
+        );
 
     // 3. Optimistic update: notify collection notifier to remove it from state
     // so it doesn't reappear on partial refresh.

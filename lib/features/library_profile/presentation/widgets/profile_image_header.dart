@@ -21,13 +21,13 @@ class ProfileImageHeader extends StatelessWidget {
   final File? localProfilePic;
   final void Function(bool isProfilePic) onPickImage;
 
-  void _showProfileOptions(BuildContext context, String? imagePath) {
+  void _showProfileOptions(BuildContext parentContext, String? imagePath) {
     showModalBottomSheet<Widget>(
-      context: context,
+      context: parentContext,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return SafeArea(
           child: Wrap(
             children: [
@@ -35,11 +35,11 @@ class ProfileImageHeader extends StatelessWidget {
                 leading: const Icon(Icons.visibility),
                 title: const Text('View Profile Picture'),
                 onTap: () {
-                  context.pop();
+                  sheetContext.pop();
                   if (imagePath != null) {
-                    context.push('/profile-image', extra: imagePath);
+                    parentContext.push('/profile-image', extra: imagePath);
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
                       const SnackBar(
                         content: Text('No profile picture to view.'),
                       ),
@@ -51,7 +51,7 @@ class ProfileImageHeader extends StatelessWidget {
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Change Profile Picture'),
                 onTap: () {
-                  context.pop();
+                  sheetContext.pop();
                   onPickImage(true);
                 },
               ),

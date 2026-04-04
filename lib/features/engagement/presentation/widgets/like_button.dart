@@ -60,7 +60,12 @@ class _LikeButtonState extends ConsumerState<LikeButton> {
       activeColor: AppColors.primary,
       onToggle: () => ref
           .read(trackSocialProvider.notifier)
-          .toggleAction(widget.trackId, SocialActionType.like),
+          .toggleAction(
+            widget.trackId,
+            SocialActionType.like,
+            initialLikeCount: widget.likeCount,
+            initialIsLiked: widget.isLiked,
+          ),
       onCountTap: () => showTrackEngagersSheet(
         context,
         trackId: widget.trackId,

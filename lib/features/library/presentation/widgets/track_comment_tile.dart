@@ -22,6 +22,7 @@ class TrackCommentTile extends ConsumerWidget {
     // Logic for Image Handling
     final avatarUrl = comment.user.avatarUrl;
     final hasValidUrl = avatarUrl != null && avatarUrl.isNotEmpty;
+    final avatarImage = hasValidUrl ? NetworkImage(avatarUrl!) : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -33,7 +34,7 @@ class TrackCommentTile extends ConsumerWidget {
             backgroundColor: theme.colorScheme.surfaceContainerHighest,
 
             // 1. Only provide the provider if the URL is valid
-            backgroundImage: hasValidUrl ? NetworkImage(avatarUrl) : null,
+            backgroundImage: avatarImage,
 
             // If there is no image, there MUST be no error handler.
             onBackgroundImageError: hasValidUrl

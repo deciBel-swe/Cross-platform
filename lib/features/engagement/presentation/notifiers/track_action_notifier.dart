@@ -48,20 +48,29 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
   Future<void> toggleAction(
     int trackId,
     SocialActionType actionType, {
-    int initialLikeCount = 0,
-    int initialRepostCount = 0,
-    bool initialIsLiked = false,
-    bool initialIsReposted = false,
+    int? initialLikeCount,
+    int? initialRepostCount,
+    bool? initialIsLiked,
+    bool? initialIsReposted,
   }) async {
     final trackKey = trackId.toString();
     var trackData = state.trackStates[trackKey];
 
     if (trackData == null) {
+      if (actionType == SocialActionType.like &&
+          (initialLikeCount == null || initialIsLiked == null)) {
+        return;
+      }
+      if (actionType == SocialActionType.repost &&
+          (initialRepostCount == null || initialIsReposted == null)) {
+        return;
+      }
+
       trackData = TrackSocialData(
-        isLiked: initialIsLiked,
-        likeCount: initialLikeCount,
-        isReposted: initialIsReposted,
-        repostCount: initialRepostCount,
+        isLiked: initialIsLiked ?? false,
+        likeCount: initialLikeCount ?? 0,
+        isReposted: initialIsReposted ?? false,
+        repostCount: initialRepostCount ?? 0,
       );
       state = state.copyWith(
         trackStates: {...state.trackStates, trackKey: trackData},
