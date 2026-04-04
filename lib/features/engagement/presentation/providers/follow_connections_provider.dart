@@ -5,28 +5,30 @@ import 'follow_state_provider.dart';
 
 enum FollowConnectionsType { followers, following }
 
-typedef FollowConnectionsParams = ({
-  int userId,
-  FollowConnectionsType type,
-});
+typedef FollowConnectionsParams = ({int userId, FollowConnectionsType type});
 
-final followConnectionsProvider =
-    FutureProvider.autoDispose.family<PaginatedEngagers, FollowConnectionsParams>((
-      ref,
-      params,
-    ) async {
+final followConnectionsProvider = FutureProvider.autoDispose
+    .family<PaginatedEngagers, FollowConnectionsParams>((ref, params) async {
       final repository = ref.read(followRepositoryProvider);
 
       final result = params.type == FollowConnectionsType.followers
           ? await repository.getFollowers(userId: params.userId)
           : await repository.getFollowing(userId: params.userId);
 
-      return result.fold((failure) => throw Exception(failure.message), (data) => data);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (data) => data,
+      );
     });
 
-final suggestedUsersProvider = FutureProvider.autoDispose<PaginatedEngagers>((ref) async {
+final suggestedUsersProvider = FutureProvider.autoDispose<PaginatedEngagers>((
+  ref,
+) async {
   final repository = ref.read(followRepositoryProvider);
   final result = await repository.getSuggestedUsers();
 
-  return result.fold((failure) => throw Exception(failure.message), (data) => data);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (data) => data,
+  );
 });

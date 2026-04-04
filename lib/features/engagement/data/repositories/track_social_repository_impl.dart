@@ -15,8 +15,16 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
   final TrackSocialRemoteDatasource _datasource;
 
   @override
-  Future<PaginatedTracks> getLikedTracks({int page = 0, int size = 20}) async {
-    final model = await _datasource.getLikedTracks(page: page, size: size);
+  Future<PaginatedTracks> getLikedTracks({
+    int page = 0,
+    int size = 20,
+    int? userId,
+  }) async {
+    final model = await _datasource.getLikedTracks(
+      page: page,
+      size: size,
+      userId: userId,
+    );
     return model.toEntity();
   }
 
@@ -24,8 +32,13 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
   Future<PaginatedTracks> getRepostedTracks({
     int page = 0,
     int size = 20,
+    int? userId,
   }) async {
-    final model = await _datasource.getRepostedTracks(page: page, size: size);
+    final model = await _datasource.getRepostedTracks(
+      page: page,
+      size: size,
+      userId: userId,
+    );
     return model.toEntity();
   }
 

@@ -34,7 +34,8 @@ class MockFollowRepository implements FollowRepository {
         username: 'demo_artist_$userId',
         tier: userId % 3 == 0 ? 'PRO' : 'FREE',
         profile: const PublicProfileDetails(
-          bio: 'This is a mock profile for testing the follow feature. '
+          bio:
+              'This is a mock profile for testing the follow feature. '
               'It shows how the public profile screen looks with real data.',
           location: 'Cairo, Egypt',
           avatarUrl: null,
@@ -86,19 +87,16 @@ class MockFollowRepository implements FollowRepository {
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
 
-    final users = List<TrackEngager>.generate(
-      size,
-      (index) {
-        final id = (page * size) + index + 1;
-        return TrackEngager(
-          id: id,
-          username: 'follower_$id',
-          avatarUrl: null,
-          tier: id % 3 == 0 ? 'PRO' : 'FREE',
-          isFollowing: _followState[id] ?? id.isEven,
-        );
-      },
-    );
+    final users = List<TrackEngager>.generate(size, (index) {
+      final id = (page * size) + index + 1;
+      return TrackEngager(
+        id: id,
+        username: 'follower_$id',
+        avatarUrl: null,
+        tier: id % 3 == 0 ? 'PRO' : 'FREE',
+        isFollowing: _followState[id] ?? id.isEven,
+      );
+    });
 
     return Right(
       PaginatedEngagers(
@@ -120,19 +118,16 @@ class MockFollowRepository implements FollowRepository {
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
 
-    final users = List<TrackEngager>.generate(
-      size,
-      (index) {
-        final id = 1000 + (page * size) + index + 1;
-        return TrackEngager(
-          id: id,
-          username: 'following_$id',
-          avatarUrl: null,
-          tier: id % 4 == 0 ? 'PRO' : 'FREE',
-          isFollowing: _followState[id] ?? true,
-        );
-      },
-    );
+    final users = List<TrackEngager>.generate(size, (index) {
+      final id = 1000 + (page * size) + index + 1;
+      return TrackEngager(
+        id: id,
+        username: 'following_$id',
+        avatarUrl: null,
+        tier: id % 4 == 0 ? 'PRO' : 'FREE',
+        isFollowing: _followState[id] ?? true,
+      );
+    });
 
     return Right(
       PaginatedEngagers(
@@ -153,19 +148,16 @@ class MockFollowRepository implements FollowRepository {
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
 
-    final users = List<TrackEngager>.generate(
-      size,
-      (index) {
-        final id = 5000 + (page * size) + index + 1;
-        return TrackEngager(
-          id: id,
-          username: 'suggested_$id',
-          avatarUrl: null,
-          tier: id % 5 == 0 ? 'PRO' : 'FREE',
-          isFollowing: _followState[id] ?? false,
-        );
-      },
-    );
+    final users = List<TrackEngager>.generate(size, (index) {
+      final id = 5000 + (page * size) + index + 1;
+      return TrackEngager(
+        id: id,
+        username: 'suggested_$id',
+        avatarUrl: null,
+        tier: id % 5 == 0 ? 'PRO' : 'FREE',
+        isFollowing: _followState[id] ?? false,
+      );
+    });
 
     return Right(
       PaginatedEngagers(

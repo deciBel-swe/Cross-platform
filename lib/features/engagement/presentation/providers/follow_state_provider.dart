@@ -28,6 +28,4 @@ final followRefreshTickProvider = StateProvider<int>((_) => 0);
 /// final isFollowing = ref.watch(followStateProvider(userId));
 /// ```
 final followStateProvider =
-    AsyncNotifierProvider.family<FollowNotifier, bool, int>(
-  FollowNotifier.new,
-);
+    AsyncNotifierProvider.family<FollowNotifier, bool, int>(FollowNotifier.new);

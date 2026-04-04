@@ -11,10 +11,18 @@ abstract class ITrackSocialRepository {
   Future<void> unrepostTrack(int trackId);
 
   /// Fetches liked tracks for the current user.
-  Future<PaginatedTracks> getLikedTracks({int page = 0, int size = 20});
+  Future<PaginatedTracks> getLikedTracks({
+    int page = 0,
+    int size = 20,
+    int? userId,
+  });
 
   /// Fetches reposted tracks for the current user.
-  Future<PaginatedTracks> getRepostedTracks({int page = 0, int size = 20});
+  Future<PaginatedTracks> getRepostedTracks({
+    int page = 0,
+    int size = 20,
+    int? userId,
+  });
 
   /// Fetches a paginated list of users who liked [trackId].
   Future<Either<Failure, PaginatedEngagers>> fetchTrackLikers({

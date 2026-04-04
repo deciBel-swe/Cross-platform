@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/widgets/follow_button.dart';
 import '../../domain/entities/public_profile.dart';
@@ -13,6 +14,7 @@ import '../providers/user_profile_provider.dart';
 import '../widgets/expandable_bio.dart';
 import '../widgets/social_links_widget.dart';
 import '../widgets/spotlight_section.dart';
+import '../widgets/track_tile.dart';
 
 /// Screen that displays another user's public profile.
 ///
@@ -165,14 +167,33 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: AppConstants.spacingMassive),
-                  _ProfileHeader(
-                    userId: widget.userId,
-                    profile: profile,
-                  ),
+                  _ProfileHeader(userId: widget.userId, profile: profile),
                   const SizedBox(height: AppConstants.spacingSmall),
                   _ActionRow(userId: widget.userId, profile: profile),
                   const SizedBox(height: AppConstants.spacingRegular),
+                  const _SectionTitle(title: AppConstants.tracksSectionTitle),
+                  const SizedBox(height: AppConstants.spacingSmall),
                   TopTracksSection(userId: profile.id),
+                  const SizedBox(height: AppConstants.spacingLarge),
+                  const _SectionTitle(title: 'Likes'),
+                  const SizedBox(height: AppConstants.spacingSmall),
+                  _PublicTrackCollectionSection(
+                    tracksAsync: ref.watch(
+                      publicLikedTracksProvider(profile.id),
+                    ),
+                    emptyLabel: 'No likes yet',
+                    errorLabel: 'Could not load likes',
+                  ),
+                  const SizedBox(height: AppConstants.spacingLarge),
+                  const _SectionTitle(title: 'Reposts'),
+                  const SizedBox(height: AppConstants.spacingSmall),
+                  _PublicTrackCollectionSection(
+                    tracksAsync: ref.watch(
+                      publicRepostedTracksProvider(profile.id),
+                    ),
+                    emptyLabel: 'No reposts yet',
+                    errorLabel: 'Could not load reposts',
+                  ),
                   const SizedBox(height: AppConstants.spacingMassive),
                 ],
               ),
@@ -326,10 +347,7 @@ class _Avatar extends StatelessWidget {
 
 /// Username, bio, location, and follower/following counts.
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
-    required this.userId,
-    required this.profile,
-  });
+  const _ProfileHeader({required this.userId, required this.profile});
 
   final int userId;
   final PublicProfile profile;
@@ -348,7 +366,8 @@ class _ProfileHeader extends StatelessWidget {
             ? (isFollowing ? 1 : -1)
             : 0;
 
-        final displayedFollowers = snapshot.stats.followersCount + followerDelta;
+        final displayedFollowers =
+            snapshot.stats.followersCount + followerDelta;
 
         return _ProfileHeaderContent(
           userId: userId,
@@ -408,7 +427,8 @@ class _ProfileHeaderContent extends StatelessWidget {
             _StatChip(
               count: followersCount,
               label: AppConstants.followers,
-              onTap: () => context.push(RoutePaths.publicProfileFollowers(userId)),
+              onTap: () =>
+                  context.push(RoutePaths.publicProfileFollowers(userId)),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -424,7 +444,8 @@ class _ProfileHeaderContent extends StatelessWidget {
             _StatChip(
               count: profile.stats.followingCount,
               label: AppConstants.following,
-              onTap: () => context.push(RoutePaths.publicProfileFollowing(userId)),
+              onTap: () =>
+                  context.push(RoutePaths.publicProfileFollowing(userId)),
             ),
           ],
         ),
@@ -498,6 +519,84 @@ class _ActionRow extends ConsumerWidget {
           SocialLinksWidget(socialLinks: profile.socialLinks!),
         const Spacer(),
       ],
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+      ),
+    );
+  }
+}
+
+class _PublicTrackCollectionSection extends StatelessWidget {
+  const _PublicTrackCollectionSection({
+    required this.tracksAsync,
+    required this.emptyLabel,
+    required this.errorLabel,
+  });
+
+  final AsyncValue<List<Track>> tracksAsync;
+  final String emptyLabel;
+  final String errorLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return tracksAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppConstants.spacingMedium),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, _) => Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppConstants.spacingSmall,
+        ),
+        child: Text(
+          errorLabel,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        ),
+      ),
+      data: (tracks) {
+        if (tracks.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppConstants.spacingSmall,
+            ),
+            child: Text(
+              emptyLabel,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: tracks.length,
+          itemBuilder: (context, index) {
+            final track = tracks[index];
+            return TrackTile(
+              track: track,
+              onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+            );
+          },
+        );
+      },
     );
   }
 }

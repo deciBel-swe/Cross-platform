@@ -72,7 +72,11 @@ class MockTrackSocialRepository implements ITrackSocialRepository {
   ];
 
   @override
-  Future<PaginatedTracks> getLikedTracks({int page = 0, int size = 20}) async {
+  Future<PaginatedTracks> getLikedTracks({
+    int page = 0,
+    int size = 20,
+    int? userId,
+  }) async {
     await Future<void>.delayed(_mockDelay);
     return PaginatedTracks(
       content: <Track>[],
@@ -88,6 +92,7 @@ class MockTrackSocialRepository implements ITrackSocialRepository {
   Future<PaginatedTracks> getRepostedTracks({
     int page = 0,
     int size = 20,
+    int? userId,
   }) async {
     await Future<void>.delayed(_mockDelay);
     return PaginatedTracks(

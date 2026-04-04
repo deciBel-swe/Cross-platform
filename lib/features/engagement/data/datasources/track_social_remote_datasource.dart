@@ -38,13 +38,16 @@ class TrackSocialRemoteDatasource {
   Future<PaginatedTracksModel> getLikedTracks({
     int page = 0,
     int size = 10,
+    int? userId,
   }) async {
-    final userId = await _resolveCurrentUserId();
+    final resolvedUserId = userId ?? await _resolveCurrentUserId();
     final endpoints = <String>[
-      '/users/me/liked-tracks',
-      '/users/me/likes',
-      if (userId != null) '/users/$userId/likes',
-      if (userId != null) '/users/$userId/liked-tracks',
+      if (userId == null) '/users/me/likes',
+      if (userId == null) '/users/me/like',
+      if (userId == null) '/users/me/liked-tracks',
+      if (resolvedUserId != null) '/users/$resolvedUserId/likes',
+      if (resolvedUserId != null) '/users/$resolvedUserId/like',
+      if (resolvedUserId != null) '/users/$resolvedUserId/liked-tracks',
     ];
 
     return _fetchTrackCollection(endpoints: endpoints, page: page, size: size);
@@ -53,13 +56,15 @@ class TrackSocialRemoteDatasource {
   Future<PaginatedTracksModel> getRepostedTracks({
     int page = 0,
     int size = 10,
+    int? userId,
   }) async {
-    final userId = await _resolveCurrentUserId();
+    final resolvedUserId = userId ?? await _resolveCurrentUserId();
     final endpoints = <String>[
-      '/users/me/repost',
-      '/users/me/reposts',
-      if (userId != null) '/users/$userId/repost',
-      if (userId != null) '/users/$userId/reposts',
+      if (userId == null) '/users/me/repost',
+      if (userId == null) '/users/me/reposts',
+      if (resolvedUserId != null) '/users/$resolvedUserId/repost',
+      if (resolvedUserId != null) '/users/$resolvedUserId/reposts',
+      if (resolvedUserId != null) '/users/$resolvedUserId/reposted-tracks',
     ];
 
     return _fetchTrackCollection(endpoints: endpoints, page: page, size: size);

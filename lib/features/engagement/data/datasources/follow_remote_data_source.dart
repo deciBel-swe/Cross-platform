@@ -73,12 +73,12 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         throw const ServerException('Received empty response from server');
       }
 
-        // The response may be nested under `data` and/or `profile`.
-        final responseData = data['data'] is Map<String, dynamic>
+      // The response may be nested under `data` and/or `profile`.
+      final responseData = data['data'] is Map<String, dynamic>
           ? data['data'] as Map<String, dynamic>
           : data;
 
-        return PublicProfileModel.fromJson(_normalizePublicProfile(responseData));
+      return PublicProfileModel.fromJson(_normalizePublicProfile(responseData));
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized. Please log in again.');
@@ -197,23 +197,26 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
   }
 
   Map<String, dynamic> _normalizePaginatedUsers(Map<String, dynamic> payload) {
-    final rawContent = payload['content'] ?? payload['users'] ?? payload['items'];
+    final rawContent =
+        payload['content'] ?? payload['users'] ?? payload['items'];
 
     final listSource = rawContent is List
         ? rawContent
-        : (payload['data'] is List ? payload['data'] as List : const <dynamic>[]);
+        : (payload['data'] is List
+              ? payload['data'] as List
+              : const <dynamic>[]);
 
     final contentList = listSource;
 
     final pageNumber = _asInt(payload['pageNumber'] ?? payload['page']) ?? 0;
-    final pageSize = _asInt(payload['pageSize'] ?? payload['size']) ??
+    final pageSize =
+        _asInt(payload['pageSize'] ?? payload['size']) ??
         (contentList.isEmpty ? 20 : contentList.length);
     final totalElements =
         _asInt(payload['totalElements'] ?? payload['total']) ??
         contentList.length;
     final totalPages = _asInt(payload['totalPages']) ?? 1;
-    final isLast =
-        _asBool(payload['isLast']) ?? (pageNumber + 1 >= totalPages);
+    final isLast = _asBool(payload['isLast']) ?? (pageNumber + 1 >= totalPages);
 
     return <String, dynamic>{
       'content': contentList
@@ -234,9 +237,9 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         : payload;
 
     final rawSocial =
-      profile['socialLinks'] ??
-      profile['socialLinksDto'] ??
-      const <String, dynamic>{};
+        profile['socialLinks'] ??
+        profile['socialLinksDto'] ??
+        const <String, dynamic>{};
     final social = _normalizeSocialLinks(rawSocial);
 
     final city = (profile['city'] ?? '').toString().trim();
@@ -263,16 +266,14 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
       },
       'socialLinks': social,
       'stats': <String, dynamic>{
-        'followersCount': _asInt(
-              profile['followersCount'] ?? profile['followerCount'],
-            ) ??
-            0,
+        'followersCount':
+            _asInt(profile['followersCount'] ?? profile['followerCount']) ?? 0,
         'followingCount': _asInt(profile['followingCount']) ?? 0,
         'trackCount': _asInt(profile['trackCount']) ?? 0,
       },
       'isFollowing': _asBool(profile['isFollowing']) ?? false,
-      'isFollowedBy': _asBool(profile['isFollowedBy'] ?? profile['isFollowed']) ??
-          false,
+      'isFollowedBy':
+          _asBool(profile['isFollowedBy'] ?? profile['isFollowed']) ?? false,
     };
   }
 
@@ -315,24 +316,24 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
 
   Map<String, dynamic> _normalizeUserItem(Map<String, dynamic> user) {
     final profile = user['profile'] is Map<String, dynamic>
-      ? user['profile'] as Map<String, dynamic>
-      : user;
+        ? user['profile'] as Map<String, dynamic>
+        : user;
 
     final id = _asInt(profile['id'] ?? user['id']) ?? 0;
     final username =
-      (profile['username'] ??
-          user['username'] ??
-          user['userName'] ??
-          user['displayName'] ??
-          '')
+        (profile['username'] ??
+                user['username'] ??
+                user['userName'] ??
+                user['displayName'] ??
+                '')
             .toString();
     final avatarUrl =
-      (profile['avatarUrl'] ??
-          profile['profilePic'] ??
-          user['avatarUrl'] ??
-          user['profilePic'] ??
-          user['avatar'])
-        ?.toString();
+        (profile['avatarUrl'] ??
+                profile['profilePic'] ??
+                user['avatarUrl'] ??
+                user['profilePic'] ??
+                user['avatar'])
+            ?.toString();
 
     final rawTier = profile['tier'] ?? user['tier'];
     final tier = rawTier is String
@@ -342,8 +343,10 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
               : 'FREE');
 
     final isFollowing =
-      _asBool(user['isFollowing'] ?? profile['isFollowing'] ?? user['isFollowed']) ??
-      false;
+        _asBool(
+          user['isFollowing'] ?? profile['isFollowing'] ?? user['isFollowed'],
+        ) ??
+        false;
 
     return <String, dynamic>{
       'id': id,

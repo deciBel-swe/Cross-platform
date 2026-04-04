@@ -46,7 +46,9 @@ class FollowConnectionsScreen extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(followConnectionsProvider((userId: userId, type: type)));
+          ref.invalidate(
+            followConnectionsProvider((userId: userId, type: type)),
+          );
           ref.invalidate(suggestedUsersProvider);
         },
         child: ListView(
@@ -120,7 +122,9 @@ class _Section extends StatelessWidget {
             );
           },
           loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppConstants.spacingRegular),
+            padding: EdgeInsets.symmetric(
+              vertical: AppConstants.spacingRegular,
+            ),
             child: Center(child: CircularProgressIndicator()),
           ),
           error: (error, _) => Padding(
@@ -129,9 +133,9 @@ class _Section extends StatelessWidget {
             ),
             child: Text(
               error.toString().replaceAll('Exception: ', ''),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.errors,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.errors),
             ),
           ),
         ),
@@ -198,7 +202,8 @@ class _InlineFollowButton extends ConsumerStatefulWidget {
   final bool initialIsFollowing;
 
   @override
-  ConsumerState<_InlineFollowButton> createState() => _InlineFollowButtonState();
+  ConsumerState<_InlineFollowButton> createState() =>
+      _InlineFollowButtonState();
 }
 
 class _InlineFollowButtonState extends ConsumerState<_InlineFollowButton> {
