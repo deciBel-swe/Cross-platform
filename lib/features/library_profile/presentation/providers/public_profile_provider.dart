@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
+import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/public_profile.dart';
 import '../notifiers/public_profile_notifier.dart';

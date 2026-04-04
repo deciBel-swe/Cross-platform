@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../engagement/presentation/notifiers/liked_tracks_notifier.dart';
-import 'track_tile.dart';
 import 'tile.dart';
+import 'track_tile.dart';
 
 class MediaCollection extends ConsumerWidget {
   const MediaCollection({super.key});

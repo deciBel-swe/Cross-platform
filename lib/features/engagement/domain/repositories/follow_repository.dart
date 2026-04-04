@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/errors/failures.dart';
-import '../entities/paginated_engagers.dart';
 import '../../../../features/library_profile/domain/entities/public_profile.dart';
+import '../entities/paginated_engagers.dart';
 
 /// Contract for follow-related operations and public-profile fetching.
 ///

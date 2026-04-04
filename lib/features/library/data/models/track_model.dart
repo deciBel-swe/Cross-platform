@@ -31,20 +31,24 @@ class TrackModel with _$TrackModel {
     required DateTime createdAt,
   }) = _TrackModel;
 
-  factory TrackModel.fromJson(Map<String, dynamic> json) {
-    // Handle alternative keys from different endpoints
+  factory TrackModel.fromJson(Map<String, dynamic> json) =>
+      _$TrackModelFromJson(_normalizeTrackJson(json));
+
+  factory TrackModel.fromJsonString(String jsonString) =>
+      TrackModel.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
+
+  static Map<String, dynamic> _normalizeTrackJson(Map<String, dynamic> json) {
     final map = Map<String, dynamic>.from(json);
+
     if (!map.containsKey('createdAt') && map.containsKey('uploadDate')) {
       map['createdAt'] = map['uploadDate'];
     }
     if (!map.containsKey('state')) {
       map['state'] = 'FINISHED';
     }
-    return _$TrackModelFromJson(map);
-  }
 
-  factory TrackModel.fromJsonString(String jsonString) =>
-      TrackModel.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
+    return map;
+  }
 }
 
 extension TrackModelX on TrackModel {

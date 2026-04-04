@@ -225,69 +225,70 @@ class _TrackEditScreenState extends ConsumerState<TrackEditScreen> {
                             fontSize: 12,
                           ),
                         ),
-                        Row(
-                          children: [
-                            Radio<bool>(
-                              value: false,
-                              groupValue: state.isPrivate,
-                              onChanged: state.isSubmitting
-                                  ? null
-                                  : (val) => notifier.updateIsPrivate(
-                                      val ?? state.isPrivate,
+                        IgnorePointer(
+                          ignoring: state.isSubmitting,
+                          child: RadioGroup<bool>(
+                            groupValue: state.isPrivate,
+                            onChanged: (val) {
+                              if (val != null) {
+                                notifier.updateIsPrivate(val);
+                              }
+                            },
+                            child: const Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Radio<bool>(value: false),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Public',
+                                            style: TextStyle(
+                                              color: AppColors.onPrimary,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Anyone can find this',
+                                            style: TextStyle(
+                                              color: AppColors.textMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Radio<bool>(value: true),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Unlisted (Private)',
+                                            style: TextStyle(
+                                              color: AppColors.onPrimary,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Anyone with private link can access',
+                                            style: TextStyle(
+                                              color: AppColors.textMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Public',
-                                    style: TextStyle(
-                                      color: AppColors.onPrimary,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Anyone can find this',
-                                    style: TextStyle(
-                                      color: AppColors.textMuted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Radio<bool>(
-                              value: true,
-                              groupValue: state.isPrivate,
-                              onChanged: state.isSubmitting
-                                  ? null
-                                  : (val) => notifier.updateIsPrivate(
-                                      val ?? state.isPrivate,
-                                    ),
-                            ),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Unlisted (Private)',
-                                    style: TextStyle(
-                                      color: AppColors.onPrimary,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Anyone with private link can access',
-                                    style: TextStyle(
-                                      color: AppColors.textMuted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),

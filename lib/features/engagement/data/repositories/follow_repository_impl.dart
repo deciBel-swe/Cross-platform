@@ -3,12 +3,12 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
-import '../models/paginated_engagers_model.dart';
 import '../../../library_profile/data/models/public_profile_model.dart';
 import '../../../library_profile/domain/entities/public_profile.dart';
 import '../../domain/entities/paginated_engagers.dart';
 import '../../domain/repositories/follow_repository.dart';
 import '../datasources/follow_remote_data_source.dart';
+import '../models/paginated_engagers_model.dart';
 
 /// Concrete implementation of [FollowRepository].
 ///
