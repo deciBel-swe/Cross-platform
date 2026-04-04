@@ -162,11 +162,68 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     required int page,
     required int size,
   }) async {
-    return _fetchPaginatedUsers(
-      path: '/users/suggested',
-      page: page,
-      size: size,
-    );
+    return _fetchSuggestedUsers(limit: size);
+  }
+
+  Future<PaginatedEngagersModel> _fetchSuggestedUsers({
+    required int limit,
+  }) async {
+    try {
+      final response = await _dioClient.get<dynamic>(
+        '/users/suggested',
+        queryParams: <String, dynamic>{'limit': limit},
+      );
+
+      final body = response.data;
+
+      if (body is List) {
+        final users = body
+            .whereType<Map<String, dynamic>>()
+            .map(_normalizeUserItem)
+            .toList();
+
+        return PaginatedEngagersModel.fromJson(<String, dynamic>{
+          'content': users,
+          'pageNumber': 0,
+          'pageSize': users.length,
+          'totalElements': users.length,
+          'totalPages': 1,
+          'isLast': true,
+        });
+      }
+
+      // Fallback for wrapped array responses: { data: [...] }
+      if (body is Map<String, dynamic>) {
+        final data = body['data'];
+        if (data is List) {
+          final users = data
+              .whereType<Map<String, dynamic>>()
+              .map(_normalizeUserItem)
+              .toList();
+
+          return PaginatedEngagersModel.fromJson(<String, dynamic>{
+            'content': users,
+            'pageNumber': 0,
+            'pageSize': users.length,
+            'totalElements': users.length,
+            'totalPages': 1,
+            'isLast': true,
+          });
+        }
+
+        // Last fallback if backend returns paginated map shape.
+        final payload = data is Map<String, dynamic> ? data : body;
+        final normalized = _normalizePaginatedUsers(payload);
+        return PaginatedEngagersModel.fromJson(normalized);
+      }
+
+      throw const ServerException('Unexpected suggested users response shape');
+    } on DioException catch (e) {
+      _handleDioError(e, 'fetch suggested users');
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw ServerException('Failed to parse suggested users: $e');
+    }
   }
 
   Future<PaginatedEngagersModel> _fetchPaginatedUsers({

@@ -362,8 +362,11 @@ class _ProfileHeader extends StatelessWidget {
         final followAsync = ref.watch(followStateProvider(userId));
         final isFollowing = followAsync.valueOrNull ?? snapshot.isFollowing;
 
-        final followerDelta = isFollowing != snapshot.isFollowing
-            ? (isFollowing ? 1 : -1)
+        // Avoid double counting: once snapshot is available, trust backend count.
+        // Apply local delta only while still showing the initial profile fallback.
+        final shouldApplyLocalDelta = snapshotAsync.valueOrNull == null;
+        final followerDelta = shouldApplyLocalDelta
+            ? (isFollowing != profile.isFollowing ? (isFollowing ? 1 : -1) : 0)
             : 0;
 
         final displayedFollowers =
