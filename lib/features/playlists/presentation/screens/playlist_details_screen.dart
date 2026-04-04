@@ -153,19 +153,19 @@ class _PlaylistHeader extends StatelessWidget {
             color: AppColors.surfaceVariant,
             borderRadius: BorderRadius.circular(4),
           ),
-          child: playlist.coverArt != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Image.file(
-                    File(playlist.coverArt!),
-                    fit: BoxFit.cover,
+          // Ensures the mosaic grid stays inside the rounded corners
+          clipBehavior: Clip.hardEdge, 
+          child: (playlist.coverArt != null && playlist.coverArt!.trim().isNotEmpty)
+              ? Image.file(
+                  File(playlist.coverArt!),
+                  fit: BoxFit.cover,
+                  // error builder so if the cover image file is deleted or corrupted the app shows an icon instead of the giant red error box
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.broken_image,
+                    color: AppColors.textMuted,
                   ),
                 )
-              : const Icon(
-                  Icons.music_note,
-                  color: AppColors.textMuted,
-                  size: 48,
-                ),
+              : _MosaicCover(tracks: playlist.tracks),
         ),
         const SizedBox(width: 16),
 
@@ -380,6 +380,53 @@ class _TrackTile extends StatelessWidget {
           // TODO: Open the track options bottom sheet
         },
       ),
+    );
+  }
+}
+
+class _MosaicCover extends StatelessWidget {
+  const _MosaicCover({required this.tracks});
+
+  final List<Track> tracks;
+
+  @override
+  Widget build(BuildContext context) {
+    // Filter tracks that actually have a cover URL
+    final tracksWithCovers = tracks
+        .where((t) => t.coverUrl != null && t.coverUrl!.trim().isNotEmpty)
+        .toList();
+
+    // If we have 4 or more, build a 2x2 grid
+    if (tracksWithCovers.length >= 4) {
+      return GridView.builder(
+        padding: EdgeInsets.zero,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+        ),
+        itemCount: 4,
+        itemBuilder: (context, index) {
+          return Image.network(
+            tracksWithCovers[index].coverUrl!,
+            fit: BoxFit.cover,
+          );
+        },
+      );
+    } 
+    
+    // If we have at least 1, just show the first one taking up the whole space
+    if (tracksWithCovers.isNotEmpty) {
+      return Image.network(
+        tracksWithCovers.first.coverUrl!,
+        fit: BoxFit.cover,
+      );
+    }
+
+    // fallback if no tracks have covers
+    return const Icon(
+      Icons.music_note,
+      color: AppColors.textMuted,
+      size: 48,
     );
   }
 }

@@ -44,10 +44,14 @@ class _PlaylistCoverArt extends StatelessWidget {
         color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(4),
       ),
-      child: coverArtPath != null
+      child: (coverArtPath != null && coverArtPath!.trim().isNotEmpty)
           ? ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: Image.file(File(coverArtPath!), fit: BoxFit.cover),
+              child: Image.file(
+                File(coverArtPath!), 
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) => const Icon(Icons.music_note, color: AppColors.textMuted),
+              ),
             )
           : const Icon(Icons.music_note, color: AppColors.textMuted),
     );
