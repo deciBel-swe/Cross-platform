@@ -47,7 +47,11 @@ class FakeUploadsNotifier extends UploadsNotifier {
 
 class FakeTrackSocialRepository implements ITrackSocialRepository {
   @override
-  Future<PaginatedTracks> getLikedTracks({int page = 0, int size = 20}) async {
+  Future<PaginatedTracks> getLikedTracks({
+    int page = 0,
+    int size = 20,
+    int? userId,
+  }) async {
     return const PaginatedTracks(
       content: <Track>[],
       pageNumber: 0,
@@ -62,6 +66,7 @@ class FakeTrackSocialRepository implements ITrackSocialRepository {
   Future<PaginatedTracks> getRepostedTracks({
     int page = 0,
     int size = 20,
+    int? userId,
   }) async {
     return const PaginatedTracks(
       content: <Track>[],
