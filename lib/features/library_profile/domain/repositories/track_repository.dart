@@ -7,6 +7,11 @@ import '../../../library/domain/entities/track_edit_request.dart';
 import '../../../library/domain/entities/track_peaks.dart';
 
 abstract class TrackRepository {
+  Future<Either<Failure, PaginatedTracks>> fetchMyTracks({
+    required int page,
+    required int size,
+  });
+
   Future<Either<Failure, PaginatedTracks>> fetchTracks({
     required int userId,
     required int page,

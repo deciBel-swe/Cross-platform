@@ -18,6 +18,32 @@ class LibraryRemoteDatasource {
   final DioClient _dioClient;
   bool _supportsTrackByIdEndpoint = true;
 
+  Future<PaginatedTracksModel> fetchMyTracks({
+    required int page,
+    required int size,
+  }) async {
+    final response = await _dioClient.get<Map<String, dynamic>>(
+      '/users/me/tracks',
+      queryParams: <String, Object?>{'page': page, 'size': size},
+    );
+
+    final data = response.data;
+    if (data == null) {
+      throw Exception('Empty response');
+    }
+
+    final normalizedData = Map<String, dynamic>.from(data);
+    final content = normalizedData['content'];
+    if (content is List) {
+      normalizedData['content'] = content
+          .whereType<Map<String, dynamic>>()
+          .map(_normalizeTrackJson)
+          .toList();
+    }
+
+    return PaginatedTracksModel.fromJson(normalizedData);
+  }
+
   Future<PaginatedTracksModel> fetchTracks({
     required int userId,
     required int page,

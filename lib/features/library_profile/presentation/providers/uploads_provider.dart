@@ -99,11 +99,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     }
 
     final repo = ref.read(trackRepositoryProvider);
-    final result = await repo.fetchTracks(
-      userId: userId,
-      page: 0,
-      size: _pageSize,
-    );
+    final result = await repo.fetchMyTracks(page: 0, size: _pageSize);
 
     final paginated = result.fold(
       (failure) => throw Exception(failure.message),
@@ -160,11 +156,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     try {
       final repo = ref.read(trackRepositoryProvider);
       final nextPage = _currentPage + 1;
-      final result = await repo.fetchTracks(
-        userId: userId,
-        page: nextPage,
-        size: _pageSize,
-      );
+      final result = await repo.fetchMyTracks(page: nextPage, size: _pageSize);
 
       if (_isDisposed) return;
 
@@ -201,11 +193,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       return false;
     }
 
-    final result = await repo.fetchTracks(
-      userId: userId,
-      page: 0,
-      size: _pageSize,
-    );
+    final result = await repo.fetchMyTracks(page: 0, size: _pageSize);
 
     if (_isDisposed) return false;
     var didUpdate = false;

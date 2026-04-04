@@ -16,6 +16,18 @@ import '../../domain/repositories/track_repository.dart';
 @LazySingleton(as: TrackRepository)
 class MockTrackRepository implements TrackRepository {
   @override
+  Future<Either<Failure, PaginatedTracks>> fetchMyTracks({
+    required int page,
+    required int size,
+  }) async {
+    final paginatedModel = await const LibraryMockDatasource().fetchTracks(
+      size: size,
+      page: page,
+    );
+    return Right(paginatedModel.toEntity());
+  }
+
+  @override
   Future<Either<Failure, Track>> fetchTrackById(int id) async {
     final trackModel = await const LibraryMockDatasource().fetchTrackById(id);
 

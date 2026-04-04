@@ -20,6 +20,19 @@ class TrackRepositoryImpl implements TrackRepository {
   final LibraryRemoteDatasource _remote;
 
   @override
+  Future<Either<Failure, PaginatedTracks>> fetchMyTracks({
+    required int page,
+    required int size,
+  }) async {
+    try {
+      final model = await _remote.fetchMyTracks(page: page, size: size);
+      return Right(model.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, PaginatedTracks>> fetchTracks({
     required int userId,
     required int page,
