@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../models/paginated_tracks_model.dart';
 import '../models/track_model.dart';
 import '../models/track_peaks_model.dart';
@@ -70,6 +72,84 @@ class LibraryMockDatasource {
     }
 
     return TrackPeaksModel.fromJson(data);
+  }
+
+  Future<TrackModel> updateTrackMetadata({
+    required int trackId,
+    required String title,
+    required String genre,
+    required String description,
+    required List<String> tags,
+    required DateTime? releaseDate,
+    required bool isPrivate,
+    File? coverImage,
+  }) async {
+    await Future<void>.delayed(LibraryMockFixtures.mockDelay);
+
+    final baseTrack =
+        LibraryMockFixtures.trackMetaDataById[trackId] ??
+        LibraryMockFixtures.allTracks
+            .cast<Map<String, dynamic>>()
+            .where((track) => track['id'] == trackId)
+            .cast<Map<String, dynamic>>()
+            .firstOrNull;
+
+    if (baseTrack == null) {
+      throw Exception('Track not found');
+    }
+
+    final updatedTrack = Map<String, dynamic>.from(baseTrack)
+      ..['title'] = title
+      ..['genre'] = genre
+      ..['description'] = description
+      ..['tags'] = tags
+      ..['isPrivate'] = isPrivate;
+
+    if (releaseDate != null) {
+      updatedTrack['releaseDate'] = releaseDate.toIso8601String();
+    }
+
+    if (coverImage != null) {
+      updatedTrack['coverUrl'] = coverImage.path;
+    }
+
+    LibraryMockFixtures.trackMetaDataById[trackId] = updatedTrack;
+
+    final allTracksIndex = LibraryMockFixtures.allTracks.indexWhere(
+      (track) => track['id'] == trackId,
+    );
+    if (allTracksIndex != -1) {
+      LibraryMockFixtures.allTracks[allTracksIndex] = updatedTrack;
+    }
+
+    return TrackModel.fromJson(updatedTrack);
+  }
+
+  Future<void> deleteTrackCover(int trackId) async {
+    await Future<void>.delayed(LibraryMockFixtures.mockDelay);
+
+    final track =
+        LibraryMockFixtures.trackMetaDataById[trackId] ??
+        LibraryMockFixtures.allTracks
+            .cast<Map<String, dynamic>>()
+            .where((item) => item['id'] == trackId)
+            .cast<Map<String, dynamic>>()
+            .firstOrNull;
+
+    if (track == null) {
+      throw Exception('Track not found');
+    }
+
+    final updatedTrack = Map<String, dynamic>.from(track)..['coverUrl'] = null;
+
+    LibraryMockFixtures.trackMetaDataById[trackId] = updatedTrack;
+
+    final allTracksIndex = LibraryMockFixtures.allTracks.indexWhere(
+      (item) => item['id'] == trackId,
+    );
+    if (allTracksIndex != -1) {
+      LibraryMockFixtures.allTracks[allTracksIndex] = updatedTrack;
+    }
   }
 }
 

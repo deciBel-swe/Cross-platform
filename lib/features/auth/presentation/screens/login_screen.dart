@@ -3,7 +3,9 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/auth_validators.dart';
 import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
@@ -20,6 +22,31 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    final emailValidation = AuthValidators.validateEmail(email);
+    if (emailValidation != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(emailValidation)));
+      return;
+    }
+
+    final passwordValidation = AuthValidators.validatePassword(password);
+    if (passwordValidation != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(passwordValidation)));
+      return;
+    }
+
+    await ref
+        .read(authStateProvider.notifier)
+        .loginWithEmailPassword(email: email, password: password);
+  }
 
   @override
   void dispose() {
@@ -168,13 +195,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 // ---- Continue button (white) ----
                 ElevatedButton(
-                  onPressed:
-                      null, // TODO(auth): enable once local/WebView auth is wired up
+                  onPressed: isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.onPrimary,
                     foregroundColor: AppColors.onBackground,
                   ),
-                  child: const Text('Continue'),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Continue'),
                 ),
 
                 const SizedBox(height: 32),

@@ -192,11 +192,11 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i928.TrackRepositoryImpl(gh<_i534.LibraryRemoteDatasource>()),
       registerFor: {_prod},
     );
-    gh.lazySingleton<_i745.AuthInterceptor>(
-      () => registerModule.getAuthInterceptor(gh<_i666.SecureStorageService>()),
-    );
     gh.lazySingleton<_i557.FollowRepository>(
       () => _i666.FollowRepositoryImpl(gh<_i485.IFollowRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i745.AuthInterceptor>(
+      () => _i745.AuthInterceptor(gh<_i666.SecureStorageService>()),
     );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i229.TrackCommentsRepository(

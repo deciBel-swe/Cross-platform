@@ -15,18 +15,27 @@ import '../providers/follow_state_provider.dart';
 /// Implements **optimistic updates with rollback**: the UI immediately reflects
 /// the toggled state, and reverts if the API call fails.
 class FollowNotifier extends FamilyAsyncNotifier<bool, int> {
+  bool _isSeeded = false;
+
   /// Builds the initial state for this userId.
   ///
   /// Defaults to `false` (not following). The actual state is set later
   /// via [setInitialState] once the public profile data is fetched.
   @override
-  FutureOr<bool> build(int arg) => false;
+  FutureOr<bool> build(int arg) {
+    _isSeeded = false;
+    return false;
+  }
 
   /// Sets the initial follow state from the public profile response.
   ///
   /// Called by [PublicProfileNotifier] after fetching the public profile
   /// to synchronize the follow button with the server-known state.
   void setInitialState(bool isFollowing) {
+    if (_isSeeded) {
+      return;
+    }
+    _isSeeded = true;
     state = AsyncData(isFollowing);
   }
 
@@ -54,10 +63,14 @@ class FollowNotifier extends FamilyAsyncNotifier<bool, int> {
       (failure) {
         // Rollback to previous state on failure.
         state = AsyncData(current);
+        _isSeeded = true;
       },
       (isFollowing) {
         // Update to server-confirmed state.
         state = AsyncData(isFollowing);
+        _isSeeded = true;
+
+        ref.read(followRefreshTickProvider.notifier).state++;
       },
     );
   }

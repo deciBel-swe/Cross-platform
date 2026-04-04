@@ -3,15 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/widgets/follow_button.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/public_profile.dart';
 import '../providers/public_profile_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/expandable_bio.dart';
 import '../widgets/social_links_widget.dart';
 import '../widgets/spotlight_section.dart';
+import '../widgets/track_tile.dart';
 
 /// Screen that displays another user's public profile.
 ///
@@ -164,11 +167,33 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: AppConstants.spacingMassive),
-                  _ProfileHeader(profile: profile),
+                  _ProfileHeader(userId: widget.userId, profile: profile),
                   const SizedBox(height: AppConstants.spacingSmall),
                   _ActionRow(userId: widget.userId, profile: profile),
                   const SizedBox(height: AppConstants.spacingRegular),
+                  const _SectionTitle(title: AppConstants.tracksSectionTitle),
+                  const SizedBox(height: AppConstants.spacingSmall),
                   TopTracksSection(userId: profile.id),
+                  const SizedBox(height: AppConstants.spacingLarge),
+                  const _SectionTitle(title: 'Likes'),
+                  const SizedBox(height: AppConstants.spacingSmall),
+                  _PublicTrackCollectionSection(
+                    tracksAsync: ref.watch(
+                      publicLikedTracksProvider(profile.id),
+                    ),
+                    emptyLabel: 'No likes yet',
+                    errorLabel: 'Could not load likes',
+                  ),
+                  const SizedBox(height: AppConstants.spacingLarge),
+                  const _SectionTitle(title: 'Reposts'),
+                  const SizedBox(height: AppConstants.spacingSmall),
+                  _PublicTrackCollectionSection(
+                    tracksAsync: ref.watch(
+                      publicRepostedTracksProvider(profile.id),
+                    ),
+                    emptyLabel: 'No reposts yet',
+                    errorLabel: 'Could not load reposts',
+                  ),
                   const SizedBox(height: AppConstants.spacingMassive),
                 ],
               ),
@@ -322,9 +347,51 @@ class _Avatar extends StatelessWidget {
 
 /// Username, bio, location, and follower/following counts.
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.profile});
+  const _ProfileHeader({required this.userId, required this.profile});
 
+  final int userId;
   final PublicProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final snapshotAsync = ref.watch(publicProfileSnapshotProvider(userId));
+        final snapshot = snapshotAsync.valueOrNull ?? profile;
+
+        final followAsync = ref.watch(followStateProvider(userId));
+        final isFollowing = followAsync.valueOrNull ?? snapshot.isFollowing;
+
+        // Avoid double counting: once snapshot is available, trust backend count.
+        // Apply local delta only while still showing the initial profile fallback.
+        final shouldApplyLocalDelta = snapshotAsync.valueOrNull == null;
+        final followerDelta = shouldApplyLocalDelta
+            ? (isFollowing != profile.isFollowing ? (isFollowing ? 1 : -1) : 0)
+            : 0;
+
+        final displayedFollowers =
+            snapshot.stats.followersCount + followerDelta;
+
+        return _ProfileHeaderContent(
+          userId: userId,
+          profile: snapshot,
+          followersCount: displayedFollowers,
+        );
+      },
+    );
+  }
+}
+
+class _ProfileHeaderContent extends StatelessWidget {
+  const _ProfileHeaderContent({
+    required this.userId,
+    required this.profile,
+    required this.followersCount,
+  });
+
+  final int userId;
+  final PublicProfile profile;
+  final int followersCount;
 
   @override
   Widget build(BuildContext context) {
@@ -361,8 +428,10 @@ class _ProfileHeader extends StatelessWidget {
         Row(
           children: [
             _StatChip(
-              count: profile.stats.followersCount,
+              count: followersCount,
               label: AppConstants.followers,
+              onTap: () =>
+                  context.push(RoutePaths.publicProfileFollowers(userId)),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -378,6 +447,8 @@ class _ProfileHeader extends StatelessWidget {
             _StatChip(
               count: profile.stats.followingCount,
               label: AppConstants.following,
+              onTap: () =>
+                  context.push(RoutePaths.publicProfileFollowing(userId)),
             ),
           ],
         ),
@@ -388,25 +459,34 @@ class _ProfileHeader extends StatelessWidget {
 
 /// Displays a single stat as "123 followers".
 class _StatChip extends StatelessWidget {
-  const _StatChip({required this.count, required this.label});
+  const _StatChip({
+    required this.count,
+    required this.label,
+    required this.onTap,
+  });
 
   final int count;
   final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return RichText(
-      text: TextSpan(
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
-        children: [
-          TextSpan(
-            text: '$count ',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          TextSpan(text: label),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: RichText(
+        text: TextSpan(
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+          children: [
+            TextSpan(
+              text: '$count ',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            TextSpan(text: label),
+          ],
+        ),
       ),
     );
   }
@@ -432,16 +512,6 @@ class _ActionRow extends ConsumerWidget {
       orElse: () => false,
     );
 
-    // Watch the follow state to update follower count optimistically.
-    final followAsync = ref.watch(followStateProvider(userId));
-    final isFollowing = followAsync.valueOrNull ?? profile.isFollowing;
-
-    // Adjust follower count optimistically based on follow toggle.
-    final followerDelta = isFollowing != profile.isFollowing
-        ? (isFollowing ? 1 : -1)
-        : 0;
-    final adjustedFollowers = profile.stats.followersCount + followerDelta;
-
     return Row(
       children: [
         if (!isOwnProfile) ...[
@@ -451,18 +521,85 @@ class _ActionRow extends ConsumerWidget {
         if (profile.socialLinks != null)
           SocialLinksWidget(socialLinks: profile.socialLinks!),
         const Spacer(),
-        // Show adjusted follower count if it differs
-        if (followerDelta != 0)
-          Padding(
-            padding: const EdgeInsets.only(right: AppConstants.spacingSmall),
+      ],
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+      ),
+    );
+  }
+}
+
+class _PublicTrackCollectionSection extends StatelessWidget {
+  const _PublicTrackCollectionSection({
+    required this.tracksAsync,
+    required this.emptyLabel,
+    required this.errorLabel,
+  });
+
+  final AsyncValue<List<Track>> tracksAsync;
+  final String emptyLabel;
+  final String errorLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return tracksAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppConstants.spacingMedium),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, _) => Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppConstants.spacingSmall,
+        ),
+        child: Text(
+          errorLabel,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        ),
+      ),
+      data: (tracks) {
+        if (tracks.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppConstants.spacingSmall,
+            ),
             child: Text(
-              '$adjustedFollowers ${AppConstants.followers}',
+              emptyLabel,
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
-          ),
-      ],
+          );
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: tracks.length,
+          itemBuilder: (context, index) {
+            final track = tracks[index];
+            return TrackTile(
+              track: track,
+              onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+            );
+          },
+        );
+      },
     );
   }
 }

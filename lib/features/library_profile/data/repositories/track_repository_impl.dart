@@ -8,6 +8,7 @@ import '../../../library/data/models/track_model.dart';
 import '../../../library/data/models/track_peaks_model.dart';
 import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library/domain/entities/track_edit_request.dart';
 import '../../../library/domain/entities/track_peaks.dart';
 import '../../domain/repositories/track_repository.dart';
 
@@ -17,6 +18,19 @@ class TrackRepositoryImpl implements TrackRepository {
   const TrackRepositoryImpl(this._remote);
 
   final LibraryRemoteDatasource _remote;
+
+  @override
+  Future<Either<Failure, PaginatedTracks>> fetchMyTracks({
+    required int page,
+    required int size,
+  }) async {
+    try {
+      final model = await _remote.fetchMyTracks(page: page, size: size);
+      return Right(model.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 
   @override
   Future<Either<Failure, PaginatedTracks>> fetchTracks({
@@ -62,6 +76,38 @@ class TrackRepositoryImpl implements TrackRepository {
     try {
       final model = await _remote.fetchTrackPeaks(id);
       return Right(model.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Track>> updateTrackMetadata({
+    required int trackId,
+    required TrackEditRequest request,
+  }) async {
+    try {
+      final model = await _remote.updateTrackMetadata(
+        trackId: trackId,
+        title: request.title,
+        genre: request.genre,
+        description: request.description,
+        tags: request.tags,
+        releaseDate: request.releaseDate,
+        isPrivate: request.isPrivate,
+        coverImage: request.coverImage,
+      );
+      return Right(model.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> deleteTrackCover(int trackId) async {
+    try {
+      await _remote.deleteTrackCover(trackId);
+      return const Right(true);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

@@ -36,6 +36,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
       ),
       error: (_, _) =>
           _buildButton(label: 'Follow', filled: false, onPressed: _handleTap),
+
       data: (isFollowing) {
         if (isFollowing) {
           return _buildFollowingButton();
@@ -86,7 +87,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
     final Color borderColor;
 
     if (isUnfollow) {
-      backgroundColor = AppColors.errors.withValues(alpha: 0.15);
+      backgroundColor = Colors.red.withValues(alpha: 0.15);
       foregroundColor = Colors.redAccent;
       borderColor = Colors.redAccent;
     } else if (filled) {

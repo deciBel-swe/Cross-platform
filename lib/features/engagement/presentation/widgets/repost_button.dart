@@ -83,13 +83,23 @@ class _RepostButtonState extends ConsumerState<RepostButton> {
         if (confirmed == true) {
           ref
               .read(trackSocialProvider.notifier)
-              .toggleAction(widget.trackId, SocialActionType.repost);
+              .toggleAction(
+                widget.trackId,
+                SocialActionType.repost,
+                initialRepostCount: widget.repostCount,
+                initialIsReposted: widget.isReposted,
+              );
         }
       });
     } else {
       ref
           .read(trackSocialProvider.notifier)
-          .toggleAction(widget.trackId, SocialActionType.repost);
+          .toggleAction(
+            widget.trackId,
+            SocialActionType.repost,
+            initialRepostCount: widget.repostCount,
+            initialIsReposted: widget.isReposted,
+          );
     }
   }
 

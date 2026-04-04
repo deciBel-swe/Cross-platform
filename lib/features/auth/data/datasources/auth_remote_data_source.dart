@@ -13,11 +13,15 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/device_info_model.dart';
+import '../models/login_local_request_model.dart';
 import '../models/login_response_model.dart';
 import '../models/oauth_exchange_request_dto.dart';
+import '../models/register_local_request_model.dart';
 import '../utils/auth_success_page.dart';
 
 abstract class IAuthRemoteDataSource {
+  Future<LoginResponseModel> loginLocal(LoginLocalRequestModel request);
+  Future<void> registerLocal(RegisterLocalRequestModel request);
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
   Future<void> logout();
 }
@@ -27,6 +31,58 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   AuthRemoteDataSource(this._dioClient);
 
   final DioClient _dioClient;
+
+  @override
+  Future<LoginResponseModel> loginLocal(LoginLocalRequestModel request) async {
+    try {
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.localLoginEndpoint,
+        data: request.toJson(),
+      );
+
+      if (response.statusCode != 200) {
+        throw AuthException(
+          'Backend returned an error. Status Code: ${response.statusCode}',
+        );
+      }
+
+      return _parseLoginResponse(response);
+    } on DioException catch (e) {
+      throw ServerException(
+        _extractDioErrorMessage(e, fallback: 'Login failed'),
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AuthException('An unexpected error occurred during login: $e');
+    }
+  }
+
+  @override
+  Future<void> registerLocal(RegisterLocalRequestModel request) async {
+    try {
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.localRegisterEndpoint,
+        data: request.toJson(),
+      );
+
+      if (response.statusCode != 201) {
+        throw AuthException(
+          'Backend returned an error. Status Code: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw ServerException(
+        _extractDioErrorMessage(e, fallback: 'Registration failed'),
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during registration: $e',
+      );
+    }
+  }
 
   @override
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo) async {
@@ -236,41 +292,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Extract refreshToken from cookies
-        final cookies = response.headers.map['set-cookie'] ?? <String>[];
-        String? extractedRefreshToken;
-        for (final cookie in cookies) {
-          if (cookie.contains('refreshToken=')) {
-            final parts = cookie.split(';');
-            for (final part in parts) {
-              final trimmed = part.trim();
-              if (trimmed.startsWith('refreshToken=')) {
-                extractedRefreshToken = trimmed.substring(
-                  'refreshToken='.length,
-                );
-                break;
-              }
-            }
-          }
-          if (extractedRefreshToken != null) break;
-        }
-
-        final body = response.data;
-        Map<String, dynamic> dataMap;
-        if (body is Map<String, dynamic> && body['data'] != null) {
-          dataMap = Map<String, dynamic>.from(body['data'] as Map);
-        } else if (body is Map<String, dynamic>) {
-          // Fallback in case the backend doesn't wrap the specific endpoint
-          dataMap = Map<String, dynamic>.from(body);
-        } else {
-          throw const AuthException('Invalid response format from server.');
-        }
-
-        if (extractedRefreshToken != null) {
-          dataMap['refreshToken'] = extractedRefreshToken;
-        }
-
-        return LoginResponseModel.fromJson(dataMap);
+        return _parseLoginResponse(response);
       } else {
         throw AuthException(
           'Backend returned an error. Status Code: ${response.statusCode}',
@@ -285,5 +307,71 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         'An unexpected error occurred during Google Sign In: $e',
       );
     }
+  }
+
+  LoginResponseModel _parseLoginResponse(Response<dynamic> response) {
+    final body = response.data;
+
+    Map<String, dynamic> dataMap;
+    if (body is Map<String, dynamic> && body['data'] != null) {
+      dataMap = Map<String, dynamic>.from(body['data'] as Map);
+    } else if (body is Map<String, dynamic>) {
+      dataMap = Map<String, dynamic>.from(body);
+    } else {
+      throw const AuthException('Invalid response format from server.');
+    }
+
+    final extractedRefreshToken = _extractRefreshToken(response);
+    if (extractedRefreshToken != null && extractedRefreshToken.isNotEmpty) {
+      dataMap['refreshToken'] = extractedRefreshToken;
+    }
+
+    return LoginResponseModel.fromJson(dataMap);
+  }
+
+  String? _extractRefreshToken(Response<dynamic> response) {
+    final cookies = response.headers.map['set-cookie'] ?? <String>[];
+
+    for (final cookie in cookies) {
+      if (!cookie.contains('refreshToken=')) {
+        continue;
+      }
+
+      final parts = cookie.split(';');
+      for (final part in parts) {
+        final trimmed = part.trim();
+        if (trimmed.startsWith('refreshToken=')) {
+          return trimmed.substring('refreshToken='.length);
+        }
+      }
+    }
+
+    return null;
+  }
+
+  String _extractDioErrorMessage(DioException e, {required String fallback}) {
+    final data = e.response?.data;
+
+    if (data is Map<String, dynamic>) {
+      final directMessage = data['message'];
+      if (directMessage is String && directMessage.trim().isNotEmpty) {
+        return directMessage.trim();
+      }
+
+      final nestedData = data['data'];
+      if (nestedData is Map<String, dynamic>) {
+        final nestedMessage = nestedData['message'];
+        if (nestedMessage is String && nestedMessage.trim().isNotEmpty) {
+          return nestedMessage.trim();
+        }
+      }
+    }
+
+    final fallbackMessage = e.message?.trim();
+    if (fallbackMessage != null && fallbackMessage.isNotEmpty) {
+      return '$fallback: $fallbackMessage';
+    }
+
+    return fallback;
   }
 }
