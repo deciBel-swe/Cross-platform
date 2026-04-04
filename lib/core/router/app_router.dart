@@ -11,6 +11,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/start_screen.dart';
+import '../../features/engagement/presentation/screens/liked_tracks_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
@@ -120,6 +121,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: RoutePaths.upload,
                 builder: (context, state) => const UploadScreen(),
               ),
+              GoRoute(
+                path: 'your-likes',
+                builder: (context, state) => const LikedTracksScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -150,6 +155,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'uploads',
                     builder: (context, state) => const UploadsLibraryScreen(),
+                  ),
+                  GoRoute(
+                    path: 'likes',
+                    builder: (context, state) => const LikedTracksScreen(),
                   ),
                   GoRoute(
                     path: 'track-preview/:trackId',

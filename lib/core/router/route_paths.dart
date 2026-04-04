@@ -21,7 +21,9 @@ class RoutePaths {
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit-profile';
   static const String upload = '/home/upload';
+  static const String homeLikes = '/home/your-likes';
   static const String uploadLibrary = '/library/uploads';
+  static const String libraryLikes = '/library/likes';
   static const String editWebLink = '/profile/edit-web-link';
   static const String trackPreviewBase = '/library/track-preview';
   static const String trackEditBase = '/library/track-edit';
