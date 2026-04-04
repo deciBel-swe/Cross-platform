@@ -9,7 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 class ShareOptionsRow extends StatelessWidget {
   const ShareOptionsRow({super.key, required this.onCopyLinkTap});
 
-final Future<Either<Failure, String>> Function() onCopyLinkTap;
+  final Future<Either<Failure, String>> Function() onCopyLinkTap;
 
   @override
   Widget build(BuildContext context) {
@@ -42,10 +42,10 @@ final Future<Either<Failure, String>> Function() onCopyLinkTap;
                 onTap: () async {
                   // Fetch the link via the callback
                   final result = await onCopyLinkTap();
-                  
+
                   result.fold(
-                    (failure){
-                        if (context.mounted) {
+                    (failure) {
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(failure.message),
@@ -68,7 +68,7 @@ final Future<Either<Failure, String>> Function() onCopyLinkTap;
                           ),
                         );
                       }
-                    }
+                    },
                   );
                 },
               ),

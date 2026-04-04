@@ -16,7 +16,10 @@ abstract class IPlaylistRemoteDataSource {
 
   Future<PlaylistModel> reorderTracks(int playlistId, List<int> trackIds);
 
-  Future<PlaylistModel> createPlaylist(CreatePlaylistRequest request);
+  Future<PlaylistModel> createPlaylist(
+    CreatePlaylistRequest request,
+    File? coverImage,
+  );
 
   Future<String> getPlaylistSecretLink(int playlistId);
 
@@ -26,6 +29,10 @@ abstract class IPlaylistRemoteDataSource {
     File? coverImage,
   );
   Future<void> deletePlayList(int playListId);
+
+  Future<void> addTrackToPlaylist(int playlistId, int trackId);
+
+  Future<void> removeTrackFromPlaylist(int playlistId, int trackId);
 }
 
 @Injectable(as: IPlaylistRemoteDataSource)
@@ -42,17 +49,22 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       );
 
       final responseData = response.data as Map<String, dynamic>;
-      
+
       // check lowercase "secretLink" just in case your backend uses standard JSON camelCase.
-      final secretLink = responseData['SecretLink'] ?? responseData['secretLink'];
-      
+      final secretLink =
+          responseData['SecretLink'] ?? responseData['secretLink'];
+
       if (secretLink != null) {
         return secretLink as String;
       } else {
-        throw const ServerException('Secret link not found in response payload');
+        throw const ServerException(
+          'Secret link not found in response payload',
+        );
       }
     } on DioException catch (error) {
-      throw ServerException(error.message ?? 'Failed to fetch playlist secret link');
+      throw ServerException(
+        error.message ?? 'Failed to fetch playlist secret link',
+      );
     } catch (error) {
       throw ServerException('Failed to parse secret link response: $error');
     }
@@ -91,11 +103,27 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   }
 
   @override
-  Future<PlaylistModel> createPlaylist(CreatePlaylistRequest request) async {
+  Future<PlaylistModel> createPlaylist(
+    CreatePlaylistRequest request,
+    File? coverImage,
+  ) async {
     try {
+      final dataMap = request.toJson();
+      final formData = FormData.fromMap(dataMap);
+
+      if (coverImage != null) {
+        final imageName = coverImage.path.split('/').last;
+        formData.files.add(
+          MapEntry(
+            'CoverArt',
+            await MultipartFile.fromFile(coverImage.path, filename: imageName),
+          ),
+        );
+      }
+
       final response = await _dioClient.post<dynamic>(
         ApiConstants.playlists,
-        data: request,
+        data: formData,
       );
       final responseData = response.data as Map<String, dynamic>;
       return PlaylistModel.fromJson(responseData);
@@ -173,6 +201,35 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       throw ServerException(
         'Failed to execute delete playlist request: $error',
       );
+    }
+  }
+
+  @override
+  Future<void> addTrackToPlaylist(int playlistId, int trackId) async {
+    try {
+      await _dioClient.post<dynamic>(
+        '${ApiConstants.playlists}$playlistId/tracks',
+        data: {'trackId': trackId},
+      );
+    } on DioException catch (error) {
+      throw ServerException(error.message ?? 'Failed to add track to playlist');
+    } catch (error) {
+      throw ServerException('Failed to execute add track request: $error');
+    }
+  }
+
+  @override
+  Future<void> removeTrackFromPlaylist(int playlistId, int trackId) async {
+    try {
+      await _dioClient.delete<dynamic>(
+        '${ApiConstants.playlists}$playlistId/tracks/$trackId',
+      );
+    } on DioException catch (error) {
+      throw ServerException(
+        error.message ?? 'Failed to remove track from playlist',
+      );
+    } catch (error) {
+      throw ServerException('Failed to execute remove track request: $error');
     }
   }
 }

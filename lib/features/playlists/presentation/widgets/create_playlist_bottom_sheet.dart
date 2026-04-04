@@ -169,7 +169,7 @@ class CreatePlaylistBottomSheet extends ConsumerWidget {
                     onSubmitted: (_) async {
                       // Using the notifier you already declared
                       final success = await notifier.submitPlaylist();
-                      
+
                       if (success && context.mounted) {
                         context.pop();
                       }

@@ -133,7 +133,6 @@ class MockPlaylistRepository implements IPlaylistRepository {
     int playlistId,
     PlaylistMetadata metadata,
   ) async {
-
     final index = _mockPlaylists.indexWhere((p) => p.id == playlistId);
 
     if (index == -1) {
@@ -208,5 +207,38 @@ class MockPlaylistRepository implements IPlaylistRepository {
   @override
   Future<Either<Failure, String>> getPlaylistSecretLink(int playlistId) async {
     return Right("https://deciebl.app/secret-link/$playlistId");
+  }
+
+  @override
+  Future<Either<Failure, void>> addTrackToPlaylist(
+    int playlistId,
+    int trackId,
+  ) async {
+    final index = _mockPlaylists.indexWhere((p) => p.id == playlistId);
+    if (index == -1) return const Left(ServerFailure("Playlist not found"));
+
+    try {
+      final track = _mockTracks.firstWhere((t) => t.id == trackId);
+      final playlist = _mockPlaylists[index];
+      // Prevent duplicates in mock
+      if (!playlist.tracks.any((t) => t.id == trackId)) {
+        playlist.tracks.add(track);
+      }
+      return const Right(null);
+    } catch (e) {
+      return const Left(ServerFailure("Track not found in mock data"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeTrackFromPlaylist(
+    int playlistId,
+    int trackId,
+  ) async {
+    final index = _mockPlaylists.indexWhere((p) => p.id == playlistId);
+    if (index == -1) return const Left(ServerFailure("Playlist not found"));
+
+    _mockPlaylists[index].tracks.removeWhere((t) => t.id == trackId);
+    return const Right(null);
   }
 }

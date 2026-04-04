@@ -84,7 +84,10 @@ class PlaylistRepository implements IPlaylistRepository {
         isPrivate: metadata.isPrivate,
       );
 
-      final model = await _remoteDataSource.createPlaylist(request);
+      final model = await _remoteDataSource.createPlaylist(
+        request,
+        metadata.coverImage,
+      );
 
       return Right(model.toEntity());
     } on ServerException catch (e) {
@@ -134,8 +137,10 @@ class PlaylistRepository implements IPlaylistRepository {
   @override
   Future<Either<Failure, String>> getPlaylistSecretLink(int playlistId) async {
     try {
-      final secretLink = await _remoteDataSource.getPlaylistSecretLink(playlistId);
-      
+      final secretLink = await _remoteDataSource.getPlaylistSecretLink(
+        playlistId,
+      );
+
       return Right(secretLink);
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
@@ -143,6 +148,36 @@ class PlaylistRepository implements IPlaylistRepository {
       return Left(
         ServerFailure('An unexpected error occurred: ${error.toString()}'),
       );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> addTrackToPlaylist(
+    int playlistId,
+    int trackId,
+  ) async {
+    try {
+      await _remoteDataSource.addTrackToPlaylist(playlistId, trackId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeTrackFromPlaylist(
+    int playlistId,
+    int trackId,
+  ) async {
+    try {
+      await _remoteDataSource.removeTrackFromPlaylist(playlistId, trackId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

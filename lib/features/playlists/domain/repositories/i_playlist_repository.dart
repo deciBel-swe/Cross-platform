@@ -33,4 +33,13 @@ abstract class IPlaylistRepository {
 
   /// Deletes a playlist by its ID.
   Future<Either<Failure, void>> deletePlaylist(int playlistId);
+
+  /// Adds a specific track to the playlist.
+  Future<Either<Failure, void>> addTrackToPlaylist(int playlistId, int trackId);
+
+  /// Removes a specific track from the playlist.
+  Future<Either<Failure, void>> removeTrackFromPlaylist(
+    int playlistId,
+    int trackId,
+  );
 }

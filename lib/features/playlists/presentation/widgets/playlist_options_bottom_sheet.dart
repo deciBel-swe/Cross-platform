@@ -15,7 +15,7 @@ import 'share_options_row.dart';
 /// The bottom sheet for playlist actions.
 class PlaylistOptionsBottomSheet extends ConsumerWidget {
   const PlaylistOptionsBottomSheet({super.key, required this.playlist});
-  
+
   final Playlist playlist;
 
   /// Helper to easily show this bottom sheet from any screen.
@@ -73,8 +73,10 @@ class PlaylistOptionsBottomSheet extends ConsumerWidget {
                 _Header(playlist: playlist),
                 const SizedBox(height: 24),
                 ShareOptionsRow(
-                  onCopyLinkTap: () async{
-                    return await ref.read(playlistDetailsProvider(playlist.id).notifier).fetchSecretLink();
+                  onCopyLinkTap: () async {
+                    return await ref
+                        .read(playlistDetailsProvider(playlist.id).notifier)
+                        .fetchSecretLink();
                   },
                 ),
                 const SizedBox(height: 16),
