@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library_profile/presentation/widgets/track_tile.dart';
 import '../../domain/models/track_action_data.dart';
 import '../notifiers/liked_tracks_notifier.dart';
-import '../notifiers/track_action_notifier.dart';
-import '../widgets/liked_track_tile.dart';
+import '../providers/track_social_provider.dart';
 
 class LikedTracksScreen extends ConsumerStatefulWidget {
   const LikedTracksScreen({super.key});
@@ -134,10 +136,7 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
               ),
             ),
           ),
-          child: LikedTrackTile(
-            track: removedTrack,
-            onUnlike: () {}, // Do nothing during removal
-          ),
+          child: TrackTile(track: removedTrack),
         ),
       ),
       duration: const Duration(milliseconds: 1000),
@@ -146,7 +145,7 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
     // 2. Perform actual API call via TrackSocialNotifier
     ref
         .read(trackSocialProvider.notifier)
-        .toggleAction(track.id.toString(), SocialActionType.like);
+        .toggleAction(track.id, SocialActionType.like);
 
     // 3. Optimistic update: notify LikedTracksNotifier to remove it from state
     // so it doesn't reappear on partial refresh.
@@ -224,10 +223,11 @@ class _LikedTracksScreenState extends ConsumerState<LikedTracksScreen> {
 
                 return FadeTransition(
                   opacity: animation,
-                  child: LikedTrackTile(
+                  child: TrackTile(
                     track: track,
-                    onUnlike: () => _handleUnlike(track, index),
-                    onTap: () {},
+                    onTap: () =>
+                        context.push(RoutePaths.trackPreview(track.id)),
+                    onMorePressed: () => _handleUnlike(track, index),
                   ),
                 );
               },

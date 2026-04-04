@@ -2,6 +2,8 @@ import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../library/domain/entities/paginated_tracks.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/paginated_engagers.dart';
 import '../../domain/entities/track_engager.dart';
 import '../../domain/repositories/track_social_repository.dart';
@@ -68,6 +70,19 @@ class MockTrackSocialRepository implements ITrackSocialRepository {
       isFollowing: false,
     ),
   ];
+
+  @override
+  Future<PaginatedTracks> getLikedTracks({int page = 0, int size = 20}) async {
+    await Future<void>.delayed(_mockDelay);
+    return PaginatedTracks(
+      content: <Track>[],
+      pageNumber: page,
+      pageSize: size,
+      totalElements: 0,
+      totalPages: 0,
+      isLast: true,
+    );
+  }
 
   @override
   Future<void> likeTrack(int trackId) async {

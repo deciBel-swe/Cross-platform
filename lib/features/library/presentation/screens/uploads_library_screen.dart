@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_scroll_controller_provider.dart';
-import '../../../library_profile/presentation/widgets/upload_track_card.dart';
+import '../../../library_profile/presentation/widgets/track_tile.dart';
 
 class UploadsLibraryScreen extends ConsumerWidget {
   const UploadsLibraryScreen({super.key});
@@ -82,12 +82,12 @@ class UploadsLibraryBody extends ConsumerWidget {
               final track = tracks[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
+                child: TrackTile(
+                  key: ValueKey(track.id),
+                  track: track,
                   onTap: () {
                     context.push(RoutePaths.trackPreview(track.id));
                   },
-                  child: UploadTrackCard(key: ValueKey(track.id), track: track),
                 ),
               );
             },
