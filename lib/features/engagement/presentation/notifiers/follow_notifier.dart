@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/follow_state_provider.dart';
 import '../../domain/repositories/follow_repository.dart';
+import '../providers/follow_state_provider.dart';
 
 /// Manages the follow state for a single user, identified by `arg` (userId).
 ///
