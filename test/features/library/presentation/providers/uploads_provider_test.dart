@@ -83,7 +83,7 @@ void main() {
       );
 
       when(
-        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
+        () => mockRepo.fetchMyTracks(page: 0, size: 20),
       ).thenAnswer((_) async => Right(paginated));
 
       final container = createContainer(authState: authState);
@@ -92,9 +92,7 @@ void main() {
       final state = await container.read(uploadsProvider.future);
 
       expect(state, tracks);
-      verify(
-        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
-      ).called(1);
+      verify(() => mockRepo.fetchMyTracks(page: 0, size: 20)).called(1);
     });
 
     test('initial build returns empty list if unauthenticated', () async {
@@ -105,8 +103,7 @@ void main() {
 
       expect(state, isEmpty);
       verifyNever(
-        () => mockRepo.fetchTracks(
-          userId: any(named: 'userId'),
+        () => mockRepo.fetchMyTracks(
           page: any(named: 'page'),
           size: any(named: 'size'),
         ),
@@ -115,7 +112,7 @@ void main() {
 
     test('refreshAll re-fetches data', () async {
       // Setup mock before container creation due to sync build
-      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20)).thenAnswer(
+      when(() => mockRepo.fetchMyTracks(page: 0, size: 20)).thenAnswer(
         (_) async => const Right(
           PaginatedTracks(
             content: [],
@@ -138,9 +135,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       // Verify fetchTracks was called once by initial build
-      verify(
-        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
-      ).called(1);
+      verify(() => mockRepo.fetchMyTracks(page: 0, size: 20)).called(1);
 
       clearInteractions(mockRepo);
 
@@ -158,9 +153,7 @@ void main() {
       );
 
       // Verify called ONCE (refresh only)
-      verify(
-        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
-      ).called(1);
+      verify(() => mockRepo.fetchMyTracks(page: 0, size: 20)).called(1);
     });
 
     test('loadNextPage fetches next page', () async {
@@ -217,11 +210,11 @@ void main() {
       );
 
       when(
-        () => mockRepo.fetchTracks(userId: 1, page: 0, size: 20),
+        () => mockRepo.fetchMyTracks(page: 0, size: 20),
       ).thenAnswer((_) async => Right(page0));
 
       when(
-        () => mockRepo.fetchTracks(userId: 1, page: 1, size: 20),
+        () => mockRepo.fetchMyTracks(page: 1, size: 20),
       ).thenAnswer((_) async => Right(page1));
 
       final container = createContainer(authState: authState);
@@ -242,7 +235,7 @@ void main() {
     });
 
     test('addTrack updates state optimistically', () async {
-      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20)).thenAnswer(
+      when(() => mockRepo.fetchMyTracks(page: 0, size: 20)).thenAnswer(
         (_) async => const Right(
           PaginatedTracks(
             content: [],
@@ -288,7 +281,7 @@ void main() {
     });
 
     test('invalidateCache just clears memory cache', () async {
-      when(() => mockRepo.fetchTracks(userId: 1, page: 0, size: 20)).thenAnswer(
+      when(() => mockRepo.fetchMyTracks(page: 0, size: 20)).thenAnswer(
         (_) async => const Right(
           PaginatedTracks(
             content: [],

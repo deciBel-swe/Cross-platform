@@ -1,11 +1,17 @@
 import 'dart:async';
 
+import 'package:dartz/dartz.dart';
+import 'package:decibel/core/errors/failures.dart';
+import 'package:decibel/features/engagement/domain/entities/paginated_engagers.dart';
+import 'package:decibel/features/engagement/domain/repositories/track_social_repository.dart';
+import 'package:decibel/features/engagement/presentation/providers/track_social_provider.dart';
 import 'package:decibel/features/library/domain/entities/artist.dart';
+import 'package:decibel/features/library/domain/entities/paginated_tracks.dart';
 import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:decibel/features/library/domain/entities/track_status.dart';
 import 'package:decibel/features/library/presentation/screens/uploads_library_screen.dart';
 import 'package:decibel/features/library_profile/presentation/providers/uploads_provider.dart';
-import 'package:decibel/features/library_profile/presentation/widgets/upload_track_card.dart';
+import 'package:decibel/features/library_profile/presentation/widgets/track_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,6 +45,83 @@ class FakeUploadsNotifier extends UploadsNotifier {
   Future<void> loadNextPage() async {}
 }
 
+class FakeTrackSocialRepository implements ITrackSocialRepository {
+  @override
+  Future<PaginatedTracks> getLikedTracks({int page = 0, int size = 20}) async {
+    return const PaginatedTracks(
+      content: <Track>[],
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 0,
+      totalPages: 0,
+      isLast: true,
+    );
+  }
+
+  @override
+  Future<PaginatedTracks> getRepostedTracks({
+    int page = 0,
+    int size = 20,
+  }) async {
+    return const PaginatedTracks(
+      content: <Track>[],
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 0,
+      totalPages: 0,
+      isLast: true,
+    );
+  }
+
+  @override
+  Future<void> likeTrack(int trackId) async {}
+
+  @override
+  Future<void> unlikeTrack(int trackId) async {}
+
+  @override
+  Future<void> repostTrack(int trackId) async {}
+
+  @override
+  Future<void> unrepostTrack(int trackId) async {}
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> fetchTrackLikers({
+    required int trackId,
+    required int page,
+    required int size,
+  }) async {
+    return const Right(
+      PaginatedEngagers(
+        content: [],
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 0,
+        totalPages: 0,
+        isLast: true,
+      ),
+    );
+  }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> fetchTrackReposters({
+    required int trackId,
+    required int page,
+    required int size,
+  }) async {
+    return const Right(
+      PaginatedEngagers(
+        content: [],
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 0,
+        totalPages: 0,
+        isLast: true,
+      ),
+    );
+  }
+}
+
 void main() {
   Track makeTrack({int id = 1, String title = 'Track 1'}) {
     return Track(
@@ -60,7 +143,12 @@ void main() {
 
   Widget buildTestWidget(FakeUploadsNotifier notifier) {
     return ProviderScope(
-      overrides: [uploadsProvider.overrideWith(() => notifier)],
+      overrides: [
+        uploadsProvider.overrideWith(() => notifier),
+        trackSocialRepositoryProvider.overrideWithValue(
+          FakeTrackSocialRepository(),
+        ),
+      ],
       child: const MaterialApp(home: UploadsLibraryScreen()),
     );
   }
@@ -90,12 +178,10 @@ void main() {
 
       expect(find.text('No uploads yet.'), findsOneWidget);
       expect(find.text('Refresh'), findsOneWidget);
-      expect(find.byType(UploadTrackCard), findsNothing);
+      expect(find.byType(TrackTile), findsNothing);
     });
 
-    testWidgets('shows list of upload cards when uploads exist', (
-      tester,
-    ) async {
+    testWidgets('shows list of track tiles when uploads exist', (tester) async {
       final notifier = FakeUploadsNotifier(
         tracks: <Track>[
           makeTrack(id: 1, title: 'First Track'),
@@ -106,9 +192,9 @@ void main() {
       await tester.pumpWidget(buildTestWidget(notifier));
       await tester.pumpAndSettle();
 
-      expect(find.byType(UploadTrackCard), findsNWidgets(2));
-      expect(find.text('First Track'), findsOneWidget);
-      expect(find.text('Second Track'), findsOneWidget);
+      expect(find.byType(TrackTile), findsNWidgets(2));
+      expect(find.text('tester - First Track'), findsOneWidget);
+      expect(find.text('tester - Second Track'), findsOneWidget);
     });
 
     testWidgets('shows error state with retry button when provider fails', (
