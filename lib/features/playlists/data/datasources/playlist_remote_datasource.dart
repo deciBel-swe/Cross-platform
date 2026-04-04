@@ -84,7 +84,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
 
       final response = await _dioClient.patch<dynamic>(
         '${ApiConstants.playlists}/$playListId',
-        data: request.toJson(),
+        data: formData,
       );
       final responseData = response.data as Map<String, dynamic>;
       return PlaylistModel.fromJson(responseData);
