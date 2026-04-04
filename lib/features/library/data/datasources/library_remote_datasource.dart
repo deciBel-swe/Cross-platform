@@ -89,7 +89,7 @@ class LibraryRemoteDatasource {
       'genre': genre,
       'description': description,
       'tags': jsonEncode(tags),
-      'isPrivate': isPrivate.toString(),
+      'isPrivate': isPrivate,
       ...?releaseDateValue == null
           ? null
           : <String, dynamic>{'releaseDate': releaseDateValue},
