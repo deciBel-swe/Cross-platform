@@ -1,4 +1,3 @@
-import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/engagement/data/datasources/track_social_remote_datasource.dart';
 import 'package:decibel/features/engagement/data/models/paginated_engagers_model.dart';

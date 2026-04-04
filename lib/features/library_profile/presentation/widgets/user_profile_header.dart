@@ -5,9 +5,16 @@ import '../../domain/entities/user_profile.dart';
 import 'expandable_bio.dart';
 
 class UserProfileHeader extends StatelessWidget {
-  const UserProfileHeader({required this.user, super.key});
+  const UserProfileHeader({
+    required this.user,
+    required this.onFollowersTap,
+    required this.onFollowingTap,
+    super.key,
+  });
 
   final UserProfile user;
+  final VoidCallback onFollowersTap;
+  final VoidCallback onFollowingTap;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +55,7 @@ class UserProfileHeader extends StatelessWidget {
             _StatButton(
               count: user.stats.followers,
               label: AppConstants.followers,
-              onTap: () {},
+              onTap: onFollowersTap,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -64,7 +71,7 @@ class UserProfileHeader extends StatelessWidget {
             _StatButton(
               count: user.stats.following,
               label: AppConstants.following,
-              onTap: () {},
+              onTap: onFollowingTap,
             ),
           ],
         ),

@@ -36,8 +36,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
       ),
       error: (_, _) =>
           _buildButton(label: 'Follow', filled: false, onPressed: _handleTap),
-      error: (_, _) =>
-          _buildButton(label: 'Follow', filled: false, onPressed: _handleTap),
+
       data: (isFollowing) {
         if (isFollowing) {
           return _buildFollowingButton();
@@ -49,7 +48,6 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
 
   Widget _buildNotFollowingButton() {
     final label = widget.isFollowedBy ? 'Follow Back' : 'Follow';
-    return _buildButton(label: label, filled: false, onPressed: _handleTap);
     return _buildButton(label: label, filled: false, onPressed: _handleTap);
   }
 
@@ -98,7 +96,6 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
       borderColor = AppColors.primary;
     } else {
       backgroundColor = (_isHovering || _isPressed)
-          ? AppColors.onPrimary.withValues(alpha: 0.05)
           ? AppColors.onPrimary.withValues(alpha: 0.05)
           : AppColors.transparent;
       foregroundColor = AppColors.onPrimary;

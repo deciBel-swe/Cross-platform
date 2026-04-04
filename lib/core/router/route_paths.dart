@@ -19,6 +19,8 @@ class RoutePaths {
   static const String upgrade = '/upgrade';
   static const String player = '/player';
   static const String profile = '/profile';
+  static const String profileFollowers = '/profile/followers';
+  static const String profileFollowing = '/profile/following';
   static const String editProfile = '/profile/edit-profile';
   static const String upload = '/home/upload';
   static const String homeLikes = '/home/your-likes';
@@ -34,5 +36,11 @@ class RoutePaths {
 
   /// Public profile screen for viewing another user's profile.
   static const String publicProfileBase = '/user';
+  static const String publicProfileFollowersBase = '/user-followers';
+  static const String publicProfileFollowingBase = '/user-following';
   static String publicProfile(int userId) => '$publicProfileBase/$userId';
+  static String publicProfileFollowers(int userId) =>
+      '$publicProfileFollowersBase/$userId';
+  static String publicProfileFollowing(int userId) =>
+      '$publicProfileFollowingBase/$userId';
 }

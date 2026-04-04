@@ -12,6 +12,11 @@ final followRepositoryProvider = Provider<FollowRepository>(
   (_) => getIt<FollowRepository>(),
 );
 
+/// Monotonic tick used to refresh follow-related views globally.
+///
+/// Incremented after successful follow/unfollow operations.
+final followRefreshTickProvider = StateProvider<int>((_) => 0);
+
 /// Family provider that manages follow state for each userId globally.
 ///
 /// Any widget that watches `followStateProvider(userId)` will see the same

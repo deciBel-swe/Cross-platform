@@ -177,7 +177,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: AppConstants.spacingMassive),
-                        UserProfileHeader(user: user),
+                        UserProfileHeader(
+                          user: user,
+                          onFollowersTap: () => context.push(
+                            RoutePaths.profileFollowers,
+                            extra: user.id,
+                          ),
+                          onFollowingTap: () => context.push(
+                            RoutePaths.profileFollowing,
+                            extra: user.id,
+                          ),
+                        ),
                         Consumer(
                           builder: (context, ref, child) {
                             final socialLinks = ref.watch(webProfilesProvider);

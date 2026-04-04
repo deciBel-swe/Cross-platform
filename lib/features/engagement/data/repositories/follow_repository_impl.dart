@@ -3,8 +3,10 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
+import '../models/paginated_engagers_model.dart';
 import '../../../library_profile/data/models/public_profile_model.dart';
 import '../../../library_profile/domain/entities/public_profile.dart';
+import '../../domain/entities/paginated_engagers.dart';
 import '../../domain/repositories/follow_repository.dart';
 import '../datasources/follow_remote_data_source.dart';
 
@@ -64,6 +66,70 @@ class FollowRepositoryImpl implements FollowRepository {
     try {
       final response = await _remoteDataSource.unfollowUser(userId);
       return Right(response.isFollowing);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getFollowers({
+    required int userId,
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      final model = await _remoteDataSource.getFollowers(
+        userId: userId,
+        page: page,
+        size: size,
+      );
+      return Right(model.toEntity());
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getFollowing({
+    required int userId,
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      final model = await _remoteDataSource.getFollowing(
+        userId: userId,
+        page: page,
+        size: size,
+      );
+      return Right(model.toEntity());
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getSuggestedUsers({
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      final model = await _remoteDataSource.getSuggestedUsers(
+        page: page,
+        size: size,
+      );
+      return Right(model.toEntity());
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {

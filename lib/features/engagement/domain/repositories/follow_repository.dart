@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../entities/paginated_engagers.dart';
 import '../../../../features/library_profile/domain/entities/public_profile.dart';
 
 /// Contract for follow-related operations and public-profile fetching.
@@ -26,4 +27,24 @@ abstract class FollowRepository {
   /// Returns [Right(false)] if the server confirms the unfollow,
   /// or [Left(Failure)] on error.
   Future<Either<Failure, bool>> unfollowUser(int userId);
+
+  /// Fetches followers for a user via `GET /users/{userId}/followers`.
+  Future<Either<Failure, PaginatedEngagers>> getFollowers({
+    required int userId,
+    int page = 0,
+    int size = 20,
+  });
+
+  /// Fetches following for a user via `GET /users/{userId}/following`.
+  Future<Either<Failure, PaginatedEngagers>> getFollowing({
+    required int userId,
+    int page = 0,
+    int size = 20,
+  });
+
+  /// Fetches suggested users to follow via `GET /users/suggested`.
+  Future<Either<Failure, PaginatedEngagers>> getSuggestedUsers({
+    int page = 0,
+    int size = 20,
+  });
 }

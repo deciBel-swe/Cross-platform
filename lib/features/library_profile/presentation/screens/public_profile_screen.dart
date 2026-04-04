@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/widgets/follow_button.dart';
@@ -164,7 +165,10 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: AppConstants.spacingMassive),
-                  _ProfileHeader(profile: profile),
+                  _ProfileHeader(
+                    userId: widget.userId,
+                    profile: profile,
+                  ),
                   const SizedBox(height: AppConstants.spacingSmall),
                   _ActionRow(userId: widget.userId, profile: profile),
                   const SizedBox(height: AppConstants.spacingRegular),
@@ -322,9 +326,50 @@ class _Avatar extends StatelessWidget {
 
 /// Username, bio, location, and follower/following counts.
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.profile});
+  const _ProfileHeader({
+    required this.userId,
+    required this.profile,
+  });
 
+  final int userId;
   final PublicProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final snapshotAsync = ref.watch(publicProfileSnapshotProvider(userId));
+        final snapshot = snapshotAsync.valueOrNull ?? profile;
+
+        final followAsync = ref.watch(followStateProvider(userId));
+        final isFollowing = followAsync.valueOrNull ?? snapshot.isFollowing;
+
+        final followerDelta = isFollowing != snapshot.isFollowing
+            ? (isFollowing ? 1 : -1)
+            : 0;
+
+        final displayedFollowers = snapshot.stats.followersCount + followerDelta;
+
+        return _ProfileHeaderContent(
+          userId: userId,
+          profile: snapshot,
+          followersCount: displayedFollowers,
+        );
+      },
+    );
+  }
+}
+
+class _ProfileHeaderContent extends StatelessWidget {
+  const _ProfileHeaderContent({
+    required this.userId,
+    required this.profile,
+    required this.followersCount,
+  });
+
+  final int userId;
+  final PublicProfile profile;
+  final int followersCount;
 
   @override
   Widget build(BuildContext context) {
@@ -361,8 +406,9 @@ class _ProfileHeader extends StatelessWidget {
         Row(
           children: [
             _StatChip(
-              count: profile.stats.followersCount,
+              count: followersCount,
               label: AppConstants.followers,
+              onTap: () => context.push(RoutePaths.publicProfileFollowers(userId)),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -378,6 +424,7 @@ class _ProfileHeader extends StatelessWidget {
             _StatChip(
               count: profile.stats.followingCount,
               label: AppConstants.following,
+              onTap: () => context.push(RoutePaths.publicProfileFollowing(userId)),
             ),
           ],
         ),
@@ -388,25 +435,34 @@ class _ProfileHeader extends StatelessWidget {
 
 /// Displays a single stat as "123 followers".
 class _StatChip extends StatelessWidget {
-  const _StatChip({required this.count, required this.label});
+  const _StatChip({
+    required this.count,
+    required this.label,
+    required this.onTap,
+  });
 
   final int count;
   final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return RichText(
-      text: TextSpan(
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
-        children: [
-          TextSpan(
-            text: '$count ',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          TextSpan(text: label),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: RichText(
+        text: TextSpan(
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+          children: [
+            TextSpan(
+              text: '$count ',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            TextSpan(text: label),
+          ],
+        ),
       ),
     );
   }
@@ -432,16 +488,6 @@ class _ActionRow extends ConsumerWidget {
       orElse: () => false,
     );
 
-    // Watch the follow state to update follower count optimistically.
-    final followAsync = ref.watch(followStateProvider(userId));
-    final isFollowing = followAsync.valueOrNull ?? profile.isFollowing;
-
-    // Adjust follower count optimistically based on follow toggle.
-    final followerDelta = isFollowing != profile.isFollowing
-        ? (isFollowing ? 1 : -1)
-        : 0;
-    final adjustedFollowers = profile.stats.followersCount + followerDelta;
-
     return Row(
       children: [
         if (!isOwnProfile) ...[
@@ -451,17 +497,6 @@ class _ActionRow extends ConsumerWidget {
         if (profile.socialLinks != null)
           SocialLinksWidget(socialLinks: profile.socialLinks!),
         const Spacer(),
-        // Show adjusted follower count if it differs
-        if (followerDelta != 0)
-          Padding(
-            padding: const EdgeInsets.only(right: AppConstants.spacingSmall),
-            child: Text(
-              '$adjustedFollowers ${AppConstants.followers}',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-            ),
-          ),
       ],
     );
   }

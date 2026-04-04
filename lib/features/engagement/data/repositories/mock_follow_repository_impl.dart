@@ -3,6 +3,8 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../features/library_profile/domain/entities/public_profile.dart';
 import '../../../../features/library_profile/domain/entities/public_profile_social_links.dart';
+import '../../domain/entities/paginated_engagers.dart';
+import '../../domain/entities/track_engager.dart';
 import '../../domain/repositories/follow_repository.dart';
 
 /// In-memory mock implementation of [FollowRepository].
@@ -74,5 +76,106 @@ class MockFollowRepository implements FollowRepository {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     _followState[userId] = false;
     return const Right(false);
+  }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getFollowers({
+    required int userId,
+    int page = 0,
+    int size = 20,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+
+    final users = List<TrackEngager>.generate(
+      size,
+      (index) {
+        final id = (page * size) + index + 1;
+        return TrackEngager(
+          id: id,
+          username: 'follower_$id',
+          avatarUrl: null,
+          tier: id % 3 == 0 ? 'PRO' : 'FREE',
+          isFollowing: _followState[id] ?? id.isEven,
+        );
+      },
+    );
+
+    return Right(
+      PaginatedEngagers(
+        content: users,
+        pageNumber: page,
+        pageSize: size,
+        totalElements: 200,
+        totalPages: 10,
+        isLast: page >= 9,
+      ),
+    );
+  }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getFollowing({
+    required int userId,
+    int page = 0,
+    int size = 20,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+
+    final users = List<TrackEngager>.generate(
+      size,
+      (index) {
+        final id = 1000 + (page * size) + index + 1;
+        return TrackEngager(
+          id: id,
+          username: 'following_$id',
+          avatarUrl: null,
+          tier: id % 4 == 0 ? 'PRO' : 'FREE',
+          isFollowing: _followState[id] ?? true,
+        );
+      },
+    );
+
+    return Right(
+      PaginatedEngagers(
+        content: users,
+        pageNumber: page,
+        pageSize: size,
+        totalElements: 120,
+        totalPages: 6,
+        isLast: page >= 5,
+      ),
+    );
+  }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getSuggestedUsers({
+    int page = 0,
+    int size = 20,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+
+    final users = List<TrackEngager>.generate(
+      size,
+      (index) {
+        final id = 5000 + (page * size) + index + 1;
+        return TrackEngager(
+          id: id,
+          username: 'suggested_$id',
+          avatarUrl: null,
+          tier: id % 5 == 0 ? 'PRO' : 'FREE',
+          isFollowing: _followState[id] ?? false,
+        );
+      },
+    );
+
+    return Right(
+      PaginatedEngagers(
+        content: users,
+        pageNumber: page,
+        pageSize: size,
+        totalElements: 80,
+        totalPages: 4,
+        isLast: page >= 3,
+      ),
+    );
   }
 }
