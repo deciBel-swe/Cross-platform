@@ -39,39 +39,100 @@ class TrackSocialRemoteDatasource {
     int page = 0,
     int size = 10,
   }) async {
-    try {
-      final response = await _dioClient.get<Map<String, dynamic>>(
-        '/users/me/liked-tracks',
-        queryParams: {'page': page, 'size': size},
-      );
+    final userId = await _resolveCurrentUserId();
+    final endpoints = <String>[
+      '/users/me/liked-tracks',
+      '/users/me/likes',
+      if (userId != null) '/users/$userId/likes',
+      if (userId != null) '/users/$userId/liked-tracks',
+    ];
 
-      final data = response.data;
-      if (data == null) {
-        throw const ServerException('No data returned from server.');
-      }
-      return PaginatedTracksModel.fromJson(data);
-    } on DioException catch (e) {
-      throw _handleDioError(e);
-    }
+    return _fetchTrackCollection(endpoints: endpoints, page: page, size: size);
   }
 
   Future<PaginatedTracksModel> getRepostedTracks({
     int page = 0,
     int size = 10,
   }) async {
-    try {
-      final response = await _dioClient.get<Map<String, dynamic>>(
-        '/users/me/repost',
-        queryParams: {'page': page, 'size': size},
-      );
+    final userId = await _resolveCurrentUserId();
+    final endpoints = <String>[
+      '/users/me/repost',
+      '/users/me/reposts',
+      if (userId != null) '/users/$userId/repost',
+      if (userId != null) '/users/$userId/reposts',
+    ];
 
-      final data = response.data;
-      if (data == null) {
-        throw const ServerException('No data returned from server.');
+    return _fetchTrackCollection(endpoints: endpoints, page: page, size: size);
+  }
+
+  Future<PaginatedTracksModel> _fetchTrackCollection({
+    required List<String> endpoints,
+    required int page,
+    required int size,
+  }) async {
+    DioException? lastDioException;
+
+    for (final endpoint in endpoints) {
+      try {
+        final response = await _dioClient.get<Map<String, dynamic>>(
+          endpoint,
+          queryParams: {'page': page, 'size': size},
+        );
+
+        final data = response.data;
+        if (data == null) {
+          throw const ServerException('No data returned from server.');
+        }
+
+        return PaginatedTracksModel.fromJson(data);
+      } on DioException catch (error) {
+        lastDioException = error;
+        final statusCode = error.response?.statusCode;
+
+        // Continue trying alternative endpoint shapes for path mismatches.
+        if (statusCode == 404 || statusCode == 405) {
+          continue;
+        }
+
+        throw _handleDioError(error);
       }
-      return PaginatedTracksModel.fromJson(data);
-    } on DioException catch (e) {
-      throw _handleDioError(e);
+    }
+
+    if (lastDioException != null) {
+      throw _handleDioError(lastDioException);
+    }
+
+    throw const ServerException('No track collection endpoint succeeded.');
+  }
+
+  Future<int?> _resolveCurrentUserId() async {
+    try {
+      final response = await _dioClient.get<Map<String, dynamic>>('/users/me');
+      final body = response.data;
+      if (body == null) {
+        return null;
+      }
+
+      final data = body['data'];
+      final payload = data is Map<String, dynamic> ? data : body;
+      final profile = payload['profile'];
+      final profileMap = profile is Map<String, dynamic>
+          ? profile
+          : const <String, dynamic>{};
+
+      final topLevelId = payload['id'];
+      if (topLevelId is num) {
+        return topLevelId.toInt();
+      }
+
+      final nestedId = profileMap['id'];
+      if (nestedId is num) {
+        return nestedId.toInt();
+      }
+
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 

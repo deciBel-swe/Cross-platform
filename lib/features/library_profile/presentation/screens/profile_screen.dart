@@ -186,11 +186,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         const SizedBox(height: AppConstants.spacingRegular),
                         Tile(
-                          title: AppConstants.spotlightTitle,
-                          subtitle: AppConstants.spotlightSubtitle,
-                          buttonText: AppConstants.edit,
+                          title: AppConstants.tracksSectionTitle,
+                          subtitle: AppConstants.tracksSectionSubtitle,
+                          buttonText: AppConstants.seeAll,
                           onButtonPressed: () =>
-                              context.push(RoutePaths.editProfile),
+                              context.push(RoutePaths.uploadLibrary),
                         ),
                         TopTracksSection(userId: user.id),
                         const SizedBox(height: AppConstants.spacingLarge),
