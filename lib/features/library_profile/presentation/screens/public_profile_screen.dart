@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/public_profile.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/widgets/follow_button.dart';
+import '../../domain/entities/public_profile.dart';
 import '../providers/public_profile_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/expandable_bio.dart';
@@ -101,8 +101,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       surfaceTintColor: AppColors.transparent,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_rounded, color: AppColors.onPrimary),
-        onPressed: () =>
-            context.canPop() ? context.pop() : context.go('/home'),
+        onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
       ),
       centerTitle: true,
       title: AnimatedOpacity(
@@ -115,9 +114,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.onPrimary,
-              ),
+            fontWeight: FontWeight.bold,
+            color: AppColors.onPrimary,
+          ),
         ),
       ),
       actions: [
@@ -167,10 +166,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   const SizedBox(height: AppConstants.spacingMassive),
                   _ProfileHeader(profile: profile),
                   const SizedBox(height: AppConstants.spacingSmall),
-                  _ActionRow(
-                    userId: widget.userId,
-                    profile: profile,
-                  ),
+                  _ActionRow(userId: widget.userId, profile: profile),
                   const SizedBox(height: AppConstants.spacingRegular),
                   TopTracksSection(userId: profile.id),
                   const SizedBox(height: AppConstants.spacingMassive),
@@ -206,27 +202,25 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             Text(
               AppConstants.errorGeneric,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: AppColors.onPrimary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppConstants.spacingSmall),
             Text(
               error.toString().replaceAll(
-                    AppConstants.errorExceptionPrefix,
-                    '',
-                  ),
+                AppConstants.errorExceptionPrefix,
+                '',
+              ),
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: AppColors.onPrimary),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
             ),
             const SizedBox(height: AppConstants.spacingExtraLarge),
             ElevatedButton.icon(
-              onPressed: () => ref.invalidate(
-                publicProfileProvider(widget.userId),
-              ),
+              onPressed: () =>
+                  ref.invalidate(publicProfileProvider(widget.userId)),
               icon: const Icon(Icons.refresh_rounded),
               label: const Text(AppConstants.tryAgain),
               style: ElevatedButton.styleFrom(
@@ -322,11 +316,7 @@ class _Avatar extends StatelessWidget {
   }
 
   Widget _avatarPlaceholder() {
-    return const Icon(
-      Icons.person,
-      size: 40,
-      color: AppColors.textMuted,
-    );
+    return const Icon(Icons.person, size: 40, color: AppColors.textMuted);
   }
 }
 
@@ -407,10 +397,9 @@ class _StatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return RichText(
       text: TextSpan(
-        style: Theme.of(context)
-            .textTheme
-            .bodyMedium
-            ?.copyWith(color: AppColors.onPrimary),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
         children: [
           TextSpan(
             text: '$count ',
@@ -428,10 +417,7 @@ class _StatChip extends StatelessWidget {
 /// Hides the follow button when the profile belongs to the currently
 /// logged-in user.
 class _ActionRow extends ConsumerWidget {
-  const _ActionRow({
-    required this.userId,
-    required this.profile,
-  });
+  const _ActionRow({required this.userId, required this.profile});
 
   final int userId;
   final PublicProfile profile;
@@ -441,10 +427,8 @@ class _ActionRow extends ConsumerWidget {
     // Determine if this is the logged-in user's own profile.
     final ownProfileAsync = ref.watch(userProfileProvider);
     final isOwnProfile = ownProfileAsync.maybeWhen(
-      data: (eitherUser) => eitherUser.fold(
-        (_) => false,
-        (user) => user.id == userId,
-      ),
+      data: (eitherUser) =>
+          eitherUser.fold((_) => false, (user) => user.id == userId),
       orElse: () => false,
     );
 
@@ -461,10 +445,7 @@ class _ActionRow extends ConsumerWidget {
     return Row(
       children: [
         if (!isOwnProfile) ...[
-          FollowButton(
-            userId: userId,
-            isFollowedBy: profile.isFollowedBy,
-          ),
+          FollowButton(userId: userId, isFollowedBy: profile.isFollowedBy),
           const SizedBox(width: AppConstants.spacingSmall),
         ],
         if (profile.socialLinks != null)
@@ -476,9 +457,9 @@ class _ActionRow extends ConsumerWidget {
             padding: const EdgeInsets.only(right: AppConstants.spacingSmall),
             child: Text(
               '$adjustedFollowers ${AppConstants.followers}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
             ),
           ),
       ],
