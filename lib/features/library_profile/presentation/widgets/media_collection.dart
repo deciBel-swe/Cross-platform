@@ -15,6 +15,7 @@ class MediaCollection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final likedTracksAsync = ref.watch(likedTracksProvider);
+    final repostedTracksAsync = ref.watch(repostedTracksProvider);
 
     return Column(
       children: [
@@ -54,6 +55,51 @@ class MediaCollection extends ConsumerWidget {
             if (tracks.isEmpty) {
               return Text(
                 'No likes yet',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              );
+            }
+
+            final previewTracks = tracks.take(3).toList();
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: previewTracks.length,
+              itemBuilder: (context, index) {
+                final track = previewTracks[index];
+                return TrackTile(
+                  track: track,
+                  onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+                );
+              },
+            );
+          },
+        ),
+        const SizedBox(height: 14),
+        Tile(
+          title: "Reposts",
+          buttonText: "See All",
+          onButtonPressed: () {
+            context.push(RoutePaths.libraryReposts);
+          },
+        ),
+        const SizedBox(height: 14),
+        repostedTracksAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: CircularProgressIndicator(),
+          ),
+          error: (_, _) => Text(
+            'Could not load reposts',
+            style: textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          data: (tracks) {
+            if (tracks.isEmpty) {
+              return Text(
+                'No reposts yet',
                 style: textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                 ),
