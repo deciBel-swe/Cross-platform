@@ -24,8 +24,10 @@ class RoutePaths {
   static const String uploadLibrary = '/library/uploads';
   static const String editWebLink = '/profile/edit-web-link';
   static const String trackPreviewBase = '/library/track-preview';
+  static const String trackEditBase = '/library/track-edit';
 
   static String trackPreview(int trackId) => '$trackPreviewBase/$trackId';
+  static String trackEdit(int trackId) => '$trackEditBase/$trackId';
 
   /// Public profile screen for viewing another user's profile.
   static const String publicProfileBase = '/user';

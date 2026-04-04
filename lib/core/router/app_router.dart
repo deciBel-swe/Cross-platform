@@ -14,6 +14,7 @@ import '../../features/auth/presentation/screens/start_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
+import '../../features/library/presentation/screens/track_edit_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
 import '../../features/library/presentation/screens/uploads_library_screen.dart';
 import '../../features/library_profile/presentation/screens/edit_profile_screen.dart';
@@ -166,6 +167,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         state.pathParameters['trackId']!,
                       );
                       return TrackPreviewScreen(trackId: trackId);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'track-edit/:trackId',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    redirect: (context, state) {
+                      final raw = state.pathParameters['trackId'];
+                      final parsed = int.tryParse(raw ?? '');
+                      if (parsed == null) {
+                        return RoutePaths.library;
+                      }
+                      return null;
+                    },
+                    builder: (context, state) {
+                      final trackId = int.parse(
+                        state.pathParameters['trackId']!,
+                      );
+                      return TrackEditScreen(trackId: trackId);
                     },
                   ),
                   GoRoute(

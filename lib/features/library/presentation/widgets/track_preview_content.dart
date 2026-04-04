@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../library/presentation/widgets/bottom_bar_widget.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/track_preview_derived_providers.dart';
@@ -34,6 +38,12 @@ class TrackPreviewContent extends ConsumerWidget {
     final audioNotifier = ref.read(trackAudioProvider.notifier);
     final playbackUi = ref.watch(trackPreviewPlaybackUiStateProvider);
     final commentsState = ref.watch(trackCommentsProvider(trackId));
+    final authState = ref.watch(authStateProvider).valueOrNull;
+    final isOwner = authState is AuthAuthenticated
+        ? authState.user.id == track.artist.id ||
+              authState.user.username.trim().toLowerCase() ==
+                  track.artist.username.trim().toLowerCase()
+        : false;
 
     final isReady = trackPeaks != null;
     final peaks = isReady
@@ -150,7 +160,17 @@ class TrackPreviewContent extends ConsumerWidget {
             );
           },
           onSharePressed: () {},
-          onMoreOptionsPressed: () {},
+          onMoreOptionsPressed: () async {
+            final action = await _showTrackOptionsBottomSheet(
+              context: context,
+              isOwner: isOwner,
+            );
+
+            if (action == _TrackOptionsAction.edit) {
+              if (!context.mounted) return;
+              await context.push(RoutePaths.trackEdit(trackId));
+            }
+          },
         ),
       ],
     );
@@ -170,4 +190,44 @@ class TrackPreviewContent extends ConsumerWidget {
       child: contentColumn,
     );
   }
+
+  Future<_TrackOptionsAction?> _showTrackOptionsBottomSheet({
+    required BuildContext context,
+    required bool isOwner,
+  }) async {
+    return showModalBottomSheet<_TrackOptionsAction>(
+      context: context,
+      backgroundColor: Colors.black,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isOwner)
+                ListTile(
+                  leading: const Icon(Icons.edit, color: Colors.white),
+                  title: const Text(
+                    'Edit track',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () =>
+                      Navigator.of(sheetContext).pop(_TrackOptionsAction.edit),
+                ),
+              ListTile(
+                leading: const Icon(Icons.close, color: Colors.white70),
+                title: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_TrackOptionsAction.cancel),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
+
+enum _TrackOptionsAction { edit, cancel }

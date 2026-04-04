@@ -8,6 +8,7 @@ import '../../../library/data/models/track_model.dart';
 import '../../../library/data/models/track_peaks_model.dart';
 import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library/domain/entities/track_edit_request.dart';
 import '../../../library/domain/entities/track_peaks.dart';
 import '../../domain/repositories/track_repository.dart';
 
@@ -50,5 +51,38 @@ class MockTrackRepository implements TrackRepository {
       page: page,
     );
     return Right(paginatedModel.toEntity());
+  }
+
+  @override
+  Future<Either<Failure, Track>> updateTrackMetadata({
+    required int trackId,
+    required TrackEditRequest request,
+  }) async {
+    try {
+      final trackModel = await const LibraryMockDatasource()
+          .updateTrackMetadata(
+            trackId: trackId,
+            title: request.title,
+            genre: request.genre,
+            description: request.description,
+            tags: request.tags,
+            releaseDate: request.releaseDate,
+            isPrivate: request.isPrivate,
+            coverImage: request.coverImage,
+          );
+      return Right(trackModel.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> deleteTrackCover(int trackId) async {
+    try {
+      await const LibraryMockDatasource().deleteTrackCover(trackId);
+      return const Right(true);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }
