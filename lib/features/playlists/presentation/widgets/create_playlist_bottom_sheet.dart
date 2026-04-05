@@ -91,7 +91,7 @@ class CreatePlaylistBottomSheet extends ConsumerWidget {
                         width: 36,
                         height: 36,
                         child: InkWell(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () => context.pop(),
                           borderRadius: BorderRadius.circular(18),
                           child: Container(
                             decoration: const BoxDecoration(
@@ -128,7 +128,7 @@ class CreatePlaylistBottomSheet extends ConsumerWidget {
                                   final success = await notifier
                                       .submitPlaylist();
                                   if (success && context.mounted) {
-                                    Navigator.pop(context);
+                                    context.pop();
                                   }
                                 },
                           style: ElevatedButton.styleFrom(
