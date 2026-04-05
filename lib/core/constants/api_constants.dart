@@ -42,7 +42,7 @@ class ApiConstants {
   static const String userProfileImage = '/users/me/images';
 
   /// Base endpoint for playlist operations
-  static const String playlists = '/playlists/';
+  static const String playlists = '/playlists';
 
   /// Endpoint to get the current authenticated user's playlists
   static const String myPlaylists = '/users/me/playlists';
