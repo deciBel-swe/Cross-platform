@@ -6,10 +6,28 @@ import 'track_model.dart';
 part 'paginated_tracks_model.freezed.dart';
 part 'paginated_tracks_model.g.dart';
 
+List<TrackModel> _trackListFromJson(List<dynamic>? json) {
+  if (json == null) {
+    return const <TrackModel>[];
+  }
+
+  return json
+      .whereType<Map<String, dynamic>>()
+      .map(TrackModel.fromJson)
+      .toList();
+}
+
+List<Map<String, dynamic>> _trackListToJson(List<TrackModel> tracks) {
+  return tracks.map((track) => track.toJson()).toList();
+}
+
 @freezed
 class PaginatedTracksModel with _$PaginatedTracksModel {
+  @JsonSerializable(explicitToJson: true)
   const factory PaginatedTracksModel({
-    @Default(<TrackModel>[]) List<TrackModel> content,
+    @JsonKey(fromJson: _trackListFromJson, toJson: _trackListToJson)
+    @Default(<TrackModel>[])
+    List<TrackModel> content,
     required int pageNumber,
     required int pageSize,
     required int totalElements,

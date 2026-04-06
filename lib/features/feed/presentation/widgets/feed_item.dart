@@ -2,10 +2,13 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../engagement/presentation/widgets/like_button.dart';
+import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
 import 'mobile_feed_track_card.dart';
 
@@ -13,31 +16,37 @@ import 'mobile_feed_track_card.dart';
 class FeedItem extends StatelessWidget {
   const FeedItem({
     super.key,
+    required this.trackId,
     required this.userName,
     required this.action,
     required this.trackTitle,
     required this.trackArtist,
     required this.timeAgo,
     required this.genre,
-    required this.likes,
-    required this.reposts,
+    required this.likeCount,
+    required this.repostCount,
+    required this.isLiked,
+    required this.isReposted,
     required this.plays,
-    required this.comments,
+    required this.commentCount,
     required this.duration,
     required this.waveformPeaks,
     this.gradientColors,
   });
 
+  final int trackId;
   final String userName;
   final String action;
   final String trackTitle;
   final String trackArtist;
   final String timeAgo;
   final String genre;
-  final String likes;
-  final String reposts;
+  final int likeCount;
+  final int repostCount;
+  final bool isLiked;
+  final bool isReposted;
   final String plays;
-  final String comments;
+  final int commentCount;
   final String duration;
   final List<double> waveformPeaks;
   final List<Color>? gradientColors;
@@ -51,13 +60,17 @@ class FeedItem extends StatelessWidget {
 
     if (!isDesktop) {
       return _MobileFeedItem(
+        trackId: trackId,
         userName: userName,
         action: action,
         trackTitle: trackTitle,
         trackArtist: trackArtist,
         timeAgo: timeAgo,
-        likes: likes,
-        comments: comments,
+        likeCount: likeCount,
+        repostCount: repostCount,
+        isLiked: isLiked,
+        isReposted: isReposted,
+        commentCount: commentCount,
         duration: duration,
         gradientColors: colors,
       );
@@ -130,54 +143,14 @@ class FeedItem extends StatelessWidget {
                     const SizedBox(height: AppDimensions.paddingMd),
                     _WaveformStrip(peaks: waveformPeaks, duration: duration),
                     const SizedBox(height: AppDimensions.paddingMd),
-                    Row(
-                      children: [
-                        _MetricPill(
-                          icon: Icons.favorite,
-                          value: likes,
-                          iconColor: AppColors.textPrimary,
-                        ),
-                        const SizedBox(width: AppDimensions.paddingSm),
-                        _MetricPill(
-                          icon: Icons.repeat,
-                          value: reposts,
-                          iconColor: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: AppDimensions.paddingSm),
-                        const _IconSquareButton(icon: Icons.ios_share_outlined),
-                        const SizedBox(width: AppDimensions.paddingSm),
-                        const _IconSquareButton(
-                          icon: Icons.content_copy_outlined,
-                        ),
-                        const SizedBox(width: AppDimensions.paddingSm),
-                        const _IconSquareButton(icon: Icons.more_horiz),
-                        const Spacer(),
-                        Icon(
-                          Icons.play_arrow,
-                          size: 14,
-                          color: AppColors.textSecondary.withValues(alpha: 0.8),
-                        ),
-                        const SizedBox(width: AppDimensions.paddingXs),
-                        Text(
-                          plays,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(width: AppDimensions.paddingMd),
-                        Icon(
-                          Icons.mode_comment_outlined,
-                          size: 14,
-                          color: AppColors.textSecondary.withValues(alpha: 0.8),
-                        ),
-                        const SizedBox(width: AppDimensions.paddingXs),
-                        Text(
-                          comments,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                    _DesktopFeedActions(
+                      trackId: trackId,
+                      initialLikeCount: likeCount,
+                      initialRepostCount: repostCount,
+                      initialIsLiked: isLiked,
+                      initialIsReposted: isReposted,
+                      commentCount: commentCount,
+                      plays: plays,
                     ),
                   ],
                 ),
@@ -200,24 +173,32 @@ bool _isDesktopLayout(BuildContext context) {
 
 class _MobileFeedItem extends StatelessWidget {
   const _MobileFeedItem({
+    required this.trackId,
     required this.userName,
     required this.action,
     required this.trackTitle,
     required this.trackArtist,
     required this.timeAgo,
-    required this.likes,
-    required this.comments,
+    required this.likeCount,
+    required this.repostCount,
+    required this.isLiked,
+    required this.isReposted,
+    required this.commentCount,
     required this.duration,
     required this.gradientColors,
   });
 
+  final int trackId;
   final String userName;
   final String action;
   final String trackTitle;
   final String trackArtist;
   final String timeAgo;
-  final String likes;
-  final String comments;
+  final int likeCount;
+  final int repostCount;
+  final bool isLiked;
+  final bool isReposted;
+  final int commentCount;
   final String duration;
   final List<Color> gradientColors;
 
@@ -257,11 +238,15 @@ class _MobileFeedItem extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.paddingMd),
           MobileFeedTrackCard(
+            trackId: trackId,
             title: trackTitle,
             artist: trackArtist,
             duration: duration,
-            likes: likes,
-            comments: comments,
+            likeCount: likeCount,
+            repostCount: repostCount,
+            isLiked: isLiked,
+            isReposted: isReposted,
+            commentCount: commentCount,
             gradientColors: gradientColors,
           ),
         ],
@@ -415,33 +400,86 @@ class _WaveformStrip extends StatelessWidget {
   }
 }
 
-class _MetricPill extends StatelessWidget {
-  const _MetricPill({
-    required this.icon,
-    required this.value,
-    required this.iconColor,
+class _DesktopFeedActions extends ConsumerWidget {
+  const _DesktopFeedActions({
+    required this.trackId,
+    required this.initialLikeCount,
+    required this.initialRepostCount,
+    required this.initialIsLiked,
+    required this.initialIsReposted,
+    required this.commentCount,
+    required this.plays,
   });
 
-  final IconData icon;
-  final String value;
-  final Color iconColor;
+  final int trackId;
+  final int initialLikeCount;
+  final int initialRepostCount;
+  final bool initialIsLiked;
+  final bool initialIsReposted;
+  final int commentCount;
+  final String plays;
+
+  String _formatCount(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(number % 1000 == 0 ? 0 : 1)}K';
+    }
+    return number.toString();
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingSm),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 17, color: iconColor),
-          const SizedBox(width: AppDimensions.paddingSm),
-          Text(value, style: AppTextStyles.cardTitle),
-        ],
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Row(
+      children: [
+        LikeButton(
+          trackId: trackId,
+          isLiked: initialIsLiked,
+          likeCount: initialLikeCount,
+          iconSize: 18,
+          fontSize: 13,
+        ),
+        const SizedBox(width: AppDimensions.paddingSm),
+        RepostButton(
+          trackId: trackId,
+          isReposted: initialIsReposted,
+          repostCount: initialRepostCount,
+          iconSize: 18,
+          fontSize: 13,
+        ),
+        const SizedBox(width: AppDimensions.paddingSm),
+        const _IconSquareButton(icon: Icons.ios_share_outlined),
+        const SizedBox(width: AppDimensions.paddingSm),
+        const _IconSquareButton(icon: Icons.content_copy_outlined),
+        const SizedBox(width: AppDimensions.paddingSm),
+        const _IconSquareButton(icon: Icons.more_horiz),
+        const Spacer(),
+        Icon(
+          Icons.play_arrow,
+          size: 14,
+          color: AppColors.textSecondary.withValues(alpha: 0.8),
+        ),
+        const SizedBox(width: AppDimensions.paddingXs),
+        Text(
+          plays,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(width: AppDimensions.paddingMd),
+        Icon(
+          Icons.mode_comment_outlined,
+          size: 14,
+          color: AppColors.textSecondary.withValues(alpha: 0.8),
+        ),
+        const SizedBox(width: AppDimensions.paddingXs),
+        Text(
+          _formatCount(commentCount),
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }

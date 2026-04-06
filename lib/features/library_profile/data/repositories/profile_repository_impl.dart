@@ -74,7 +74,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
         ...?(bio != null ? {'bio': bio} : null),
         ...?(city != null ? {'city': city} : null),
         ...?(country != null ? {'country': country} : null),
-        ...?(favoriteGenres != null ? {'favoriteGenres': favoriteGenres} : null),
+        ...?(favoriteGenres != null
+            ? {'favoriteGenres': favoriteGenres}
+            : null),
         ...?(socialLinks != null
             ? {'socialLinks': socialLinks.toModel().toJson()}
             : null),

@@ -136,15 +136,43 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       final Map<String, dynamic> responseData = data['data'] != null
           ? data['data'] as Map<String, dynamic>
           : data;
-      final normalizedSocialLinks = _extractProfileSocialLinks(responseData);
+      final rawProfile = responseData['profile'];
+      final profileMap = rawProfile is Map<String, dynamic>
+          ? rawProfile
+          : const <String, dynamic>{};
+
+      final normalizedSocialLinks = _extractProfileSocialLinks(
+        responseData,
+        profileMap,
+      );
+      final profilePayload = _extractProfileDetailsPayload(responseData);
+      final privacyPayload = _extractPrivacySettingsPayload(responseData);
 
       final Map<String, dynamic> normalizedResponse = {
         ...responseData,
+        'id': _asInt(responseData['id'] ?? profileMap['id']),
         'Role': _normalizeRole(responseData),
+        'email': _asString(responseData['email'] ?? profileMap['email']),
+        'username': _asString(
+          responseData['username'] ?? profileMap['username'],
+        ),
+        'emailVerified': _asBool(responseData['emailVerified']),
+        'tier': _asString(
+          responseData['tier'] ?? profileMap['tier'],
+          fallback: 'FREE',
+        ),
+        'profile': profilePayload,
+        'privacySettings': privacyPayload,
         'stats': {
-          'followers': (responseData['followerCount'] as num?)?.toInt() ?? 0,
-          'following': (responseData['followingCount'] as num?)?.toInt() ?? 0,
-          'tracksCount': (responseData['trackCount'] as num?)?.toInt() ?? 0,
+          'followers': _asInt(
+            responseData['followerCount'] ?? profileMap['followerCount'],
+          ),
+          'following': _asInt(
+            responseData['followingCount'] ?? profileMap['followingCount'],
+          ),
+          'tracksCount': _asInt(
+            responseData['trackCount'] ?? profileMap['trackCount'],
+          ),
         },
         'socialLinks': normalizedSocialLinks,
       };
@@ -237,6 +265,87 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
     return roleValue.toString();
   }
 
+  Map<String, dynamic> _extractProfileDetailsPayload(
+    Map<String, dynamic> responseData,
+  ) {
+    final rawProfile = responseData['profile'];
+    final profileMap = rawProfile is Map<String, dynamic>
+        ? rawProfile
+        : const <String, dynamic>{};
+
+    return <String, dynamic>{
+      'bio': _asNullableString(profileMap['bio'] ?? responseData['bio']),
+      'city': _asNullableString(profileMap['city'] ?? responseData['city']),
+      'country': _asNullableString(
+        profileMap['country'] ?? responseData['country'],
+      ),
+      'profilePic': _asNullableString(
+        profileMap['profilePic'] ??
+            profileMap['avatarUrl'] ??
+            responseData['profilePic'] ??
+            responseData['avatarUrl'],
+      ),
+      'coverPic': _asNullableString(
+        profileMap['coverPic'] ??
+            profileMap['coverPhotoUrl'] ??
+            responseData['coverPic'] ??
+            responseData['coverPhotoUrl'],
+      ),
+      'favoriteGenres': _asStringList(
+        profileMap['favoriteGenres'] ?? responseData['favoriteGenres'],
+      ),
+    };
+  }
+
+  Map<String, dynamic> _extractPrivacySettingsPayload(
+    Map<String, dynamic> responseData,
+  ) {
+    final raw = responseData['privacySettings'];
+    final map = raw is Map<String, dynamic> ? raw : const <String, dynamic>{};
+
+    return <String, dynamic>{
+      'isPrivate': _asBool(map['isPrivate']),
+      'showHistory': _asBool(map['showHistory']),
+    };
+  }
+
+  int _asInt(Object? value, {int fallback = 0}) {
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value.trim()) ?? fallback;
+    return fallback;
+  }
+
+  bool _asBool(Object? value, {bool fallback = false}) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1') return true;
+      if (normalized == 'false' || normalized == '0') return false;
+    }
+    return fallback;
+  }
+
+  String _asString(Object? value, {String fallback = ''}) {
+    if (value == null) return fallback;
+    final parsed = value.toString().trim();
+    return parsed.isEmpty ? fallback : parsed;
+  }
+
+  String? _asNullableString(Object? value) {
+    if (value == null) return null;
+    final parsed = value.toString().trim();
+    return parsed.isEmpty ? null : parsed;
+  }
+
+  List<String> _asStringList(Object? value) {
+    if (value is! List) return const <String>[];
+    return value
+        .map((item) => item.toString().trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+
   Map<String, dynamic> _extractSocialLinksPayload({
     required Map<String, dynamic> responseData,
   }) {
@@ -297,13 +406,16 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
   Map<String, dynamic>? _extractProfileSocialLinks(
     Map<String, dynamic> responseData,
+    Map<String, dynamic> profileMap,
   ) {
-    final socialLinks = responseData['socialLinks'];
+    final socialLinks =
+        responseData['socialLinks'] ?? profileMap['socialLinks'];
     if (socialLinks is Map<String, dynamic> && socialLinks.isNotEmpty) {
       return socialLinks;
     }
 
-    final socialLinksDto = responseData['socialLinksDto'];
+    final socialLinksDto =
+        responseData['socialLinksDto'] ?? profileMap['socialLinksDto'];
     if (socialLinksDto is Map<String, dynamic> && socialLinksDto.isNotEmpty) {
       return socialLinksDto;
     }

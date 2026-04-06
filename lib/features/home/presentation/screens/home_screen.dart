@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
+import '../widgets/liked_tracks_shortcut.dart';
 
 /// Empty Home page – placeholder.
 class HomeScreen extends StatelessWidget {
@@ -28,7 +29,12 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-      body: const Center(child: Text('Home', style: TextStyle(fontSize: 24))),
+      body: const Column(
+        children: [
+          LikedTracksShortcut(),
+          Text('Home', style: TextStyle(fontSize: 24)),
+        ],
+      ),
     );
   }
 }

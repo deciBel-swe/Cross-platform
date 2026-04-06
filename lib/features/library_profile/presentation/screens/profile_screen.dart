@@ -181,7 +181,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userProfileAsync = ref.watch(userProfileProvider(widget.userId));
+    final userProfileAsync = ref.watch(userProfileProvider);
 
     ref.listen<AsyncValue<Set<int>>>(moderationProvider, (previous, next) {
       if (next is AsyncError) {
@@ -237,7 +237,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: AppConstants.spacingExtraLarge),
                 ElevatedButton.icon(
                   onPressed: () {
-                    ref.invalidate(userProfileProvider(widget.userId));
+                    ref.invalidate(userProfileProvider);
                   },
                   icon: const Icon(Icons.refresh_rounded),
                   label: const Text(AppConstants.tryAgain),
@@ -261,9 +261,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         data: (eitherUser) => eitherUser.fold(
           (failure) => RefreshIndicator(
-            onRefresh: () async => ref
-                .read(userProfileProvider(widget.userId).notifier)
-                .refreshProfile(),
+            onRefresh: () async =>
+                ref.read(userProfileProvider.notifier).refreshProfile(),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: SizedBox(
@@ -278,9 +277,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
           (user) => RefreshIndicator(
-            onRefresh: () async => ref
-                .read(userProfileProvider(widget.userId).notifier)
-                .refreshProfile(),
+            onRefresh: () async =>
+                ref.read(userProfileProvider.notifier).refreshProfile(),
             child: SingleChildScrollView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
@@ -299,7 +297,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           padding: const EdgeInsets.only(
                             left: AppConstants.spacingMedium,
                           ),
-                          child: ProfileIcon(userId: widget.userId),
+                          child: const ProfileIcon(),
                         ),
                       ),
                     ],
@@ -310,7 +308,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: AppConstants.spacingMassive),
-                        UserProfileHeader(user: user),
+                        UserProfileHeader(
+                          user: user,
+                          onFollowersTap: () => context.push(
+                            RoutePaths.profileFollowers,
+                            extra: user.id,
+                          ),
+                          onFollowingTap: () => context.push(
+                            RoutePaths.profileFollowing,
+                            extra: user.id,
+                          ),
+                        ),
                         Consumer(
                           builder: (context, ref, child) {
                             final socialLinks = ref.watch(webProfilesProvider);
@@ -318,14 +326,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           },
                         ),
                         const SizedBox(height: AppConstants.spacingRegular),
-                        if (!_isPublicProfile)
-                          Tile(
-                            title: AppConstants.spotlightTitle,
-                            subtitle: AppConstants.spotlightSubtitle,
-                            buttonText: AppConstants.edit,
-                            onButtonPressed: () =>
-                                context.push(RoutePaths.editProfile),
-                          ),
+                        Tile(
+                          title: AppConstants.tracksSectionTitle,
+                          subtitle: AppConstants.tracksSectionSubtitle,
+                          buttonText: AppConstants.seeAll,
+                          onButtonPressed: () =>
+                              context.push(RoutePaths.uploadLibrary),
+                        ),
                         TopTracksSection(userId: user.id),
                         const SizedBox(height: AppConstants.spacingLarge),
                         if (!_isPublicProfile) const MediaCollection(),
@@ -380,7 +387,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 shape: BoxShape.circle,
                 color: AppColors.surface,
               ),
-              child: ProfileIcon(userId: widget.userId),
+              child: const ProfileIcon(),
             ),
             const SizedBox(width: 10),
             Text(

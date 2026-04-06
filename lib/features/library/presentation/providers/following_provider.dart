@@ -4,15 +4,13 @@ import '../../../../core/di/injection.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/following_user.dart';
-import '../../domain/entities/paginated_following_users.dart';
 import '../../domain/repositories/social_graph_repository.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/repositories/social_graph_mock_repository.dart';
 
 final socialGraphRepositoryProvider = Provider<SocialGraphRepository>((ref) {
-  final useMock =
-      dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
+  final useMock = dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
 
   if (useMock) {
     return SocialGraphMockRepository();
@@ -135,10 +133,7 @@ class FollowingNotifier extends Notifier<FollowingState> {
       );
 
       state = state.copyWith(
-        users: <FollowingUser>[
-          ...state.users,
-          ...result.content,
-        ],
+        users: <FollowingUser>[...state.users, ...result.content],
         isLoadingMore: false,
         currentPage: result.pageNumber,
         hasReachedEnd: result.isLast,
@@ -156,16 +151,15 @@ class FollowingNotifier extends Notifier<FollowingState> {
     await loadInitial();
   }
 
-int _extractAuthenticatedUserId(AuthState authState) {
-  if (authState is AuthAuthenticated) {
-    return authState.user.id;
+  int _extractAuthenticatedUserId(AuthState authState) {
+    if (authState is AuthAuthenticated) {
+      return authState.user.id;
+    }
+
+    throw Exception('User is not authenticated');
   }
-
-  throw Exception('User is not authenticated');
-}
 }
 
-final followingProvider =
-    NotifierProvider<FollowingNotifier, FollowingState>(
+final followingProvider = NotifierProvider<FollowingNotifier, FollowingState>(
   FollowingNotifier.new,
 );

@@ -149,10 +149,12 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
   @override
   Widget build(BuildContext context) {
     final isHighlighted = widget.isSelected || _isHovered;
-    final iconColor =
-        widget.isSelected ? AppColors.primary : AppColors.textSecondary;
-    final textColor =
-        widget.isSelected ? Colors.white : AppColors.textSecondary;
+    final iconColor = widget.isSelected
+        ? AppColors.primary
+        : AppColors.textSecondary;
+    final textColor = widget.isSelected
+        ? Colors.white
+        : AppColors.textSecondary;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -196,10 +198,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
 
 /// Upgrade item at the bottom of the sidebar with a gradient accent.
 class _SidebarUpgradeItem extends StatefulWidget {
-  const _SidebarUpgradeItem({
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _SidebarUpgradeItem({required this.isSelected, required this.onTap});
 
   final bool isSelected;
   final VoidCallback onTap;

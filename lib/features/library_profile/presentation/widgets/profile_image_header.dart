@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
@@ -14,10 +15,52 @@ class ProfileImageHeader extends StatelessWidget {
     this.localProfilePic,
     required this.onPickImage,
   });
+
   final UserProfile user;
   final File? localCoverPic;
   final File? localProfilePic;
   final void Function(bool isProfilePic) onPickImage;
+
+  void _showProfileOptions(BuildContext parentContext, String? imagePath) {
+    showModalBottomSheet<Widget>(
+      context: parentContext,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.visibility),
+                title: const Text('View Profile Picture'),
+                onTap: () {
+                  sheetContext.pop();
+                  if (imagePath != null) {
+                    parentContext.push('/profile-image', extra: imagePath);
+                  } else {
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('No profile picture to view.'),
+                      ),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Change Profile Picture'),
+                onTap: () {
+                  sheetContext.pop();
+                  onPickImage(true);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Widget _buildRemoteOrLocalImage({
     required String imagePath,
@@ -50,9 +93,7 @@ class ProfileImageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     bool isDesktop = MediaQuery.sizeOf(context).width > 600;
-
     double coverHeight = isDesktop ? 350.0 : 160.0;
-
     double stackHeight = isDesktop ? 430.0 : 220.0;
 
     return SizedBox(
@@ -94,12 +135,18 @@ class ProfileImageHeader extends StatelessWidget {
                           )),
             ),
           ),
-          // Profile Photo
+
+          // --- Profile Photo ---
           Positioned(
             bottom: 0,
             left: 16,
             child: GestureDetector(
-              onTap: () => onPickImage(true),
+              // --- UPDATED: Call the new bottom sheet logic ---
+              onTap: () {
+                final activePath =
+                    localProfilePic?.path ?? user.profileDetails.profilePic;
+                _showProfileOptions(context, activePath);
+              },
               child: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -152,7 +199,7 @@ class ProfileImageHeader extends StatelessWidget {
             ),
           ),
 
-          // Cover Photo Camera Icon
+          // --- Cover Photo Camera Icon ---
           Positioned(
             top: 16,
             right: 16,

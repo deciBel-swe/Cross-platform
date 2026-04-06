@@ -7,7 +7,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../widgets/feed_item.dart';
-import 'package:go_router/go_router.dart';
 
 /// Activity feed showing recent actions from followed users.
 class FeedScreen extends StatelessWidget {
@@ -30,50 +29,39 @@ class FeedScreen extends StatelessWidget {
           AppDimensions.paddingLg,
         ),
         children: [
-  // ✅ ADD THIS BUTTON
-  Padding(
-    padding: const EdgeInsets.only(bottom: 16),
-    child: ElevatedButton(
-      onPressed: () {
-        context.push('/users/123');
-        // OR if using GoRouter:
-        // context.push('/users/123');
-      },
-      child: const Text('Open Public Profile'),
-    ),
-  ),
-
-  if (isDesktop) ...[
-    const Text('Your Feed', style: AppTextStyles.sectionTitle),
-    const SizedBox(height: AppDimensions.paddingSm),
-    const Text(
-      'Hear the latest from people you follow.',
-      style: AppTextStyles.bodyMedium,
-    ),
-    const SizedBox(height: AppDimensions.paddingLg),
-  ],
-
-  ..._mockFeedItems.map(
-    (item) => Padding(
-      padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
-      child: FeedItem(
-        userName: item.userName,
-        action: item.action,
-        trackTitle: item.trackTitle,
-        trackArtist: item.trackArtist,
-        timeAgo: item.timeAgo,
-        genre: item.genre,
-        likes: item.likes,
-        reposts: item.reposts,
-        plays: item.plays,
-        comments: item.comments,
-        duration: item.duration,
-        waveformPeaks: item.waveformPeaks,
-        gradientColors: item.colors,
-      ),
-    ),
-  ),
-],
+          if (isDesktop) ...[
+            const Text('Your Feed', style: AppTextStyles.sectionTitle),
+            const SizedBox(height: AppDimensions.paddingSm),
+            const Text(
+              'Hear the latest from people you follow.',
+              style: AppTextStyles.bodyMedium,
+            ),
+            const SizedBox(height: AppDimensions.paddingLg),
+          ],
+          ..._mockFeedItems.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
+              child: FeedItem(
+                trackId: item.id,
+                userName: item.userName,
+                action: item.action,
+                trackTitle: item.trackTitle,
+                trackArtist: item.trackArtist,
+                timeAgo: item.timeAgo,
+                genre: item.genre,
+                likeCount: item.likeCount,
+                repostCount: item.repostCount,
+                isLiked: item.isLiked,
+                isReposted: item.isReposted,
+                plays: item.plays,
+                commentCount: item.commentCount,
+                duration: item.duration,
+                waveformPeaks: item.waveformPeaks,
+                gradientColors: item.colors,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -91,30 +79,36 @@ bool _isDesktopLayout(BuildContext context) {
 
 class _MockFeed {
   _MockFeed({
+    required this.id,
     required this.userName,
     required this.action,
     required this.trackTitle,
     required this.trackArtist,
     required this.timeAgo,
     required this.genre,
-    required this.likes,
-    required this.reposts,
+    required this.likeCount,
+    required this.repostCount,
+    required this.isLiked,
+    required this.isReposted,
     required this.plays,
-    required this.comments,
+    required this.commentCount,
     required this.duration,
     required this.colors,
   }) : waveformPeaks = _buildMockPeaks(seed: '$userName$trackTitle'.hashCode);
 
+  final int id;
   final String userName;
   final String action;
   final String trackTitle;
   final String trackArtist;
   final String timeAgo;
   final String genre;
-  final String likes;
-  final String reposts;
+  final int likeCount;
+  final int repostCount;
+  final bool isLiked;
+  final bool isReposted;
   final String plays;
-  final String comments;
+  final int commentCount;
   final String duration;
   final List<Color> colors;
   final List<double> waveformPeaks;
@@ -122,44 +116,53 @@ class _MockFeed {
 
 final _mockFeedItems = [
   _MockFeed(
+    id: 101,
     userName: 'Bad-Bunny',
     action: 'posted a track',
     trackTitle: 'Super Bowl LX Halftime Show (Live)',
     trackArtist: 'Bad Bunny, NFL',
     timeAgo: '1 month ago',
     genre: 'Latin',
-    likes: '6,877',
-    reposts: '296',
+    likeCount: 6877,
+    repostCount: 296,
+    isLiked: false,
+    isReposted: false,
     plays: '162K',
-    comments: '718',
+    commentCount: 718,
     duration: '13:41',
     colors: [const Color(0xFF1E88E5), const Color(0xFFF4511E)],
   ),
   _MockFeed(
+    id: 102,
     userName: 'Gunna',
     action: 'posted a track',
     trackTitle: 'wgft (Remix) [feat. Chris Brown]',
     trackArtist: 'Gunna',
     timeAgo: '2 months ago',
     genre: 'Rap/Hip Hop',
-    likes: '17.9K',
-    reposts: '144',
+    likeCount: 17900,
+    repostCount: 144,
+    isLiked: true,
+    isReposted: false,
     plays: '705K',
-    comments: '195',
+    commentCount: 195,
     duration: '3:07',
     colors: [const Color(0xFF3E2723), const Color(0xFF6D4C41)],
   ),
   _MockFeed(
+    id: 103,
     userName: 'Gunna',
     action: 'posted a track',
     trackTitle: 'at my purest (feat. Offset)',
     trackArtist: 'Gunna',
     timeAgo: '7 months ago',
     genre: 'Rap/Hip Hop',
-    likes: '26.2K',
-    reposts: '182',
+    likeCount: 26200,
+    repostCount: 182,
+    isLiked: false,
+    isReposted: true,
     plays: '1.52M',
-    comments: '230',
+    commentCount: 230,
     duration: '3:13',
     colors: [const Color(0xFF37474F), const Color(0xFF263238)],
   ),

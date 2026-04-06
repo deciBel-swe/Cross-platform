@@ -21,6 +21,7 @@ PaginatedTracksModel _$PaginatedTracksModelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$PaginatedTracksModel {
+  @JsonKey(fromJson: _trackListFromJson, toJson: _trackListToJson)
   List<TrackModel> get content => throw _privateConstructorUsedError;
   int get pageNumber => throw _privateConstructorUsedError;
   int get pageSize => throw _privateConstructorUsedError;
@@ -46,6 +47,7 @@ abstract class $PaginatedTracksModelCopyWith<$Res> {
   ) = _$PaginatedTracksModelCopyWithImpl<$Res, PaginatedTracksModel>;
   @useResult
   $Res call({
+    @JsonKey(fromJson: _trackListFromJson, toJson: _trackListToJson)
     List<TrackModel> content,
     int pageNumber,
     int pageSize,
@@ -122,6 +124,7 @@ abstract class _$$PaginatedTracksModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
+    @JsonKey(fromJson: _trackListFromJson, toJson: _trackListToJson)
     List<TrackModel> content,
     int pageNumber,
     int pageSize,
@@ -184,9 +187,11 @@ class __$$PaginatedTracksModelImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
+@JsonSerializable(explicitToJson: true)
 class _$PaginatedTracksModelImpl implements _PaginatedTracksModel {
   const _$PaginatedTracksModelImpl({
+    @JsonKey(fromJson: _trackListFromJson, toJson: _trackListToJson)
     final List<TrackModel> content = const <TrackModel>[],
     required this.pageNumber,
     required this.pageSize,
@@ -200,7 +205,7 @@ class _$PaginatedTracksModelImpl implements _PaginatedTracksModel {
 
   final List<TrackModel> _content;
   @override
-  @JsonKey()
+  @JsonKey(fromJson: _trackListFromJson, toJson: _trackListToJson)
   List<TrackModel> get content {
     if (_content is EqualUnmodifiableListView) return _content;
     // ignore: implicit_dynamic_type
@@ -272,6 +277,7 @@ class _$PaginatedTracksModelImpl implements _PaginatedTracksModel {
 
 abstract class _PaginatedTracksModel implements PaginatedTracksModel {
   const factory _PaginatedTracksModel({
+    @JsonKey(fromJson: _trackListFromJson, toJson: _trackListToJson)
     final List<TrackModel> content,
     required final int pageNumber,
     required final int pageSize,
@@ -284,6 +290,7 @@ abstract class _PaginatedTracksModel implements PaginatedTracksModel {
       _$PaginatedTracksModelImpl.fromJson;
 
   @override
+  @JsonKey(fromJson: _trackListFromJson, toJson: _trackListToJson)
   List<TrackModel> get content;
   @override
   int get pageNumber;

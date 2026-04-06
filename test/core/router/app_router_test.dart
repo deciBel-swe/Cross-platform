@@ -23,6 +23,24 @@ class MockAuthNotifier extends AsyncNotifier<AuthState>
   Future<void> loginWithGoogle() async {}
 
   @override
+  Future<void> loginWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {}
+
+  @override
+  Future<void> registerWithEmailPassword({
+    required String email,
+    required String username,
+    required String password,
+    required DateTime dateOfBirth,
+    required String gender,
+    String? city,
+    String? country,
+    required String captchaToken,
+  }) async {}
+
+  @override
   Future<void> logout() async {}
 }
 
@@ -46,7 +64,7 @@ Widget createTestApp(ProviderContainer container) {
 void main() {
   group('AppRouter Guard Tests', () {
     testWidgets(
-      'should redirect to /login if unauthenticated and accessing /home',
+      'should redirect to /start if unauthenticated and accessing /home',
       (tester) async {
         // Arrange: Force the AuthState to completely unauthenticated
         final container = ProviderContainer(
