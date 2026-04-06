@@ -9,14 +9,24 @@ part of 'paginated_blocked_users_model.dart';
 _$PaginatedBlockedUsersModelImpl _$$PaginatedBlockedUsersModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$PaginatedBlockedUsersModelImpl(
-  content: (json['content'] as List<dynamic>)
-      .map((e) => BlockedUserModel.fromJson(e as Map<String, dynamic>))
-      .toList(),
-  pageNumber: (json['pageNumber'] as num).toInt(),
-  pageSize: (json['pageSize'] as num).toInt(),
-  totalElements: (json['totalElements'] as num).toInt(),
-  totalPages: (json['totalPages'] as num).toInt(),
-  isLast: json['isLast'] as bool,
+  content:
+      (json['content'] as List<dynamic>?)
+          ?.map((e) => BlockedUserModel.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      [],
+  pageNumber: _readPageNumber(json, 'pageNumber') == null
+      ? 0
+      : _toInt(_readPageNumber(json, 'pageNumber')),
+  pageSize: _readPageSize(json, 'pageSize') == null
+      ? 20
+      : _toInt(_readPageSize(json, 'pageSize')),
+  totalElements: json['totalElements'] == null
+      ? 0
+      : _toInt(json['totalElements']),
+  totalPages: json['totalPages'] == null ? 1 : _toInt(json['totalPages']),
+  isLast: _readIsLast(json, 'isLast') == null
+      ? true
+      : _toBool(_readIsLast(json, 'isLast')),
 );
 
 Map<String, dynamic> _$$PaginatedBlockedUsersModelImplToJson(
