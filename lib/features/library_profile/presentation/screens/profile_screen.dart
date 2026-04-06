@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,7 @@ import '../../domain/entities/user_profile.dart';
 import '../providers/moderation_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
+import '../utils/profile_image_path_utils.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/button.dart';
 import '../widgets/media_collection.dart';
@@ -290,7 +293,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         imageUrl: user.profileDetails.coverPic,
                       ),
 
-                      const Positioned(
+                      Positioned(
                         bottom: -32,
                         child: Padding(
                           padding: const EdgeInsets.only(
