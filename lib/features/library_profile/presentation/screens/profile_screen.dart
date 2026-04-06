@@ -52,10 +52,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               isBlocked
                   ? "They will now be able to follow and interact with you and your content. We won't let them know that you have unblocked them."
                   : 'This user will no longer be able to follow or interact with you, and you will not see notifications from them.',
-              style: const TextStyle(
-                color: Colors.white70,
-                height: 1.5,
-              ),
+              style: const TextStyle(color: Colors.white70, height: 1.5),
             ),
             actions: [
               TextButton(
@@ -112,7 +109,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 20),
                 ListTile(
                   leading: Icon(
-                    isBlocked ? Icons.remove_circle_outline : Icons.block_outlined,
+                    isBlocked
+                        ? Icons.remove_circle_outline
+                        : Icons.block_outlined,
                     color: Colors.white,
                     size: 28,
                   ),
@@ -184,9 +183,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     ref.listen<AsyncValue<Set<int>>>(moderationProvider, (previous, next) {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update moderation status.'),
-          ),
+          const SnackBar(content: Text('Failed to update moderation status.')),
         );
       }
     });
@@ -219,21 +216,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Text(
                   'Oops! Something went wrong.',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.onPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: AppColors.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: AppConstants.spacingSmall),
                 Text(
                   error.toString().replaceAll(
-                        AppConstants.errorExceptionPrefix,
-                        '',
-                      ),
+                    AppConstants.errorExceptionPrefix,
+                    '',
+                  ),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: AppColors.onPrimary),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
                 ),
                 const SizedBox(height: AppConstants.spacingExtraLarge),
                 ElevatedButton.icon(
@@ -293,7 +289,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       _ProfileCoverPhoto(
                         imageUrl: user.profileDetails.coverPic,
                       ),
-                      Positioned(
+
+                      const Positioned(
                         bottom: -32,
                         child: Padding(
                           padding: const EdgeInsets.only(
@@ -386,9 +383,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Text(
               user.username,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.onPrimary,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
             ),
           ],
         ),
@@ -421,20 +418,48 @@ class _ProfileCoverPhoto extends StatelessWidget {
       width: double.infinity,
       color: AppColors.surface,
       child: imageUrl == null
-          ? const Icon(
-              Icons.image,
-              color: AppColors.onPrimary,
-              size: AppConstants.placeholderIconSize,
-            )
-          : Image.network(
+          ? _buildPlaceholder()
+          : ProfileImagePathUtils.isRemote(imageUrl!)
+          ? Image.network(
               imageUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.image,
-                color: AppColors.onPrimary,
-                size: AppConstants.placeholderIconSize,
-              ),
+              filterQuality: FilterQuality.high,
+              errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return _buildPlaceholder();
+              },
+            )
+          : Builder(
+              builder: (context) {
+                final localPath = ProfileImagePathUtils.localFilePath(
+                  imageUrl!,
+                );
+
+                if (localPath == null) {
+                  return _buildPlaceholder();
+                }
+
+                return Image.file(
+                  File(localPath),
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.high,
+                  errorBuilder: (context, error, stackTrace) =>
+                      _buildPlaceholder(),
+                );
+              },
             ),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      color: AppColors.surface,
+      child: const Icon(
+        Icons.image,
+        color: AppColors.onPrimary,
+        size: AppConstants.placeholderIconSize,
+      ),
     );
   }
 }

@@ -5,9 +5,9 @@ import '../../../../core/errors/failures.dart';
 import '../../domain/entities/user_profile.dart';
 import '../notifiers/user_profile_notifier.dart';
 
-final userProfileProvider = AsyncNotifierProvider.family<
-    UserProfileNotifier,
-    Either<Failure, UserProfile>,
-    int?>(
-  UserProfileNotifier.new,
-);
+final userProfileProvider =
+    AsyncNotifierProvider.family<
+      UserProfileNotifier,
+      Either<Failure, UserProfile>,
+      int?
+    >(UserProfileNotifier.new);

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../notifiers/social_settings_notifier.dart';
 
@@ -12,7 +14,6 @@ class SocialSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final socialState = ref.watch(socialSettingsProvider);
 
-    // Watch for errors to show the rollback notification
     ref.listen(socialSettingsProvider, (previous, next) {
       if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -53,6 +54,23 @@ class SocialSettingsScreen extends ConsumerWidget {
                   .read(socialSettingsProvider.notifier)
                   .toggleHistoryVisibility(val),
             ),
+            const SizedBox(height: 24),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text(
+                'Blocked users',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: AppConstants.fontSizeMedium,
+                  color: AppColors.onPrimary,
+                ),
+              ),
+              trailing: const Icon(
+                Icons.chevron_right,
+                color: AppColors.onPrimary,
+              ),
+              onTap: () => context.push(RoutePaths.blockedUsers),
+            ),
           ],
         ),
       ),
@@ -67,6 +85,7 @@ class _SocialToggleTile extends StatelessWidget {
     required this.value,
     required this.onChanged,
   });
+
   final String title;
   final String subtitle;
   final bool value;
