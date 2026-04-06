@@ -8,6 +8,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
+import '../../../../core/utils/genre_constants.dart';
 import '../../../library/data/datasources/library_mock_fixtures.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../domain/entities/track_upload_metadata.dart';
@@ -27,23 +28,7 @@ final uploadNotifierProvider =
 
 final genreListProvider = StateProvider<List<String>>((ref) {
   // Mocked backend data
-  return [
-    "Qur'an",
-    'Alternative Rock',
-    'Ambient',
-    'Classical',
-    'Country',
-    'Dance & EDM',
-    'Dancehall',
-    'Deep House',
-    'Disco',
-    'Drum & Bass',
-    'Dubstep',
-    'Electronic',
-    'Folk & Singer-Songwriter',
-    'Hip-hop & Rap',
-    'House',
-  ];
+  return GenreConstants.genres;
 });
 
 // 3. The Notifier which containing the form logic "Upload Form Controller"
