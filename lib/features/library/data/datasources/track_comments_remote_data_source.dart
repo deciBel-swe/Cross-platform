@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/network/dio_client.dart';
 import '../models/comment_reply_model.dart';
 import '../models/paginated_comments_response_model.dart';
 import '../models/paginated_replies_response_model.dart';
@@ -38,7 +39,7 @@ abstract class ITrackCommentsRemoteDataSource {
 class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
   TrackCommentsRemoteDataSource(this._dioClient);
 
-  final Dio _dioClient;
+  final DioClient _dioClient;
 
   @override
   Future<PostCommentResponseModel> postComment({
@@ -105,7 +106,7 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
     try {
       final response = await _dioClient.get<Map<String, dynamic>>(
         '${ApiConstants.tracks}/$trackId${ApiConstants.comments}',
-        queryParameters: {'page': page, 'size': size},
+        queryParams: {'page': page, 'size': size},
       );
 
       final data = response.data;
@@ -136,7 +137,7 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
     try {
       final response = await _dioClient.get<Map<String, dynamic>>(
         '${ApiConstants.comments}/$commentId${ApiConstants.replies}',
-        queryParameters: {'page': page, 'size': size},
+        queryParams: {'page': page, 'size': size},
       );
 
       final data = response.data;

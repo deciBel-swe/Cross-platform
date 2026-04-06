@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; 
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
@@ -15,19 +15,19 @@ class ProfileImageHeader extends StatelessWidget {
     this.localProfilePic,
     required this.onPickImage,
   });
-  
+
   final UserProfile user;
   final File? localCoverPic;
   final File? localProfilePic;
   final void Function(bool isProfilePic) onPickImage;
 
-  void _showProfileOptions(BuildContext context, String? imagePath) {
+  void _showProfileOptions(BuildContext parentContext, String? imagePath) {
     showModalBottomSheet<Widget>(
-      context: context,
+      context: parentContext,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return SafeArea(
           child: Wrap(
             children: [
@@ -35,12 +35,14 @@ class ProfileImageHeader extends StatelessWidget {
                 leading: const Icon(Icons.visibility),
                 title: const Text('View Profile Picture'),
                 onTap: () {
-                  context.pop(); 
+                  sheetContext.pop();
                   if (imagePath != null) {
-                    context.push('/profile-image', extra: imagePath);
+                    parentContext.push('/profile-image', extra: imagePath);
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('No profile picture to view.')),
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('No profile picture to view.'),
+                      ),
                     );
                   }
                 },
@@ -49,7 +51,7 @@ class ProfileImageHeader extends StatelessWidget {
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Change Profile Picture'),
                 onTap: () {
-                  context.pop(); 
+                  sheetContext.pop();
                   onPickImage(true);
                 },
               ),
@@ -133,7 +135,7 @@ class ProfileImageHeader extends StatelessWidget {
                           )),
             ),
           ),
-          
+
           // --- Profile Photo ---
           Positioned(
             bottom: 0,
@@ -141,7 +143,8 @@ class ProfileImageHeader extends StatelessWidget {
             child: GestureDetector(
               // --- UPDATED: Call the new bottom sheet logic ---
               onTap: () {
-                final activePath = localProfilePic?.path ?? user.profileDetails.profilePic;
+                final activePath =
+                    localProfilePic?.path ?? user.profileDetails.profilePic;
                 _showProfileOptions(context, activePath);
               },
               child: Stack(
@@ -161,7 +164,8 @@ class ProfileImageHeader extends StatelessWidget {
                               ? Image.file(localProfilePic!, fit: BoxFit.cover)
                               : (user.profileDetails.profilePic != null
                                     ? _buildRemoteOrLocalImage(
-                                        imagePath: user.profileDetails.profilePic!,
+                                        imagePath:
+                                            user.profileDetails.profilePic!,
                                         fit: BoxFit.cover,
                                         fallback: const Icon(
                                           Icons.person,

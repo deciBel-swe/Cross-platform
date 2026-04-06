@@ -19,6 +19,29 @@ class MockAuthRepository implements IAuthRepository {
   final SecureStorageService _secureStorageService;
 
   @override
+  Future<Either<Failure, AuthUser>> loginWithEmailPassword({
+    required String email,
+    required String password,
+  }) {
+    return loginWithGoogle();
+  }
+
+  @override
+  Future<Either<Failure, Unit>> registerWithEmailPassword({
+    required String email,
+    required String username,
+    required String password,
+    required DateTime dateOfBirth,
+    required String gender,
+    String? city,
+    String? country,
+    required String captchaToken,
+  }) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+    return const Right(unit);
+  }
+
+  @override
   Future<Either<Failure, AuthUser>> loginWithGoogle() async {
     // Standard async delay for realistic UI loading states
     await Future<void>.delayed(AuthMockFixtures.delay);

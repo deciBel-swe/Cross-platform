@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -16,6 +17,32 @@ class LibraryRemoteDatasource {
 
   final DioClient _dioClient;
   bool _supportsTrackByIdEndpoint = true;
+
+  Future<PaginatedTracksModel> fetchMyTracks({
+    required int page,
+    required int size,
+  }) async {
+    final response = await _dioClient.get<Map<String, dynamic>>(
+      '/users/me/tracks',
+      queryParams: <String, Object?>{'page': page, 'size': size},
+    );
+
+    final data = response.data;
+    if (data == null) {
+      throw Exception('Empty response');
+    }
+
+    final normalizedData = Map<String, dynamic>.from(data);
+    final content = normalizedData['content'];
+    if (content is List) {
+      normalizedData['content'] = content
+          .whereType<Map<String, dynamic>>()
+          .map(_normalizeTrackJson)
+          .toList();
+    }
+
+    return PaginatedTracksModel.fromJson(normalizedData);
+  }
 
   Future<PaginatedTracksModel> fetchTracks({
     required int userId,
@@ -69,6 +96,87 @@ class LibraryRemoteDatasource {
       }
       return _fetchTrackByIdFallbackFromUserTracks(id);
     }
+  }
+
+  Future<TrackModel> updateTrackMetadata({
+    required int trackId,
+    required String title,
+    required String genre,
+    required String description,
+    required List<String> tags,
+    required DateTime? releaseDate,
+    required bool isPrivate,
+    File? coverImage,
+  }) async {
+    final releaseDateValue = releaseDate?.toIso8601String().split('T').first;
+
+    final patchMap = <String, dynamic>{
+      'title': title,
+      'genre': genre,
+      'description': description,
+      'tags': jsonEncode(tags),
+      'isPrivate': isPrivate,
+      ...?releaseDateValue == null
+          ? null
+          : <String, dynamic>{'releaseDate': releaseDateValue},
+    };
+
+    final patchFormData = FormData.fromMap(patchMap);
+    if (coverImage != null) {
+      final imageName = coverImage.path.split('/').last;
+      patchFormData.files.add(
+        MapEntry(
+          'coverImage',
+          await MultipartFile.fromFile(coverImage.path, filename: imageName),
+        ),
+      );
+    }
+
+    try {
+      final patchResponse = await _dioClient.patch<Map<String, dynamic>>(
+        '/tracks/$trackId',
+        data: patchFormData,
+      );
+
+      final patchData = patchResponse.data;
+      if (patchData == null) {
+        throw Exception('Empty update response');
+      }
+
+      return TrackModel.fromJson(_normalizeTrackJson(patchData));
+    } on DioException catch (error) {
+      final statusCode = error.response?.statusCode;
+      if (statusCode != 404 && statusCode != 405) {
+        rethrow;
+      }
+
+      final putPayload = <String, dynamic>{
+        'title': title,
+        'genre': genre,
+        'description': description,
+        'tags': tags,
+        'isPrivate': isPrivate,
+        ...?releaseDateValue == null
+            ? null
+            : <String, dynamic>{'releaseDate': releaseDateValue},
+      };
+
+      final putResponse = await _dioClient.put<Map<String, dynamic>>(
+        '/tracks/$trackId',
+        data: putPayload,
+      );
+
+      final putData = putResponse.data;
+      if (putData == null) {
+        throw Exception('Empty update response');
+      }
+
+      return TrackModel.fromJson(_normalizeTrackJson(putData));
+    }
+  }
+
+  Future<void> deleteTrackCover(int trackId) async {
+    await _dioClient.delete<dynamic>('/tracks/$trackId/cover');
   }
 
   Future<String> fetchTrackStatusById(int id) async {
@@ -283,7 +391,9 @@ class LibraryRemoteDatasource {
     final raw = switch (payload) {
       String value => value,
       Map<String, dynamic> map =>
-        map['status']?.toString() ?? map['state']?.toString(),
+        map['trackState']?.toString() ??
+            map['status']?.toString() ??
+            map['state']?.toString(),
       _ => null,
     };
 
@@ -300,7 +410,18 @@ class LibraryRemoteDatasource {
   Future<TrackModel> _fetchTrackByIdFallbackFromUserTracks(int trackId) async {
     final meResponse = await _dioClient.get<Map<String, dynamic>>('/users/me');
     final meData = meResponse.data;
-    final userId = (meData?['id'] as num?)?.toInt();
+    final responseData = meData == null ? null : meData['data'];
+    final payload = responseData is Map<String, dynamic>
+        ? responseData
+        : meData;
+    final profilePayload = payload == null ? null : payload['profile'];
+    final profileMap = profilePayload is Map<String, dynamic>
+        ? profilePayload
+        : const <String, dynamic>{};
+
+    final userId =
+        (payload == null ? null : payload['id'] as num?)?.toInt() ??
+        (profileMap['id'] as num?)?.toInt();
     if (userId == null) {
       throw Exception('Unable to resolve current user id for track fallback');
     }

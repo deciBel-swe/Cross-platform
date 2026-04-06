@@ -62,8 +62,20 @@ class _LibraryTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         _NavigationRow(
+          title: 'Following',
+          onTap: () => context.go(RoutePaths.libraryFollowing),
+        ),
+        _NavigationRow(
           title: 'Your uploads',
           onTap: () => context.go(RoutePaths.uploadLibrary),
+        ),
+        _NavigationRow(
+          title: 'Your likes',
+          onTap: () => context.go(RoutePaths.libraryLikes),
+        ),
+        _NavigationRow(
+          title: 'Your reposts',
+          onTap: () => context.go(RoutePaths.libraryReposts),
         ),
       ],
     );

@@ -1,10 +1,8 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
-import '../../data/datasources/track_comments_mock_fixtures.dart';
 import '../../domain/entities/comment.dart';
 import '../../domain/entities/comment_reply.dart';
 import '../../domain/entities/comment_user.dart';
@@ -31,23 +29,10 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     _trackId = trackId;
     _repository = ref.read(commentRepositoryProvider);
 
-    final fixtureComment = TrackCommentsMockFixtures.mockTrackComments.first;
-
-    final initialTestComment = Comment(
-      commentid: fixtureComment.commentId,
-      timestampSeconds: fixtureComment.timestampSeconds,
-      body: fixtureComment.body,
-      createdAt: fixtureComment.createdAt,
-      replycount: fixtureComment.replycount,
-      user: CommentUser(
-        id: fixtureComment.user.id,
-        username: fixtureComment.user.username,
-        avatarUrl: fixtureComment.user.avatarUrl,
-      ),
-    );
+    Future.microtask(() => loadComments());
 
     return TrackCommentsState(
-      comments: [initialTestComment],
+      comments: const [],
       isSubmitting: false,
       selectedTimestampSeconds: null,
       isLoadingComments: false,
@@ -404,6 +389,11 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     final authUser = authState.user;
     final tempId = DateTime.now().millisecondsSinceEpoch;
 
+    // Use avatarUrl only when non-null and non-empty
+    final avatarUrl = authUser.avatarUrl?.isNotEmpty == true
+        ? authUser.avatarUrl
+        : null;
+
     final optimisticComment = Comment(
       replycount: 0,
       commentid: tempId,
@@ -413,7 +403,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
       user: CommentUser(
         id: authUser.id,
         username: authUser.username,
-        avatarUrl: authUser.avatarUrl!.isNotEmpty ? authUser.avatarUrl : '',
+        avatarUrl: avatarUrl,
       ),
     );
 

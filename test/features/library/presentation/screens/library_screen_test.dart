@@ -34,7 +34,7 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
 
       expect(find.text('Your uploads'), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_right), findsAtLeastNWidgets(1));
     });
 
     testWidgets('navigates to profile when profile icon is tapped', (

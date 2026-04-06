@@ -115,6 +115,8 @@ class AppConstants {
 
   static const String remove = 'Remove';
 
+  static const String seeAll = 'See all';
+
   static const String repostRemoveMessage =
       'This will be removed from your profile and timeline.';
 
@@ -129,6 +131,10 @@ class AppConstants {
   static const String spotlightSubtitle = 'Pin items to your spotlight';
 
   static const String spotlightTitle = 'Pinned to Spotlight';
+
+  static const String tracksSectionSubtitle = 'Your uploaded tracks';
+
+  static const String tracksSectionTitle = 'Tracks';
 
   static const String statSeparator = '-';
 }

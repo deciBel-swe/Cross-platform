@@ -34,6 +34,8 @@ mixin _$TrackModel {
   int get playCount => throw _privateConstructorUsedError;
   int get likeCount => throw _privateConstructorUsedError;
   int get repostCount => throw _privateConstructorUsedError;
+  bool get isLiked => throw _privateConstructorUsedError;
+  bool get isReposted => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this TrackModel to a JSON map.
@@ -67,6 +69,8 @@ abstract class $TrackModelCopyWith<$Res> {
     int playCount,
     int likeCount,
     int repostCount,
+    bool isLiked,
+    bool isReposted,
     DateTime createdAt,
   });
 
@@ -101,6 +105,8 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
     Object? playCount = null,
     Object? likeCount = null,
     Object? repostCount = null,
+    Object? isLiked = null,
+    Object? isReposted = null,
     Object? createdAt = null,
   }) {
     return _then(
@@ -157,6 +163,14 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
                 ? _value.repostCount
                 : repostCount // ignore: cast_nullable_to_non_nullable
                       as int,
+            isLiked: null == isLiked
+                ? _value.isLiked
+                : isLiked // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isReposted: null == isReposted
+                ? _value.isReposted
+                : isReposted // ignore: cast_nullable_to_non_nullable
+                      as bool,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -200,6 +214,8 @@ abstract class _$$TrackModelImplCopyWith<$Res>
     int playCount,
     int likeCount,
     int repostCount,
+    bool isLiked,
+    bool isReposted,
     DateTime createdAt,
   });
 
@@ -234,6 +250,8 @@ class __$$TrackModelImplCopyWithImpl<$Res>
     Object? playCount = null,
     Object? likeCount = null,
     Object? repostCount = null,
+    Object? isLiked = null,
+    Object? isReposted = null,
     Object? createdAt = null,
   }) {
     return _then(
@@ -290,6 +308,14 @@ class __$$TrackModelImplCopyWithImpl<$Res>
             ? _value.repostCount
             : repostCount // ignore: cast_nullable_to_non_nullable
                   as int,
+        isLiked: null == isLiked
+            ? _value.isLiked
+            : isLiked // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isReposted: null == isReposted
+            ? _value.isReposted
+            : isReposted // ignore: cast_nullable_to_non_nullable
+                  as bool,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -316,6 +342,8 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
     this.playCount = 0,
     this.likeCount = 0,
     this.repostCount = 0,
+    this.isLiked = false,
+    this.isReposted = false,
     required this.createdAt,
   }) : _tags = tags;
 
@@ -359,11 +387,17 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
   @JsonKey()
   final int repostCount;
   @override
+  @JsonKey()
+  final bool isLiked;
+  @override
+  @JsonKey()
+  final bool isReposted;
+  @override
   final DateTime createdAt;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'TrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, tags: $tags, state: $state, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, createdAt: $createdAt)';
+    return 'TrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, tags: $tags, state: $state, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, isLiked: $isLiked, isReposted: $isReposted, createdAt: $createdAt)';
   }
 
   @override
@@ -384,6 +418,8 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
       ..add(DiagnosticsProperty('playCount', playCount))
       ..add(DiagnosticsProperty('likeCount', likeCount))
       ..add(DiagnosticsProperty('repostCount', repostCount))
+      ..add(DiagnosticsProperty('isLiked', isLiked))
+      ..add(DiagnosticsProperty('isReposted', isReposted))
       ..add(DiagnosticsProperty('createdAt', createdAt));
   }
 
@@ -412,6 +448,9 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
                 other.likeCount == likeCount) &&
             (identical(other.repostCount, repostCount) ||
                 other.repostCount == repostCount) &&
+            (identical(other.isLiked, isLiked) || other.isLiked == isLiked) &&
+            (identical(other.isReposted, isReposted) ||
+                other.isReposted == isReposted) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
@@ -433,6 +472,8 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
     playCount,
     likeCount,
     repostCount,
+    isLiked,
+    isReposted,
     createdAt,
   );
 
@@ -465,6 +506,8 @@ abstract class _TrackModel implements TrackModel {
     final int playCount,
     final int likeCount,
     final int repostCount,
+    final bool isLiked,
+    final bool isReposted,
     required final DateTime createdAt,
   }) = _$TrackModelImpl;
 
@@ -497,6 +540,10 @@ abstract class _TrackModel implements TrackModel {
   int get likeCount;
   @override
   int get repostCount;
+  @override
+  bool get isLiked;
+  @override
+  bool get isReposted;
   @override
   DateTime get createdAt;
 
