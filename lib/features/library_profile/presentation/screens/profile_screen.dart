@@ -133,7 +133,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       context,
                       isBlocked,
                     );
-                    if (!confirmed || !mounted) {
+                    if (!confirmed || !context.mounted) {
                       return;
                     }
 
@@ -146,7 +146,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           .read(moderationProvider.notifier)
                           .blockUser(user.id);
 
-                      if (mounted && context.canPop()) {
+                      if (context.canPop()) {
                         context.pop();
                       }
                     }
@@ -291,13 +291,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         imageUrl: user.profileDetails.coverPic,
                       ),
 
-                      Positioned(
+                      const Positioned(
                         bottom: -32,
                         child: Padding(
-                          padding: const EdgeInsets.only(
+                          padding: EdgeInsets.only(
                             left: AppConstants.spacingMedium,
                           ),
-                          child: const ProfileIcon(),
+                          child: ProfileIcon(),
                         ),
                       ),
                     ],
@@ -473,3 +473,4 @@ class _ProfileCoverPhoto extends StatelessWidget {
     );
   }
 }
+

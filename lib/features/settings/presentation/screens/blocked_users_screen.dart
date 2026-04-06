@@ -52,7 +52,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
       builder: (BuildContext context) {
         return SafeArea(
           child: Padding(
-            padding: EdgeInsets.all(AppDimensions.paddingLg),
+            padding: const EdgeInsets.all(AppDimensions.paddingLg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
@@ -64,7 +64,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: AppDimensions.paddingSm),
+                const SizedBox(height: AppDimensions.paddingSm),
                 Text(
                   'They will be able to interact with you again.',
                   style: AppTextStyles.bodyMedium.copyWith(
@@ -72,7 +72,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: AppDimensions.paddingLg),
+                const SizedBox(height: AppDimensions.paddingLg),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -80,7 +80,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                     child: const Text('Unblock'),
                   ),
                 ),
-                SizedBox(height: AppDimensions.paddingSm),
+                const SizedBox(height: AppDimensions.paddingSm),
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(
@@ -135,7 +135,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                 children: <Widget>[
                   SizedBox(height: MediaQuery.of(context).size.height * 0.22),
                   Padding(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: AppDimensions.paddingLg,
                     ),
                     child: Column(
@@ -145,7 +145,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                           color: AppColors.textMuted,
                           size: 54,
                         ),
-                        SizedBox(height: AppDimensions.paddingMd),
+                        const SizedBox(height: AppDimensions.paddingMd),
                         Text(
                           'Failed to load blocked users.',
                           style: AppTextStyles.headlineMedium.copyWith(
@@ -153,7 +153,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: AppDimensions.paddingSm),
+                        const SizedBox(height: AppDimensions.paddingSm),
                         TextButton(
                           onPressed: () {
                             ref.read(blockedUsersProvider.notifier).loadInitial();
@@ -173,7 +173,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                 children: <Widget>[
                   SizedBox(height: MediaQuery.of(context).size.height * 0.22),
                   Padding(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: AppDimensions.paddingLg,
                     ),
                     child: Column(
@@ -183,7 +183,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                           size: 72,
                           color: AppColors.textMuted,
                         ),
-                        SizedBox(height: AppDimensions.paddingMd),
+                        const SizedBox(height: AppDimensions.paddingMd),
                         Text(
                           "You haven't blocked anyone.",
                           style: AppTextStyles.headlineMedium.copyWith(
@@ -211,9 +211,9 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
               ),
               itemBuilder: (BuildContext context, int index) {
                 if (index >= state.users.length) {
-                  return Padding(
+                  return const Padding(
                     padding: EdgeInsets.all(AppDimensions.paddingMd),
-                    child: const Center(
+                    child: Center(
                       child: CircularProgressIndicator(),
                     ),
                   );

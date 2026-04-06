@@ -17,10 +17,23 @@ class PaginatedFollowingUsersModel with _$PaginatedFollowingUsersModel {
     required bool isLast,
   }) = _PaginatedFollowingUsersModel;
 
-  factory PaginatedFollowingUsersModel.fromJson(
-    Map<String, dynamic> json,
-  ) =>
-      _$PaginatedFollowingUsersModelFromJson(json);
+  factory PaginatedFollowingUsersModel.fromJson(Map<String, dynamic> json) {
+    final dynamic rawContent = json['content'];
+    final List<FollowingUserModel> parsedContent =
+        (rawContent is List<dynamic> ? rawContent : const <dynamic>[])
+            .whereType<Map<String, dynamic>>()
+            .map(FollowingUserModel.fromJson)
+            .toList();
+
+    return PaginatedFollowingUsersModel(
+      content: parsedContent,
+      pageNumber: (json['pageNumber'] ?? json['number'] ?? 0) as int,
+      pageSize: (json['pageSize'] ?? json['size'] ?? 20) as int,
+      totalElements: (json['totalElements'] ?? 0) as int,
+      totalPages: (json['totalPages'] ?? 1) as int,
+      isLast: (json['isLast'] ?? json['last'] ?? true) as bool,
+    );
+  }
 }
 
 extension PaginatedFollowingUsersMapper on PaginatedFollowingUsersModel {

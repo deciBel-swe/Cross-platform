@@ -1,13 +1,12 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/repositories/social_graph_mock_repository.dart';
 import '../../domain/entities/following_user.dart';
 import '../../domain/repositories/social_graph_repository.dart';
-
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../data/repositories/social_graph_mock_repository.dart';
 
 final socialGraphRepositoryProvider = Provider<SocialGraphRepository>((ref) {
   final useMock = dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';

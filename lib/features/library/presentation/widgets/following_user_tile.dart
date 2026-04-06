@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../domain/entities/following_user.dart';
 import '../../../library_profile/presentation/widgets/pro_badge.dart';
+import '../../domain/entities/following_user.dart';
 
 class FollowingUserTile extends StatelessWidget {
   const FollowingUserTile({
@@ -25,7 +25,7 @@ class FollowingUserTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: AppDimensions.paddingMd,
             vertical: AppDimensions.paddingMd,
           ),
@@ -46,7 +46,7 @@ class FollowingUserTile extends StatelessWidget {
                       )
                     : null,
               ),
-              SizedBox(width: AppDimensions.paddingMd),
+              const SizedBox(width: AppDimensions.paddingMd),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,12 +65,12 @@ class FollowingUserTile extends StatelessWidget {
                           ),
                         ),
                         if (isPro) ...<Widget>[
-                          SizedBox(width: AppDimensions.paddingXs),
-                          ProBadge(),
+                          const SizedBox(width: AppDimensions.paddingXs),
+                          const ProBadge(),
                         ],
                       ],
                     ),
-                    SizedBox(height: AppDimensions.paddingXs),
+                    const SizedBox(height: AppDimensions.paddingXs),
                     Row(
                       children: <Widget>[
                         const Icon(
@@ -94,7 +94,7 @@ class FollowingUserTile extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(width: AppDimensions.paddingMd),
+              const SizedBox(width: AppDimensions.paddingMd),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 22,

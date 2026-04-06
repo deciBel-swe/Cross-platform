@@ -88,7 +88,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                 children: <Widget>[
                   SizedBox(height: MediaQuery.of(context).size.height * 0.22),
                   Padding(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: AppDimensions.paddingLg,
                     ),
                     child: Column(
@@ -98,7 +98,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                           color: AppColors.textMuted,
                           size: 54,
                         ),
-                        SizedBox(height: AppDimensions.paddingMd),
+                        const SizedBox(height: AppDimensions.paddingMd),
                         Text(
                           'Failed to load following users.',
                           style: AppTextStyles.headlineMedium.copyWith(
@@ -106,7 +106,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: AppDimensions.paddingSm),
+                        const SizedBox(height: AppDimensions.paddingSm),
                         TextButton(
                           onPressed: () {
                             ref.read(followingProvider.notifier).loadInitial();
@@ -126,7 +126,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                 children: <Widget>[
                   SizedBox(height: MediaQuery.of(context).size.height * 0.2),
                   Padding(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: AppDimensions.paddingLg,
                     ),
                     child: Column(
@@ -136,7 +136,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                           size: 72,
                           color: AppColors.textMuted,
                         ),
-                        SizedBox(height: AppDimensions.paddingMd),
+                        const SizedBox(height: AppDimensions.paddingMd),
                         Text(
                           'You are not following anyone yet.',
                           style: AppTextStyles.headlineMedium.copyWith(
@@ -144,7 +144,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: AppDimensions.paddingSm),
+                        const SizedBox(height: AppDimensions.paddingSm),
                         Text(
                           'Discover artists and creators to build your community.',
                           style: AppTextStyles.bodyMedium.copyWith(
@@ -152,7 +152,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: AppDimensions.paddingLg),
+                        const SizedBox(height: AppDimensions.paddingLg),
                         ElevatedButton(
                           onPressed: () {
                             context.go(RoutePaths.discover);
@@ -172,17 +172,17 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
             return ListView.separated(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.only(top: AppDimensions.paddingMd),
+              padding: const EdgeInsets.only(top: AppDimensions.paddingMd),
               itemCount: itemCount,
               separatorBuilder: (_, __) => const SizedBox.shrink(),
               itemBuilder: (BuildContext context, int index) {
                 if (index == 0) {
                   return Padding(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: AppDimensions.paddingMd,
                     ),
                     child: Container(
-                      padding: EdgeInsets.all(AppDimensions.paddingMd),
+                      padding: const EdgeInsets.all(AppDimensions.paddingMd),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius:
@@ -205,7 +205,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                               color: AppColors.onPrimary,
                             ),
                           ),
-                          SizedBox(width: AppDimensions.paddingMd),
+                          const SizedBox(width: AppDimensions.paddingMd),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,9 +240,9 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                 final int userIndex = index - 1;
 
                 if (userIndex >= state.users.length) {
-                  return Padding(
+                  return const Padding(
                     padding: EdgeInsets.all(AppDimensions.paddingMd),
-                    child: const Center(
+                    child: Center(
                       child: CircularProgressIndicator(),
                     ),
                   );

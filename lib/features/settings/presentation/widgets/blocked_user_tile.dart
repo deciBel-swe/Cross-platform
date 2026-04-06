@@ -20,7 +20,7 @@ class BlockedUserTile extends StatelessWidget {
     return Material(
       color: AppColors.background,
       child: Padding(
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.paddingMd,
           vertical: AppDimensions.paddingMd,
         ),
@@ -40,7 +40,7 @@ class BlockedUserTile extends StatelessWidget {
                     )
                   : null,
             ),
-            SizedBox(width: AppDimensions.paddingMd),
+            const SizedBox(width: AppDimensions.paddingMd),
             Expanded(
               child: Text(
                 user.username,
@@ -52,7 +52,7 @@ class BlockedUserTile extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(width: AppDimensions.paddingMd),
+            const SizedBox(width: AppDimensions.paddingMd),
             TextButton(
               onPressed: onUnblockTap,
               child: Text(

@@ -17,8 +17,23 @@ class PaginatedBlockedUsersModel with _$PaginatedBlockedUsersModel {
     required bool isLast,
   }) = _PaginatedBlockedUsersModel;
 
-  factory PaginatedBlockedUsersModel.fromJson(Map<String, dynamic> json) =>
-      _$PaginatedBlockedUsersModelFromJson(json);
+  factory PaginatedBlockedUsersModel.fromJson(Map<String, dynamic> json) {
+    final dynamic rawContent = json['content'];
+    final List<BlockedUserModel> parsedContent =
+        (rawContent is List<dynamic> ? rawContent : const <dynamic>[])
+            .whereType<Map<String, dynamic>>()
+            .map(BlockedUserModel.fromJson)
+            .toList();
+
+    return PaginatedBlockedUsersModel(
+      content: parsedContent,
+      pageNumber: (json['pageNumber'] ?? json['number'] ?? 0) as int,
+      pageSize: (json['pageSize'] ?? json['size'] ?? 20) as int,
+      totalElements: (json['totalElements'] ?? 0) as int,
+      totalPages: (json['totalPages'] ?? 1) as int,
+      isLast: (json['isLast'] ?? json['last'] ?? true) as bool,
+    );
+  }
 }
 
 extension PaginatedBlockedUsersModelMapper on PaginatedBlockedUsersModel {

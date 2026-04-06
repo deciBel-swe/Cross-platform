@@ -15,8 +15,15 @@ class FollowingUserModel with _$FollowingUserModel {
     required bool isFollowing,
   }) = _FollowingUserModel;
 
-  factory FollowingUserModel.fromJson(Map<String, dynamic> json) =>
-      _$FollowingUserModelFromJson(json);
+  factory FollowingUserModel.fromJson(Map<String, dynamic> json) {
+    return FollowingUserModel(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      username: (json['username'] ?? '') as String,
+      avatarUrl: json['avatarUrl'] as String?,
+      tier: json['tier'] as String?,
+      isFollowing: (json['isFollowing'] as bool?) ?? false,
+    );
+  }
 }
 
 extension FollowingUserModelMapper on FollowingUserModel {

@@ -13,22 +13,12 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return getIt<ProfileRepository>();
 });
 
-<<<<<<< HEAD
-class UserProfileNotifier
-    extends FamilyAsyncNotifier<Either<Failure, UserProfile>, int?> {
-  int? _userId;
-
-  @override
-  Future<Either<Failure, UserProfile>> build(int? arg) async {
-    _userId = arg;
-=======
 class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
   @override
   Future<Either<Failure, UserProfile>> build() async {
     ref.watch(followRefreshTickProvider);
 
     // This runs automatically when the provider is first watched.
->>>>>>> dev
     return _fetchProfile();
   }
 
@@ -65,9 +55,7 @@ class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
   Future<Either<Failure, UserProfile>> _fetchProfile() async {
     final repository = ref.read(profileRepositoryProvider);
 
-    final result = _userId == null
-        ? await repository.getUserProfile()
-        : await repository.getPublicProfile(_userId!);
+    final result = await repository.getUserProfile();
 
     return result.fold(
       (failure) {

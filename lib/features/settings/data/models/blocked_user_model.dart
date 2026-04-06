@@ -15,8 +15,15 @@ class BlockedUserModel with _$BlockedUserModel {
     required bool isFollowing,
   }) = _BlockedUserModel;
 
-  factory BlockedUserModel.fromJson(Map<String, dynamic> json) =>
-      _$BlockedUserModelFromJson(json);
+  factory BlockedUserModel.fromJson(Map<String, dynamic> json) {
+    return BlockedUserModel(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      username: (json['username'] ?? '') as String,
+      avatarUrl: json['avatarUrl'] as String?,
+      tier: json['tier'] as String?,
+      isFollowing: (json['isFollowing'] as bool?) ?? false,
+    );
+  }
 }
 
 extension BlockedUserModelMapper on BlockedUserModel {
