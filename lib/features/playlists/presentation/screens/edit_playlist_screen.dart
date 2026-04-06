@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../library/domain/entities/track.dart';
+
 import '../../domain/entities/playlist.dart';
 import '../notifiers/playlist_form_notifier.dart';
 import '../providers/edit_playlist_provider.dart';
+import '../providers/playlist_details_provider.dart';
 import '../widgets/playlist_details_tab.dart';
 import '../widgets/playlist_tracks_tab.dart';
 
@@ -137,39 +140,113 @@ class _EditPlaylistScreenState extends ConsumerState<EditPlaylistScreen> {
                     // If validation fails disables the button.
                     onPressed: canSave
                         ? () async {
+                            final formNotifier = ref.read(
+                              playlistFormProvider(widget.playlist).notifier,
+                            );
+                            final tracksNotifier = ref.read(
+                              editPlaylistProvider(widget.playlist).notifier,
+                            );
+
+                            // Capture exact state before popping
+                            final deletedTracks = List<Track>.from(
+                              tracksNotifier.deletedTracks,
+                            );
+                            final hasMetadataChanges = formNotifier.hasChanges;
+                            final hasTrackChanges = tracksNotifier.hasChanges;
+
+                            final messenger = ScaffoldMessenger.of(context);
+                            final container = ProviderScope.containerOf(
+                              context,
+                            );
+                            final playlistId = widget.playlist.id;
+
                             bool metadataSuccess = true;
                             bool tracksSuccess = true;
 
                             if (hasMetadataChanges) {
-                              metadataSuccess = await ref
-                                  .read(
-                                    playlistFormProvider(
-                                      widget.playlist,
-                                    ).notifier,
-                                  )
+                              metadataSuccess = await formNotifier
                                   .submitPlaylist();
                             }
-
                             if (hasTrackChanges) {
-                              tracksSuccess = await ref
-                                  .read(
-                                    editPlaylistProvider(
-                                      widget.playlist,
-                                    ).notifier,
-                                  )
+                              tracksSuccess = await tracksNotifier
                                   .saveChanges();
                             }
 
                             if (metadataSuccess &&
                                 tracksSuccess &&
                                 context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Changes saved successfully!'),
-                                  backgroundColor: AppColors.success,
-                                ),
-                              );
+                              // 1. Hand over the deletions to the background Details screen
+                              if (deletedTracks.isNotEmpty) {
+                                container
+                                    .read(
+                                      playlistDetailsProvider(
+                                        playlistId,
+                                      ).notifier,
+                                    )
+                                    .scheduleDeletions(deletedTracks);
+                              } else if (hasTrackChanges ||
+                                  hasMetadataChanges) {
+                                container.invalidate(
+                                  playlistDetailsProvider(playlistId),
+                                );
+                              }
+
+                              // 2. Pop instantly Snappy UX
                               context.pop();
+
+                              // 3. Show appropriate Snackbar over the Details Screen
+                              messenger.clearSnackBars();
+                              if (deletedTracks.isNotEmpty) {
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    duration: const Duration(seconds: 5),
+                                    behavior: SnackBarBehavior.floating,
+                                    content: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: TweenAnimationBuilder<int>(
+                                            tween: IntTween(begin: 5, end: 0),
+                                            duration: const Duration(seconds: 5),
+                                            builder: (context, value, child) {
+                                              return Text(
+                                                'Changes saved. Undo deletions? ($value)',
+                                                overflow: TextOverflow.ellipsis, 
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            messenger.hideCurrentSnackBar();
+                                            container
+                                                .read(playlistDetailsProvider(playlistId).notifier)
+                                                .undoDeletions();
+                                          },
+                                          child: const Text(
+                                            'Undo',
+                                            style: TextStyle(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                messenger.clearSnackBars();
+                                messenger.showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Changes saved successfully!',
+                                    ),
+                                    backgroundColor: AppColors.success,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
                             }
                           }
                         : null,

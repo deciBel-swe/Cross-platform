@@ -157,28 +157,9 @@ class PlaylistDetailsTab extends ConsumerWidget {
             return null;
           },
         ),
-
-        // Tags Menu Item
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text(
-            'Tags',
-            style: TextStyle(color: AppColors.textMuted),
-          ),
-          trailing: const Icon(
-            Icons.chevron_right,
-            color: AppColors.textPrimary,
-          ),
-          onTap: isLoading
-              ? null
-              : () {
-                  // TODO: Navigate to tags editor or add tags list like upload
-                },
-        ),
-
         const SizedBox(height: 32),
 
-        // Make Public Switch (Matching your exact reference logic!)
+        // Make Public Switch
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

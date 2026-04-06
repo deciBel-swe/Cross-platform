@@ -154,8 +154,10 @@ class _PlaylistHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
           // Ensures the mosaic grid stays inside the rounded corners
-          clipBehavior: Clip.hardEdge, 
-          child: (playlist.coverArt != null && playlist.coverArt!.trim().isNotEmpty)
+          clipBehavior: Clip.hardEdge,
+          child:
+              (playlist.coverArt != null &&
+                  playlist.coverArt!.trim().isNotEmpty)
               ? Image.file(
                   File(playlist.coverArt!),
                   fit: BoxFit.cover,
@@ -412,21 +414,14 @@ class _MosaicCover extends StatelessWidget {
           );
         },
       );
-    } 
-    
+    }
+
     // If we have at least 1, just show the first one taking up the whole space
     if (tracksWithCovers.isNotEmpty) {
-      return Image.network(
-        tracksWithCovers.first.coverUrl!,
-        fit: BoxFit.cover,
-      );
+      return Image.network(tracksWithCovers.first.coverUrl!, fit: BoxFit.cover);
     }
 
     // fallback if no tracks have covers
-    return const Icon(
-      Icons.music_note,
-      color: AppColors.textMuted,
-      size: 48,
-    );
+    return const Icon(Icons.music_note, color: AppColors.textMuted, size: 48);
   }
 }

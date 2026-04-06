@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/genre_constants.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
 import 'playlist_form_notifier.dart';
@@ -18,6 +19,10 @@ class EditPlaylistNotifier
     _initialTracks = List.from(arg.tracks);
     return List.from(arg.tracks);
   }
+
+  final genreListProvider = StateProvider<List<String>>((ref) {
+  return GenreConstants.genres;
+  });
 
   // Safely compares the IDs to know if the order actually changed
   bool get hasOrderChanged {

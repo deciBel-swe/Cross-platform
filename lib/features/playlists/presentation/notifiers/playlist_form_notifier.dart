@@ -159,6 +159,13 @@ class PlaylistFormNotifier
       (newPlaylist) {
         ref.invalidate(userPlaylistsProvider);
 
+        // If editing an existing one, just update the metadata locally
+        if (arg == null) {
+          ref.invalidate(userPlaylistsProvider);
+        } else {
+          ref.read(userPlaylistsProvider.notifier).updatePlaylistMetadataLocally(newPlaylist);
+        }
+
         state = AsyncData(
           PlaylistMetadata(
             title: '',

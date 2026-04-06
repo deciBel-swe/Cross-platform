@@ -14,7 +14,7 @@ class SubmitSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(uploadNotifierProvider);
-    final isLoading = state is AsyncLoading;
+    final isLoading = state.isLoading;
     final metadata = state.valueOrNull;
 
     return SizedBox(
