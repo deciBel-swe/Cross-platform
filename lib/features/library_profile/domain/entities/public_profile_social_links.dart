@@ -12,6 +12,7 @@ class PublicProfileSocialLinks {
     this.website,
     this.supportLink,
   });
+
   final String? instagram;
   final String? twitter;
   final String? youtube;
@@ -22,10 +23,21 @@ class PublicProfileSocialLinks {
   final String? website;
   final String? supportLink;
 
-  static List<String> get displayPlatforms =>
-      WebProfilePlatformUtils.displayPlatforms;
+  // 🔥 IMPORTANT FIX: only visible platforms (NO supportLink)
+  static List<String> get displayPlatforms => [
+        WebProfilePlatformUtils.instagram,
+        WebProfilePlatformUtils.twitter,
+        WebProfilePlatformUtils.youtube,
+        WebProfilePlatformUtils.tiktok,
+        WebProfilePlatformUtils.linkedin,
+        WebProfilePlatformUtils.snapchat,
+        WebProfilePlatformUtils.facebook,
+        WebProfilePlatformUtils.website,
+      ];
 
-  static List<String> get allPlatforms => WebProfilePlatformUtils.allPlatforms;
+  // keep allPlatforms unchanged (backend safety)
+  static List<String> get allPlatforms =>
+      WebProfilePlatformUtils.allPlatforms;
 
   bool get isEmpty =>
       _isNullOrEmpty(instagram) &&
@@ -35,8 +47,7 @@ class PublicProfileSocialLinks {
       _isNullOrEmpty(linkedin) &&
       _isNullOrEmpty(snapchat) &&
       _isNullOrEmpty(facebook) &&
-      _isNullOrEmpty(website) &&
-      _isNullOrEmpty(supportLink);
+      _isNullOrEmpty(website);
 
   bool _isNullOrEmpty(String? value) {
     return value == null || value.trim().isEmpty;
@@ -66,7 +77,7 @@ class PublicProfileSocialLinks {
       case WebProfilePlatformUtils.website:
         return website;
       case WebProfilePlatformUtils.supportLink:
-        return supportLink;
+        return supportLink; // still exists but ignored
       default:
         return null;
     }
@@ -74,7 +85,6 @@ class PublicProfileSocialLinks {
 
   List<String> nonEmptyPlatforms({bool includeSupportLink = true}) {
     final platforms = includeSupportLink ? allPlatforms : displayPlatforms;
-
     return platforms.where(hasValueForPlatform).toList();
   }
 
