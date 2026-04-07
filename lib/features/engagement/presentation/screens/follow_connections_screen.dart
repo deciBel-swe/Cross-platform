@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -176,12 +177,24 @@ class _ConnectionTile extends ConsumerWidget {
             child: CircleAvatar(
               radius: 20,
               backgroundColor: AppColors.surface,
-              backgroundImage: user.avatarUrl != null
-                  ? NetworkImage(user.avatarUrl!)
-                  : null,
-              child: user.avatarUrl == null
-                  ? const Icon(Icons.person, color: AppColors.onPrimary)
-                  : null,
+              child: ClipOval(
+                child: user.avatarUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: user.avatarUrl!,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Icon(
+                          Icons.person,
+                          color: AppColors.onPrimary,
+                        ),
+                        errorWidget: (context, url, error) => const Icon(
+                          Icons.person,
+                          color: AppColors.onPrimary,
+                        ),
+                      )
+                    : const Icon(Icons.person, color: AppColors.onPrimary),
+              ),
             ),
           ),
           const SizedBox(width: AppConstants.spacingSmall),

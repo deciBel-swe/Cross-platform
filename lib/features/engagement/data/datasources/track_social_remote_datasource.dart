@@ -86,7 +86,6 @@ class TrackSocialRemoteDatasource {
       if (userId == null && _cachedRepostedMeEndpoint != null)
         _cachedRepostedMeEndpoint!,
       if (userId == null) '/users/me/repost',
-      if (userId == null) '/users/me/reposts',
     ];
 
     final firstPass = _uniqueEndpoints(meEndpoints);
@@ -105,8 +104,6 @@ class TrackSocialRemoteDatasource {
       final resolvedUserId = userId ?? await _resolveCurrentUserId();
       final fallbackEndpoints = <String>[
         if (resolvedUserId != null) '/users/$resolvedUserId/repost',
-        if (resolvedUserId != null) '/users/$resolvedUserId/reposts',
-        if (resolvedUserId != null) '/users/$resolvedUserId/reposted-tracks',
       ];
 
       return _fetchTrackCollection(

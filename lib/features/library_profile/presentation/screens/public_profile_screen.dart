@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -318,13 +319,12 @@ class _CoverPhoto extends StatelessWidget {
       height: coverHeight,
       width: double.infinity,
       child: imageUrl != null && imageUrl!.isNotEmpty
-          ? Image.network(
-              imageUrl!,
+          ? CachedNetworkImage(
+              imageUrl: imageUrl!,
               fit: BoxFit.cover,
               filterQuality: FilterQuality.high,
-              errorBuilder: (_, _, _) => _placeholder(),
-              loadingBuilder: (_, child, progress) =>
-                  progress == null ? child : _placeholder(),
+              placeholder: (_, _) => _placeholder(),
+              errorWidget: (_, _, _) => _placeholder(),
             )
           : _placeholder(),
     );
@@ -360,10 +360,11 @@ class _Avatar extends StatelessWidget {
       ),
       child: ClipOval(
         child: imageUrl != null && imageUrl!.isNotEmpty
-            ? Image.network(
-                imageUrl!,
+            ? CachedNetworkImage(
+                imageUrl: imageUrl!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _avatarPlaceholder(),
+                placeholder: (_, _) => _avatarPlaceholder(),
+                errorWidget: (_, _, _) => _avatarPlaceholder(),
               )
             : _avatarPlaceholder(),
       ),

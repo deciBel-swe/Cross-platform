@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -439,13 +440,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-class _ProfileCoverPhoto extends StatelessWidget {
+class _ProfileCoverPhoto extends StatefulWidget {
   const _ProfileCoverPhoto({this.imageUrl});
 
   final String? imageUrl;
 
   @override
+  State<_ProfileCoverPhoto> createState() => _ProfileCoverPhotoState();
+}
+
+class _ProfileCoverPhotoState extends State<_ProfileCoverPhoto> {
+  String? _lastKnownImageUrl;
+
+  @override
   Widget build(BuildContext context) {
+    final imageUrl = widget.imageUrl;
+    if (imageUrl != null && imageUrl.trim().isNotEmpty) {
+      _lastKnownImageUrl = imageUrl;
+    }
+
+    final effectiveImageUrl = (imageUrl != null && imageUrl.trim().isNotEmpty)
+        ? imageUrl
+        : _lastKnownImageUrl;
+
     final bool isDesktop = MediaQuery.sizeOf(context).width > 600;
     final double coverHeight = isDesktop ? 350.0 : 160.0;
 
@@ -453,23 +470,20 @@ class _ProfileCoverPhoto extends StatelessWidget {
       height: coverHeight,
       width: double.infinity,
       color: AppColors.surface,
-      child: imageUrl == null
+      child: effectiveImageUrl == null
           ? _buildPlaceholder()
-          : ProfileImagePathUtils.isRemote(imageUrl!)
-          ? Image.network(
-              imageUrl!,
+          : ProfileImagePathUtils.isRemote(effectiveImageUrl)
+          ? CachedNetworkImage(
+              imageUrl: effectiveImageUrl,
               fit: BoxFit.cover,
               filterQuality: FilterQuality.high,
-              errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return _buildPlaceholder();
-              },
+              placeholder: (context, url) => _buildPlaceholder(),
+              errorWidget: (context, url, error) => _buildPlaceholder(),
             )
           : Builder(
               builder: (context) {
                 final localPath = ProfileImagePathUtils.localFilePath(
-                  imageUrl!,
+                  effectiveImageUrl,
                 );
 
                 if (localPath == null) {
