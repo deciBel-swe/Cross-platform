@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../library/domain/entities/track.dart';
-import '../../data/repositories/mock_playlist_repository.dart';
 import '../../domain/entities/playlist.dart';
 import '../../domain/entities/playlist_metadata.dart';
 import '../../domain/repositories/i_playlist_repository.dart';
@@ -19,7 +19,7 @@ final userPlaylistsProvider =
     );
 
 final playlistRepositoryProvider = Provider<IPlaylistRepository>((ref) {
-  return MockPlaylistRepository();
+  return getIt<IPlaylistRepository>();
 });
 
 class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {

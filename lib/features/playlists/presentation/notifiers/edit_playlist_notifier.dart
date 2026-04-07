@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/genre_constants.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
-import 'playlist_form_notifier.dart';
+import '../providers/user_playlists_provider.dart';
 
 class EditPlaylistNotifier
     extends AutoDisposeFamilyAsyncNotifier<List<Track>, Playlist> {

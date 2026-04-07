@@ -84,6 +84,18 @@ import '../../features/library_profile/domain/repositories/track_repository.dart
     as _i127;
 import '../../features/library_profile/domain/repositories/update_image.dart'
     as _i728;
+import '../../features/playlists/data/datasources/playlist_remote_datasource.dart'
+    as _i108;
+import '../../features/playlists/data/repositories/playlist_repository.dart'
+    as _i757;
+import '../../features/playlists/domain/repositories/i_playlist_repository.dart'
+    as _i582;
+import '../../features/settings/data/datasources/blocked_users_remote_datasource.dart'
+    as _i688;
+import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
+    as _i292;
+import '../../features/settings/domain/repositories/blocked_users_repository.dart'
+    as _i288;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/mock_upload_repository_impl.dart'
@@ -148,6 +160,16 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i690.MockTrackRepository(),
       registerFor: {_mock},
     );
+    gh.lazySingleton<_i590.ITrackSocialRepository>(
+      () => _i872.MockTrackSocialRepository(),
+      registerFor: {_mock},
+    );
+    gh.factory<_i108.IPlaylistRemoteDataSource>(
+      () => _i108.PlaylistRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i269.IModerationRemoteDataSource>(
+      () => _i269.ModerationRemoteDataSource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => const _i580.MockUploadRepository(),
       registerFor: {_mock},
@@ -186,6 +208,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i666.SecureStorageService>(),
       ),
       registerFor: {_prod},
+    );
+    gh.factory<_i582.IPlaylistRepository>(
+      () => _i757.PlaylistRepository(gh<_i108.IPlaylistRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i1006.SocialGraphRepository>(
+      () => _i645.SocialGraphRepositoryImpl(
+        gh<_i237.SocialGraphRemoteDatasource>(),
+      ),
     );
     gh.lazySingleton<_i2.AllGenresRepository>(
       () => _i140.AllGenresRepositoryImpl(

@@ -3,19 +3,14 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mime/mime.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
-import '../../data/repositories/mock_playlist_repository.dart';
 import '../../domain/entities/playlist.dart';
 import '../../domain/entities/playlist_metadata.dart';
 import '../../domain/repositories/i_playlist_repository.dart';
 import '../providers/user_playlists_provider.dart';
-
-final playlistRepositoryProvider = Provider<IPlaylistRepository>((ref) {
-  //return getIt<IPlaylistRepository>();
-  return MockPlaylistRepository();
-});
 
 /// Provider for the Create/Update Playlist form state
 final playlistFormProvider = AsyncNotifierProvider.autoDispose

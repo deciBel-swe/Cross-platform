@@ -24,7 +24,9 @@ _$PlaylistModelImpl _$$PlaylistModelImplFromJson(Map<String, dynamic> json) =>
       isPrivate: json['isPrivate'] as bool? ?? false,
       isLiked: json['isLiked'] as bool? ?? false,
       coverArt: json['CoverArt'] as String?,
-      owner: OwnerModel.fromJson(json['owner'] as Map<String, dynamic>),
+      owner: json['owner'] == null
+          ? null
+          : OwnerModel.fromJson(json['owner'] as Map<String, dynamic>),
       tracks:
           (json['tracks'] as List<dynamic>?)
               ?.map((e) => TrackModel.fromJson(e as Map<String, dynamic>))
