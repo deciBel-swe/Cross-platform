@@ -59,12 +59,14 @@ class FollowConnectionsScreen extends ConsumerWidget {
               title: primaryTitle,
               data: primaryAsync,
               emptyMessage: 'No $primaryTitle yet',
+              itemsAreFollowers: type == FollowConnectionsType.followers,
             ),
             const SizedBox(height: AppConstants.spacingLarge),
             _Section(
               title: 'suggested',
               data: suggestedAsync,
               emptyMessage: 'No suggestions right now',
+              itemsAreFollowers: false,
             ),
           ],
         ),
@@ -78,11 +80,13 @@ class _Section extends StatelessWidget {
     required this.title,
     required this.data,
     required this.emptyMessage,
+    required this.itemsAreFollowers,
   });
 
   final String title;
   final AsyncValue<PaginatedEngagers> data;
   final String emptyMessage;
+  final bool itemsAreFollowers;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +121,12 @@ class _Section extends StatelessWidget {
 
             return Column(
               children: page.content
-                  .map((user) => _ConnectionTile(user: user))
+                  .map(
+                    (user) => _ConnectionTile(
+                      user: user,
+                      isFollowerContext: itemsAreFollowers,
+                    ),
+                  )
                   .toList(),
             );
           },
@@ -144,19 +153,26 @@ class _Section extends StatelessWidget {
   }
 }
 
-class _ConnectionTile extends StatelessWidget {
-  const _ConnectionTile({required this.user});
+class _ConnectionTile extends ConsumerWidget {
+  const _ConnectionTile({required this.user, required this.isFollowerContext});
 
   final TrackEngager user;
+  final bool isFollowerContext;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    void openProfile() {
+      ref.read(followBackHintProvider(user.id).notifier).state =
+          isFollowerContext;
+      context.push(RoutePaths.publicProfile(user.id));
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingSmall),
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => context.push(RoutePaths.publicProfile(user.id)),
+            onTap: openProfile,
             child: CircleAvatar(
               radius: 20,
               backgroundColor: AppColors.surface,
@@ -171,7 +187,7 @@ class _ConnectionTile extends StatelessWidget {
           const SizedBox(width: AppConstants.spacingSmall),
           Expanded(
             child: GestureDetector(
-              onTap: () => context.push(RoutePaths.publicProfile(user.id)),
+              onTap: openProfile,
               behavior: HitTestBehavior.opaque,
               child: Text(
                 user.username,

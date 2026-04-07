@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -369,8 +371,10 @@ class _ProfileHeader extends StatelessWidget {
             ? (isFollowing != profile.isFollowing ? (isFollowing ? 1 : -1) : 0)
             : 0;
 
-        final displayedFollowers =
-            snapshot.stats.followersCount + followerDelta;
+        final displayedFollowers = math.max(
+          snapshot.stats.followersCount + followerDelta,
+          0,
+        );
 
         return _ProfileHeaderContent(
           userId: userId,
@@ -512,10 +516,13 @@ class _ActionRow extends ConsumerWidget {
       orElse: () => false,
     );
 
+    final followBackHint = ref.watch(followBackHintProvider(userId));
+    final isFollowedBy = profile.isFollowedBy || followBackHint;
+
     return Row(
       children: [
         if (!isOwnProfile) ...[
-          FollowButton(userId: userId, isFollowedBy: profile.isFollowedBy),
+          FollowButton(userId: userId, isFollowedBy: isFollowedBy),
           const SizedBox(width: AppConstants.spacingSmall),
         ],
         if (profile.socialLinks != null)
