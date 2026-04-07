@@ -25,10 +25,12 @@ class PaginatedBlockedUsersModel with _$PaginatedBlockedUsersModel {
       _$PaginatedBlockedUsersModelFromJson(json);
 }
 
-Object? _readPageNumber(Map json, String key) =>
+Object? _readPageNumber(Map<Object?, Object?> json, String key) =>
     json['pageNumber'] ?? json['number'];
-Object? _readPageSize(Map json, String key) => json['pageSize'] ?? json['size'];
-Object? _readIsLast(Map json, String key) => json['isLast'] ?? json['last'];
+Object? _readPageSize(Map<Object?, Object?> json, String key) =>
+    json['pageSize'] ?? json['size'];
+Object? _readIsLast(Map<Object?, Object?> json, String key) =>
+    json['isLast'] ?? json['last'];
 
 int _toInt(Object? value) => (value as num?)?.toInt() ?? 0;
 

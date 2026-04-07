@@ -64,11 +64,7 @@ class MockProfileRepository implements ProfileRepository {
         isPrivate: false,
         showHistory: true,
       ),
-      stats: const UserStats(
-        followers: 138,
-        following: 140,
-        tracksCount: 5,
-      ),
+      stats: const UserStats(followers: 138, following: 140, tracksCount: 5),
     );
 
     return Right(publicProfile);
