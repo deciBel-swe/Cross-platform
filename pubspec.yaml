@@ -102,6 +102,7 @@ flutter:
 
   assets:
     - assets/icon/
+    - .env
     - assets/background/
     - assets/background/desktop/
     - assets/html/

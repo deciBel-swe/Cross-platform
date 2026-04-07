@@ -9,6 +9,7 @@ import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/widgets/follow_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/public_profile.dart';
+import '../providers/block_provider.dart';
 import '../providers/public_profile_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/expandable_bio.dart';
@@ -58,6 +59,129 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     }
   }
 
+  Future<bool> _showConfirmDialog(
+    BuildContext context,
+    bool isBlocked,
+  ) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: const Color(0xFF2B2B2B),
+            title: Text(
+              isBlocked ? 'Unblock user?' : 'Block user?',
+              style: const TextStyle(color: Colors.white),
+            ),
+            content: Text(
+              isBlocked
+                  ? "They will now be able to follow and interact with you and your content. We won't let them know that you have unblocked them."
+                  : 'This user will no longer be able to follow or interact with you, and you will not see notifications from them.',
+              style: const TextStyle(color: Colors.white70, height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(
+                  'CANCEL',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(
+                  isBlocked ? 'UNBLOCK' : 'BLOCK',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _showModerationSheet(
+    BuildContext context,
+    PublicProfile? profile,
+  ) async {
+    if (profile == null) {
+      return;
+    }
+
+    final bool isBlocked = ref.read(blockedUsersProvider).contains(profile.id);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white54,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Icon(
+                    isBlocked
+                        ? Icons.remove_circle_outline
+                        : Icons.block_outlined,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                  title: Text(
+                    isBlocked ? 'Unblock user' : 'Block user',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+
+                    final confirmed = await _showConfirmDialog(
+                      context,
+                      isBlocked,
+                    );
+                    if (!confirmed || !mounted) {
+                      return;
+                    }
+
+                    final notifier = ref.read(blockedUsersProvider.notifier);
+
+                    if (isBlocked) {
+                      notifier.unblock(profile.id);
+                    } else {
+                      notifier.block(profile.id);
+
+                      if (context.canPop()) {
+                        context.pop();
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
@@ -68,6 +192,21 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(publicProfileProvider(widget.userId));
+
+    ref.listen<Set<int>>(blockedUsersProvider, (previous, next) {
+      final wasBlocked = previous?.contains(widget.userId) ?? false;
+      final isBlocked = next.contains(widget.userId);
+
+      if (!wasBlocked && isBlocked) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User blocked successfully.')),
+        );
+      } else if (wasBlocked && !isBlocked) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User unblocked successfully.')),
+        );
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -127,6 +266,12 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           icon: const Icon(Icons.share_outlined, color: AppColors.onPrimary),
           onPressed: () {
             // TODO: share profile action
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.more_vert, color: AppColors.onPrimary),
+          onPressed: () {
+            _showModerationSheet(context, profileAsync.valueOrNull);
           },
         ),
       ],
