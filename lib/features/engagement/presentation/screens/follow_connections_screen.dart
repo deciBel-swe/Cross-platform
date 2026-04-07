@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/paginated_engagers.dart';
 import '../../domain/entities/track_engager.dart';
 import '../providers/follow_connections_provider.dart';
@@ -23,6 +25,11 @@ class FollowConnectionsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider).valueOrNull;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
+
     final primaryAsync = ref.watch(
       followConnectionsProvider((userId: userId, type: type)),
     );
@@ -61,6 +68,7 @@ class FollowConnectionsScreen extends ConsumerWidget {
               data: primaryAsync,
               emptyMessage: 'No $primaryTitle yet',
               itemsAreFollowers: type == FollowConnectionsType.followers,
+              currentUserId: currentUserId,
             ),
             const SizedBox(height: AppConstants.spacingLarge),
             _Section(
@@ -68,6 +76,7 @@ class FollowConnectionsScreen extends ConsumerWidget {
               data: suggestedAsync,
               emptyMessage: 'No suggestions right now',
               itemsAreFollowers: false,
+              currentUserId: currentUserId,
             ),
           ],
         ),
@@ -82,12 +91,14 @@ class _Section extends StatelessWidget {
     required this.data,
     required this.emptyMessage,
     required this.itemsAreFollowers,
+    required this.currentUserId,
   });
 
   final String title;
   final AsyncValue<PaginatedEngagers> data;
   final String emptyMessage;
   final bool itemsAreFollowers;
+  final int? currentUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +137,7 @@ class _Section extends StatelessWidget {
                     (user) => _ConnectionTile(
                       user: user,
                       isFollowerContext: itemsAreFollowers,
+                      currentUserId: currentUserId,
                     ),
                   )
                   .toList(),
@@ -155,14 +167,26 @@ class _Section extends StatelessWidget {
 }
 
 class _ConnectionTile extends ConsumerWidget {
-  const _ConnectionTile({required this.user, required this.isFollowerContext});
+  const _ConnectionTile({
+    required this.user,
+    required this.isFollowerContext,
+    required this.currentUserId,
+  });
 
   final TrackEngager user;
   final bool isFollowerContext;
+  final int? currentUserId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isCurrentUser = currentUserId != null && user.id == currentUserId;
+
     void openProfile() {
+      if (isCurrentUser) {
+        context.go(RoutePaths.profile);
+        return;
+      }
+
       ref.read(followBackHintProvider(user.id).notifier).state =
           isFollowerContext;
       context.push(RoutePaths.publicProfile(user.id));
@@ -211,11 +235,12 @@ class _ConnectionTile extends ConsumerWidget {
               ),
             ),
           ),
-          _InlineFollowButton(
-            userId: user.id,
-            initialIsFollowing: user.isFollowing,
-            showFollowBackWhenNotFollowing: isFollowerContext,
-          ),
+          if (!isCurrentUser)
+            _InlineFollowButton(
+              userId: user.id,
+              initialIsFollowing: user.isFollowing,
+              showFollowBackWhenNotFollowing: isFollowerContext,
+            ),
         ],
       ),
     );
