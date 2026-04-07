@@ -1,7 +1,7 @@
 /// GoRouter configuration – all app routes defined here.
 library;
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,13 +11,20 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/start_screen.dart';
+import '../../features/engagement/presentation/providers/follow_connections_provider.dart';
+import '../../features/engagement/presentation/screens/follow_connections_screen.dart';
+import '../../features/engagement/presentation/screens/liked_tracks_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/library/presentation/screens/following_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
+import '../../features/library/presentation/screens/track_edit_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
 import '../../features/library/presentation/screens/uploads_library_screen.dart';
 import '../../features/library_profile/presentation/screens/edit_profile_screen.dart';
+import '../../features/library_profile/presentation/screens/fullscreen_image_screen.dart';
 import '../../features/library_profile/presentation/screens/profile_screen.dart';
+import '../../features/library_profile/presentation/screens/public_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/web_profiles.dart';
 import '../../features/playlists/domain/entities/playlist.dart';
 import '../../features/playlists/presentation/screens/edit_playlist_screen.dart';
@@ -25,19 +32,24 @@ import '../../features/playlists/presentation/screens/playlist_details_screen.da
 import '../../features/playlists/presentation/screens/playlists_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
+import '../../features/settings/presentation/screens/blocked_users_screen.dart';
 import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/social_settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/upload/presentation/screens/upload_screen.dart';
+import '../theme/app_colors.dart';
 import 'go_router_refresh_stream.dart';
 import 'main_shell.dart';
 import 'route_paths.dart';
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = GoRouterRefreshStream(ref);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: RoutePaths.home,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
@@ -58,7 +70,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       if (authState is AuthUnauthenticated) {
         debugPrint('[AppRouter] -> Handling as AuthUnauthenticated.');
-        // If user is on a protected route or splash, send them to start
         return isAuthRoute && state.matchedLocation != RoutePaths.splash
             ? null
             : RoutePaths.start;
@@ -72,7 +83,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       debugPrint(
         '[AppRouter] -> State is Loading or Error. Staying on splash.',
       );
-      // Always go to splash while loading unless we are already on a route we want to keep
       return state.matchedLocation == RoutePaths.splash
           ? null
           : RoutePaths.splash;
@@ -94,6 +104,49 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
       ),
+      GoRoute(
+        path: '${RoutePaths.publicProfileBase}/:userId',
+        builder: (context, state) {
+          final userId = int.parse(state.pathParameters['userId']!);
+          return PublicProfileScreen(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '${RoutePaths.publicProfileFollowersBase}/:userId',
+        redirect: (context, state) {
+          final raw = state.pathParameters['userId'];
+          final userId = int.tryParse(raw ?? '');
+          if (userId == null) {
+            return RoutePaths.home;
+          }
+          return null;
+        },
+        builder: (context, state) {
+          final userId = int.parse(state.pathParameters['userId']!);
+          return FollowConnectionsScreen(
+            userId: userId,
+            type: FollowConnectionsType.followers,
+          );
+        },
+      ),
+      GoRoute(
+        path: '${RoutePaths.publicProfileFollowingBase}/:userId',
+        redirect: (context, state) {
+          final raw = state.pathParameters['userId'];
+          final userId = int.tryParse(raw ?? '');
+          if (userId == null) {
+            return RoutePaths.home;
+          }
+          return null;
+        },
+        builder: (context, state) {
+          final userId = int.parse(state.pathParameters['userId']!);
+          return FollowConnectionsScreen(
+            userId: userId,
+            type: FollowConnectionsType.following,
+          );
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),
@@ -108,6 +161,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: RoutePaths.upload,
                 builder: (context, state) => const UploadScreen(),
+              ),
+              GoRoute(
+                path: 'your-likes',
+                builder: (context, state) => const LikedTracksScreen(),
               ),
             ],
           ),
@@ -159,11 +216,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ],
                   ),
                   GoRoute(
+                    path: 'following',
+                    builder: (context, state) => const FollowingScreen(),
+                  ),
+                  GoRoute(
                     path: 'uploads',
                     builder: (context, state) => const UploadsLibraryScreen(),
                   ),
                   GoRoute(
+                    path: 'likes',
+                    builder: (context, state) => const LikedTracksScreen(),
+                  ),
+                  GoRoute(
+                    path: 'reposts',
+                    builder: (context, state) => const RepostedTracksScreen(),
+                  ),
+                  GoRoute(
                     path: 'track-preview/:trackId',
+                    parentNavigatorKey: _rootNavigatorKey,
                     redirect: (context, state) {
                       final raw = state.pathParameters['trackId'];
                       final parsed = int.tryParse(raw ?? '');
@@ -180,6 +250,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     },
                   ),
                   GoRoute(
+                    path: 'track-edit/:trackId',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    redirect: (context, state) {
+                      final raw = state.pathParameters['trackId'];
+                      final parsed = int.tryParse(raw ?? '');
+                      if (parsed == null) {
+                        return RoutePaths.library;
+                      }
+                      return null;
+                    },
+                    builder: (context, state) {
+                      final trackId = int.parse(
+                        state.pathParameters['trackId']!,
+                      );
+                      return TrackEditScreen(trackId: trackId);
+                    },
+                  ),
+                  GoRoute(
                     path: 'settings',
                     builder: (context, state) => const SettingsScreen(),
                     routes: [
@@ -187,6 +275,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         path: 'social-settings',
                         builder: (context, state) =>
                             const SocialSettingsScreen(),
+                        routes: [
+                          GoRoute(
+                            path: 'blocked',
+                            builder: (context, state) =>
+                                const BlockedUsersScreen(),
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: 'basic-settings',
@@ -223,11 +318,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     const NoTransitionPage(child: ProfileScreen()),
                 routes: [
                   GoRoute(
+                    path: 'followers',
+                    redirect: (context, state) {
+                      if (state.extra is! int) {
+                        return RoutePaths.profile;
+                      }
+                      return null;
+                    },
+                    builder: (context, state) => FollowConnectionsScreen(
+                      userId: state.extra! as int,
+                      type: FollowConnectionsType.followers,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'following',
+                    redirect: (context, state) {
+                      if (state.extra is! int) {
+                        return RoutePaths.profile;
+                      }
+                      return null;
+                    },
+                    builder: (context, state) => FollowConnectionsScreen(
+                      userId: state.extra! as int,
+                      type: FollowConnectionsType.following,
+                    ),
+                  ),
+                  GoRoute(
                     path: 'edit-web-link',
                     builder: (context, state) => const EditProfileLinkScreen(),
                   ),
                   GoRoute(
-                    path: 'edit-profile', // Define this as '/edit-profile'
+                    path: 'edit-profile',
                     builder: (context, state) => const EditProfileScreen(),
                   ),
                 ],
@@ -235,6 +356,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/profile-image',
+        pageBuilder: (context, state) {
+          final imagePath = state.extra as String?;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            opaque: false,
+            barrierColor: AppColors.background.withValues(alpha: 0.9),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+            child: FullscreenImagePage(imagePath: imagePath),
+          );
+        },
       ),
     ],
   );

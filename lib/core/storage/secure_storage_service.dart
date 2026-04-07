@@ -43,6 +43,10 @@ class SecureStorageService {
       key: _userKey,
       value: jsonEncode(response.user.toJson()),
     );
+
+    if (response.refreshToken != null && response.refreshToken!.isNotEmpty) {
+      await _storage.write(key: _refreshTokenKey, value: response.refreshToken);
+    }
   }
 
   /// Saves newly refreshed access token and optionally updates the refresh token.

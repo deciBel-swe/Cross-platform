@@ -16,6 +16,8 @@ class Track {
     required this.playCount,
     required this.likeCount,
     required this.repostCount,
+    required this.isLiked,
+    required this.isReposted,
     required this.createdAt,
   });
 
@@ -32,5 +34,7 @@ class Track {
   final int playCount;
   final int likeCount;
   final int repostCount;
+  final bool isLiked;
+  final bool isReposted;
   final DateTime createdAt;
 }

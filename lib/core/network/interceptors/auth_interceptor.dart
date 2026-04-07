@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
 import '../../constants/api_constants.dart';
 import '../../storage/secure_storage_service.dart';
 import '../events/auth_event_bus.dart';
@@ -14,20 +15,21 @@ import '../events/auth_event_bus.dart';
 ///
 /// Uses a concurrency lock (`_refreshLock`) to ensure multiple simultaneous requests
 /// do not trigger multiple concurrent refresh calls.
+@lazySingleton
 class AuthInterceptor extends Interceptor {
-  /// Constructs the interceptor with the required secure storage service and optionally a custom
-  /// Dio instance for the refresh call to prevent infinite interception loops.
-  AuthInterceptor(this._secureStorage, {Dio? refreshDio})
-    : _refreshDio =
-          refreshDio ??
-          (Dio()
-            ..options.baseUrl = ApiConstants.baseUrl
-            ..options.connectTimeout = const Duration(
-              milliseconds: ApiConstants.connectTimeout,
-            )
-            ..options.receiveTimeout = const Duration(
-              milliseconds: ApiConstants.receiveTimeout,
-            ));
+  /// Constructs the interceptor with the required secure storage service.
+  ///
+  /// A dedicated internal Dio instance is created for refresh calls to avoid
+  /// interceptor recursion.
+  AuthInterceptor(this._secureStorage)
+    : _refreshDio = (Dio()
+        ..options.baseUrl = ApiConstants.baseUrl
+        ..options.connectTimeout = const Duration(
+          milliseconds: ApiConstants.connectTimeout,
+        )
+        ..options.receiveTimeout = const Duration(
+          milliseconds: ApiConstants.receiveTimeout,
+        ));
 
   final SecureStorageService _secureStorage;
   final Dio _refreshDio;

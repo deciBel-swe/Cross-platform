@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../playlists/presentation/widgets/create_playlist_bottom_sheet.dart';
 
 class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key});
@@ -98,8 +97,20 @@ class _LibraryTab extends StatelessWidget {
           onTap: () {}, // TODO: Implement Route
         ),
         _NavigationRow(
+          title: 'Following',
+          onTap: () => context.go(RoutePaths.libraryFollowing),
+        ),
+        _NavigationRow(
           title: 'Your uploads',
           onTap: () => context.go(RoutePaths.uploadLibrary),
+        ),
+        _NavigationRow(
+          title: 'Your likes',
+          onTap: () => context.go(RoutePaths.libraryLikes),
+        ),
+        _NavigationRow(
+          title: 'Your reposts',
+          onTap: () => context.go(RoutePaths.libraryReposts),
         ),
       ],
     );

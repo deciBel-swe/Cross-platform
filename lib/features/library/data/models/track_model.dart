@@ -26,14 +26,29 @@ class TrackModel with _$TrackModel {
     @Default(0) int playCount,
     @Default(0) int likeCount,
     @Default(0) int repostCount,
+    @Default(false) bool isLiked,
+    @Default(false) bool isReposted,
     required DateTime createdAt,
   }) = _TrackModel;
 
   factory TrackModel.fromJson(Map<String, dynamic> json) =>
-      _$TrackModelFromJson(json);
+      _$TrackModelFromJson(_normalizeTrackJson(json));
 
   factory TrackModel.fromJsonString(String jsonString) =>
       TrackModel.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
+
+  static Map<String, dynamic> _normalizeTrackJson(Map<String, dynamic> json) {
+    final map = Map<String, dynamic>.from(json);
+
+    if (!map.containsKey('createdAt') && map.containsKey('uploadDate')) {
+      map['createdAt'] = map['uploadDate'];
+    }
+    if (!map.containsKey('state')) {
+      map['state'] = 'FINISHED';
+    }
+
+    return map;
+  }
 }
 
 extension TrackModelX on TrackModel {
@@ -52,6 +67,8 @@ extension TrackModelX on TrackModel {
       playCount: playCount,
       likeCount: likeCount,
       repostCount: repostCount,
+      isLiked: isLiked,
+      isReposted: isReposted,
       createdAt: createdAt,
     );
   }

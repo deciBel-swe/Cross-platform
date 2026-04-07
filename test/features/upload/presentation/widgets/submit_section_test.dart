@@ -55,6 +55,7 @@ void main() {
     final validState = TrackUploadMetadata(
       audioFile: File('dummy.mp3'),
       genre: 'Rock',
+      waveFormData: const [1, 2, 3],
     );
 
     final formKey = GlobalKey<FormState>();
@@ -70,6 +71,8 @@ void main() {
       playCount: 0,
       likeCount: 0,
       repostCount: 0,
+      isLiked: false,
+      isReposted: false,
       createdAt: DateTime(2026, 1, 1),
     );
 
@@ -122,6 +125,7 @@ void main() {
     final validState = TrackUploadMetadata(
       audioFile: File('dummy.mp3'),
       genre: 'Rock',
+      waveFormData: const [1, 2, 3],
     );
 
     final formKey = GlobalKey<FormState>();

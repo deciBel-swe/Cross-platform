@@ -23,6 +23,8 @@ _$TrackModelImpl _$$TrackModelImplFromJson(Map<String, dynamic> json) =>
       playCount: (json['playCount'] as num?)?.toInt() ?? 0,
       likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
       repostCount: (json['repostCount'] as num?)?.toInt() ?? 0,
+      isLiked: json['isLiked'] as bool? ?? false,
+      isReposted: json['isReposted'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
@@ -41,6 +43,8 @@ Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
       'playCount': instance.playCount,
       'likeCount': instance.likeCount,
       'repostCount': instance.repostCount,
+      'isLiked': instance.isLiked,
+      'isReposted': instance.isReposted,
       'createdAt': instance.createdAt.toIso8601String(),
     };
 

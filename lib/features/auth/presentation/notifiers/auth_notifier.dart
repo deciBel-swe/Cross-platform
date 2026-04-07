@@ -54,10 +54,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         return const AuthUnauthenticated();
       });
     } catch (_) {
-      // Ignore errors during check, fallback to unauthenticated state.
+      return const AuthUnauthenticated();
     }
-
-    return const AuthUnauthenticated();
   }
 
   Future<void> loginWithGoogle() async {
@@ -100,6 +98,60 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
 
     debugPrint('[AuthNotifier] State is now: $state');
+  }
+
+  Future<void> loginWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
+    state = const AsyncLoading();
+
+    state = await AsyncValue.guard(() async {
+      final repo = ref.read(authRepositoryProvider);
+
+      final userEither = await repo.loginWithEmailPassword(
+        email: email,
+        password: password,
+      );
+
+      return userEither.fold(
+        (failure) => throw Exception(failure.message),
+        (user) => AuthAuthenticated(user: user),
+      );
+    });
+
+    if (state.hasError) {
+      state = const AsyncData(AuthUnauthenticated());
+    }
+  }
+
+  Future<void> registerWithEmailPassword({
+    required String email,
+    required String displayName,
+    required String password,
+    required DateTime dateOfBirth,
+    required String gender,
+    String? city,
+    String? country,
+    required String captchaToken,
+  }) async {
+    final repo = ref.read(authRepositoryProvider);
+
+    final registerEither = await repo.registerWithEmailPassword(
+      email: email,
+      displayName: displayName,
+      password: password,
+      dateOfBirth: dateOfBirth,
+      gender: gender,
+      city: city,
+      country: country,
+      captchaToken: captchaToken,
+    );
+
+    registerEither.fold(
+      (failure) => throw Exception(failure.message),
+      (_) => null,
+    );
   }
 
   Future<void> logout() async {

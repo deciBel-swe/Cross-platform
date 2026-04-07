@@ -276,6 +276,13 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
   Future<bool> submitTrack() async {
     final currentState = state.value;
     if (currentState == null || currentState.audioFile == null) return false;
+    if (currentState.waveFormData.isEmpty) {
+      state = AsyncValue<TrackUploadMetadata>.error(
+        'Waveform data is required. Please reselect the audio file.',
+        StackTrace.current,
+      ).copyWithPrevious(state);
+      return false;
+    }
 
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 

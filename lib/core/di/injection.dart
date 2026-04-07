@@ -1,6 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../features/engagement/data/repositories/mock_follow_repository_impl.dart';
+import '../../features/engagement/domain/repositories/follow_repository.dart';
 import '../../features/library_profile/data/repositories/mock_genre_repository_impl.dart';
 import '../../features/library_profile/data/repositories/mock_profile_repository_impl.dart';
 import '../../features/library_profile/domain/repositories/genre_repository.dart';
@@ -58,6 +60,11 @@ void _registerManualDependencies({required bool useMockServices}) {
     getIt.registerLazySingleton<AllGenresRepository>(
       MockAllGenresRepository.new,
     );
+
+    if (getIt.isRegistered<FollowRepository>()) {
+      getIt.unregister<FollowRepository>();
+    }
+    getIt.registerLazySingleton<FollowRepository>(MockFollowRepository.new);
   } else {
     getIt.registerLazySingleton<SocialSettingsRepository>(
       () => SocialSettingsRepositoryImpl(
