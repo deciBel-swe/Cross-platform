@@ -11,11 +11,14 @@ class RoutePaths {
   static const String discover = '/discover';
   static const String search = '/search';
   static const String library = '/library';
+  static const String libraryFollowing = '/library/following';
   static const String settings = '/library/settings';
   static const String basicSettings = '/library/settings/basic-settings';
   static const String changeAppIcon =
       '/library/settings/basic-settings/change-app-icon';
   static const String socialSettings = '/library/settings/social-settings';
+  static const String blockedUsers =
+      '/library/settings/social-settings/blocked';
   static const String upgrade = '/upgrade';
   static const String player = '/player';
   static const String profile = '/profile';
@@ -36,11 +39,11 @@ class RoutePaths {
 
   /// Public profile screen for viewing another user's profile.
   static const String publicProfileBase = '/user';
-  static const String publicProfileFollowersBase = '/user-followers';
-  static const String publicProfileFollowingBase = '/user-following';
+  static const String publicProfileFollowersBase = '/followers';
+  static const String publicProfileFollowingBase = '/following';
   static String publicProfile(int userId) => '$publicProfileBase/$userId';
   static String publicProfileFollowers(int userId) =>
-      '$publicProfileFollowersBase/$userId';
+      '$publicProfileBase/$userId$publicProfileFollowersBase';
   static String publicProfileFollowing(int userId) =>
-      '$publicProfileFollowingBase/$userId';
+      '$publicProfileBase/$userId$publicProfileFollowingBase';
 }

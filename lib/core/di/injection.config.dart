@@ -38,16 +38,24 @@ import '../../features/engagement/domain/repositories/track_social_repository.da
     as _i590;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
+import '../../features/library/data/datasources/social_graph_remote_datasource.dart'
+    as _i237;
 import '../../features/library/data/datasources/track_comments_remote_data_source.dart'
     as _i688;
+import '../../features/library/data/repositories/social_graph_repository_impl.dart'
+    as _i645;
 import '../../features/library/data/repositories/track_comments_mock_repository.dart'
     as _i238;
 import '../../features/library/data/repositories/track_comments_repository.dart'
     as _i229;
 import '../../features/library/domain/repositories/i_track_comments_repository.dart'
     as _i226;
+import '../../features/library/domain/repositories/social_graph_repository.dart'
+    as _i1006;
 import '../../features/library_profile/data/datasources/genre_data_source_remote.dart'
     as _i271;
+import '../../features/library_profile/data/datasources/moderation_remote_data_source.dart'
+    as _i269;
 import '../../features/library_profile/data/datasources/profile_remote_data_source.dart'
     as _i364;
 import '../../features/library_profile/data/datasources/track_remote_data_source.dart'
@@ -58,6 +66,8 @@ import '../../features/library_profile/data/repositories/image_repository_impl.d
     as _i423;
 import '../../features/library_profile/data/repositories/mock_track_repository_impl.dart'
     as _i690;
+import '../../features/library_profile/data/repositories/moderation_repository_impl.dart'
+    as _i810;
 import '../../features/library_profile/data/repositories/profile_repository_impl.dart'
     as _i997;
 import '../../features/library_profile/data/repositories/track_repository_impl.dart'
@@ -66,12 +76,20 @@ import '../../features/library_profile/domain/repositories/genre_repository.dart
     as _i2;
 import '../../features/library_profile/domain/repositories/image_repository.dart'
     as _i121;
+import '../../features/library_profile/domain/repositories/moderation_repository.dart'
+    as _i11;
 import '../../features/library_profile/domain/repositories/profile_repository.dart'
     as _i106;
 import '../../features/library_profile/domain/repositories/track_repository.dart'
     as _i127;
 import '../../features/library_profile/domain/repositories/update_image.dart'
     as _i728;
+import '../../features/settings/data/datasources/blocked_users_remote_datasource.dart'
+    as _i688;
+import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
+    as _i292;
+import '../../features/settings/domain/repositories/blocked_users_repository.dart'
+    as _i288;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/mock_upload_repository_impl.dart'
@@ -126,6 +144,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i237.SocialGraphRemoteDatasource>(
+      () => _i237.SocialGraphRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i688.BlockedUsersRemoteDatasource>(
+      () => _i688.BlockedUsersRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i690.MockTrackRepository(),
       registerFor: {_mock},
@@ -133,6 +157,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i590.ITrackSocialRepository>(
       () => _i872.MockTrackSocialRepository(),
       registerFor: {_mock},
+    );
+    gh.lazySingleton<_i269.IModerationRemoteDataSource>(
+      () => _i269.ModerationRemoteDataSource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => const _i580.MockUploadRepository(),
@@ -173,6 +200,11 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       registerFor: {_prod},
     );
+    gh.lazySingleton<_i1006.SocialGraphRepository>(
+      () => _i645.SocialGraphRepositoryImpl(
+        gh<_i237.SocialGraphRemoteDatasource>(),
+      ),
+    );
     gh.lazySingleton<_i2.AllGenresRepository>(
       () => _i140.AllGenresRepositoryImpl(
         remoteDataSource: gh<_i271.IGenreRemoteDataSource>(),
@@ -184,6 +216,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i688.ITrackCommentsRemoteDataSource>(
       () => _i688.TrackCommentsRemoteDataSource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i288.BlockedUsersRepository>(
+      () => _i292.BlockedUsersRepositoryImpl(
+        gh<_i688.BlockedUsersRemoteDatasource>(),
+      ),
+    );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i703.MockAuthRepository(gh<_i666.SecureStorageService>()),
       registerFor: {_mock},
@@ -191,6 +228,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i928.TrackRepositoryImpl(gh<_i534.LibraryRemoteDatasource>()),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i11.ModerationRepository>(
+      () => _i810.ModerationRepositoryImpl(
+        gh<_i269.IModerationRemoteDataSource>(),
+      ),
     );
     gh.lazySingleton<_i557.FollowRepository>(
       () => _i666.FollowRepositoryImpl(gh<_i485.IFollowRemoteDataSource>()),

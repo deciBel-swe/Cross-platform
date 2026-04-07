@@ -9,7 +9,7 @@ part 'register_local_request_model.g.dart';
 class RegisterLocalRequestModel with _$RegisterLocalRequestModel {
   const factory RegisterLocalRequestModel({
     required String email,
-    required String username,
+    required String displayName,
     required String password,
     required String dateOfBirth,
     required String gender,
