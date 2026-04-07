@@ -35,9 +35,15 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   @override
   Future<LoginResponseModel> loginLocal(LoginLocalRequestModel request) async {
     try {
+      final payload = <String, dynamic>{
+        'email': request.email,
+        'password': request.password,
+        'deviceInfo': request.deviceInfo.toJson(),
+      };
+
       final response = await _dioClient.post<dynamic>(
         ApiConstants.localLoginEndpoint,
-        data: request.toJson(),
+        data: payload,
       );
 
       if (response.statusCode != 200) {

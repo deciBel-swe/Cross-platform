@@ -29,3 +29,12 @@ final followRefreshTickProvider = StateProvider<int>((_) => 0);
 /// ```
 final followStateProvider =
     AsyncNotifierProvider.family<FollowNotifier, bool, int>(FollowNotifier.new);
+
+/// Local fallback hint that a user follows the current user.
+///
+/// Used to preserve "Follow Back" UX when navigation context already
+/// proves follower relationship (e.g., opened from Followers list),
+/// even if a profile response omits `isFollowedBy`.
+final followBackHintProvider = StateProvider.family<bool, int>(
+  (_, userId) => false,
+);

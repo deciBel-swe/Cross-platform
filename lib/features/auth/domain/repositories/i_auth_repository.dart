@@ -14,7 +14,7 @@ abstract class IAuthRepository {
   /// Registers a new user account using local credentials.
   Future<Either<Failure, Unit>> registerWithEmailPassword({
     required String email,
-    required String username,
+    required String displayName,
     required String password,
     required DateTime dateOfBirth,
     required String gender,

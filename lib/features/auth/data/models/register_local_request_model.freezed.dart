@@ -24,7 +24,7 @@ RegisterLocalRequestModel _$RegisterLocalRequestModelFromJson(
 /// @nodoc
 mixin _$RegisterLocalRequestModel {
   String get email => throw _privateConstructorUsedError;
-  String get username => throw _privateConstructorUsedError;
+  String get displayName => throw _privateConstructorUsedError;
   String get password => throw _privateConstructorUsedError;
   String get dateOfBirth => throw _privateConstructorUsedError;
   String get gender => throw _privateConstructorUsedError;
@@ -52,7 +52,7 @@ abstract class $RegisterLocalRequestModelCopyWith<$Res> {
   @useResult
   $Res call({
     String email,
-    String username,
+    String displayName,
     String password,
     String dateOfBirth,
     String gender,
@@ -84,7 +84,7 @@ class _$RegisterLocalRequestModelCopyWithImpl<
   @override
   $Res call({
     Object? email = null,
-    Object? username = null,
+    Object? displayName = null,
     Object? password = null,
     Object? dateOfBirth = null,
     Object? gender = null,
@@ -99,9 +99,9 @@ class _$RegisterLocalRequestModelCopyWithImpl<
                 ? _value.email
                 : email // ignore: cast_nullable_to_non_nullable
                       as String,
-            username: null == username
-                ? _value.username
-                : username // ignore: cast_nullable_to_non_nullable
+            displayName: null == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
                       as String,
             password: null == password
                 ? _value.password
@@ -158,7 +158,7 @@ abstract class _$$RegisterLocalRequestModelImplCopyWith<$Res>
   @useResult
   $Res call({
     String email,
-    String username,
+    String displayName,
     String password,
     String dateOfBirth,
     String gender,
@@ -191,7 +191,7 @@ class __$$RegisterLocalRequestModelImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? email = null,
-    Object? username = null,
+    Object? displayName = null,
     Object? password = null,
     Object? dateOfBirth = null,
     Object? gender = null,
@@ -206,9 +206,9 @@ class __$$RegisterLocalRequestModelImplCopyWithImpl<$Res>
             ? _value.email
             : email // ignore: cast_nullable_to_non_nullable
                   as String,
-        username: null == username
-            ? _value.username
-            : username // ignore: cast_nullable_to_non_nullable
+        displayName: null == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
                   as String,
         password: null == password
             ? _value.password
@@ -248,7 +248,7 @@ class __$$RegisterLocalRequestModelImplCopyWithImpl<$Res>
 class _$RegisterLocalRequestModelImpl implements _RegisterLocalRequestModel {
   const _$RegisterLocalRequestModelImpl({
     required this.email,
-    required this.username,
+    required this.displayName,
     required this.password,
     required this.dateOfBirth,
     required this.gender,
@@ -264,7 +264,7 @@ class _$RegisterLocalRequestModelImpl implements _RegisterLocalRequestModel {
   @override
   final String email;
   @override
-  final String username;
+  final String displayName;
   @override
   final String password;
   @override
@@ -282,7 +282,7 @@ class _$RegisterLocalRequestModelImpl implements _RegisterLocalRequestModel {
 
   @override
   String toString() {
-    return 'RegisterLocalRequestModel(email: $email, username: $username, password: $password, dateOfBirth: $dateOfBirth, gender: $gender, city: $city, country: $country, captchaToken: $captchaToken, deviceInfo: $deviceInfo)';
+    return 'RegisterLocalRequestModel(email: $email, displayName: $displayName, password: $password, dateOfBirth: $dateOfBirth, gender: $gender, city: $city, country: $country, captchaToken: $captchaToken, deviceInfo: $deviceInfo)';
   }
 
   @override
@@ -291,8 +291,8 @@ class _$RegisterLocalRequestModelImpl implements _RegisterLocalRequestModel {
         (other.runtimeType == runtimeType &&
             other is _$RegisterLocalRequestModelImpl &&
             (identical(other.email, email) || other.email == email) &&
-            (identical(other.username, username) ||
-                other.username == username) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
             (identical(other.password, password) ||
                 other.password == password) &&
             (identical(other.dateOfBirth, dateOfBirth) ||
@@ -311,7 +311,7 @@ class _$RegisterLocalRequestModelImpl implements _RegisterLocalRequestModel {
   int get hashCode => Object.hash(
     runtimeType,
     email,
-    username,
+    displayName,
     password,
     dateOfBirth,
     gender,
@@ -341,7 +341,7 @@ class _$RegisterLocalRequestModelImpl implements _RegisterLocalRequestModel {
 abstract class _RegisterLocalRequestModel implements RegisterLocalRequestModel {
   const factory _RegisterLocalRequestModel({
     required final String email,
-    required final String username,
+    required final String displayName,
     required final String password,
     required final String dateOfBirth,
     required final String gender,
@@ -357,7 +357,7 @@ abstract class _RegisterLocalRequestModel implements RegisterLocalRequestModel {
   @override
   String get email;
   @override
-  String get username;
+  String get displayName;
   @override
   String get password;
   @override

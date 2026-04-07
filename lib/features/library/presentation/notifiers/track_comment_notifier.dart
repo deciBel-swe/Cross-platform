@@ -31,8 +31,8 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
 
     Future.microtask(() => loadComments());
 
-    return TrackCommentsState(
-      comments: const [],
+    return const TrackCommentsState(
+      comments: [],
       isSubmitting: false,
       selectedTimestampSeconds: null,
       isLoadingComments: false,

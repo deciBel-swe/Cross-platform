@@ -208,7 +208,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: itemCount,
-              separatorBuilder: (context, index) =>
+              separatorBuilder: (_, _) =>
                   const Divider(height: 1, color: AppColors.divider),
               itemBuilder: (BuildContext context, int index) {
                 if (index >= state.users.length) {

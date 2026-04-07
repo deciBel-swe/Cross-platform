@@ -15,14 +15,29 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
+PaginatedBlockedUsersModel _$PaginatedBlockedUsersModelFromJson(
+  Map<String, dynamic> json,
+) {
+  return _PaginatedBlockedUsersModel.fromJson(json);
+}
+
 /// @nodoc
 mixin _$PaginatedBlockedUsersModel {
+  @JsonKey(defaultValue: <BlockedUserModel>[])
   List<BlockedUserModel> get content => throw _privateConstructorUsedError;
+  @JsonKey(readValue: _readPageNumber, fromJson: _toInt, defaultValue: 0)
   int get pageNumber => throw _privateConstructorUsedError;
+  @JsonKey(readValue: _readPageSize, fromJson: _toInt, defaultValue: 20)
   int get pageSize => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _toInt, defaultValue: 0)
   int get totalElements => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _toInt, defaultValue: 1)
   int get totalPages => throw _privateConstructorUsedError;
+  @JsonKey(readValue: _readIsLast, fromJson: _toBool, defaultValue: true)
   bool get isLast => throw _privateConstructorUsedError;
+
+  /// Serializes this PaginatedBlockedUsersModel to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
   /// Create a copy of PaginatedBlockedUsersModel
   /// with the given fields replaced by the non-null parameter values.
@@ -43,11 +58,14 @@ abstract class $PaginatedBlockedUsersModelCopyWith<$Res> {
       >;
   @useResult
   $Res call({
-    List<BlockedUserModel> content,
+    @JsonKey(defaultValue: <BlockedUserModel>[]) List<BlockedUserModel> content,
+    @JsonKey(readValue: _readPageNumber, fromJson: _toInt, defaultValue: 0)
     int pageNumber,
+    @JsonKey(readValue: _readPageSize, fromJson: _toInt, defaultValue: 20)
     int pageSize,
-    int totalElements,
-    int totalPages,
+    @JsonKey(fromJson: _toInt, defaultValue: 0) int totalElements,
+    @JsonKey(fromJson: _toInt, defaultValue: 1) int totalPages,
+    @JsonKey(readValue: _readIsLast, fromJson: _toBool, defaultValue: true)
     bool isLast,
   });
 }
@@ -119,11 +137,14 @@ abstract class _$$PaginatedBlockedUsersModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    List<BlockedUserModel> content,
+    @JsonKey(defaultValue: <BlockedUserModel>[]) List<BlockedUserModel> content,
+    @JsonKey(readValue: _readPageNumber, fromJson: _toInt, defaultValue: 0)
     int pageNumber,
+    @JsonKey(readValue: _readPageSize, fromJson: _toInt, defaultValue: 20)
     int pageSize,
-    int totalElements,
-    int totalPages,
+    @JsonKey(fromJson: _toInt, defaultValue: 0) int totalElements,
+    @JsonKey(fromJson: _toInt, defaultValue: 1) int totalPages,
+    @JsonKey(readValue: _readIsLast, fromJson: _toBool, defaultValue: true)
     bool isLast,
   });
 }
@@ -185,19 +206,28 @@ class __$$PaginatedBlockedUsersModelImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
+@JsonSerializable()
 class _$PaginatedBlockedUsersModelImpl implements _PaginatedBlockedUsersModel {
   const _$PaginatedBlockedUsersModelImpl({
+    @JsonKey(defaultValue: <BlockedUserModel>[])
     required final List<BlockedUserModel> content,
+    @JsonKey(readValue: _readPageNumber, fromJson: _toInt, defaultValue: 0)
     required this.pageNumber,
+    @JsonKey(readValue: _readPageSize, fromJson: _toInt, defaultValue: 20)
     required this.pageSize,
-    required this.totalElements,
-    required this.totalPages,
+    @JsonKey(fromJson: _toInt, defaultValue: 0) required this.totalElements,
+    @JsonKey(fromJson: _toInt, defaultValue: 1) required this.totalPages,
+    @JsonKey(readValue: _readIsLast, fromJson: _toBool, defaultValue: true)
     required this.isLast,
   }) : _content = content;
 
+  factory _$PaginatedBlockedUsersModelImpl.fromJson(
+    Map<String, dynamic> json,
+  ) => _$$PaginatedBlockedUsersModelImplFromJson(json);
+
   final List<BlockedUserModel> _content;
   @override
+  @JsonKey(defaultValue: <BlockedUserModel>[])
   List<BlockedUserModel> get content {
     if (_content is EqualUnmodifiableListView) return _content;
     // ignore: implicit_dynamic_type
@@ -205,14 +235,19 @@ class _$PaginatedBlockedUsersModelImpl implements _PaginatedBlockedUsersModel {
   }
 
   @override
+  @JsonKey(readValue: _readPageNumber, fromJson: _toInt, defaultValue: 0)
   final int pageNumber;
   @override
+  @JsonKey(readValue: _readPageSize, fromJson: _toInt, defaultValue: 20)
   final int pageSize;
   @override
+  @JsonKey(fromJson: _toInt, defaultValue: 0)
   final int totalElements;
   @override
+  @JsonKey(fromJson: _toInt, defaultValue: 1)
   final int totalPages;
   @override
+  @JsonKey(readValue: _readIsLast, fromJson: _toBool, defaultValue: true)
   final bool isLast;
 
   @override
@@ -237,6 +272,7 @@ class _$PaginatedBlockedUsersModelImpl implements _PaginatedBlockedUsersModel {
             (identical(other.isLast, isLast) || other.isLast == isLast));
   }
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
     runtimeType,
@@ -258,30 +294,49 @@ class _$PaginatedBlockedUsersModelImpl implements _PaginatedBlockedUsersModel {
       __$$PaginatedBlockedUsersModelImplCopyWithImpl<
         _$PaginatedBlockedUsersModelImpl
       >(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$PaginatedBlockedUsersModelImplToJson(this);
+  }
 }
 
 abstract class _PaginatedBlockedUsersModel
     implements PaginatedBlockedUsersModel {
   const factory _PaginatedBlockedUsersModel({
+    @JsonKey(defaultValue: <BlockedUserModel>[])
     required final List<BlockedUserModel> content,
+    @JsonKey(readValue: _readPageNumber, fromJson: _toInt, defaultValue: 0)
     required final int pageNumber,
+    @JsonKey(readValue: _readPageSize, fromJson: _toInt, defaultValue: 20)
     required final int pageSize,
+    @JsonKey(fromJson: _toInt, defaultValue: 0)
     required final int totalElements,
-    required final int totalPages,
+    @JsonKey(fromJson: _toInt, defaultValue: 1) required final int totalPages,
+    @JsonKey(readValue: _readIsLast, fromJson: _toBool, defaultValue: true)
     required final bool isLast,
   }) = _$PaginatedBlockedUsersModelImpl;
 
+  factory _PaginatedBlockedUsersModel.fromJson(Map<String, dynamic> json) =
+      _$PaginatedBlockedUsersModelImpl.fromJson;
+
   @override
+  @JsonKey(defaultValue: <BlockedUserModel>[])
   List<BlockedUserModel> get content;
   @override
+  @JsonKey(readValue: _readPageNumber, fromJson: _toInt, defaultValue: 0)
   int get pageNumber;
   @override
+  @JsonKey(readValue: _readPageSize, fromJson: _toInt, defaultValue: 20)
   int get pageSize;
   @override
+  @JsonKey(fromJson: _toInt, defaultValue: 0)
   int get totalElements;
   @override
+  @JsonKey(fromJson: _toInt, defaultValue: 1)
   int get totalPages;
   @override
+  @JsonKey(readValue: _readIsLast, fromJson: _toBool, defaultValue: true)
   bool get isLast;
 
   /// Create a copy of PaginatedBlockedUsersModel

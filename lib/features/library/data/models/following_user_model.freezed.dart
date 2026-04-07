@@ -15,13 +15,23 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
+FollowingUserModel _$FollowingUserModelFromJson(Map<String, dynamic> json) {
+  return _FollowingUserModel.fromJson(json);
+}
+
 /// @nodoc
 mixin _$FollowingUserModel {
+  @JsonKey(fromJson: _toInt, defaultValue: 0)
   int get id => throw _privateConstructorUsedError;
+  @JsonKey(defaultValue: '')
   String get username => throw _privateConstructorUsedError;
   String? get avatarUrl => throw _privateConstructorUsedError;
   String? get tier => throw _privateConstructorUsedError;
+  @JsonKey(defaultValue: false)
   bool get isFollowing => throw _privateConstructorUsedError;
+
+  /// Serializes this FollowingUserModel to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
   /// Create a copy of FollowingUserModel
   /// with the given fields replaced by the non-null parameter values.
@@ -38,11 +48,11 @@ abstract class $FollowingUserModelCopyWith<$Res> {
   ) = _$FollowingUserModelCopyWithImpl<$Res, FollowingUserModel>;
   @useResult
   $Res call({
-    int id,
-    String username,
+    @JsonKey(fromJson: _toInt, defaultValue: 0) int id,
+    @JsonKey(defaultValue: '') String username,
     String? avatarUrl,
     String? tier,
-    bool isFollowing,
+    @JsonKey(defaultValue: false) bool isFollowing,
   });
 }
 
@@ -105,11 +115,11 @@ abstract class _$$FollowingUserModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int id,
-    String username,
+    @JsonKey(fromJson: _toInt, defaultValue: 0) int id,
+    @JsonKey(defaultValue: '') String username,
     String? avatarUrl,
     String? tier,
-    bool isFollowing,
+    @JsonKey(defaultValue: false) bool isFollowing,
   });
 }
 
@@ -161,25 +171,31 @@ class __$$FollowingUserModelImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-
+@JsonSerializable()
 class _$FollowingUserModelImpl implements _FollowingUserModel {
   const _$FollowingUserModelImpl({
-    required this.id,
-    required this.username,
+    @JsonKey(fromJson: _toInt, defaultValue: 0) required this.id,
+    @JsonKey(defaultValue: '') required this.username,
     this.avatarUrl,
     this.tier,
-    required this.isFollowing,
+    @JsonKey(defaultValue: false) required this.isFollowing,
   });
 
+  factory _$FollowingUserModelImpl.fromJson(Map<String, dynamic> json) =>
+      _$$FollowingUserModelImplFromJson(json);
+
   @override
+  @JsonKey(fromJson: _toInt, defaultValue: 0)
   final int id;
   @override
+  @JsonKey(defaultValue: '')
   final String username;
   @override
   final String? avatarUrl;
   @override
   final String? tier;
   @override
+  @JsonKey(defaultValue: false)
   final bool isFollowing;
 
   @override
@@ -202,6 +218,7 @@ class _$FollowingUserModelImpl implements _FollowingUserModel {
                 other.isFollowing == isFollowing));
   }
 
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
       Object.hash(runtimeType, id, username, avatarUrl, tier, isFollowing);
@@ -216,26 +233,37 @@ class _$FollowingUserModelImpl implements _FollowingUserModel {
         this,
         _$identity,
       );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$FollowingUserModelImplToJson(this);
+  }
 }
 
 abstract class _FollowingUserModel implements FollowingUserModel {
   const factory _FollowingUserModel({
-    required final int id,
-    required final String username,
+    @JsonKey(fromJson: _toInt, defaultValue: 0) required final int id,
+    @JsonKey(defaultValue: '') required final String username,
     final String? avatarUrl,
     final String? tier,
-    required final bool isFollowing,
+    @JsonKey(defaultValue: false) required final bool isFollowing,
   }) = _$FollowingUserModelImpl;
 
+  factory _FollowingUserModel.fromJson(Map<String, dynamic> json) =
+      _$FollowingUserModelImpl.fromJson;
+
   @override
+  @JsonKey(fromJson: _toInt, defaultValue: 0)
   int get id;
   @override
+  @JsonKey(defaultValue: '')
   String get username;
   @override
   String? get avatarUrl;
   @override
   String? get tier;
   @override
+  @JsonKey(defaultValue: false)
   bool get isFollowing;
 
   /// Create a copy of FollowingUserModel

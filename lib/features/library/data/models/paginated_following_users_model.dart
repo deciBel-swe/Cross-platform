@@ -9,31 +9,36 @@ part 'paginated_following_users_model.g.dart';
 @freezed
 class PaginatedFollowingUsersModel with _$PaginatedFollowingUsersModel {
   const factory PaginatedFollowingUsersModel({
+    @JsonKey(defaultValue: <FollowingUserModel>[])
     required List<FollowingUserModel> content,
+    @JsonKey(readValue: _readPageNumber, fromJson: _toInt, defaultValue: 0)
     required int pageNumber,
+    @JsonKey(readValue: _readPageSize, fromJson: _toInt, defaultValue: 20)
     required int pageSize,
-    required int totalElements,
-    required int totalPages,
+    @JsonKey(fromJson: _toInt, defaultValue: 0) required int totalElements,
+    @JsonKey(fromJson: _toInt, defaultValue: 1) required int totalPages,
+    @JsonKey(readValue: _readIsLast, fromJson: _toBool, defaultValue: true)
     required bool isLast,
   }) = _PaginatedFollowingUsersModel;
 
-  factory PaginatedFollowingUsersModel.fromJson(Map<String, dynamic> json) {
-    final dynamic rawContent = json['content'];
-    final List<FollowingUserModel> parsedContent =
-        (rawContent is List<dynamic> ? rawContent : const <dynamic>[])
-            .whereType<Map<String, dynamic>>()
-            .map(FollowingUserModel.fromJson)
-            .toList();
+  factory PaginatedFollowingUsersModel.fromJson(Map<String, dynamic> json) =>
+      _$PaginatedFollowingUsersModelFromJson(json);
+}
 
-    return PaginatedFollowingUsersModel(
-      content: parsedContent,
-      pageNumber: (json['pageNumber'] ?? json['number'] ?? 0) as int,
-      pageSize: (json['pageSize'] ?? json['size'] ?? 20) as int,
-      totalElements: (json['totalElements'] ?? 0) as int,
-      totalPages: (json['totalPages'] ?? 1) as int,
-      isLast: (json['isLast'] ?? json['last'] ?? true) as bool,
-    );
-  }
+Object? _readPageNumber(Map<Object?, Object?> json, String key) =>
+    json['pageNumber'] ?? json['number'];
+Object? _readPageSize(Map<Object?, Object?> json, String key) =>
+    json['pageSize'] ?? json['size'];
+Object? _readIsLast(Map<Object?, Object?> json, String key) =>
+    json['isLast'] ?? json['last'];
+
+int _toInt(Object? value) => (value as num?)?.toInt() ?? 0;
+
+bool _toBool(Object? value) {
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) return value.toLowerCase() == 'true';
+  return false;
 }
 
 extension PaginatedFollowingUsersMapper on PaginatedFollowingUsersModel {

@@ -29,7 +29,7 @@ class MockAuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, Unit>> registerWithEmailPassword({
     required String email,
-    required String username,
+    required String displayName,
     required String password,
     required DateTime dateOfBirth,
     required String gender,

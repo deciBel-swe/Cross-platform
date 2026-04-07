@@ -9,11 +9,11 @@ part of 'blocked_user_model.dart';
 _$BlockedUserModelImpl _$$BlockedUserModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$BlockedUserModelImpl(
-  id: (json['id'] as num).toInt(),
-  username: json['username'] as String,
+  id: json['id'] == null ? 0 : _toInt(json['id']),
+  username: json['username'] as String? ?? '',
   avatarUrl: json['avatarUrl'] as String?,
   tier: json['tier'] as String?,
-  isFollowing: json['isFollowing'] as bool,
+  isFollowing: json['isFollowing'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$$BlockedUserModelImplToJson(

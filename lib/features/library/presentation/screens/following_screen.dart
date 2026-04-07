@@ -172,7 +172,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(top: AppDimensions.paddingMd),
               itemCount: itemCount,
-              separatorBuilder: (context, index) => const SizedBox.shrink(),
+              separatorBuilder: (_, _) => const SizedBox.shrink(),
               itemBuilder: (BuildContext context, int index) {
                 if (index == 0) {
                   return Padding(
