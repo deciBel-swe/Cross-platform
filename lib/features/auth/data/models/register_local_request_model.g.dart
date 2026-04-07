@@ -10,7 +10,7 @@ _$RegisterLocalRequestModelImpl _$$RegisterLocalRequestModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$RegisterLocalRequestModelImpl(
   email: json['email'] as String,
-  username: json['username'] as String,
+  displayName: json['displayName'] as String,
   password: json['password'] as String,
   dateOfBirth: json['dateOfBirth'] as String,
   gender: json['gender'] as String,
@@ -26,7 +26,7 @@ Map<String, dynamic> _$$RegisterLocalRequestModelImplToJson(
   _$RegisterLocalRequestModelImpl instance,
 ) => <String, dynamic>{
   'email': instance.email,
-  'username': instance.username,
+  'displayName': instance.displayName,
   'password': instance.password,
   'dateOfBirth': instance.dateOfBirth,
   'gender': instance.gender,

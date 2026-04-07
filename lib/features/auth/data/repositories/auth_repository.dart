@@ -65,7 +65,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, Unit>> registerWithEmailPassword({
     required String email,
-    required String username,
+    required String displayName,
     required String password,
     required DateTime dateOfBirth,
     required String gender,
@@ -78,7 +78,7 @@ class AuthRepository implements IAuthRepository {
 
       final request = RegisterLocalRequestModel(
         email: email,
-        username: username,
+        displayName: displayName,
         password: _hashPassword(password),
         dateOfBirth: dateOfBirth.toIso8601String().split('T').first,
         gender: gender,

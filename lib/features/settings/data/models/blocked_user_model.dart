@@ -8,23 +8,18 @@ part 'blocked_user_model.g.dart';
 @freezed
 class BlockedUserModel with _$BlockedUserModel {
   const factory BlockedUserModel({
-    required int id,
-    required String username,
+    @JsonKey(fromJson: _toInt, defaultValue: 0) required int id,
+    @JsonKey(defaultValue: '') required String username,
     String? avatarUrl,
     String? tier,
-    required bool isFollowing,
+    @JsonKey(defaultValue: false) required bool isFollowing,
   }) = _BlockedUserModel;
 
-  factory BlockedUserModel.fromJson(Map<String, dynamic> json) {
-    return BlockedUserModel(
-      id: (json['id'] as num?)?.toInt() ?? 0,
-      username: (json['username'] ?? '') as String,
-      avatarUrl: json['avatarUrl'] as String?,
-      tier: json['tier'] as String?,
-      isFollowing: (json['isFollowing'] as bool?) ?? false,
-    );
-  }
+  factory BlockedUserModel.fromJson(Map<String, dynamic> json) =>
+      _$BlockedUserModelFromJson(json);
 }
+
+int _toInt(Object? value) => (value as num?)?.toInt() ?? 0;
 
 extension BlockedUserModelMapper on BlockedUserModel {
   BlockedUser toEntity() {

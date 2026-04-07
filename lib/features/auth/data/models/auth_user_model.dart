@@ -10,6 +10,7 @@ class AuthUserModel with _$AuthUserModel {
   const factory AuthUserModel({
     required int id,
     required String username,
+    String? displayName,
     required String tier,
     String? profileUrl,
     String? avatarUrl,
@@ -24,6 +25,7 @@ class AuthUserModel with _$AuthUserModel {
     return AuthUser(
       id: id,
       username: username,
+      displayName: displayName,
       tier: _parseTier(tier),
       profileUrl: profileUrl,
       avatarUrl: avatarUrl,
