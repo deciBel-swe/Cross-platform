@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../upload/presentation/providers/upload_notifier.dart';
-import '../providers/edit_playlist_provider.dart';
 
 class GenreBottomSheet extends ConsumerWidget {
   const GenreBottomSheet({super.key});

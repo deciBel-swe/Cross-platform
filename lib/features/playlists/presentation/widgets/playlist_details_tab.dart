@@ -158,6 +158,7 @@ class PlaylistDetailsTab extends ConsumerWidget {
           onChanged: (val) => ref
               .read(playlistFormProvider(playlist).notifier)
               .updateDescription(val),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (v) {
             if (v != null && v.length > 2000) {
               if (v.trim().isEmpty) {
