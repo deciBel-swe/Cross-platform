@@ -201,6 +201,7 @@ class _ConnectionTile extends ConsumerWidget {
           _InlineFollowButton(
             userId: user.id,
             initialIsFollowing: user.isFollowing,
+            showFollowBackWhenNotFollowing: isFollowerContext,
           ),
         ],
       ),
@@ -212,10 +213,12 @@ class _InlineFollowButton extends ConsumerStatefulWidget {
   const _InlineFollowButton({
     required this.userId,
     required this.initialIsFollowing,
+    required this.showFollowBackWhenNotFollowing,
   });
 
   final int userId;
   final bool initialIsFollowing;
+  final bool showFollowBackWhenNotFollowing;
 
   @override
   ConsumerState<_InlineFollowButton> createState() =>
@@ -238,6 +241,9 @@ class _InlineFollowButtonState extends ConsumerState<_InlineFollowButton> {
     final isFollowing =
         ref.watch(followStateProvider(widget.userId)).valueOrNull ??
         widget.initialIsFollowing;
+    final label = isFollowing
+        ? 'Following'
+        : (widget.showFollowBackWhenNotFollowing ? 'Follow Back' : 'Follow');
 
     return OutlinedButton(
       onPressed: () {
@@ -250,7 +256,7 @@ class _InlineFollowButtonState extends ConsumerState<_InlineFollowButton> {
         minimumSize: const Size(0, 32),
       ),
       child: Text(
-        isFollowing ? 'Following' : 'Follow',
+        label,
         style: TextStyle(
           color: isFollowing ? AppColors.onPrimary : AppColors.primary,
           fontSize: AppConstants.fontSizeSmall,

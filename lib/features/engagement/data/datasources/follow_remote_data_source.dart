@@ -313,16 +313,17 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
 
     final isFollowing =
         _asBool(
-          payload['isFollowing'] ??
-              payload['isFollowed'] ??
-              payload['following'] ??
-              payload['followingCurrentUser'] ??
-              relationship['isFollowing'] ??
+          payload['isFollowed'] ??
               relationship['isFollowed'] ??
-              relationship['following'] ??
-              relationship['followingCurrentUser'] ??
-              profile['isFollowing'] ??
               profile['isFollowed'] ??
+              payload['isFollowingByCurrentUser'] ??
+              relationship['isFollowingByCurrentUser'] ??
+              profile['isFollowingByCurrentUser'] ??
+              payload['isFollowing'] ??
+              relationship['isFollowing'] ??
+              profile['isFollowing'] ??
+              payload['following'] ??
+              relationship['following'] ??
               profile['following'],
         ) ??
         false;
@@ -330,20 +331,26 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     final isFollowedBy =
         _asBool(
           payload['isFollowedBy'] ??
+              relationship['isFollowedBy'] ??
+              profile['isFollowedBy'] ??
+              payload['isFollowing'] ??
+              relationship['isFollowing'] ??
+              profile['isFollowing'] ??
               payload['isFollower'] ??
               payload['followsMe'] ??
               payload['isFollowingMe'] ??
               payload['followsCurrentUser'] ??
-              relationship['isFollowedBy'] ??
+              payload['followingCurrentUser'] ??
               relationship['isFollower'] ??
               relationship['followsMe'] ??
               relationship['isFollowingMe'] ??
               relationship['followsCurrentUser'] ??
-              profile['isFollowedBy'] ??
+              relationship['followingCurrentUser'] ??
               profile['isFollower'] ??
               profile['followsMe'] ??
               profile['isFollowingMe'] ??
-              profile['followsCurrentUser'],
+              profile['followsCurrentUser'] ??
+              profile['followingCurrentUser'],
         ) ??
         false;
 
@@ -439,9 +446,13 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
 
     final isFollowing =
         _asBool(
-          user['isFollowing'] ??
-              user['following'] ??
+          user['isFollowed'] ??
+              profile['isFollowed'] ??
+              user['isFollowingByCurrentUser'] ??
+              profile['isFollowingByCurrentUser'] ??
+              user['isFollowing'] ??
               profile['isFollowing'] ??
+              user['following'] ??
               profile['following'],
         ) ??
         false;
