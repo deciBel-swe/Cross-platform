@@ -39,11 +39,11 @@ class RoutePaths {
 
   /// Public profile screen for viewing another user's profile.
   static const String publicProfileBase = '/user';
-  static const String publicProfileFollowersBase = '/user-followers';
-  static const String publicProfileFollowingBase = '/user-following';
+  static const String publicProfileFollowersBase = '/followers';
+  static const String publicProfileFollowingBase = '/following';
   static String publicProfile(int userId) => '$publicProfileBase/$userId';
   static String publicProfileFollowers(int userId) =>
-      '$publicProfileFollowersBase/$userId';
+      '$publicProfileBase/$userId$publicProfileFollowersBase';
   static String publicProfileFollowing(int userId) =>
-      '$publicProfileFollowingBase/$userId';
+      '$publicProfileBase/$userId$publicProfileFollowingBase';
 }

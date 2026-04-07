@@ -54,10 +54,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         return const AuthUnauthenticated();
       });
     } catch (_) {
-      // Ignore errors during check, fallback to unauthenticated state.
+      return const AuthUnauthenticated();
     }
-
-    return const AuthUnauthenticated();
   }
 
   Future<void> loginWithGoogle() async {
@@ -129,7 +127,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
   Future<void> registerWithEmailPassword({
     required String email,
-    required String username,
+    required String displayName,
     required String password,
     required DateTime dateOfBirth,
     required String gender,
@@ -141,7 +139,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
     final registerEither = await repo.registerWithEmailPassword(
       email: email,
-      username: username,
+      displayName: displayName,
       password: password,
       dateOfBirth: dateOfBirth,
       gender: gender,

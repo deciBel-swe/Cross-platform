@@ -22,6 +22,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
@@ -171,6 +172,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [
+                    AutofillHints.username,
+                    AutofillHints.email,
+                  ],
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
@@ -183,12 +189,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // ---- Password field ----
                 TextField(
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.password],
+                  onSubmitted: (_) => _handleLogin(),
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                   ),
-                  decoration: _inputDecoration('Password'),
+                  decoration: _inputDecoration('Password').copyWith(
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 32),

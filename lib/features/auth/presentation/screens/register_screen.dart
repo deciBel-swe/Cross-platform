@@ -24,7 +24,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
-  final _usernameController = TextEditingController();
+  final _displayNameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _dateController = TextEditingController();
   final _cityController = TextEditingController();
@@ -33,11 +33,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _selectedGender;
   DateTime? _selectedDateOfBirth;
   bool _isSubmitting = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _usernameController.dispose();
+    _displayNameController.dispose();
     _passwordController.dispose();
     _dateController.dispose();
     _cityController.dispose();
@@ -64,15 +65,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     final email = _emailController.text.trim();
-    final username = _usernameController.text.trim();
+    final displayName = _displayNameController.text.trim();
     final password = _passwordController.text;
     final city = _cityController.text.trim();
     final country = _countryController.text.trim();
 
-    if (username.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Username is required.')));
+    if (displayName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Display name is required.')),
+      );
       return;
     }
 
@@ -105,7 +106,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           .read(authStateProvider.notifier)
           .registerWithEmailPassword(
             email: email,
-            username: username,
+            displayName: displayName,
             password: password,
             dateOfBirth: _selectedDateOfBirth!,
             gender: _selectedGender!,
@@ -241,6 +242,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
@@ -251,24 +254,42 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 TextField(
-                  controller: _usernameController,
+                  controller: _displayNameController,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.name],
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                   ),
-                  decoration: _inputDecoration('Username'),
+                  decoration: _inputDecoration('Display name'),
                 ),
 
                 const SizedBox(height: 16),
 
                 TextField(
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.newPassword],
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                   ),
-                  decoration: _inputDecoration('Password'),
+                  decoration: _inputDecoration('Password').copyWith(
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 16),
@@ -339,6 +360,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 TextField(
                   controller: _countryController,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _isSubmitting ? null : _handleRegister(),
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,

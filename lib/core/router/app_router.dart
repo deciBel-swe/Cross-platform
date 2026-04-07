@@ -100,49 +100,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: '${RoutePaths.publicProfileBase}/:userId',
-        builder: (context, state) {
-          final userId = int.parse(state.pathParameters['userId']!);
-          return PublicProfileScreen(userId: userId);
-        },
-      ),
-      GoRoute(
-        path: '${RoutePaths.publicProfileFollowersBase}/:userId',
-        redirect: (context, state) {
-          final raw = state.pathParameters['userId'];
-          final userId = int.tryParse(raw ?? '');
-          if (userId == null) {
-            return RoutePaths.home;
-          }
-          return null;
-        },
-        builder: (context, state) {
-          final userId = int.parse(state.pathParameters['userId']!);
-          return FollowConnectionsScreen(
-            userId: userId,
-            type: FollowConnectionsType.followers,
-          );
-        },
-      ),
-      GoRoute(
-        path: '${RoutePaths.publicProfileFollowingBase}/:userId',
-        redirect: (context, state) {
-          final raw = state.pathParameters['userId'];
-          final userId = int.tryParse(raw ?? '');
-          if (userId == null) {
-            return RoutePaths.home;
-          }
-          return null;
-        },
-        builder: (context, state) {
-          final userId = int.parse(state.pathParameters['userId']!);
-          return FollowConnectionsScreen(
-            userId: userId,
-            type: FollowConnectionsType.following,
-          );
-        },
-      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),
@@ -324,6 +281,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'edit-profile',
                     builder: (context, state) => const EditProfileScreen(),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: '${RoutePaths.publicProfileBase}/:userId',
+                redirect: (context, state) {
+                  final raw = state.pathParameters['userId'];
+                  final userId = int.tryParse(raw ?? '');
+                  if (userId == null) {
+                    return RoutePaths.home;
+                  }
+                  return null;
+                },
+                builder: (context, state) {
+                  final userId = int.parse(state.pathParameters['userId']!);
+                  return PublicProfileScreen(userId: userId);
+                },
+                routes: [
+                  GoRoute(
+                    path: 'followers',
+                    builder: (context, state) {
+                      final userId = int.parse(state.pathParameters['userId']!);
+                      return FollowConnectionsScreen(
+                        userId: userId,
+                        type: FollowConnectionsType.followers,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'following',
+                    builder: (context, state) {
+                      final userId = int.parse(state.pathParameters['userId']!);
+                      return FollowConnectionsScreen(
+                        userId: userId,
+                        type: FollowConnectionsType.following,
+                      );
+                    },
                   ),
                 ],
               ),

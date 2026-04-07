@@ -15,6 +15,7 @@ class AuthUser {
   const AuthUser({
     required this.id,
     required this.username,
+    this.displayName,
     required this.tier,
     this.profileUrl,
     this.avatarUrl,
@@ -23,8 +24,11 @@ class AuthUser {
   /// The unique identifier of the user.
   final int id;
 
-  /// The user's display name.
+  /// The user's unique handle/username.
   final String username;
+
+  /// The user's profile display name returned by backend.
+  final String? displayName;
 
   /// The user's membership tier.
   final UserTier tier;

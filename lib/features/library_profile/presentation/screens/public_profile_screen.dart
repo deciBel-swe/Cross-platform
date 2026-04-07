@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,13 +8,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/widgets/follow_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/public_profile.dart';
 import '../providers/block_provider.dart';
 import '../providers/public_profile_provider.dart';
-import '../providers/user_profile_provider.dart';
 import '../widgets/expandable_bio.dart';
 import '../widgets/social_links_widget.dart';
 import '../widgets/spotlight_section.dart';
@@ -39,12 +43,29 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   late ScrollController _scrollController;
   bool _showAppBarTitle = false;
+  bool _shouldWatchSections = true;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+  }
+
+  Future<void> _openConnections(String route) async {
+    if (_shouldWatchSections) {
+      setState(() => _shouldWatchSections = false);
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) {
+        return;
+      }
+    }
+
+    await context.push(route);
+
+    if (mounted) {
+      setState(() => _shouldWatchSections = true);
+    }
   }
 
   /// Shows/hides the app bar title based on scroll position.
@@ -312,7 +333,17 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: AppConstants.spacingMassive),
-                  _ProfileHeader(userId: widget.userId, profile: profile),
+                  _ProfileHeader(
+                    userId: widget.userId,
+                    profile: profile,
+                    isActive: _shouldWatchSections,
+                    onFollowersTap: () => _openConnections(
+                      RoutePaths.publicProfileFollowers(widget.userId),
+                    ),
+                    onFollowingTap: () => _openConnections(
+                      RoutePaths.publicProfileFollowing(widget.userId),
+                    ),
+                  ),
                   const SizedBox(height: AppConstants.spacingSmall),
                   _ActionRow(userId: widget.userId, profile: profile),
                   const SizedBox(height: AppConstants.spacingRegular),
@@ -323,9 +354,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   const _SectionTitle(title: 'Likes'),
                   const SizedBox(height: AppConstants.spacingSmall),
                   _PublicTrackCollectionSection(
-                    tracksAsync: ref.watch(
-                      publicLikedTracksProvider(profile.id),
-                    ),
+                    tracksAsync: _shouldWatchSections
+                        ? ref.watch(publicLikedTracksProvider(profile.id))
+                        : const AsyncData(<Track>[]),
                     emptyLabel: 'No likes yet',
                     errorLabel: 'Could not load likes',
                   ),
@@ -333,9 +364,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   const _SectionTitle(title: 'Reposts'),
                   const SizedBox(height: AppConstants.spacingSmall),
                   _PublicTrackCollectionSection(
-                    tracksAsync: ref.watch(
-                      publicRepostedTracksProvider(profile.id),
-                    ),
+                    tracksAsync: _shouldWatchSections
+                        ? ref.watch(publicRepostedTracksProvider(profile.id))
+                        : const AsyncData(<Track>[]),
                     emptyLabel: 'No reposts yet',
                     errorLabel: 'Could not load reposts',
                   ),
@@ -433,13 +464,12 @@ class _CoverPhoto extends StatelessWidget {
       height: coverHeight,
       width: double.infinity,
       child: imageUrl != null && imageUrl!.isNotEmpty
-          ? Image.network(
-              imageUrl!,
+          ? CachedNetworkImage(
+              imageUrl: imageUrl!,
               fit: BoxFit.cover,
               filterQuality: FilterQuality.high,
-              errorBuilder: (_, _, _) => _placeholder(),
-              loadingBuilder: (_, child, progress) =>
-                  progress == null ? child : _placeholder(),
+              placeholder: (_, _) => _placeholder(),
+              errorWidget: (_, _, _) => _placeholder(),
             )
           : _placeholder(),
     );
@@ -475,10 +505,11 @@ class _Avatar extends StatelessWidget {
       ),
       child: ClipOval(
         child: imageUrl != null && imageUrl!.isNotEmpty
-            ? Image.network(
-                imageUrl!,
+            ? CachedNetworkImage(
+                imageUrl: imageUrl!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _avatarPlaceholder(),
+                placeholder: (_, _) => _avatarPlaceholder(),
+                errorWidget: (_, _, _) => _avatarPlaceholder(),
               )
             : _avatarPlaceholder(),
       ),
@@ -492,15 +523,34 @@ class _Avatar extends StatelessWidget {
 
 /// Username, bio, location, and follower/following counts.
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.userId, required this.profile});
+  const _ProfileHeader({
+    required this.userId,
+    required this.profile,
+    required this.isActive,
+    required this.onFollowersTap,
+    required this.onFollowingTap,
+  });
 
   final int userId;
   final PublicProfile profile;
+  final bool isActive;
+  final VoidCallback onFollowersTap;
+  final VoidCallback onFollowingTap;
 
   @override
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, child) {
+        if (!isActive) {
+          return _ProfileHeaderContent(
+            userId: userId,
+            profile: profile,
+            followersCount: profile.stats.followersCount,
+            onFollowersTap: onFollowersTap,
+            onFollowingTap: onFollowingTap,
+          );
+        }
+
         final snapshotAsync = ref.watch(publicProfileSnapshotProvider(userId));
         final snapshot = snapshotAsync.valueOrNull ?? profile;
 
@@ -514,13 +564,17 @@ class _ProfileHeader extends StatelessWidget {
             ? (isFollowing != profile.isFollowing ? (isFollowing ? 1 : -1) : 0)
             : 0;
 
-        final displayedFollowers =
-            snapshot.stats.followersCount + followerDelta;
+        final displayedFollowers = math.max(
+          snapshot.stats.followersCount + followerDelta,
+          0,
+        );
 
         return _ProfileHeaderContent(
           userId: userId,
           profile: snapshot,
           followersCount: displayedFollowers,
+          onFollowersTap: onFollowersTap,
+          onFollowingTap: onFollowingTap,
         );
       },
     );
@@ -532,11 +586,15 @@ class _ProfileHeaderContent extends StatelessWidget {
     required this.userId,
     required this.profile,
     required this.followersCount,
+    required this.onFollowersTap,
+    required this.onFollowingTap,
   });
 
   final int userId;
   final PublicProfile profile;
   final int followersCount;
+  final VoidCallback onFollowersTap;
+  final VoidCallback onFollowingTap;
 
   @override
   Widget build(BuildContext context) {
@@ -575,8 +633,7 @@ class _ProfileHeaderContent extends StatelessWidget {
             _StatChip(
               count: followersCount,
               label: AppConstants.followers,
-              onTap: () =>
-                  context.push(RoutePaths.publicProfileFollowers(userId)),
+              onTap: onFollowersTap,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -592,8 +649,7 @@ class _ProfileHeaderContent extends StatelessWidget {
             _StatChip(
               count: profile.stats.followingCount,
               label: AppConstants.following,
-              onTap: () =>
-                  context.push(RoutePaths.publicProfileFollowing(userId)),
+              onTap: onFollowingTap,
             ),
           ],
         ),
@@ -649,18 +705,17 @@ class _ActionRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Determine if this is the logged-in user's own profile.
-    final ownProfileAsync = ref.watch(userProfileProvider);
-    final isOwnProfile = ownProfileAsync.maybeWhen(
-      data: (eitherUser) =>
-          eitherUser.fold((_) => false, (user) => user.id == userId),
-      orElse: () => false,
-    );
+    final authState = ref.watch(authStateProvider).valueOrNull;
+    final isOwnProfile =
+        authState is AuthAuthenticated && authState.user.id == userId;
+
+    final followBackHint = ref.watch(followBackHintProvider(userId));
+    final isFollowedBy = profile.isFollowedBy || followBackHint;
 
     return Row(
       children: [
         if (!isOwnProfile) ...[
-          FollowButton(userId: userId, isFollowedBy: profile.isFollowedBy),
+          FollowButton(userId: userId, isFollowedBy: isFollowedBy),
           const SizedBox(width: AppConstants.spacingSmall),
         ],
         if (profile.socialLinks != null)
