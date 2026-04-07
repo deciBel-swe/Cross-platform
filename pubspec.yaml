@@ -82,6 +82,9 @@ dev_dependencies:
   # ---------- Linting ----------
   flutter_lints: ^6.0.0
 
+  # ---------- Encryption ----------
+  crypto: ^3.0.7
+
   # ---------- Code Generation ----------
   build_runner: ^2.4.14
   freezed: ^2.5.8

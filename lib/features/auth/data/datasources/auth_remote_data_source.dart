@@ -46,9 +46,9 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         data: payload,
       );
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         throw AuthException(
-          'Backend returned an error. Status Code: ${response.statusCode}',
+          _parseManualError(response.data, fallback: 'Login failed'),
         );
       }
 
@@ -72,9 +72,9 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         data: request.toJson(),
       );
 
-      if (response.statusCode != 201) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         throw AuthException(
-          'Backend returned an error. Status Code: ${response.statusCode}',
+          _parseManualError(response.data, fallback: 'Registration failed'),
         );
       }
     } on DioException catch (e) {
@@ -355,22 +355,25 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     return null;
   }
 
+  String _parseManualError(Object? data, {required String fallback}) {
+    if (data is Map<String, dynamic>) {
+      final parsed = _parseErrorMap(data);
+      if (parsed != null) return parsed;
+    }
+    return fallback;
+  }
+
   String _extractDioErrorMessage(DioException e, {required String fallback}) {
     final data = e.response?.data;
+    final statusCode = e.response?.statusCode;
+
+    if (statusCode == 401){
+      return 'Incorrect email or password.';
+    }
 
     if (data is Map<String, dynamic>) {
-      final directMessage = data['message'];
-      if (directMessage is String && directMessage.trim().isNotEmpty) {
-        return directMessage.trim();
-      }
-
-      final nestedData = data['data'];
-      if (nestedData is Map<String, dynamic>) {
-        final nestedMessage = nestedData['message'];
-        if (nestedMessage is String && nestedMessage.trim().isNotEmpty) {
-          return nestedMessage.trim();
-        }
-      }
+      final parsed = _parseErrorMap(data);
+      if (parsed != null) return parsed;
     }
 
     final fallbackMessage = e.message?.trim();
@@ -379,5 +382,43 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     }
 
     return fallback;
+  }
+
+  String? _parseErrorMap(Map<String, dynamic> data) {
+    final errors = data['errors'];
+    if (errors is Map<String, dynamic>) {
+      final List<String> fieldErrors = [];
+
+      errors.forEach((key, value) {
+        if (value is List) {
+          fieldErrors.add(value.join('\n'));
+        } else {
+          fieldErrors.add(value.toString());
+        }
+      });
+
+      if (fieldErrors.isNotEmpty) {
+        return fieldErrors.join('\n');
+      }
+    }
+
+    final messageData = data['message'];
+    if (messageData is List && messageData.isNotEmpty) {
+      return messageData.join('\n');
+    }
+
+    if (messageData is String && messageData.trim().isNotEmpty) {
+      return messageData.trim();
+    }
+
+    final nestedData = data['data'];
+    if (nestedData is Map<String, dynamic>) {
+      final nestedMessage = nestedData['message'];
+      if (nestedMessage is String && nestedMessage.trim().isNotEmpty) {
+        return nestedMessage.trim();
+      }
+    }
+
+    return null;
   }
 }

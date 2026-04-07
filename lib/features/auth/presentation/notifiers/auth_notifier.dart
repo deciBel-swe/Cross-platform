@@ -54,10 +54,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         return const AuthUnauthenticated();
       });
     } catch (_) {
-      // Ignore errors during check, fallback to unauthenticated state.
+      return const AuthUnauthenticated();
     }
-
-    return const AuthUnauthenticated();
   }
 
   Future<void> loginWithGoogle() async {
