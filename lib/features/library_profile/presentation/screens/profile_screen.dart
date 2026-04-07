@@ -32,6 +32,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late ScrollController _scrollController;
   bool _showAppBarIcon = false;
+  bool _shouldWatchSections = true;
 
   bool get _isPublicProfile => widget.userId != null;
 
@@ -146,6 +147,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           .read(moderationProvider.notifier)
                           .blockUser(user.id);
 
+                      if (!context.mounted) {
+                        return;
+                      }
+
                       if (context.canPop()) {
                         context.pop();
                       }
@@ -169,6 +174,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             AppConstants.appBarFadeScrollOffset &&
         _showAppBarIcon) {
       setState(() => _showAppBarIcon = false);
+    }
+  }
+
+  Future<void> _openConnections({
+    required String route,
+    required int userId,
+  }) async {
+    if (_shouldWatchSections) {
+      setState(() => _shouldWatchSections = false);
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) {
+        return;
+      }
+    }
+
+    await context.push(route, extra: userId);
+
+    if (mounted) {
+      setState(() => _shouldWatchSections = true);
     }
   }
 
@@ -310,13 +334,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         const SizedBox(height: AppConstants.spacingMassive),
                         UserProfileHeader(
                           user: user,
-                          onFollowersTap: () => context.push(
-                            RoutePaths.profileFollowers,
-                            extra: user.id,
+                          onFollowersTap: () => _openConnections(
+                            route: RoutePaths.profileFollowers,
+                            userId: user.id,
                           ),
-                          onFollowingTap: () => context.push(
-                            RoutePaths.profileFollowing,
-                            extra: user.id,
+                          onFollowingTap: () => _openConnections(
+                            route: RoutePaths.profileFollowing,
+                            userId: user.id,
                           ),
                         ),
                         Consumer(
@@ -333,9 +357,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           onButtonPressed: () =>
                               context.push(RoutePaths.uploadLibrary),
                         ),
-                        TopTracksSection(userId: user.id),
+                        if (_shouldWatchSections)
+                          TopTracksSection(userId: user.id),
                         const SizedBox(height: AppConstants.spacingLarge),
-                        if (!_isPublicProfile) const MediaCollection(),
+                        if (!_isPublicProfile && _shouldWatchSections)
+                          const MediaCollection(),
                         const SizedBox(height: AppConstants.spacingMassive),
                       ],
                     ),
@@ -473,4 +499,3 @@ class _ProfileCoverPhoto extends StatelessWidget {
     );
   }
 }
-

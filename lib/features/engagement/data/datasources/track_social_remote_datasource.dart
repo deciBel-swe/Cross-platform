@@ -8,8 +8,13 @@ import '../models/paginated_engagers_model.dart';
 
 @injectable
 class TrackSocialRemoteDatasource {
-  const TrackSocialRemoteDatasource(this._dioClient);
+  TrackSocialRemoteDatasource(this._dioClient);
   final DioClient _dioClient;
+
+  int? _cachedCurrentUserId;
+  Future<int?>? _currentUserIdInFlight;
+  String? _cachedLikedMeEndpoint;
+  String? _cachedRepostedMeEndpoint;
 
   Future<void> likeTrack(int trackId) async {
     try {
@@ -40,17 +45,36 @@ class TrackSocialRemoteDatasource {
     int size = 10,
     int? userId,
   }) async {
-    final resolvedUserId = userId ?? await _resolveCurrentUserId();
-    final endpoints = <String>[
-      if (userId == null) '/users/me/likes',
-      if (userId == null) '/users/me/like',
+    final meEndpoints = <String>[
+      if (userId == null && _cachedLikedMeEndpoint != null)
+        _cachedLikedMeEndpoint!,
       if (userId == null) '/users/me/liked-tracks',
-      if (resolvedUserId != null) '/users/$resolvedUserId/likes',
-      if (resolvedUserId != null) '/users/$resolvedUserId/like',
-      if (resolvedUserId != null) '/users/$resolvedUserId/liked-tracks',
     ];
 
-    return _fetchTrackCollection(endpoints: endpoints, page: page, size: size);
+    final firstPass = _uniqueEndpoints(meEndpoints);
+    try {
+      return await _fetchTrackCollection(
+        endpoints: firstPass,
+        page: page,
+        size: size,
+        onSuccess: (endpoint) {
+          if (userId == null && endpoint.startsWith('/users/me/')) {
+            _cachedLikedMeEndpoint = endpoint;
+          }
+        },
+      );
+    } on AppException {
+      final resolvedUserId = userId ?? await _resolveCurrentUserId();
+      final fallbackEndpoints = <String>[
+        if (resolvedUserId != null) '/users/$resolvedUserId/liked-tracks',
+      ];
+
+      return _fetchTrackCollection(
+        endpoints: _uniqueEndpoints(fallbackEndpoints),
+        page: page,
+        size: size,
+      );
+    }
   }
 
   Future<PaginatedTracksModel> getRepostedTracks({
@@ -58,22 +82,46 @@ class TrackSocialRemoteDatasource {
     int size = 10,
     int? userId,
   }) async {
-    final resolvedUserId = userId ?? await _resolveCurrentUserId();
-    final endpoints = <String>[
+    final meEndpoints = <String>[
+      if (userId == null && _cachedRepostedMeEndpoint != null)
+        _cachedRepostedMeEndpoint!,
       if (userId == null) '/users/me/repost',
       if (userId == null) '/users/me/reposts',
-      if (resolvedUserId != null) '/users/$resolvedUserId/repost',
-      if (resolvedUserId != null) '/users/$resolvedUserId/reposts',
-      if (resolvedUserId != null) '/users/$resolvedUserId/reposted-tracks',
     ];
 
-    return _fetchTrackCollection(endpoints: endpoints, page: page, size: size);
+    final firstPass = _uniqueEndpoints(meEndpoints);
+    try {
+      return await _fetchTrackCollection(
+        endpoints: firstPass,
+        page: page,
+        size: size,
+        onSuccess: (endpoint) {
+          if (userId == null && endpoint.startsWith('/users/me/')) {
+            _cachedRepostedMeEndpoint = endpoint;
+          }
+        },
+      );
+    } on AppException {
+      final resolvedUserId = userId ?? await _resolveCurrentUserId();
+      final fallbackEndpoints = <String>[
+        if (resolvedUserId != null) '/users/$resolvedUserId/repost',
+        if (resolvedUserId != null) '/users/$resolvedUserId/reposts',
+        if (resolvedUserId != null) '/users/$resolvedUserId/reposted-tracks',
+      ];
+
+      return _fetchTrackCollection(
+        endpoints: _uniqueEndpoints(fallbackEndpoints),
+        page: page,
+        size: size,
+      );
+    }
   }
 
   Future<PaginatedTracksModel> _fetchTrackCollection({
     required List<String> endpoints,
     required int page,
     required int size,
+    void Function(String endpoint)? onSuccess,
   }) async {
     DioException? lastDioException;
 
@@ -88,6 +136,8 @@ class TrackSocialRemoteDatasource {
         if (data == null) {
           throw const ServerException('No data returned from server.');
         }
+
+        onSuccess?.call(endpoint);
 
         return PaginatedTracksModel.fromJson(data);
       } on DioException catch (error) {
@@ -110,7 +160,39 @@ class TrackSocialRemoteDatasource {
     throw const ServerException('No track collection endpoint succeeded.');
   }
 
+  List<String> _uniqueEndpoints(List<String> endpoints) {
+    final seen = <String>{};
+    final result = <String>[];
+    for (final endpoint in endpoints) {
+      if (seen.add(endpoint)) {
+        result.add(endpoint);
+      }
+    }
+    return result;
+  }
+
   Future<int?> _resolveCurrentUserId() async {
+    if (_cachedCurrentUserId != null) {
+      return _cachedCurrentUserId;
+    }
+
+    final inFlight = _currentUserIdInFlight;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    _currentUserIdInFlight = _fetchCurrentUserId();
+    final resolved = await _currentUserIdInFlight;
+    _currentUserIdInFlight = null;
+
+    if (resolved != null) {
+      _cachedCurrentUserId = resolved;
+    }
+
+    return resolved;
+  }
+
+  Future<int?> _fetchCurrentUserId() async {
     try {
       final response = await _dioClient.get<Map<String, dynamic>>('/users/me');
       final body = response.data;

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../domain/entities/public_profile_social_links.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -16,8 +15,6 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
 class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
   @override
   Future<Either<Failure, UserProfile>> build() async {
-    ref.watch(followRefreshTickProvider);
-
     // This runs automatically when the provider is first watched.
     return _fetchProfile();
   }
