@@ -13,6 +13,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/widgets/follow_button.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../settings/presentation/providers/blocked_users_provider.dart';
 import '../../domain/entities/public_profile.dart';
 import '../providers/block_provider.dart';
 import '../providers/public_profile_provider.dart';
@@ -112,86 +113,59 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
         false;
   }
 
-  Future<void> _showModerationSheet(
+  Future<void> _handleModerationAction(
     BuildContext context,
     PublicProfile? profile,
+    bool isBlocked,
   ) async {
     if (profile == null) {
       return;
     }
 
-    final blockedUsers = ref.read(blockedUsersProvider);
-    final bool isBlocked = blockedUsers.contains(profile.id);
+    final confirmed = await _showConfirmDialog(context, isBlocked);
+    if (!confirmed || !mounted) {
+      return;
+    }
 
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white54,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ListTile(
-                  leading: Icon(
-                    isBlocked
-                        ? Icons.remove_circle_outline
-                        : Icons.block_outlined,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                  title: Text(
-                    isBlocked ? 'Unblock user' : 'Block user',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  onTap: () async {
-                    Navigator.pop(sheetContext);
+    final notifier = ref.read(blockedUsersProvider.notifier);
 
-                    final confirmed = await _showConfirmDialog(
-                      context,
-                      isBlocked,
-                    );
-                    if (!confirmed || !mounted) {
-                      return;
-                    }
+    try {
+      if (isBlocked) {
+        await notifier.unblock(profile.id);
+        return;
+      }
 
-                    final notifier = ref.read(blockedUsersProvider.notifier);
+      await notifier.block(
+        profile.id,
+        username: profile.username,
+        avatarUrl: profile.profile?.avatarUrl,
+      );
 
-                    if (isBlocked) {
-                      notifier.unblock(profile.id);
-                    } else {
-                      notifier.block(profile.id);
+      ref.read(followStateProvider(profile.id).notifier).forceState(false);
+      ref.read(followBackHintProvider(profile.id).notifier).state = false;
+      ref.invalidate(blockedUsersListProvider);
 
-                      if (context.canPop()) {
-                        context.pop();
-                      }
-                    }
-                  },
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
+      if (mounted && context.canPop()) {
+        context.pop();
+      }
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      final cleanMessage = error.toString().replaceFirst('Exception: ', '');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isBlocked
+                ? 'Failed to unblock user: $cleanMessage'
+                : 'Failed to block user: $cleanMessage',
           ),
-        );
-      },
-    );
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   @override
@@ -204,19 +178,21 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(publicProfileProvider(widget.userId));
+    final blockedUserIds = ref.watch(blockedUsersProvider);
+    final isBlocked = blockedUserIds.contains(widget.userId);
 
     ref.listen<Set<int>>(blockedUsersProvider, (previous, next) {
       final previousSet = previous ?? <int>{};
       final nextSet = next;
 
       final wasBlocked = previousSet.contains(widget.userId);
-      final isBlocked = nextSet.contains(widget.userId);
+      final isNowBlocked = nextSet.contains(widget.userId);
 
-      if (!wasBlocked && isBlocked) {
+      if (!wasBlocked && isNowBlocked) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User blocked successfully.')),
         );
-      } else if (wasBlocked && !isBlocked) {
+      } else if (wasBlocked && !isNowBlocked) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User unblocked successfully.')),
         );
@@ -225,7 +201,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _buildAppBar(context, profileAsync),
+      appBar: _buildAppBar(context, profileAsync, isBlocked),
       body: profileAsync.when(
         loading: () {
           return const Center(child: CircularProgressIndicator());
@@ -243,6 +219,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   PreferredSizeWidget _buildAppBar(
     BuildContext context,
     AsyncValue<PublicProfile> profileAsync,
+    bool isBlocked,
   ) {
     final username = profileAsync.valueOrNull?.username ?? '';
 
@@ -265,9 +242,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.onPrimary,
-          ),
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
         ),
       ),
       actions: [
@@ -275,11 +252,36 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           icon: const Icon(Icons.share_outlined, color: AppColors.onPrimary),
           onPressed: () {},
         ),
-        IconButton(
+        PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: AppColors.onPrimary),
-          onPressed: () {
-            _showModerationSheet(context, profileAsync.valueOrNull);
+          color: AppColors.surface,
+          onSelected: (_) {
+            _handleModerationAction(
+              context,
+              profileAsync.valueOrNull,
+              isBlocked,
+            );
           },
+          itemBuilder: (context) => [
+            PopupMenuItem<String>(
+              value: isBlocked ? 'unblock' : 'block',
+              child: Row(
+                children: [
+                  Icon(
+                    isBlocked
+                        ? Icons.remove_circle_outline
+                        : Icons.block_outlined,
+                    color: AppColors.onPrimary,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    isBlocked ? 'Unblock' : 'Block',
+                    style: const TextStyle(color: AppColors.onPrimary),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -377,9 +379,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             Text(
               AppConstants.errorGeneric,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+                    color: AppColors.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: AppConstants.spacingSmall),
             Text(
@@ -560,9 +562,9 @@ class _ProfileHeaderContent extends StatelessWidget {
         Text(
           profile.username,
           style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.onPrimary,
-          ),
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
         ),
         if (bio.isNotEmpty) ...[
           const SizedBox(height: AppConstants.spacingSmall),
@@ -679,9 +681,9 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-      ),
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
     );
   }
 }

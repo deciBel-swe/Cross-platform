@@ -4,55 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../library_profile/domain/entities/blocked_user_summary.dart';
 import '../../../library_profile/presentation/providers/block_provider.dart';
-import '../providers/blocked_users_provider.dart';
 
-class BlockedUsersScreen extends ConsumerStatefulWidget {
+class BlockedUsersScreen extends ConsumerWidget {
   const BlockedUsersScreen({super.key});
 
-  @override
-  ConsumerState<BlockedUsersScreen> createState() => _BlockedUsersScreenState();
-}
-
-class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
-  late final ScrollController _scrollController;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController()..addListener(_onScroll);
-
-    Future.microtask(() async {
-      await ref.read(blockedUsersListProvider.notifier).refresh();
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-
-    final position = _scrollController.position;
-    final threshold = position.maxScrollExtent * 0.8;
-
-    if (position.pixels >= threshold) {
-      ref.read(blockedUsersListProvider.notifier).loadMore();
-    }
-  }
-
-  Future<void> _showUnblockConfirmation(
+  Future<void> _showUnblockSheet(
     BuildContext context,
-    int userId,
-    String username,
+    WidgetRef ref,
+    BlockedUserSummary user,
   ) async {
-    final bool? confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
@@ -64,7 +25,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
+              children: [
                 Container(
                   width: 44,
                   height: 4,
@@ -84,7 +45,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Do you want to unblock $username?',
+                  'Do you want to unblock ${user.username}?',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white70,
@@ -125,47 +86,31 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
       return;
     }
 
-    final success = await ref
-        .read(blockedUsersListProvider.notifier)
-        .unblockUser(userId: userId);
+    try {
+      await ref.read(blockedUsersProvider.notifier).unblock(user.id);
 
-    if (!mounted) {
-      return;
-    }
-
-    if (success) {
-      ref.read(blockedUsersProvider.notifier).markUnblockedLocally(userId);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$username unblocked successfully.')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to unblock user.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${user.username} unblocked successfully.')),
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to unblock ${user.username}: ${error.toString().replaceFirst('Exception: ', '')}',
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(blockedUsersListProvider);
-
-    ref.listen(blockedUsersListProvider, (previous, next) {
-      final summaries = next.users
-          .map(
-            (user) => BlockedUserSummary(
-              id: user.id,
-              username: user.username,
-              avatarUrl: user.avatarUrl,
-            ),
-          )
-          .toList();
-
-      ref.read(blockedUsersProvider.notifier).syncFromBackend(summaries);
-    });
+  Widget build(BuildContext context, WidgetRef ref) {
+    final blockedUsers = ref.watch(blockedUserProfilesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -173,64 +118,22 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
         title: const Text('Blocked users'),
         backgroundColor: AppColors.background,
       ),
-      body: RefreshIndicator(
-        onRefresh: () => ref.read(blockedUsersListProvider.notifier).refresh(),
-        child: Builder(
-          builder: (context) {
-            if (state.isLoading && state.users.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (state.hasError && state.users.isEmpty) {
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: const [
-                  SizedBox(height: 220),
-                  Center(
-                    child: Text(
-                      'Failed to load blocked users.',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            if (state.users.isEmpty) {
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: const [
-                  SizedBox(height: 220),
-                  Center(
-                    child: Text(
-                      "You haven't blocked anyone.",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            final itemCount =
-                state.users.length + (state.isLoadingMore ? 1 : 0);
-
-            return ListView.separated(
-              controller: _scrollController,
+      body: blockedUsers.isEmpty
+          ? const Center(
+              child: Text(
+                "You haven't blocked anyone.",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+              ),
+            )
+          : ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: itemCount,
+              itemCount: blockedUsers.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                if (index >= state.users.length) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final user = state.users[index];
+                final user = blockedUsers[index];
 
                 return Container(
                   padding: const EdgeInsets.all(12),
@@ -264,11 +167,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () => _showUnblockConfirmation(
-                          context,
-                          user.id,
-                          user.username,
-                        ),
+                        onPressed: () => _showUnblockSheet(context, ref, user),
                         child: const Text(
                           'Unblock',
                           style: TextStyle(
@@ -281,10 +180,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                   ),
                 );
               },
-            );
-          },
-        ),
-      ),
+            ),
     );
   }
 }
