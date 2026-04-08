@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,6 +33,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late ScrollController _scrollController;
   bool _showAppBarIcon = false;
+  bool _shouldWatchSections = true;
 
   bool get _isPublicProfile => widget.userId != null;
 
@@ -169,6 +171,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             AppConstants.appBarFadeScrollOffset &&
         _showAppBarIcon) {
       setState(() => _showAppBarIcon = false);
+    }
+  }
+
+  Future<void> _openConnections({
+    required String route,
+    required int userId,
+  }) async {
+    if (_shouldWatchSections) {
+      setState(() => _shouldWatchSections = false);
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) {
+        return;
+      }
+    }
+
+    await context.push(route, extra: userId);
+
+    if (mounted) {
+      setState(() => _shouldWatchSections = true);
     }
   }
 
@@ -310,13 +331,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         const SizedBox(height: AppConstants.spacingMassive),
                         UserProfileHeader(
                           user: user,
-                          onFollowersTap: () => context.push(
-                            RoutePaths.profileFollowers,
-                            extra: user.id,
+                          onFollowersTap: () => _openConnections(
+                            route: RoutePaths.profileFollowers,
+                            userId: user.id,
                           ),
-                          onFollowingTap: () => context.push(
-                            RoutePaths.profileFollowing,
-                            extra: user.id,
+                          onFollowingTap: () => _openConnections(
+                            route: RoutePaths.profileFollowing,
+                            userId: user.id,
                           ),
                         ),
                         Consumer(
@@ -333,9 +354,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           onButtonPressed: () =>
                               context.push(RoutePaths.uploadLibrary),
                         ),
-                        TopTracksSection(userId: user.id),
+                        if (_shouldWatchSections)
+                          TopTracksSection(userId: user.id),
                         const SizedBox(height: AppConstants.spacingLarge),
-                        if (!_isPublicProfile) const MediaCollection(),
+                        if (!_isPublicProfile && _shouldWatchSections)
+                          const MediaCollection(),
                         const SizedBox(height: AppConstants.spacingMassive),
                       ],
                     ),
@@ -413,13 +436,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-class _ProfileCoverPhoto extends StatelessWidget {
+class _ProfileCoverPhoto extends StatefulWidget {
   const _ProfileCoverPhoto({this.imageUrl});
 
   final String? imageUrl;
 
   @override
+  State<_ProfileCoverPhoto> createState() => _ProfileCoverPhotoState();
+}
+
+class _ProfileCoverPhotoState extends State<_ProfileCoverPhoto> {
+  String? _lastKnownImageUrl;
+
+  @override
   Widget build(BuildContext context) {
+    final imageUrl = widget.imageUrl;
+    if (imageUrl != null && imageUrl.trim().isNotEmpty) {
+      _lastKnownImageUrl = imageUrl;
+    }
+
+    final effectiveImageUrl = (imageUrl != null && imageUrl.trim().isNotEmpty)
+        ? imageUrl
+        : _lastKnownImageUrl;
+
     final bool isDesktop = MediaQuery.sizeOf(context).width > 600;
     final double coverHeight = isDesktop ? 350.0 : 160.0;
 
@@ -427,23 +466,20 @@ class _ProfileCoverPhoto extends StatelessWidget {
       height: coverHeight,
       width: double.infinity,
       color: AppColors.surface,
-      child: imageUrl == null
+      child: effectiveImageUrl == null
           ? _buildPlaceholder()
-          : ProfileImagePathUtils.isRemote(imageUrl!)
-          ? Image.network(
-              imageUrl!,
+          : ProfileImagePathUtils.isRemote(effectiveImageUrl)
+          ? CachedNetworkImage(
+              imageUrl: effectiveImageUrl,
               fit: BoxFit.cover,
               filterQuality: FilterQuality.high,
-              errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return _buildPlaceholder();
-              },
+              placeholder: (context, url) => _buildPlaceholder(),
+              errorWidget: (context, url, error) => _buildPlaceholder(),
             )
           : Builder(
               builder: (context) {
                 final localPath = ProfileImagePathUtils.localFilePath(
-                  imageUrl!,
+                  effectiveImageUrl,
                 );
 
                 if (localPath == null) {
@@ -473,4 +509,3 @@ class _ProfileCoverPhoto extends StatelessWidget {
     );
   }
 }
-

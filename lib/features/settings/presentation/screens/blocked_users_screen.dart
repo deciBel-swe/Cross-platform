@@ -45,7 +45,10 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
     }
   }
 
-  Future<void> _showUnblockConfirmation(BuildContext context, BlockedUser user) async {
+  Future<void> _showUnblockConfirmation(
+    BuildContext context,
+    BlockedUser user,
+  ) async {
     final bool? confirmed = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: AppColors.surface,
@@ -124,9 +127,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
         child: Builder(
           builder: (BuildContext context) {
             if (state.isLoading && state.users.isEmpty) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return const Center(child: CircularProgressIndicator());
             }
 
             if (state.hasError && state.users.isEmpty) {
@@ -156,7 +157,9 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                         const SizedBox(height: AppDimensions.paddingSm),
                         TextButton(
                           onPressed: () {
-                            ref.read(blockedUsersProvider.notifier).loadInitial();
+                            ref
+                                .read(blockedUsersProvider.notifier)
+                                .loadInitial();
                           },
                           child: const Text('Retry'),
                         ),
@@ -205,17 +208,13 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: itemCount,
-              separatorBuilder: (context, index) => const Divider(
-                height: 1,
-                color: AppColors.divider,
-              ),
+              separatorBuilder: (context, index) =>
+                  const Divider(height: 1, color: AppColors.divider),
               itemBuilder: (BuildContext context, int index) {
                 if (index >= state.users.length) {
                   return const Padding(
                     padding: EdgeInsets.all(AppDimensions.paddingMd),
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   );
                 }
 

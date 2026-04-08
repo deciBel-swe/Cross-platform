@@ -195,9 +195,7 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
   @override
   Future<UserProfileModel> getPublicProfile(int userId) async {
     try {
-      final response = await _dioClient.get<dynamic>(
-        '/users/$userId',
-      );
+      final response = await _dioClient.get<dynamic>('/users/$userId');
 
       final data = response.data as Map<String, dynamic>?;
       if (data == null) {
@@ -210,11 +208,11 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
       final Map<String, dynamic> profile =
           (responseData['profile'] as Map<String, dynamic>?) ??
-              const <String, dynamic>{};
+          const <String, dynamic>{};
 
       final Map<String, dynamic> stats =
           (responseData['stats'] as Map<String, dynamic>?) ??
-              const <String, dynamic>{};
+          const <String, dynamic>{};
 
       final Map<String, dynamic>? socialLinks =
           responseData['socialLinks'] as Map<String, dynamic>?;
@@ -235,10 +233,7 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
           'favoriteGenres': profile['favoriteGenres'] ?? const <dynamic>[],
         },
         'socialLinks': socialLinks,
-        'privacySettings': {
-          'isPrivate': false,
-          'showHistory': true,
-        },
+        'privacySettings': {'isPrivate': false, 'showHistory': true},
         'stats': {
           'followers': (stats['followersCount'] as num?)?.toInt() ?? 0,
           'following': (stats['followingCount'] as num?)?.toInt() ?? 0,
