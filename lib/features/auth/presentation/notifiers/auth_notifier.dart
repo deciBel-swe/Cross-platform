@@ -62,39 +62,34 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     debugPrint('[AuthNotifier] loginWithGoogle() started.');
     state = const AsyncLoading();
 
-    state = await AsyncValue.guard(() async {
+    try {
       final repo = ref.read(authRepositoryProvider);
+      
+      debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
+      final userEither = await repo.loginWithGoogle();
 
-      try {
-        debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
-        final userEither = await repo.loginWithGoogle();
-
-        return userEither.fold(
-          (failure) {
-            debugPrint('[AuthNotifier] Failure: ${failure.message}');
-            throw Exception(failure.message);
-          },
-          (user) {
-            debugPrint(
-              '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
-            );
-            return AuthAuthenticated(user: user);
-          },
-        );
-      } on AppException catch (e) {
-        debugPrint('[AuthNotifier] AppException: ${e.message}');
-        // Will be caught by UI async guard
-        throw Exception(e.message);
-      } catch (e, st) {
-        debugPrint('[AuthNotifier] Unexpected Exception: $e\n$st');
-        throw Exception(e.toString());
-      }
-    });
-
-    // If the login failed, recover to unauthenticated state so the router
-    // can redirect back to the start/login screen instead of staying on splash.
-    if (state.hasError) {
+      final user = userEither.fold(
+        (failure) {
+          debugPrint('[AuthNotifier] Failure: ${failure.message}');
+          throw Exception(failure.message);
+        },
+        (user) {
+          debugPrint(
+            '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
+          );
+          return user;
+        },
+      );
+      
+      state = AsyncData(AuthAuthenticated(user: user));
+    } on AppException catch (e) {
+      debugPrint('[AuthNotifier] AppException: ${e.message}');
       state = const AsyncData(AuthUnauthenticated());
+      throw Exception(e.message);
+    } catch (e, st) {
+      debugPrint('[AuthNotifier] Unexpected Exception: $e\n$st');
+      state = const AsyncData(AuthUnauthenticated());
+      throw Exception(e.toString());
     }
 
     debugPrint('[AuthNotifier] State is now: $state');
@@ -106,7 +101,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }) async {
     state = const AsyncLoading();
 
-    state = await AsyncValue.guard(() async {
+    try {
       final repo = ref.read(authRepositoryProvider);
 
       final userEither = await repo.loginWithEmailPassword(
@@ -114,14 +109,15 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         password: password,
       );
 
-      return userEither.fold(
+      final user = userEither.fold(
         (failure) => throw Exception(failure.message),
-        (user) => AuthAuthenticated(user: user),
+        (user) => user,
       );
-    });
-
-    if (state.hasError) {
+      
+      state = AsyncData(AuthAuthenticated(user: user));
+    } catch (e) {
       state = const AsyncData(AuthUnauthenticated());
+      rethrow;
     }
   }
 

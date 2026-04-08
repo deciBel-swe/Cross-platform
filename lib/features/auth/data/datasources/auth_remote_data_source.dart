@@ -143,6 +143,20 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         '&scope=email%20profile',
       );
 
+      // Early error check: pre-flight the auth URL
+      try {
+        final checkResponse = await Dio().getUri<dynamic>(authUrl);
+        if (checkResponse.realUri.toString().contains('oauth/error')) {
+          return Future.error(const AuthException('error while loging with google'));
+        }
+      } on DioException catch (e) {
+        if (e.response?.realUri.toString().contains('oauth/error') == true) {
+          return Future.error(const AuthException('error while loging with google'));
+        }
+      } catch (_) {
+        // Ignored, proceed to normal flow if the check fails for some other reason
+      }
+
       HttpServer? localServer;
       try {
         localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 8081);

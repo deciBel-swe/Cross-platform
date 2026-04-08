@@ -236,10 +236,12 @@ class TrackSocialRemoteDatasource {
   }) async {
     try {
       final response = await _dioClient.get<Map<String, dynamic>>(
-        '/tracks/$trackId/like',
+        '/users/tracks/$trackId/like',
         queryParams: {'page': page, 'size': size},
       );
-      return PaginatedEngagersModel.fromJson(response.data!);
+      return PaginatedEngagersModel.fromJson(
+        _normalizePagination(response.data!),
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -253,13 +255,52 @@ class TrackSocialRemoteDatasource {
   }) async {
     try {
       final response = await _dioClient.get<Map<String, dynamic>>(
-        '/tracks/$trackId/reposters',
+        '/users/tracks/$trackId/reposters',
         queryParams: {'page': page, 'size': size},
       );
-      return PaginatedEngagersModel.fromJson(response.data!);
+      return PaginatedEngagersModel.fromJson(
+        _normalizePagination(response.data!),
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
+  }
+
+  Map<String, dynamic> _normalizePagination(Map<String, dynamic> json) {
+    final normalized = Map<String, dynamic>.from(json);
+
+    if (!normalized.containsKey('pageNumber') &&
+        normalized.containsKey('number')) {
+      normalized['pageNumber'] = normalized['number'];
+      normalized['pageSize'] = normalized['size'];
+      normalized['isLast'] = normalized['last'];
+    }
+
+    if (normalized['content'] is List) {
+      final content = normalized['content'] as List;
+      normalized['content'] = content.map((item) {
+        if (item is Map<String, dynamic>) {
+          final normalizedItem = Map<String, dynamic>.from(item);
+          // Handle flat structure
+          if (!normalizedItem.containsKey('avatarUrl') &&
+              normalizedItem.containsKey('profilePic')) {
+            normalizedItem['avatarUrl'] = normalizedItem['profilePic'];
+          }
+          // Handle nested profile structure (OpenAPI spec shape)
+          if (!normalizedItem.containsKey('avatarUrl') &&
+              normalizedItem['profile'] is Map<String, dynamic>) {
+            final profile = normalizedItem['profile'] as Map<String, dynamic>;
+            if (profile.containsKey('avatarUrl')) {
+              normalizedItem['avatarUrl'] = profile['avatarUrl'];
+            }
+          }
+          return normalizedItem;
+        }
+        return item;
+      }).toList();
+    }
+
+    return normalized;
   }
 
   /// Maps a [DioException] to the appropriate [AppException] subclass.
