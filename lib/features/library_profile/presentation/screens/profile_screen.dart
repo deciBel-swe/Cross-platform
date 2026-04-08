@@ -148,7 +148,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           .read(moderationProvider.notifier)
                           .blockUser(user.id);
 
-                      if (context.mounted && context.canPop()) {
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      if (context.canPop()) {
                         context.pop();
                       }
                     }
