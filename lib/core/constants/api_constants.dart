@@ -34,12 +34,20 @@ class ApiConstants {
   /// Step 2: Backend redirects browser -> returns Token
   /// Step 3: Flutter exchanges OAuth token with backend
   static const String googleTokenExchangeEndpoint = '/auth/oauth/google';
+  static const String localLoginEndpoint = '/auth/login/local';
+  static const String localRegisterEndpoint = '/auth/register/local';
   static const String logoutEndpoint = '/auth/logout';
   static const String genresEndpoint = '/genres';
 
   static const String userProfileEndpoint = '/users/me';
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
+
+  /// Fetches a public user profile by ID: GET /users/{userId}
+  static String publicProfile(int userId) => '/users/$userId';
+
+  /// Follows or unfollows a user: POST|DELETE /users/{userId}/follow
+  static String followUser(int userId) => '/users/$userId/follow';
 
   /// Base endpoint for playlist operations
   static const String playlists = '/playlists';
@@ -75,6 +83,27 @@ class ApiConstants {
 
   static String get googleMobileClientId =>
       _requiredEnv('GOOGLE_MOBILE_CLIENT_ID');
-  static String get googleDesktopClientId =>
-      _requiredEnv('GOOGLE_DESKTOP_CLIENT_ID');
+  static String get googleDesktopClientId {
+    final desktop = dotenv.env['GOOGLE_DESKTOP_CLIENT_ID']?.trim();
+    if (desktop != null && desktop.isNotEmpty) {
+      return desktop;
+    }
+
+    final legacyWeb = dotenv.env['GOOGLE_WEB_CLIENT_ID']?.trim();
+    if (legacyWeb != null && legacyWeb.isNotEmpty) {
+      return legacyWeb;
+    }
+
+    throw StateError(
+      'Missing required environment variable: GOOGLE_DESKTOP_CLIENT_ID (or GOOGLE_WEB_CLIENT_ID)',
+    );
+  }
+
+  static String get recaptchaSiteKey {
+    final value = dotenv.env['RECAPTCHA_SITE_KEY']?.trim();
+    if (value == null || value.isEmpty) {
+      return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';
+    }
+    return value;
+  }
 }

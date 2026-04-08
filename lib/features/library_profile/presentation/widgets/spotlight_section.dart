@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../notifiers/track_notifier.dart';
 import 'track_tile.dart';
@@ -56,16 +58,11 @@ class TopTracksSection extends ConsumerWidget {
                 return TrackTile(
                   track: track,
                   onTap: () {
-                    debugPrint('Playing track: ${track.title}');
-                    // TODO: Trigger audio player
+                    context.push(RoutePaths.trackPreview(track.id));
                   },
                   onMorePressed: () {
                     debugPrint('Options for: ${track.title}');
                     // TODO: Open bottom sheet
-                  },
-                  onLikePressed: () {
-                    debugPrint('Liked: ${track.title}');
-                    // TODO: Call like provider
                   },
                 );
               },

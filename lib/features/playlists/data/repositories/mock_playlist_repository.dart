@@ -28,6 +28,8 @@ final List<Track> _mockTracks = [
     playCount: 15420,
     likeCount: 342,
     repostCount: 56,
+    isLiked: false,
+    isReposted: false,
     createdAt: DateTime(2020, 4, 20),
   ),
   Track(
@@ -44,6 +46,8 @@ final List<Track> _mockTracks = [
     playCount: 89000,
     likeCount: 4500,
     repostCount: 890,
+    isLiked: true,
+    isReposted: false,
     createdAt: DateTime(2024, 1, 10),
   ),
   Track(
@@ -60,6 +64,8 @@ final List<Track> _mockTracks = [
     playCount: 230500,
     likeCount: 12400,
     repostCount: 3100,
+    isLiked: false,
+    isReposted: true,
     createdAt: DateTime(2023, 11, 18),
   ),
 ];

@@ -177,7 +177,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: AppConstants.spacingMassive),
-                        UserProfileHeader(user: user),
+                        UserProfileHeader(
+                          user: user,
+                          onFollowersTap: () => context.push(
+                            RoutePaths.profileFollowers,
+                            extra: user.id,
+                          ),
+                          onFollowingTap: () => context.push(
+                            RoutePaths.profileFollowing,
+                            extra: user.id,
+                          ),
+                        ),
                         Consumer(
                           builder: (context, ref, child) {
                             final socialLinks = ref.watch(webProfilesProvider);
@@ -186,11 +196,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         const SizedBox(height: AppConstants.spacingRegular),
                         Tile(
-                          title: AppConstants.spotlightTitle,
-                          subtitle: AppConstants.spotlightSubtitle,
-                          buttonText: AppConstants.edit,
+                          title: AppConstants.tracksSectionTitle,
+                          subtitle: AppConstants.tracksSectionSubtitle,
+                          buttonText: AppConstants.seeAll,
                           onButtonPressed: () =>
-                              context.push(RoutePaths.editProfile),
+                              context.push(RoutePaths.uploadLibrary),
                         ),
                         TopTracksSection(userId: user.id),
                         const SizedBox(height: AppConstants.spacingLarge),
