@@ -180,11 +180,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             )
           else
             TextButton(
+              // style: TextButton.styleFrom(
+              //   backgroundColor: AppColors.primary,
+              //   padding: const EdgeInsets.symmetric(horizontal: 16),
+              // ),
               onPressed: _saveProfile,
               child: const Text(
                 'Save',
                 style: TextStyle(
-                  color: AppColors.google,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -287,6 +291,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       availableGenres: availableGenres,
                       selectedGenres: _selectedGenres,
                       onGenreToggled: (genre, isSelected) {
+                        if (isSelected && _selectedGenres.length >= 10) return;
                         setState(() {
                           if (isSelected) {
                             _selectedGenres.add(genre);

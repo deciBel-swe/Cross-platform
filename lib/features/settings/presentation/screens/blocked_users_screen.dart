@@ -89,10 +89,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                 Text(
                   'Do you want to unblock $username?',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    height: 1.5,
-                  ),
+                  style: const TextStyle(color: Colors.white70, height: 1.5),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -207,10 +204,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                   Center(
                     child: Text(
                       "You haven't blocked anyone.",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                   ),
                 ],
@@ -224,8 +218,9 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: itemCount,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
+              separatorBuilder: (context, index) =>
+                  const Divider(height: 1, color: AppColors.divider),
+              itemBuilder: (BuildContext context, int index) {
                 if (index >= state.users.length) {
                   return const Padding(
                     padding: EdgeInsets.all(16),
@@ -251,11 +246,13 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                         CircleAvatar(
                           radius: 24,
                           backgroundColor: Colors.white12,
-                          backgroundImage: (user.avatarUrl != null &&
+                          backgroundImage:
+                              (user.avatarUrl != null &&
                                   user.avatarUrl!.trim().isNotEmpty)
                               ? NetworkImage(user.avatarUrl!)
                               : null,
-                          child: (user.avatarUrl == null ||
+                          child:
+                              (user.avatarUrl == null ||
                                   user.avatarUrl!.trim().isEmpty)
                               ? const Icon(Icons.person, color: Colors.white)
                               : null,
