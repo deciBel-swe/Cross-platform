@@ -119,8 +119,16 @@ class PlaylistDetailsTab extends ConsumerWidget {
           ),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (value) {
-            if (value == null || value.trim().isEmpty) {
+            if (value == null || value.isEmpty) {
               return 'Playlist title cannot be empty';
+            }
+            
+            if (value.trim().isEmpty) {
+              return 'Playlist title cannot be only spaces.';
+            }
+            
+            if (value.trim().length > 100) {
+              return 'Title must be 100 characters or less.';
             }
             return null;
           },
@@ -150,35 +158,23 @@ class PlaylistDetailsTab extends ConsumerWidget {
           onChanged: (val) => ref
               .read(playlistFormProvider(playlist).notifier)
               .updateDescription(val),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (v) {
             if (v != null && v.length > 2000) {
-              return 'Description must be less than 2000 characters';
+              if (v.trim().isEmpty) {
+                return 'Description cannot contain only spaces.';
+              }
+              // 2. Length check
+              if (v.trim().length > 2000) {
+                return 'Description must be 2000 characters or less.';
+              }
             }
             return null;
           },
         ),
-
-        // Tags Menu Item
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text(
-            'Tags',
-            style: TextStyle(color: AppColors.textMuted),
-          ),
-          trailing: const Icon(
-            Icons.chevron_right,
-            color: AppColors.textPrimary,
-          ),
-          onTap: isLoading
-              ? null
-              : () {
-                  // TODO: Navigate to tags editor or add tags list like upload
-                },
-        ),
-
         const SizedBox(height: 32),
 
-        // Make Public Switch (Matching your exact reference logic!)
+        // Make Public Switch
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

@@ -14,6 +14,34 @@ class OwnerModel with _$OwnerModel {
       _$OwnerModelFromJson(json);
 }
 
+class PlaylistTracksConverter
+    implements JsonConverter<List<TrackModel>, dynamic> {
+  const PlaylistTracksConverter();
+
+  @override
+  List<TrackModel> fromJson(Object? json) {
+    if (json == null) return [];
+
+    List<dynamic> list = [];
+    if (json is Map) {
+      if (json.containsKey('content')) {
+        list = json['content'] as List<dynamic>? ?? [];
+      }
+    } else if (json is List) {
+      list = json;
+    }
+
+    return list
+        .where((e) => e != null)
+        .map((e) => TrackModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  @override
+  dynamic toJson(List<TrackModel> object) =>
+      object.map((e) => e.toJson()).toList();
+}
+
 @freezed
 class PlaylistModel with _$PlaylistModel {
   const factory PlaylistModel({
@@ -24,8 +52,8 @@ class PlaylistModel with _$PlaylistModel {
     @Default(false) bool isPrivate,
     @Default(false) bool isLiked,
     @JsonKey(name: 'CoverArt') String? coverArt,
-    required OwnerModel owner,
-    @Default([]) List<TrackModel> tracks,
+    OwnerModel? owner,
+    @PlaylistTracksConverter() @Default([]) List<TrackModel> tracks,
   }) = _PlaylistModel;
 
   factory PlaylistModel.fromJson(Map<String, dynamic> json) =>

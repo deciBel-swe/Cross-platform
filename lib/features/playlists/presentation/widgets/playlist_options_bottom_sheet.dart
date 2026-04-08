@@ -81,7 +81,7 @@ class PlaylistOptionsBottomSheet extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Divider(
-                  color: AppColors.borderDark.withOpacity(0.5),
+                  color: AppColors.borderDark.withValues(alpha: 0.5),
                   height: 1,
                 ),
                 const SizedBox(height: 8),
@@ -154,7 +154,7 @@ class PlaylistOptionsBottomSheet extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Divider(
-                  color: AppColors.borderDark.withOpacity(0.5),
+                  color: AppColors.borderDark.withValues(alpha: 0.5),
                   height: 1,
                 ),
                 const SizedBox(height: 8),

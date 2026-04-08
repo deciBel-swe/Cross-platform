@@ -6,16 +6,9 @@ import 'package:mime/mime.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
-import '../../data/repositories/mock_playlist_repository.dart';
 import '../../domain/entities/playlist.dart';
 import '../../domain/entities/playlist_metadata.dart';
-import '../../domain/repositories/i_playlist_repository.dart';
 import '../providers/user_playlists_provider.dart';
-
-final playlistRepositoryProvider = Provider<IPlaylistRepository>((ref) {
-  //return getIt<IPlaylistRepository>();
-  return MockPlaylistRepository();
-});
 
 /// Provider for the Create/Update Playlist form state
 final playlistFormProvider = AsyncNotifierProvider.autoDispose
@@ -158,6 +151,13 @@ class PlaylistFormNotifier
       },
       (newPlaylist) {
         ref.invalidate(userPlaylistsProvider);
+
+        // If editing an existing one, just update the metadata locally
+        if (arg == null) {
+          ref.invalidate(userPlaylistsProvider);
+        } else {
+          ref.read(userPlaylistsProvider.notifier).updatePlaylistMetadataLocally(newPlaylist);
+        }
 
         state = AsyncData(
           PlaylistMetadata(

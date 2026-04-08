@@ -14,10 +14,10 @@ class PlaylistTracksTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(editPlaylistProvider(playlist));
+    final state = ref.watch(editPlaylistProvider(playlist));
 
     final notifier = ref.read(editPlaylistProvider(playlist).notifier);
-    final currentTracks = notifier.currentTracks;
+    final currentTracks = state.value ?? [];
 
     if (currentTracks.isEmpty) {
       return const Center(
@@ -37,10 +37,24 @@ class PlaylistTracksTab extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         itemBuilder: (context, index) {
           final track = currentTracks[index];
-          return _PlaylistTrackTile(
-            key: ValueKey(track.id),
-            track: track,
-            index: index,
+
+          return Dismissible(
+            key: ValueKey('dismiss_${track.id}'),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              color: AppColors.errors,
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 24.0),
+              child: const Icon(Icons.delete, color: AppColors.onPrimary),
+            ),
+            onDismissed: (direction) {
+              notifier.removeTrackLocally(index);
+            },
+            child: _PlaylistTrackTile(
+              key: ValueKey('tile_${track.id}'),
+              track: track,
+              index: index,
+            ),
           );
         },
       ),

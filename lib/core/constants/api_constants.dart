@@ -71,7 +71,6 @@ class ApiConstants {
   // Endpoint for getting the playlist secret link
   static String getPlaylistSecretLink(int playlistId) =>
       '${ApiConstants.playlists}/$playlistId/secret-link';
-
   // Dio Timeout constants
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;

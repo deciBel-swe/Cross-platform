@@ -216,7 +216,7 @@ class CreatePlaylistBottomSheet extends ConsumerWidget {
                       ),
                       Switch(
                         value: isPublic,
-                        activeColor: AppColors.onPrimary,
+                        activeThumbColor: AppColors.onPrimary,
                         activeTrackColor: AppColors.primary,
                         inactiveThumbColor: AppColors.textMuted,
                         inactiveTrackColor: AppColors.surfaceVariant,

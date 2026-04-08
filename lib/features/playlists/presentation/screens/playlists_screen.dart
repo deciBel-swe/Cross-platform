@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/user_playlists_provider.dart';
-import '../widgets/create_playlist_bottom_sheet.dart';
 import '../widgets/playlist_action_buttons.dart';
 import '../widgets/playlist_tile.dart';
 
@@ -33,16 +32,6 @@ class PlaylistsScreen extends ConsumerWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.cast, color: AppColors.textPrimary),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.textPrimary),
-            onPressed: () => CreatePlaylistBottomSheet.show(context),
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),

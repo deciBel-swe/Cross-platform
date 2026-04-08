@@ -24,12 +24,12 @@ _$PlaylistModelImpl _$$PlaylistModelImplFromJson(Map<String, dynamic> json) =>
       isPrivate: json['isPrivate'] as bool? ?? false,
       isLiked: json['isLiked'] as bool? ?? false,
       coverArt: json['CoverArt'] as String?,
-      owner: OwnerModel.fromJson(json['owner'] as Map<String, dynamic>),
-      tracks:
-          (json['tracks'] as List<dynamic>?)
-              ?.map((e) => TrackModel.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
+      owner: json['owner'] == null
+          ? null
+          : OwnerModel.fromJson(json['owner'] as Map<String, dynamic>),
+      tracks: json['tracks'] == null
+          ? const []
+          : const PlaylistTracksConverter().fromJson(json['tracks']),
     );
 
 Map<String, dynamic> _$$PlaylistModelImplToJson(_$PlaylistModelImpl instance) =>
@@ -42,5 +42,5 @@ Map<String, dynamic> _$$PlaylistModelImplToJson(_$PlaylistModelImpl instance) =>
       'isLiked': instance.isLiked,
       'CoverArt': instance.coverArt,
       'owner': instance.owner,
-      'tracks': instance.tracks,
+      'tracks': const PlaylistTracksConverter().toJson(instance.tracks),
     };

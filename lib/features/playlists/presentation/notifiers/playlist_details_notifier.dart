@@ -1,12 +1,11 @@
 import 'dart:async';
-
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
-import 'playlist_form_notifier.dart';
+import '../providers/user_playlists_provider.dart';
 
 /// A StateProvider to hold the temporary dragged order before hitting Save
 final pendingTracksProvider = StateProvider.autoDispose<List<int>?>(
@@ -56,6 +55,9 @@ class PlaylistDetailsNotifier
 
     _pendingDeletions.addAll(tracksToDelete);
 
+    final idsToRemove = tracksToDelete.map((t) => t.id).toList();
+    ref.read(userPlaylistsProvider.notifier).removeTracksLocally(arg, idsToRemove);
+
     // Optimistically update the UI to hide deleted tracks instantly
     if (state.value != null) {
       final p = state.value!;
@@ -86,6 +88,9 @@ class PlaylistDetailsNotifier
 
   void undoDeletions() {
     _deletionTimer?.cancel();
+
+    ref.read(userPlaylistsProvider.notifier).restoreTracksLocally(arg, _pendingDeletions);
+
     _pendingDeletions.clear();
 
     // Remove KeepAlive so memory can be cleaned up if the user left the screen

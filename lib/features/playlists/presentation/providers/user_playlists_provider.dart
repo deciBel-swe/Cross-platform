@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failures.dart';
-import '../../data/repositories/mock_playlist_repository.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
 import '../../domain/entities/playlist_metadata.dart';
 import '../../domain/repositories/i_playlist_repository.dart';
@@ -18,7 +19,7 @@ final userPlaylistsProvider =
     );
 
 final playlistRepositoryProvider = Provider<IPlaylistRepository>((ref) {
-  return MockPlaylistRepository();
+  return getIt<IPlaylistRepository>();
 });
 
 class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
@@ -79,5 +80,59 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
       }
       return Right(updatedPlaylist);
     });
+  }
+
+  /// Optimistically removes tracks from the list view count
+  void removeTracksLocally(int playlistId, List<int> trackIdsToRemove) {
+    if (state.value != null) {
+      final updatedList = state.value!.map((p) {
+        if (p.id == playlistId) {
+          final newTracks = p.tracks.where((t) => !trackIdsToRemove.contains(t.id)).toList();
+          return Playlist(
+            id: p.id, title: p.title, description: p.description, type: p.type,
+            isPrivate: p.isPrivate, isLiked: p.isLiked, coverArt: p.coverArt,
+            owner: p.owner, tracks: newTracks, 
+          );
+        }
+        return p;
+      }).toList();
+      state = AsyncData(updatedList);
+    }
+  }
+
+  /// Restores tracks to the list view count if the user hits "Undo"
+  void restoreTracksLocally(int playlistId, List<Track> restoredTracks) {
+    if (state.value != null) {
+      final updatedList = state.value!.map((p) {
+        if (p.id == playlistId) {
+          final newTracks = List<Track>.from(p.tracks)..addAll(restoredTracks);
+          return Playlist(
+            id: p.id, title: p.title, description: p.description, type: p.type,
+            isPrivate: p.isPrivate, isLiked: p.isLiked, coverArt: p.coverArt,
+            owner: p.owner, tracks: newTracks,
+          );
+        }
+        return p;
+      }).toList();
+      state = AsyncData(updatedList);
+    }
+  }
+
+  /// Updates metadata (title/privacy) while preserving any local track deletions
+  void updatePlaylistMetadataLocally(Playlist updatedPlaylist) {
+    if (state.value != null) {
+      final updatedList = state.value!.map((p) {
+        if (p.id == updatedPlaylist.id) {
+          return Playlist(
+            id: updatedPlaylist.id, title: updatedPlaylist.title, description: updatedPlaylist.description,
+            type: updatedPlaylist.type, isPrivate: updatedPlaylist.isPrivate, isLiked: updatedPlaylist.isLiked,
+            coverArt: updatedPlaylist.coverArt, owner: updatedPlaylist.owner, 
+            tracks: p.tracks,
+          );
+        }
+        return p;
+      }).toList();
+      state = AsyncData(updatedList);
+    }
   }
 }

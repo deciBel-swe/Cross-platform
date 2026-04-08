@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
@@ -140,18 +141,36 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     int size = 20,
   }) async {
     try {
-      final response = await _dioClient.get<List<dynamic>>(
+      final response = await _dioClient.get<dynamic>(
         ApiConstants.myPlaylists,
         queryParams: {'page': page, 'size': size},
       );
 
-      final data = response.data ?? [];
-      return data
-          .map((json) => PlaylistModel.fromJson(json as Map<String, dynamic>))
+      final data = response.data;
+
+      if (data == null) {return [];}
+
+      List<dynamic> contentList = [];
+
+      if (data is Map) {
+        contentList = data['content'] as List<dynamic>? ?? [];
+      } else if (data is List) {
+        contentList = data;
+      }
+
+      return contentList
+          .where((item) => item != null)
+          .map((json) {
+            final cleanMap = Map<String, dynamic>.from(json as Map);
+            return PlaylistModel.fromJson(cleanMap);
+          })
           .toList();
+
     } on DioException catch (error) {
       throw ServerException(error.message ?? 'Failed to fetch playlists');
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('==========PARSING CRASH: $error');
+      debugPrint('==========STACKTRACE: $stackTrace');
       throw ServerException('Failed to parse playlists response: $error');
     }
   }
@@ -178,7 +197,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
 
       final response = await _dioClient.patch<dynamic>(
         '${ApiConstants.playlists}/$playListId',
-        data: request,
+        data: formData,
       );
       final responseData = response.data as Map<String, dynamic>;
       return PlaylistModel.fromJson(responseData);

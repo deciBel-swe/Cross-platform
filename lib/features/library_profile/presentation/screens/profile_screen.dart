@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
+import '../providers/moderation_provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../providers/web_profiles_provider.dart';
 import '../utils/profile_image_path_utils.dart';
@@ -20,7 +21,9 @@ import '../widgets/tile.dart';
 import '../widgets/user_profile_header.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, this.userId});
+
+  final int? userId;
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -30,11 +33,132 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late ScrollController _scrollController;
   bool _showAppBarIcon = false;
 
+  bool get _isPublicProfile => widget.userId != null;
+
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+  }
+
+  Future<bool> _showConfirmDialog(BuildContext context, bool isBlocked) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: const Color(0xFF2B2B2B),
+            title: Text(
+              isBlocked ? 'Unblock user?' : 'Block user?',
+              style: const TextStyle(color: Colors.white),
+            ),
+            content: Text(
+              isBlocked
+                  ? "They will now be able to follow and interact with you and your content. We won't let them know that you have unblocked them."
+                  : 'This user will no longer be able to follow or interact with you, and you will not see notifications from them.',
+              style: const TextStyle(color: Colors.white70, height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(
+                  'CANCEL',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(
+                  isBlocked ? 'UNBLOCK' : 'BLOCK',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _showModerationSheet(
+    BuildContext context,
+    UserProfile user,
+  ) async {
+    final moderationState = ref.read(moderationProvider);
+    final bool isBlocked = moderationState.value?.contains(user.id) ?? false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white54,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Icon(
+                    isBlocked
+                        ? Icons.remove_circle_outline
+                        : Icons.block_outlined,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                  title: Text(
+                    isBlocked ? 'Unblock user' : 'Block user',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+
+                    final confirmed = await _showConfirmDialog(
+                      context,
+                      isBlocked,
+                    );
+                    if (!confirmed || !context.mounted) {
+                      return;
+                    }
+
+                    if (isBlocked) {
+                      await ref
+                          .read(moderationProvider.notifier)
+                          .unblockUser(user.id);
+                    } else {
+                      await ref
+                          .read(moderationProvider.notifier)
+                          .blockUser(user.id);
+
+                      if (context.mounted && context.canPop()) {
+                        context.pop();
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _onScroll() {
@@ -57,8 +181,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the Provider that now returns an Either<Failure, UserProfile>
     final userProfileAsync = ref.watch(userProfileProvider);
+
+    ref.listen<AsyncValue<Set<int>>>(moderationProvider, (previous, next) {
+      if (next is AsyncError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update moderation status.')),
+        );
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -86,7 +217,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: AppConstants.spacingRegular),
                 Text(
-                  'Oops! Something went wrong.', // Fallback text from feat/prof-state
+                  'Oops! Something went wrong.',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppColors.onPrimary,
                     fontWeight: FontWeight.bold,
@@ -204,7 +335,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         TopTracksSection(userId: user.id),
                         const SizedBox(height: AppConstants.spacingLarge),
-                        const MediaCollection(),
+                        if (!_isPublicProfile) const MediaCollection(),
                         const SizedBox(height: AppConstants.spacingMassive),
                       ],
                     ),
@@ -247,7 +378,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           milliseconds: AppConstants.appBarAnimationDurationMs,
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.max,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: AppConstants.appBarAvatarSize,
@@ -259,21 +390,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: const ProfileIcon(),
             ),
             const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                user.username,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.onPrimary,
-                ),
+            Text(
+              user.username,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
               ),
             ),
           ],
         ),
       ),
       actions: [
+        if (_isPublicProfile)
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () => _showModerationSheet(context, user),
+          ),
         Button(icon: Icons.share, onPressed: () {}),
         Button(icon: Icons.cast, onPressed: () {}),
       ],
@@ -288,13 +420,13 @@ class _ProfileCoverPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDesktop = MediaQuery.sizeOf(context).width > 600;
+    final bool isDesktop = MediaQuery.sizeOf(context).width > 600;
+    final double coverHeight = isDesktop ? 350.0 : 160.0;
 
-    double coverHeight = isDesktop ? 350.0 : 160.0;
-
-    return SizedBox(
+    return Container(
       height: coverHeight,
       width: double.infinity,
+      color: AppColors.surface,
       child: imageUrl == null
           ? _buildPlaceholder()
           : ProfileImagePathUtils.isRemote(imageUrl!)
@@ -341,3 +473,4 @@ class _ProfileCoverPhoto extends StatelessWidget {
     );
   }
 }
+
