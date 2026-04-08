@@ -27,7 +27,6 @@ final uploadNotifierProvider =
     );
 
 final genreListProvider = StateProvider<List<String>>((ref) {
-  // Mocked backend data
   return GenreConstants.genres;
 });
 

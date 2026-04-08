@@ -26,6 +26,10 @@ import '../../features/library_profile/presentation/screens/fullscreen_image_scr
 import '../../features/library_profile/presentation/screens/profile_screen.dart';
 import '../../features/library_profile/presentation/screens/public_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/web_profiles.dart';
+import '../../features/playlists/domain/entities/playlist.dart';
+import '../../features/playlists/presentation/screens/edit_playlist_screen.dart';
+import '../../features/playlists/presentation/screens/playlist_details_screen.dart';
+import '../../features/playlists/presentation/screens/playlists_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
 import '../../features/settings/presentation/screens/blocked_users_screen.dart';
@@ -100,49 +104,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: '${RoutePaths.publicProfileBase}/:userId',
-        builder: (context, state) {
-          final userId = int.parse(state.pathParameters['userId']!);
-          return PublicProfileScreen(userId: userId);
-        },
-      ),
-      GoRoute(
-        path: '${RoutePaths.publicProfileFollowersBase}/:userId',
-        redirect: (context, state) {
-          final raw = state.pathParameters['userId'];
-          final userId = int.tryParse(raw ?? '');
-          if (userId == null) {
-            return RoutePaths.home;
-          }
-          return null;
-        },
-        builder: (context, state) {
-          final userId = int.parse(state.pathParameters['userId']!);
-          return FollowConnectionsScreen(
-            userId: userId,
-            type: FollowConnectionsType.followers,
-          );
-        },
-      ),
-      GoRoute(
-        path: '${RoutePaths.publicProfileFollowingBase}/:userId',
-        redirect: (context, state) {
-          final raw = state.pathParameters['userId'];
-          final userId = int.tryParse(raw ?? '');
-          if (userId == null) {
-            return RoutePaths.home;
-          }
-          return null;
-        },
-        builder: (context, state) {
-          final userId = int.parse(state.pathParameters['userId']!);
-          return FollowConnectionsScreen(
-            userId: userId,
-            type: FollowConnectionsType.following,
-          );
-        },
-      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),
@@ -189,6 +150,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: LibraryScreen()),
                 routes: [
+                  GoRoute(
+                    path: 'playlists',
+                    builder: (context, state) => const PlaylistsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) {
+                          final playlist = state.extra as Playlist;
+                          return EditPlaylistScreen(playlist: playlist);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'playlist-tracks',
+                        builder: (context, state) {
+                          final playlist = state.extra as Playlist;
+                          return PlaylistDetailsScreen(
+                            playlistSummary: playlist,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                   GoRoute(
                     path: 'following',
                     builder: (context, state) => const FollowingScreen(),
@@ -324,6 +307,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'edit-profile',
                     builder: (context, state) => const EditProfileScreen(),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: '${RoutePaths.publicProfileBase}/:userId',
+                redirect: (context, state) {
+                  final raw = state.pathParameters['userId'];
+                  final userId = int.tryParse(raw ?? '');
+                  if (userId == null) {
+                    return RoutePaths.home;
+                  }
+                  return null;
+                },
+                builder: (context, state) {
+                  final userId = int.parse(state.pathParameters['userId']!);
+                  return PublicProfileScreen(userId: userId);
+                },
+                routes: [
+                  GoRoute(
+                    path: 'followers',
+                    builder: (context, state) {
+                      final userId = int.parse(state.pathParameters['userId']!);
+                      return FollowConnectionsScreen(
+                        userId: userId,
+                        type: FollowConnectionsType.followers,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'following',
+                    builder: (context, state) {
+                      final userId = int.parse(state.pathParameters['userId']!);
+                      return FollowConnectionsScreen(
+                        userId: userId,
+                        type: FollowConnectionsType.following,
+                      );
+                    },
                   ),
                 ],
               ),

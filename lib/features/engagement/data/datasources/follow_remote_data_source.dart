@@ -292,6 +292,9 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     final profile = payload['profile'] is Map<String, dynamic>
         ? payload['profile'] as Map<String, dynamic>
         : payload;
+    final relationship = payload['relationship'] is Map<String, dynamic>
+        ? payload['relationship'] as Map<String, dynamic>
+        : const <String, dynamic>{};
 
     final rawSocial =
         profile['socialLinks'] ??
@@ -307,6 +310,49 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
       (false, true) => country,
       (false, false) => '',
     };
+
+    final isFollowing =
+        _asBool(
+          payload['isFollowed'] ??
+              relationship['isFollowed'] ??
+              profile['isFollowed'] ??
+              payload['isFollowingByCurrentUser'] ??
+              relationship['isFollowingByCurrentUser'] ??
+              profile['isFollowingByCurrentUser'] ??
+              payload['isFollowing'] ??
+              relationship['isFollowing'] ??
+              profile['isFollowing'] ??
+              payload['following'] ??
+              relationship['following'] ??
+              profile['following'],
+        ) ??
+        false;
+
+    final isFollowedBy =
+        _asBool(
+          payload['isFollowedBy'] ??
+              relationship['isFollowedBy'] ??
+              profile['isFollowedBy'] ??
+              payload['isFollowing'] ??
+              relationship['isFollowing'] ??
+              profile['isFollowing'] ??
+              payload['isFollower'] ??
+              payload['followsMe'] ??
+              payload['isFollowingMe'] ??
+              payload['followsCurrentUser'] ??
+              payload['followingCurrentUser'] ??
+              relationship['isFollower'] ??
+              relationship['followsMe'] ??
+              relationship['isFollowingMe'] ??
+              relationship['followsCurrentUser'] ??
+              relationship['followingCurrentUser'] ??
+              profile['isFollower'] ??
+              profile['followsMe'] ??
+              profile['isFollowingMe'] ??
+              profile['followsCurrentUser'] ??
+              profile['followingCurrentUser'],
+        ) ??
+        false;
 
     return <String, dynamic>{
       'id': _asInt(profile['id']) ?? 0,
@@ -328,9 +374,8 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         'followingCount': _asInt(profile['followingCount']) ?? 0,
         'trackCount': _asInt(profile['trackCount']) ?? 0,
       },
-      'isFollowing': _asBool(profile['isFollowing']) ?? false,
-      'isFollowedBy':
-          _asBool(profile['isFollowedBy'] ?? profile['isFollowed']) ?? false,
+      'isFollowing': isFollowing,
+      'isFollowedBy': isFollowedBy,
     };
   }
 
@@ -401,7 +446,14 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
 
     final isFollowing =
         _asBool(
-          user['isFollowing'] ?? profile['isFollowing'] ?? user['isFollowed'],
+          user['isFollowed'] ??
+              profile['isFollowed'] ??
+              user['isFollowingByCurrentUser'] ??
+              profile['isFollowingByCurrentUser'] ??
+              user['isFollowing'] ??
+              profile['isFollowing'] ??
+              user['following'] ??
+              profile['following'],
         ) ??
         false;
 

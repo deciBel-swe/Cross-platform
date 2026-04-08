@@ -18,7 +18,7 @@ void main() async {
     useMockServices =
         (dotenv.env['USE_MOCK_SERVICES'] ?? 'true').toLowerCase() == 'true';
   } catch (_) {
-    useMockServices = true;
+    useMockServices = false;
   }
 
   // Configure desktop window constraints.

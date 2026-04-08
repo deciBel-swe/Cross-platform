@@ -53,33 +53,31 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-  backgroundColor: AppColors.background,
-  elevation: 0,
-  titleSpacing: 0,
-  title: Text(
-    'Following',
-    style: AppTextStyles.headlineMedium.copyWith(
-      fontSize: 26,
-      fontWeight: FontWeight.w700,
-    ),
-  ),
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.refresh),
-      onPressed: () {
-        ref.read(followingProvider.notifier).refresh();
-      },
-    ),
-  ],
-),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        titleSpacing: 0,
+        title: Text(
+          'Following',
+          style: AppTextStyles.headlineMedium.copyWith(
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              ref.read(followingProvider.notifier).refresh();
+            },
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(followingProvider.notifier).refresh(),
         child: Builder(
           builder: (BuildContext context) {
             if (state.isLoading && state.users.isEmpty) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return const Center(child: CircularProgressIndicator());
             }
 
             if (state.hasError && state.users.isEmpty) {
@@ -174,7 +172,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(top: AppDimensions.paddingMd),
               itemCount: itemCount,
-              separatorBuilder: (_, __) => const SizedBox.shrink(),
+              separatorBuilder: (context, index) => const SizedBox.shrink(),
               itemBuilder: (BuildContext context, int index) {
                 if (index == 0) {
                   return Padding(
@@ -185,8 +183,9 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                       padding: const EdgeInsets.all(AppDimensions.paddingMd),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusXl),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusXl,
+                        ),
                       ),
                       child: Row(
                         children: <Widget>[
@@ -242,9 +241,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                 if (userIndex >= state.users.length) {
                   return const Padding(
                     padding: EdgeInsets.all(AppDimensions.paddingMd),
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   );
                 }
 
@@ -258,10 +255,7 @@ class _FollowingScreenState extends ConsumerState<FollowingScreen> {
                         context.go(RoutePaths.profile);
                       },
                     ),
-                    const Divider(
-                      height: 1,
-                      color: AppColors.divider,
-                    ),
+                    const Divider(height: 1, color: AppColors.divider),
                   ],
                 );
               },

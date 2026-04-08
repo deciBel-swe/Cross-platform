@@ -31,7 +31,7 @@ class MockAuthNotifier extends AsyncNotifier<AuthState>
   @override
   Future<void> registerWithEmailPassword({
     required String email,
-    required String username,
+    required String displayName,
     required String password,
     required DateTime dateOfBirth,
     required String gender,
