@@ -11,6 +11,7 @@ _$PublicProfileModelImpl _$$PublicProfileModelImplFromJson(
 ) => _$PublicProfileModelImpl(
   id: (json['id'] as num).toInt(),
   username: json['username'] as String,
+  displayName: json['displayName'] as String?,
   tier: json['tier'] as String? ?? 'FREE',
   profile: json['profile'] == null
       ? null
@@ -31,6 +32,7 @@ Map<String, dynamic> _$$PublicProfileModelImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'username': instance.username,
+  'displayName': instance.displayName,
   'tier': instance.tier,
   'profile': instance.profile,
   'socialLinks': instance.socialLinks,

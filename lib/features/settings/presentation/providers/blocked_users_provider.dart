@@ -7,7 +7,7 @@ import '../../domain/entities/blocked_user.dart';
 import '../../domain/repositories/blocked_users_repository.dart';
 
 final blockedUsersRepositoryProvider = Provider<BlockedUsersRepository>((ref) {
-  final useMock = dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
+  final useMock = dotenv.isInitialized && dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
 
   if (useMock) {
     return BlockedUsersMockRepository();

@@ -25,7 +25,7 @@ class AuthRepository implements IAuthRepository {
   final IAuthRemoteDataSource _remoteDataSource;
   final SecureStorageService _secureStorageService;
 
-  String _hashPassword(String password){
+  String _hashPassword(String password) {
     final bytes = utf8.encode(password);
     return sha256.convert(bytes).toString();
   }
@@ -127,7 +127,6 @@ class AuthRepository implements IAuthRepository {
 
       final responseModel = await _remoteDataSource.loginWithGoogle(deviceInfo);
 
-      // Save tokens securely
       await _secureStorageService.saveTokenPair(responseModel);
 
       return Right(responseModel.user.toDomain());

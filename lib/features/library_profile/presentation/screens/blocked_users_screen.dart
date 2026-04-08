@@ -47,10 +47,7 @@ class BlockedUsersScreen extends ConsumerWidget {
                 Text(
                   'Do you want to unblock ${user.username}?',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    height: 1.5,
-                  ),
+                  style: const TextStyle(color: Colors.white70, height: 1.5),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -122,16 +119,13 @@ class BlockedUsersScreen extends ConsumerWidget {
           ? const Center(
               child: Text(
                 "You haven't blocked anyone.",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
             )
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: blockedUsers.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final user = blockedUsers[index];
 
@@ -146,11 +140,13 @@ class BlockedUsersScreen extends ConsumerWidget {
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.white12,
-                        backgroundImage: (user.avatarUrl != null &&
+                        backgroundImage:
+                            (user.avatarUrl != null &&
                                 user.avatarUrl!.trim().isNotEmpty)
                             ? NetworkImage(user.avatarUrl!)
                             : null,
-                        child: (user.avatarUrl == null ||
+                        child:
+                            (user.avatarUrl == null ||
                                 user.avatarUrl!.trim().isEmpty)
                             ? const Icon(Icons.person, color: Colors.white)
                             : null,

@@ -37,15 +37,15 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       logoutSub.cancel();
     });
 
-    final secureStorage = ref.watch(secureStorageServiceProvider);
-    final repo = ref.watch(authRepositoryProvider);
-
-    final isExpired = await secureStorage.isAccessTokenExpired();
-    if (isExpired) {
-      return const AuthUnauthenticated();
-    }
-
     try {
+      final secureStorage = ref.watch(secureStorageServiceProvider);
+      final repo = ref.watch(authRepositoryProvider);
+
+      final hasRefreshToken = await secureStorage.getRefreshToken() != null;
+      if (!hasRefreshToken) {
+        return const AuthUnauthenticated();
+      }
+
       final userEither = await repo.getCurrentUser();
       return userEither.fold((failure) => const AuthUnauthenticated(), (user) {
         if (user != null) {
@@ -53,8 +53,25 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         }
         return const AuthUnauthenticated();
       });
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[AuthNotifier] build() failed: $e\n$st');
       return const AuthUnauthenticated();
+    }
+  }
+
+  Future<void> refreshUser() async {
+    final currentVal = state.valueOrNull;
+    if (currentVal is AuthAuthenticated) {
+      final repo = ref.read(authRepositoryProvider);
+      final userEither = await repo.getCurrentUser();
+      userEither.fold(
+        (failure) {}, // ignore failure
+        (user) {
+          if (user != null) {
+            state = AsyncData(AuthAuthenticated(user: user));
+          }
+        },
+      );
     }
   }
 

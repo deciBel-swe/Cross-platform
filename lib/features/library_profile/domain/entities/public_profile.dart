@@ -9,6 +9,7 @@ class PublicProfile {
   const PublicProfile({
     required this.id,
     required this.username,
+    this.displayName,
     required this.tier,
     this.profile,
     this.socialLinks,
@@ -21,8 +22,11 @@ class PublicProfile {
   /// Unique user identifier.
   final int id;
 
-  /// Display name of the user.
+  /// Display name or unique identifer of the user.
   final String username;
+
+  /// Display name of the user.
+  final String? displayName;
 
   /// Subscription tier (e.g. `'FREE'`, `'PRO'`).
   final String tier;

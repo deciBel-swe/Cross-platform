@@ -4,6 +4,9 @@ class ApiConstants {
   ApiConstants._();
 
   static String _requiredEnv(String key) {
+    if (!dotenv.isInitialized) {
+      throw StateError('Missing required environment variable (dotenv uninitialized): $key');
+    }
     final value = dotenv.env[key]?.trim();
     if (value == null || value.isEmpty) {
       throw StateError('Missing required environment variable: $key');
@@ -14,6 +17,7 @@ class ApiConstants {
   static const String _defaultBaseUrl = 'https://decibel.foo/api';
 
   static String get baseUrl {
+    if (!dotenv.isInitialized) return _defaultBaseUrl;
     final envBaseUrl = dotenv.env['API_BASE_URL']?.trim();
     if (envBaseUrl == null || envBaseUrl.isEmpty) {
       return _defaultBaseUrl;
@@ -75,6 +79,10 @@ class ApiConstants {
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;
 
+  static const String tracks = '/tracks';
+  static const String comments = '/comments';
+  static const String replies = '/replies';
+
   // Google OAuth specific constants
   static const String googleAuthUrl =
       'https://accounts.google.com/o/oauth2/v2/auth';
@@ -83,6 +91,9 @@ class ApiConstants {
   static String get googleMobileClientId =>
       _requiredEnv('GOOGLE_MOBILE_CLIENT_ID');
   static String get googleDesktopClientId {
+    if (!dotenv.isInitialized) {
+      throw StateError('Missing required environment variable (dotenv uninitialized)');
+    }
     final desktop = dotenv.env['GOOGLE_DESKTOP_CLIENT_ID']?.trim();
     if (desktop != null && desktop.isNotEmpty) {
       return desktop;
@@ -99,6 +110,7 @@ class ApiConstants {
   }
 
   static String get recaptchaSiteKey {
+    if (!dotenv.isInitialized) return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';
     final value = dotenv.env['RECAPTCHA_SITE_KEY']?.trim();
     if (value == null || value.isEmpty) {
       return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';

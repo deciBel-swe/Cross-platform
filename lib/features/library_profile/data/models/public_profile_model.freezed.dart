@@ -23,6 +23,7 @@ PublicProfileModel _$PublicProfileModelFromJson(Map<String, dynamic> json) {
 mixin _$PublicProfileModel {
   int get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
+  String? get displayName => throw _privateConstructorUsedError;
   String get tier => throw _privateConstructorUsedError;
   PublicProfileDetailsModel? get profile => throw _privateConstructorUsedError;
   SocialLinksModel? get socialLinks => throw _privateConstructorUsedError;
@@ -57,6 +58,7 @@ abstract class $PublicProfileModelCopyWith<$Res> {
   $Res call({
     int id,
     String username,
+    String? displayName,
     String tier,
     PublicProfileDetailsModel? profile,
     SocialLinksModel? socialLinks,
@@ -88,6 +90,7 @@ class _$PublicProfileModelCopyWithImpl<$Res, $Val extends PublicProfileModel>
   $Res call({
     Object? id = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? tier = null,
     Object? profile = freezed,
     Object? socialLinks = freezed,
@@ -106,6 +109,10 @@ class _$PublicProfileModelCopyWithImpl<$Res, $Val extends PublicProfileModel>
                 ? _value.username
                 : username // ignore: cast_nullable_to_non_nullable
                       as String,
+            displayName: freezed == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
+                      as String?,
             tier: null == tier
                 ? _value.tier
                 : tier // ignore: cast_nullable_to_non_nullable
@@ -190,6 +197,7 @@ abstract class _$$PublicProfileModelImplCopyWith<$Res>
   $Res call({
     int id,
     String username,
+    String? displayName,
     String tier,
     PublicProfileDetailsModel? profile,
     SocialLinksModel? socialLinks,
@@ -223,6 +231,7 @@ class __$$PublicProfileModelImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? tier = null,
     Object? profile = freezed,
     Object? socialLinks = freezed,
@@ -241,6 +250,10 @@ class __$$PublicProfileModelImplCopyWithImpl<$Res>
             ? _value.username
             : username // ignore: cast_nullable_to_non_nullable
                   as String,
+        displayName: freezed == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
+                  as String?,
         tier: null == tier
             ? _value.tier
             : tier // ignore: cast_nullable_to_non_nullable
@@ -280,6 +293,7 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
   const _$PublicProfileModelImpl({
     required this.id,
     required this.username,
+    this.displayName,
     this.tier = 'FREE',
     this.profile,
     this.socialLinks,
@@ -296,6 +310,8 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
   final int id;
   @override
   final String username;
+  @override
+  final String? displayName;
   @override
   @JsonKey()
   final String tier;
@@ -323,7 +339,7 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
 
   @override
   String toString() {
-    return 'PublicProfileModel(id: $id, username: $username, tier: $tier, profile: $profile, socialLinks: $socialLinks, stats: $stats, isFollowing: $isFollowing, isFollowedBy: $isFollowedBy, isBlocked: $isBlocked)';
+    return 'PublicProfileModel(id: $id, username: $username, displayName: $displayName, tier: $tier, profile: $profile, socialLinks: $socialLinks, stats: $stats, isFollowing: $isFollowing, isFollowedBy: $isFollowedBy, isBlocked: $isBlocked)';
   }
 
   @override
@@ -334,6 +350,8 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.username, username) ||
                 other.username == username) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
             (identical(other.tier, tier) || other.tier == tier) &&
             (identical(other.profile, profile) || other.profile == profile) &&
             (identical(other.socialLinks, socialLinks) ||
@@ -353,6 +371,7 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
     runtimeType,
     id,
     username,
+    displayName,
     tier,
     profile,
     socialLinks,
@@ -383,6 +402,7 @@ abstract class _PublicProfileModel implements PublicProfileModel {
   const factory _PublicProfileModel({
     required final int id,
     required final String username,
+    final String? displayName,
     final String tier,
     final PublicProfileDetailsModel? profile,
     final SocialLinksModel? socialLinks,
@@ -399,6 +419,8 @@ abstract class _PublicProfileModel implements PublicProfileModel {
   int get id;
   @override
   String get username;
+  @override
+  String? get displayName;
   @override
   String get tier;
   @override

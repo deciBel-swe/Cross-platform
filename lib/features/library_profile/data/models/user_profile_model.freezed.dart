@@ -26,6 +26,7 @@ mixin _$UserProfileModel {
   String get role => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
+  String? get displayName => throw _privateConstructorUsedError;
   bool get emailVerified => throw _privateConstructorUsedError;
   UserTier get tier => throw _privateConstructorUsedError;
   @JsonKey(name: 'profile')
@@ -57,6 +58,7 @@ abstract class $UserProfileModelCopyWith<$Res> {
     @JsonKey(name: 'Role') String role,
     String email,
     String username,
+    String? displayName,
     bool emailVerified,
     UserTier tier,
     @JsonKey(name: 'profile') ProfileDetailsModel profileDetails,
@@ -90,6 +92,7 @@ class _$UserProfileModelCopyWithImpl<$Res, $Val extends UserProfileModel>
     Object? role = null,
     Object? email = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? emailVerified = null,
     Object? tier = null,
     Object? profileDetails = null,
@@ -115,6 +118,10 @@ class _$UserProfileModelCopyWithImpl<$Res, $Val extends UserProfileModel>
                 ? _value.username
                 : username // ignore: cast_nullable_to_non_nullable
                       as String,
+            displayName: freezed == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
+                      as String?,
             emailVerified: null == emailVerified
                 ? _value.emailVerified
                 : emailVerified // ignore: cast_nullable_to_non_nullable
@@ -203,6 +210,7 @@ abstract class _$$UserProfileModelImplCopyWith<$Res>
     @JsonKey(name: 'Role') String role,
     String email,
     String username,
+    String? displayName,
     bool emailVerified,
     UserTier tier,
     @JsonKey(name: 'profile') ProfileDetailsModel profileDetails,
@@ -239,6 +247,7 @@ class __$$UserProfileModelImplCopyWithImpl<$Res>
     Object? role = null,
     Object? email = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? emailVerified = null,
     Object? tier = null,
     Object? profileDetails = null,
@@ -264,6 +273,10 @@ class __$$UserProfileModelImplCopyWithImpl<$Res>
             ? _value.username
             : username // ignore: cast_nullable_to_non_nullable
                   as String,
+        displayName: freezed == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
+                  as String?,
         emailVerified: null == emailVerified
             ? _value.emailVerified
             : emailVerified // ignore: cast_nullable_to_non_nullable
@@ -301,6 +314,7 @@ class _$UserProfileModelImpl implements _UserProfileModel {
     @JsonKey(name: 'Role') required this.role,
     required this.email,
     required this.username,
+    this.displayName,
     required this.emailVerified,
     required this.tier,
     @JsonKey(name: 'profile') required this.profileDetails,
@@ -322,6 +336,8 @@ class _$UserProfileModelImpl implements _UserProfileModel {
   @override
   final String username;
   @override
+  final String? displayName;
+  @override
   final bool emailVerified;
   @override
   final UserTier tier;
@@ -337,7 +353,7 @@ class _$UserProfileModelImpl implements _UserProfileModel {
 
   @override
   String toString() {
-    return 'UserProfileModel(id: $id, role: $role, email: $email, username: $username, emailVerified: $emailVerified, tier: $tier, profileDetails: $profileDetails, socialLinks: $socialLinks, privacySettings: $privacySettings, stats: $stats)';
+    return 'UserProfileModel(id: $id, role: $role, email: $email, username: $username, displayName: $displayName, emailVerified: $emailVerified, tier: $tier, profileDetails: $profileDetails, socialLinks: $socialLinks, privacySettings: $privacySettings, stats: $stats)';
   }
 
   @override
@@ -350,6 +366,8 @@ class _$UserProfileModelImpl implements _UserProfileModel {
             (identical(other.email, email) || other.email == email) &&
             (identical(other.username, username) ||
                 other.username == username) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
             (identical(other.emailVerified, emailVerified) ||
                 other.emailVerified == emailVerified) &&
             (identical(other.tier, tier) || other.tier == tier) &&
@@ -370,6 +388,7 @@ class _$UserProfileModelImpl implements _UserProfileModel {
     role,
     email,
     username,
+    displayName,
     emailVerified,
     tier,
     profileDetails,
@@ -401,6 +420,7 @@ abstract class _UserProfileModel implements UserProfileModel {
     @JsonKey(name: 'Role') required final String role,
     required final String email,
     required final String username,
+    final String? displayName,
     required final bool emailVerified,
     required final UserTier tier,
     @JsonKey(name: 'profile') required final ProfileDetailsModel profileDetails,
@@ -421,6 +441,8 @@ abstract class _UserProfileModel implements UserProfileModel {
   String get email;
   @override
   String get username;
+  @override
+  String? get displayName;
   @override
   bool get emailVerified;
   @override

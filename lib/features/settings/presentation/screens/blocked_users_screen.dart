@@ -129,7 +129,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
         .read(blockedUsersListProvider.notifier)
         .unblockUser(userId: userId);
 
-    if (!mounted) {
+    if (!context.mounted) {
       return;
     }
 

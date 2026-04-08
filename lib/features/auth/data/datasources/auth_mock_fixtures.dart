@@ -11,7 +11,7 @@ class AuthMockFixtures {
 
     'expiresIn': 400,
     'user': {
-      'id': 101,
+      'id': 0,
       'username': 'mock_user_free',
       'tier': 'FREE',
       'profileUrl': 'https://decibel.example.com/user/mock_user_free',

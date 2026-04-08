@@ -16,6 +16,7 @@ class PublicProfileModel with _$PublicProfileModel {
   const factory PublicProfileModel({
     required int id,
     required String username,
+    String? displayName,
     @Default('FREE') String tier,
     PublicProfileDetailsModel? profile,
     SocialLinksModel? socialLinks,
@@ -77,6 +78,7 @@ extension PublicProfileModelX on PublicProfileModel {
     return PublicProfile(
       id: id,
       username: username,
+      displayName: displayName,
       tier: tier,
       profile: profile?.toEntity(),
       socialLinks: socialLinks?.toEntity(),

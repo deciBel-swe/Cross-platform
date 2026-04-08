@@ -71,10 +71,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     }
   }
 
-  Future<bool> _showConfirmDialog(
-    BuildContext context,
-    bool isBlocked,
-  ) async {
+  Future<bool> _showConfirmDialog(BuildContext context, bool isBlocked) async {
     return await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -145,11 +142,11 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       ref.read(followBackHintProvider(profile.id).notifier).state = false;
       ref.invalidate(blockedUsersListProvider);
 
-      if (mounted && context.canPop()) {
+      if (context.mounted && context.canPop()) {
         context.pop();
       }
     } catch (error) {
-      if (!mounted) {
+      if (!context.mounted) {
         return;
       }
 
@@ -242,9 +239,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.onPrimary,
-              ),
+            fontWeight: FontWeight.bold,
+            color: AppColors.onPrimary,
+          ),
         ),
       ),
       actions: [
@@ -379,9 +376,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             Text(
               AppConstants.errorGeneric,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: AppColors.onPrimary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppConstants.spacingSmall),
             Text(
@@ -560,11 +557,17 @@ class _ProfileHeaderContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          profile.username,
+          profile.displayName ?? profile.username,
           style: textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.onPrimary,
-              ),
+            fontWeight: FontWeight.bold,
+            color: AppColors.onPrimary,
+          ),
+        ),
+        Text(
+          '@${profile.username}',
+          style: textTheme.bodyLarge?.copyWith(
+            color: AppColors.onPrimary.withValues(alpha: 0.6),
+          ),
         ),
         if (bio.isNotEmpty) ...[
           const SizedBox(height: AppConstants.spacingSmall),
@@ -714,8 +717,8 @@ class _UnblockButtonState extends ConsumerState<_UnblockButton> {
     final backgroundColor = (_isHovering || _isPressed)
         ? Colors.red.withValues(alpha: 0.15)
         : AppColors.transparent;
-    final foregroundColor = Colors.redAccent;
-    final borderColor = Colors.redAccent;
+    const foregroundColor = Colors.redAccent;
+    const borderColor = Colors.redAccent;
 
     return GestureDetector(
       onTap: _isLoading ? null : _handleUnblock,
@@ -743,7 +746,7 @@ class _UnblockButtonState extends ConsumerState<_UnblockButton> {
                     color: Colors.redAccent,
                   ),
                 )
-              : Text(
+              : const Text(
                   'Unblock',
                   style: TextStyle(
                     fontSize: 14,
@@ -767,9 +770,9 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+      ),
     );
   }
 }

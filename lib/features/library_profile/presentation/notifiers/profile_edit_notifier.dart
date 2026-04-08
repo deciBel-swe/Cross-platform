@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/public_profile_social_links.dart';
 import '../../domain/repositories/update_image.dart';
 import '../providers/user_profile_provider.dart';
@@ -120,6 +121,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
   }
 
   Future<bool> updateGeneralInfo({
+    required String? displayName,
     required String bio,
     required String city,
     required String country,
@@ -132,6 +134,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
       final repository = ref.read(profileRepositoryProvider);
 
       final result = await repository.updateProfile(
+        displayName: displayName,
         bio: bio,
         city: city,
         country: country,
@@ -144,8 +147,13 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
           state = AsyncError(failure.message, StackTrace.current);
           return false;
         },
-        (success) {
+        (success) async {
           ref.invalidate(userProfileProvider);
+          await ref.read(userProfileProvider.future);
+          try {
+            await ref.read(authStateProvider.notifier).refreshUser();
+          } catch (_) {}
+          
           state = const AsyncData(null);
           return true;
         },

@@ -12,11 +12,11 @@ import 'features/settings/domain/repositories/app_icon_repository.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  var useMockServices = true;
+  var useMockServices = false;
   try {
     await dotenv.load(fileName: '.env');
     useMockServices =
-        (dotenv.env['USE_MOCK_SERVICES'] ?? 'true').toLowerCase() == 'true';
+        (dotenv.env['USE_MOCK_SERVICES'] ?? 'false').toLowerCase() == 'true';
   } catch (_) {
     useMockServices = false;
   }

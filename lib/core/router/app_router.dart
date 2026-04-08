@@ -80,6 +80,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return isAuthRoute ? RoutePaths.home : null;
       }
 
+      if (authStateAsync.hasError) {
+        debugPrint(
+          '[AppRouter] -> Error detected: ${authStateAsync.error}\nStackTrace: ${authStateAsync.stackTrace}',
+        );
+        return isAuthRoute && state.matchedLocation != RoutePaths.splash
+            ? null
+            : RoutePaths.start;
+      }
+
       debugPrint(
         '[AppRouter] -> State is Loading or Error. Staying on splash.',
       );

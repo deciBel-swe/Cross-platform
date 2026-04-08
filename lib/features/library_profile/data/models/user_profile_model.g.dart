@@ -13,6 +13,7 @@ _$UserProfileModelImpl _$$UserProfileModelImplFromJson(
   role: json['Role'] as String,
   email: json['email'] as String,
   username: json['username'] as String,
+  displayName: json['displayName'] as String?,
   emailVerified: json['emailVerified'] as bool,
   tier: $enumDecode(_$UserTierEnumMap, json['tier']),
   profileDetails: ProfileDetailsModel.fromJson(
@@ -34,6 +35,7 @@ Map<String, dynamic> _$$UserProfileModelImplToJson(
   'Role': instance.role,
   'email': instance.email,
   'username': instance.username,
+  'displayName': instance.displayName,
   'emailVerified': instance.emailVerified,
   'tier': _$UserTierEnumMap[instance.tier]!,
   'profile': instance.profileDetails,
