@@ -1,10 +1,20 @@
 name: Flutter Build
 
 on:
-    workflow_dispatch
+    workflow_dispatch:
+      inputs:
+        action:
+          description: 'Build target platform'
+          required: true
+          default: 'android'
+          type: choice
+          options:
+            - android
+            - windows
 
 jobs:
   build-android:
+    if: ${{ github.event.inputs.action == 'android' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -38,6 +48,7 @@ jobs:
           retention-days: 1
           
   build-windows:
+    if: ${{ github.event.inputs.action == 'windows' }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
