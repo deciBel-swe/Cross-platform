@@ -23,6 +23,7 @@ _$PublicProfileModelImpl _$$PublicProfileModelImplFromJson(
   stats: PublicStatsModel.fromJson(json['stats'] as Map<String, dynamic>),
   isFollowing: json['isFollowing'] as bool? ?? false,
   isFollowedBy: json['isFollowedBy'] as bool? ?? false,
+  isBlocked: json['isBlocked'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$$PublicProfileModelImplToJson(
@@ -36,6 +37,7 @@ Map<String, dynamic> _$$PublicProfileModelImplToJson(
   'stats': instance.stats,
   'isFollowing': instance.isFollowing,
   'isFollowedBy': instance.isFollowedBy,
+  'isBlocked': instance.isBlocked,
 };
 
 _$PublicProfileDetailsModelImpl _$$PublicProfileDetailsModelImplFromJson(

@@ -15,6 +15,7 @@ class PublicProfile {
     required this.stats,
     required this.isFollowing,
     required this.isFollowedBy,
+    required this.isBlocked,
   });
 
   /// Unique user identifier.
@@ -40,6 +41,9 @@ class PublicProfile {
 
   /// Whether this user follows the current logged-in user.
   final bool isFollowedBy;
+
+  /// Whether the current logged-in user has blocked this user.
+  final bool isBlocked;
 }
 
 /// Profile details shown on a public profile page.

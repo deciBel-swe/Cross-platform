@@ -354,6 +354,12 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         ) ??
         false;
 
+    final isBlocked = _asBool(
+          payload['isBlocked'] ??
+          relationship['isBlocked'] ??
+          profile['isBlocked']
+        ) ?? false;
+
     return <String, dynamic>{
       'id': _asInt(profile['id']) ?? 0,
       'username': (profile['username'] ?? '').toString(),
@@ -376,6 +382,7 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
       },
       'isFollowing': isFollowing,
       'isFollowedBy': isFollowedBy,
+      'isBlocked': isBlocked,
     };
   }
 
