@@ -327,32 +327,30 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       throw const AuthException('Invalid response format from server.');
     }
 
-    final extractedRefreshToken = _extractRefreshToken(response);
-    if (extractedRefreshToken != null && extractedRefreshToken.isNotEmpty) {
-      dataMap['refreshToken'] = extractedRefreshToken;
-    }
-
-    return LoginResponseModel.fromJson(dataMap);
-  }
-
-  String? _extractRefreshToken(Response<dynamic> response) {
     final cookies = response.headers.map['set-cookie'] ?? <String>[];
+    String? extractedRefreshToken;
+    String? extractedAccessToken;
 
     for (final cookie in cookies) {
-      if (!cookie.contains('refreshToken=')) {
-        continue;
-      }
-
       final parts = cookie.split(';');
       for (final part in parts) {
         final trimmed = part.trim();
         if (trimmed.startsWith('refreshToken=')) {
-          return trimmed.substring('refreshToken='.length);
+          extractedRefreshToken = trimmed.substring('refreshToken='.length);
+        } else if (trimmed.startsWith('accessToken=')) {
+          extractedAccessToken = trimmed.substring('accessToken='.length);
         }
       }
     }
 
-    return null;
+    if (extractedRefreshToken != null && extractedRefreshToken.isNotEmpty) {
+      dataMap['refreshToken'] = extractedRefreshToken;
+    }
+    if (extractedAccessToken != null && extractedAccessToken.isNotEmpty) {
+      dataMap['accessToken'] = extractedAccessToken;
+    }
+
+    return LoginResponseModel.fromJson(dataMap);
   }
 
   String _parseManualError(Object? data, {required String fallback}) {

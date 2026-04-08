@@ -55,6 +55,7 @@ class MockFollowRepository implements FollowRepository {
         ),
         isFollowing: isFollowing,
         isFollowedBy: isFollowedBy,
+        isBlocked: false,
       ),
     );
   }

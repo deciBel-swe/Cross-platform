@@ -34,6 +34,9 @@ mixin _$PublicProfileModel {
   /// Whether this profile's user follows the current logged-in user.
   bool get isFollowedBy => throw _privateConstructorUsedError;
 
+  /// Whether the current logged-in user has blocked this profile's user.
+  bool get isBlocked => throw _privateConstructorUsedError;
+
   /// Serializes this PublicProfileModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -60,6 +63,7 @@ abstract class $PublicProfileModelCopyWith<$Res> {
     PublicStatsModel stats,
     bool isFollowing,
     bool isFollowedBy,
+    bool isBlocked,
   });
 
   $PublicProfileDetailsModelCopyWith<$Res>? get profile;
@@ -90,6 +94,7 @@ class _$PublicProfileModelCopyWithImpl<$Res, $Val extends PublicProfileModel>
     Object? stats = null,
     Object? isFollowing = null,
     Object? isFollowedBy = null,
+    Object? isBlocked = null,
   }) {
     return _then(
       _value.copyWith(
@@ -124,6 +129,10 @@ class _$PublicProfileModelCopyWithImpl<$Res, $Val extends PublicProfileModel>
             isFollowedBy: null == isFollowedBy
                 ? _value.isFollowedBy
                 : isFollowedBy // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isBlocked: null == isBlocked
+                ? _value.isBlocked
+                : isBlocked // ignore: cast_nullable_to_non_nullable
                       as bool,
           )
           as $Val,
@@ -187,6 +196,7 @@ abstract class _$$PublicProfileModelImplCopyWith<$Res>
     PublicStatsModel stats,
     bool isFollowing,
     bool isFollowedBy,
+    bool isBlocked,
   });
 
   @override
@@ -219,6 +229,7 @@ class __$$PublicProfileModelImplCopyWithImpl<$Res>
     Object? stats = null,
     Object? isFollowing = null,
     Object? isFollowedBy = null,
+    Object? isBlocked = null,
   }) {
     return _then(
       _$PublicProfileModelImpl(
@@ -254,6 +265,10 @@ class __$$PublicProfileModelImplCopyWithImpl<$Res>
             ? _value.isFollowedBy
             : isFollowedBy // ignore: cast_nullable_to_non_nullable
                   as bool,
+        isBlocked: null == isBlocked
+            ? _value.isBlocked
+            : isBlocked // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -271,6 +286,7 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
     required this.stats,
     this.isFollowing = false,
     this.isFollowedBy = false,
+    this.isBlocked = false,
   });
 
   factory _$PublicProfileModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -300,9 +316,14 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
   @JsonKey()
   final bool isFollowedBy;
 
+  /// Whether the current logged-in user has blocked this profile's user.
+  @override
+  @JsonKey()
+  final bool isBlocked;
+
   @override
   String toString() {
-    return 'PublicProfileModel(id: $id, username: $username, tier: $tier, profile: $profile, socialLinks: $socialLinks, stats: $stats, isFollowing: $isFollowing, isFollowedBy: $isFollowedBy)';
+    return 'PublicProfileModel(id: $id, username: $username, tier: $tier, profile: $profile, socialLinks: $socialLinks, stats: $stats, isFollowing: $isFollowing, isFollowedBy: $isFollowedBy, isBlocked: $isBlocked)';
   }
 
   @override
@@ -321,7 +342,9 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
             (identical(other.isFollowing, isFollowing) ||
                 other.isFollowing == isFollowing) &&
             (identical(other.isFollowedBy, isFollowedBy) ||
-                other.isFollowedBy == isFollowedBy));
+                other.isFollowedBy == isFollowedBy) &&
+            (identical(other.isBlocked, isBlocked) ||
+                other.isBlocked == isBlocked));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -336,6 +359,7 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
     stats,
     isFollowing,
     isFollowedBy,
+    isBlocked,
   );
 
   /// Create a copy of PublicProfileModel
@@ -365,6 +389,7 @@ abstract class _PublicProfileModel implements PublicProfileModel {
     required final PublicStatsModel stats,
     final bool isFollowing,
     final bool isFollowedBy,
+    final bool isBlocked,
   }) = _$PublicProfileModelImpl;
 
   factory _PublicProfileModel.fromJson(Map<String, dynamic> json) =
@@ -390,6 +415,10 @@ abstract class _PublicProfileModel implements PublicProfileModel {
   /// Whether this profile's user follows the current logged-in user.
   @override
   bool get isFollowedBy;
+
+  /// Whether the current logged-in user has blocked this profile's user.
+  @override
+  bool get isBlocked;
 
   /// Create a copy of PublicProfileModel
   /// with the given fields replaced by the non-null parameter values.

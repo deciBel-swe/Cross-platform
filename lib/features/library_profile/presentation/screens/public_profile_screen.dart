@@ -657,16 +657,102 @@ class _ActionRow extends ConsumerWidget {
     final followBackHint = ref.watch(followBackHintProvider(userId));
     final isFollowedBy = profile.isFollowedBy || followBackHint;
 
+    final isBlocked = ref.watch(blockedUsersProvider).contains(userId);
+
     return Row(
       children: [
         if (!isOwnProfile) ...[
-          FollowButton(userId: userId, isFollowedBy: isFollowedBy),
+          if (isBlocked)
+            _UnblockButton(userId: userId)
+          else
+            FollowButton(userId: userId, isFollowedBy: isFollowedBy),
           const SizedBox(width: AppConstants.spacingSmall),
         ],
         if (profile.socialLinks != null)
           SocialLinksWidget(socialLinks: profile.socialLinks!),
         const Spacer(),
       ],
+    );
+  }
+}
+
+class _UnblockButton extends ConsumerStatefulWidget {
+  const _UnblockButton({required this.userId});
+
+  final int userId;
+
+  @override
+  ConsumerState<_UnblockButton> createState() => _UnblockButtonState();
+}
+
+class _UnblockButtonState extends ConsumerState<_UnblockButton> {
+  bool _isHovering = false;
+  bool _isPressed = false;
+  bool _isLoading = false;
+
+  Future<void> _handleUnblock() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(blockedUsersProvider.notifier).unblock(widget.userId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to unblock: ${e.toString().replaceAll('Exception: ', '')}',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = (_isHovering || _isPressed)
+        ? Colors.red.withValues(alpha: 0.15)
+        : AppColors.transparent;
+    final foregroundColor = Colors.redAccent;
+    final borderColor = Colors.redAccent;
+
+    return GestureDetector(
+      onTap: _isLoading ? null : _handleUnblock,
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovering = true),
+        onExit: (_) => setState(() => _isHovering = false),
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            border: Border.all(color: borderColor, width: 1.2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          alignment: Alignment.center,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.redAccent,
+                  ),
+                )
+              : Text(
+                  'Unblock',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: foregroundColor,
+                  ),
+                ),
+        ),
+      ),
     );
   }
 }

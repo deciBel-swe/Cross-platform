@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../settings/presentation/providers/blocked_users_provider.dart';
 import '../../domain/entities/blocked_user_summary.dart';
 import 'moderation_provider.dart';
@@ -34,6 +35,13 @@ class BlockedUsersNotifier extends StateNotifier<Set<int>> {
     final repository = ref.read(moderationRepositoryProvider);
     await repository.blockUser(userId);
 
+    try {
+      ref.read(followStateProvider(userId).notifier).forceState(false);
+      await ref.read(followRepositoryProvider).unfollowUser(userId);
+    } catch (_) {
+      // Ignore if not following or unfollow fails
+    }
+
     state = {...state, userId};
 
     ref.read(blockedUserProfilesProvider.notifier).upsert(
@@ -66,6 +74,10 @@ class BlockedUsersNotifier extends StateNotifier<Set<int>> {
     state = newState;
 
     ref.read(blockedUserProfilesProvider.notifier).remove(userId);
+  }
+
+  void markBlockedLocally(int userId) {
+    state = {...state, userId};
   }
 }
 

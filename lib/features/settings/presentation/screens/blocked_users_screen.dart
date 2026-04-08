@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/router/route_paths.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../library_profile/domain/entities/blocked_user_summary.dart';
@@ -232,52 +235,58 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
 
                 final user = state.users[index];
 
-                return Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Colors.white12,
-                        backgroundImage: (user.avatarUrl != null &&
-                                user.avatarUrl!.trim().isNotEmpty)
-                            ? NetworkImage(user.avatarUrl!)
-                            : null,
-                        child: (user.avatarUrl == null ||
-                                user.avatarUrl!.trim().isEmpty)
-                            ? const Icon(Icons.person, color: Colors.white)
-                            : null,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          user.username,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                return InkWell(
+                  onTap: () {
+                    context.push(RoutePaths.publicProfile(user.id));
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: Colors.white12,
+                          backgroundImage: (user.avatarUrl != null &&
+                                  user.avatarUrl!.trim().isNotEmpty)
+                              ? NetworkImage(user.avatarUrl!)
+                              : null,
+                          child: (user.avatarUrl == null ||
+                                  user.avatarUrl!.trim().isEmpty)
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            user.username,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () => _showUnblockConfirmation(
-                          context,
-                          user.id,
-                          user.username,
-                        ),
-                        child: const Text(
-                          'Unblock',
-                          style: TextStyle(
-                            color: Colors.redAccent,
-                            fontWeight: FontWeight.w700,
+                        TextButton(
+                          onPressed: () => _showUnblockConfirmation(
+                            context,
+                            user.id,
+                            user.username,
+                          ),
+                          child: const Text(
+                            'Unblock',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
