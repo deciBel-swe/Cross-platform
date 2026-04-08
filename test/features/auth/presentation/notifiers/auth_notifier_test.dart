@@ -143,44 +143,51 @@ void main() {
       },
     );
 
-    test('should emit [AsyncLoading, AsyncError] on failed login', () async {
-      // Arrange
-      when(
-        () => mockSecureStorageService.isAccessTokenExpired(),
-      ).thenAnswer((_) async => true); // Initial state
-      when(
-        () => mockAuthRepository.loginWithGoogle(),
-      ).thenAnswer((_) async => const Left(AuthFailure('Login failed')));
+    test(
+      'should throw and recover to AuthUnauthenticated on failed login',
+      () async {
+        // Arrange
+        when(
+          () => mockSecureStorageService.isAccessTokenExpired(),
+        ).thenAnswer((_) async => true); // Initial state
+        when(
+          () => mockAuthRepository.loginWithGoogle(),
+        ).thenAnswer((_) async => const Left(AuthFailure('Login failed')));
 
-      final listener = Listener<AsyncValue<AuthState>>();
-      container.listen(authStateProvider, listener.call, fireImmediately: true);
+        final listener = Listener<AsyncValue<AuthState>>();
+        container.listen(
+          authStateProvider,
+          listener.call,
+          fireImmediately: true,
+        );
 
-      // Wait for initial build
-      await container.read(authStateProvider.future);
+        // Wait for initial build
+        await container.read(authStateProvider.future);
 
-      // Act
-      await container.read(authStateProvider.notifier).loginWithGoogle();
+        // Act
+        await expectLater(
+          container.read(authStateProvider.notifier).loginWithGoogle(),
+          throwsA(isA<Exception>()),
+        );
 
-      // Assert
-      verifyInOrder([
-        // Initialization
-        () => listener(any(), any(that: isA<AsyncLoading<AuthState>>())),
-        () => listener(any(), any(that: isA<AsyncData<AuthState>>())),
+        // Assert
+        verifyInOrder([
+          // Initialization
+          () => listener(any(), any(that: isA<AsyncLoading<AuthState>>())),
+          () => listener(any(), any(that: isA<AsyncData<AuthState>>())),
 
-        // loginWithGoogle called -> Loading
-        () => listener(any(), any(that: isA<AsyncLoading<AuthState>>())),
+          // loginWithGoogle called -> Loading
+          () => listener(any(), any(that: isA<AsyncLoading<AuthState>>())),
 
-        // Error caught -> Error state
-        () => listener(any(), any(that: isA<AsyncError<AuthState>>())),
+          // Notifier recovers to unauthenticated
+          () => listener(any(), any(that: isA<AsyncData<AuthState>>())),
+        ]);
 
-        // Notifier recovers to unauthenticated
-        () => listener(any(), any(that: isA<AsyncData<AuthState>>())),
-      ]);
-
-      // Verify final state is AuthUnauthenticated (recovered from error)
-      final finalState = container.read(authStateProvider);
-      expect(finalState.valueOrNull, isA<AuthUnauthenticated>());
-    });
+        // Verify final state is AuthUnauthenticated (recovered from error)
+        final finalState = container.read(authStateProvider);
+        expect(finalState.valueOrNull, isA<AuthUnauthenticated>());
+      },
+    );
   });
 
   group('AuthNotifier logout()', () {

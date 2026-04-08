@@ -4,6 +4,9 @@ class ApiConstants {
   ApiConstants._();
 
   static String _requiredEnv(String key) {
+    if (!dotenv.isInitialized) {
+      throw StateError('Missing required environment variable (dotenv uninitialized): $key');
+    }
     final value = dotenv.env[key]?.trim();
     if (value == null || value.isEmpty) {
       throw StateError('Missing required environment variable: $key');
@@ -14,6 +17,7 @@ class ApiConstants {
   static const String _defaultBaseUrl = 'https://decibel.foo/api';
 
   static String get baseUrl {
+    if (!dotenv.isInitialized) return _defaultBaseUrl;
     final envBaseUrl = dotenv.env['API_BASE_URL']?.trim();
     if (envBaseUrl == null || envBaseUrl.isEmpty) {
       return _defaultBaseUrl;
@@ -49,6 +53,28 @@ class ApiConstants {
   /// Follows or unfollows a user: POST|DELETE /users/{userId}/follow
   static String followUser(int userId) => '/users/$userId/follow';
 
+  /// Base endpoint for playlist operations
+  static const String playlists = '/playlists';
+
+  /// Endpoint to get the current authenticated user's playlists
+  static const String myPlaylists = '/users/me/playlists';
+
+  /// Endpoint for operations on a specific playlist for the current user
+  static String myPlaylist(int id) => '/users/me/playlists/$id';
+
+  /// Endpoint to get playlists created by a specific user ID
+  static String userPublicPlaylists(int userId) => '/users/$userId/playlists';
+
+  /// Endpoint for liked playlists
+  static const String likedPlaylists = '/users/me/playlists/liked';
+
+  /// Endpoint for playlist's tracks reordering
+  static String updateTracksOrder(int playlistId) =>
+      '/playlists/$playlistId/tracks/reorder';
+
+  // Endpoint for getting the playlist secret link
+  static String getPlaylistSecretLink(int playlistId) =>
+      '${ApiConstants.playlists}/$playlistId/secret-link';
   // Dio Timeout constants
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;
@@ -65,6 +91,9 @@ class ApiConstants {
   static String get googleMobileClientId =>
       _requiredEnv('GOOGLE_MOBILE_CLIENT_ID');
   static String get googleDesktopClientId {
+    if (!dotenv.isInitialized) {
+      throw StateError('Missing required environment variable (dotenv uninitialized)');
+    }
     final desktop = dotenv.env['GOOGLE_DESKTOP_CLIENT_ID']?.trim();
     if (desktop != null && desktop.isNotEmpty) {
       return desktop;
@@ -81,6 +110,7 @@ class ApiConstants {
   }
 
   static String get recaptchaSiteKey {
+    if (!dotenv.isInitialized) return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';
     final value = dotenv.env['RECAPTCHA_SITE_KEY']?.trim();
     if (value == null || value.isEmpty) {
       return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';

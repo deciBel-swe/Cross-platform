@@ -26,6 +26,10 @@ import '../../features/library_profile/presentation/screens/fullscreen_image_scr
 import '../../features/library_profile/presentation/screens/profile_screen.dart';
 import '../../features/library_profile/presentation/screens/public_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/web_profiles.dart';
+import '../../features/playlists/domain/entities/playlist.dart';
+import '../../features/playlists/presentation/screens/edit_playlist_screen.dart';
+import '../../features/playlists/presentation/screens/playlist_details_screen.dart';
+import '../../features/playlists/presentation/screens/playlists_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
 import '../../features/settings/presentation/screens/blocked_users_screen.dart';
@@ -74,6 +78,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (authState is AuthAuthenticated) {
         debugPrint('[AppRouter] -> Handling as AuthAuthenticated.');
         return isAuthRoute ? RoutePaths.home : null;
+      }
+
+      if (authStateAsync.hasError) {
+        debugPrint(
+          '[AppRouter] -> Error detected: ${authStateAsync.error}\nStackTrace: ${authStateAsync.stackTrace}',
+        );
+        return isAuthRoute && state.matchedLocation != RoutePaths.splash
+            ? null
+            : RoutePaths.start;
       }
 
       debugPrint(
@@ -146,6 +159,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: LibraryScreen()),
                 routes: [
+                  GoRoute(
+                    path: 'playlists',
+                    builder: (context, state) => const PlaylistsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) {
+                          final playlist = state.extra as Playlist;
+                          return EditPlaylistScreen(playlist: playlist);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'playlist-tracks',
+                        builder: (context, state) {
+                          final playlist = state.extra as Playlist;
+                          return PlaylistDetailsScreen(
+                            playlistSummary: playlist,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                   GoRoute(
                     path: 'following',
                     builder: (context, state) => const FollowingScreen(),

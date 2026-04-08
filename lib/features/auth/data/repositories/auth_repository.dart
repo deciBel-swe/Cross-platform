@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
@@ -23,6 +25,11 @@ class AuthRepository implements IAuthRepository {
   final IAuthRemoteDataSource _remoteDataSource;
   final SecureStorageService _secureStorageService;
 
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    return sha256.convert(bytes).toString();
+  }
+
   @override
   Future<Either<Failure, AuthUser>> loginWithEmailPassword({
     required String email,
@@ -32,7 +39,7 @@ class AuthRepository implements IAuthRepository {
       final deviceInfo = await _buildDeviceInfo();
       final request = LoginLocalRequestModel(
         email: email,
-        password: password,
+        password: _hashPassword(password),
         deviceInfo: deviceInfo,
       );
 
@@ -72,7 +79,7 @@ class AuthRepository implements IAuthRepository {
       final request = RegisterLocalRequestModel(
         email: email,
         displayName: displayName,
-        password: password,
+        password: _hashPassword(password),
         dateOfBirth: dateOfBirth.toIso8601String().split('T').first,
         gender: gender,
         city: city,
@@ -120,7 +127,6 @@ class AuthRepository implements IAuthRepository {
 
       final responseModel = await _remoteDataSource.loginWithGoogle(deviceInfo);
 
-      // Save tokens securely
       await _secureStorageService.saveTokenPair(responseModel);
 
       return Right(responseModel.user.toDomain());

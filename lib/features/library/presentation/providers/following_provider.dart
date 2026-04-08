@@ -9,7 +9,7 @@ import '../../domain/entities/following_user.dart';
 import '../../domain/repositories/social_graph_repository.dart';
 
 final socialGraphRepositoryProvider = Provider<SocialGraphRepository>((ref) {
-  final useMock = dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
+  final useMock = dotenv.isInitialized && dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
 
   if (useMock) {
     return SocialGraphMockRepository();

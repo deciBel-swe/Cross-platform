@@ -156,6 +156,9 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         'username': _asString(
           responseData['username'] ?? profileMap['username'],
         ),
+        'displayName': _asNullableString(
+          responseData['displayName'] ?? profileMap['displayName'] ?? profileMap['DisplayName'],
+        ),
         'emailVerified': _asBool(responseData['emailVerified']),
         'tier': _asString(
           responseData['tier'] ?? profileMap['tier'],
@@ -222,6 +225,9 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         'Role': 'USER',
         'email': '',
         'username': responseData['username'] ?? '',
+        'displayName': _asNullableString(
+          responseData['displayName'] ?? profile['displayName'] ?? profile['DisplayName'],
+        ),
         'emailVerified': true,
         'tier': responseData['tier'] ?? 'FREE',
         'profile': {

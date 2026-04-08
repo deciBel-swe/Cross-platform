@@ -23,6 +23,8 @@ ArtistModel _$ArtistModelFromJson(Map<String, dynamic> json) {
 mixin _$ArtistModel {
   int get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
+  String? get displayName => throw _privateConstructorUsedError;
+  String? get avatarUrl => throw _privateConstructorUsedError;
 
   /// Serializes this ArtistModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -41,7 +43,7 @@ abstract class $ArtistModelCopyWith<$Res> {
     $Res Function(ArtistModel) then,
   ) = _$ArtistModelCopyWithImpl<$Res, ArtistModel>;
   @useResult
-  $Res call({int id, String username});
+  $Res call({int id, String username, String? displayName, String? avatarUrl});
 }
 
 /// @nodoc
@@ -58,7 +60,12 @@ class _$ArtistModelCopyWithImpl<$Res, $Val extends ArtistModel>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? id = null, Object? username = null}) {
+  $Res call({
+    Object? id = null,
+    Object? username = null,
+    Object? displayName = freezed,
+    Object? avatarUrl = freezed,
+  }) {
     return _then(
       _value.copyWith(
             id: null == id
@@ -69,6 +76,14 @@ class _$ArtistModelCopyWithImpl<$Res, $Val extends ArtistModel>
                 ? _value.username
                 : username // ignore: cast_nullable_to_non_nullable
                       as String,
+            displayName: freezed == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            avatarUrl: freezed == avatarUrl
+                ? _value.avatarUrl
+                : avatarUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -84,7 +99,7 @@ abstract class _$$ArtistModelImplCopyWith<$Res>
   ) = __$$ArtistModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int id, String username});
+  $Res call({int id, String username, String? displayName, String? avatarUrl});
 }
 
 /// @nodoc
@@ -100,7 +115,12 @@ class __$$ArtistModelImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? id = null, Object? username = null}) {
+  $Res call({
+    Object? id = null,
+    Object? username = null,
+    Object? displayName = freezed,
+    Object? avatarUrl = freezed,
+  }) {
     return _then(
       _$ArtistModelImpl(
         id: null == id
@@ -111,6 +131,14 @@ class __$$ArtistModelImplCopyWithImpl<$Res>
             ? _value.username
             : username // ignore: cast_nullable_to_non_nullable
                   as String,
+        displayName: freezed == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        avatarUrl: freezed == avatarUrl
+            ? _value.avatarUrl
+            : avatarUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -119,7 +147,12 @@ class __$$ArtistModelImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$ArtistModelImpl implements _ArtistModel {
-  const _$ArtistModelImpl({required this.id, required this.username});
+  const _$ArtistModelImpl({
+    required this.id,
+    required this.username,
+    this.displayName,
+    this.avatarUrl,
+  });
 
   factory _$ArtistModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$ArtistModelImplFromJson(json);
@@ -128,10 +161,14 @@ class _$ArtistModelImpl implements _ArtistModel {
   final int id;
   @override
   final String username;
+  @override
+  final String? displayName;
+  @override
+  final String? avatarUrl;
 
   @override
   String toString() {
-    return 'ArtistModel(id: $id, username: $username)';
+    return 'ArtistModel(id: $id, username: $username, displayName: $displayName, avatarUrl: $avatarUrl)';
   }
 
   @override
@@ -141,12 +178,17 @@ class _$ArtistModelImpl implements _ArtistModel {
             other is _$ArtistModelImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.username, username) ||
-                other.username == username));
+                other.username == username) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
+            (identical(other.avatarUrl, avatarUrl) ||
+                other.avatarUrl == avatarUrl));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, username);
+  int get hashCode =>
+      Object.hash(runtimeType, id, username, displayName, avatarUrl);
 
   /// Create a copy of ArtistModel
   /// with the given fields replaced by the non-null parameter values.
@@ -166,6 +208,8 @@ abstract class _ArtistModel implements ArtistModel {
   const factory _ArtistModel({
     required final int id,
     required final String username,
+    final String? displayName,
+    final String? avatarUrl,
   }) = _$ArtistModelImpl;
 
   factory _ArtistModel.fromJson(Map<String, dynamic> json) =
@@ -175,6 +219,10 @@ abstract class _ArtistModel implements ArtistModel {
   int get id;
   @override
   String get username;
+  @override
+  String? get displayName;
+  @override
+  String? get avatarUrl;
 
   /// Create a copy of ArtistModel
   /// with the given fields replaced by the non-null parameter values.

@@ -76,7 +76,7 @@ class TrackTile extends ConsumerWidget {
                 children: [
                   // Full Title (Artist - Title)
                   Text(
-                    "${track.artist.username} - ${track.title}",
+                    "${track.artist.displayName ?? track.artist.username} - ${track.title}",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.titleMedium?.copyWith(
@@ -88,7 +88,7 @@ class TrackTile extends ConsumerWidget {
 
                   // Artist Name Subtitle
                   Text(
-                    track.artist.username,
+                    track.artist.displayName ?? track.artist.username,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodyMedium?.copyWith(color: subtitleColor),

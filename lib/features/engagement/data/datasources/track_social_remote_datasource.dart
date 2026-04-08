@@ -269,7 +269,8 @@ class TrackSocialRemoteDatasource {
   Map<String, dynamic> _normalizePagination(Map<String, dynamic> json) {
     final normalized = Map<String, dynamic>.from(json);
 
-    if (!normalized.containsKey('pageNumber') && normalized.containsKey('number')) {
+    if (!normalized.containsKey('pageNumber') &&
+        normalized.containsKey('number')) {
       normalized['pageNumber'] = normalized['number'];
       normalized['pageSize'] = normalized['size'];
       normalized['isLast'] = normalized['last'];
@@ -281,11 +282,13 @@ class TrackSocialRemoteDatasource {
         if (item is Map<String, dynamic>) {
           final normalizedItem = Map<String, dynamic>.from(item);
           // Handle flat structure
-          if (!normalizedItem.containsKey('avatarUrl') && normalizedItem.containsKey('profilePic')) {
+          if (!normalizedItem.containsKey('avatarUrl') &&
+              normalizedItem.containsKey('profilePic')) {
             normalizedItem['avatarUrl'] = normalizedItem['profilePic'];
           }
           // Handle nested profile structure (OpenAPI spec shape)
-          if (!normalizedItem.containsKey('avatarUrl') && normalizedItem['profile'] is Map<String, dynamic>) {
+          if (!normalizedItem.containsKey('avatarUrl') &&
+              normalizedItem['profile'] is Map<String, dynamic>) {
             final profile = normalizedItem['profile'] as Map<String, dynamic>;
             if (profile.containsKey('avatarUrl')) {
               normalizedItem['avatarUrl'] = profile['avatarUrl'];

@@ -23,6 +23,7 @@ PublicProfileModel _$PublicProfileModelFromJson(Map<String, dynamic> json) {
 mixin _$PublicProfileModel {
   int get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
+  String? get displayName => throw _privateConstructorUsedError;
   String get tier => throw _privateConstructorUsedError;
   PublicProfileDetailsModel? get profile => throw _privateConstructorUsedError;
   SocialLinksModel? get socialLinks => throw _privateConstructorUsedError;
@@ -33,6 +34,9 @@ mixin _$PublicProfileModel {
 
   /// Whether this profile's user follows the current logged-in user.
   bool get isFollowedBy => throw _privateConstructorUsedError;
+
+  /// Whether the current logged-in user has blocked this profile's user.
+  bool get isBlocked => throw _privateConstructorUsedError;
 
   /// Serializes this PublicProfileModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -54,12 +58,14 @@ abstract class $PublicProfileModelCopyWith<$Res> {
   $Res call({
     int id,
     String username,
+    String? displayName,
     String tier,
     PublicProfileDetailsModel? profile,
     SocialLinksModel? socialLinks,
     PublicStatsModel stats,
     bool isFollowing,
     bool isFollowedBy,
+    bool isBlocked,
   });
 
   $PublicProfileDetailsModelCopyWith<$Res>? get profile;
@@ -84,12 +90,14 @@ class _$PublicProfileModelCopyWithImpl<$Res, $Val extends PublicProfileModel>
   $Res call({
     Object? id = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? tier = null,
     Object? profile = freezed,
     Object? socialLinks = freezed,
     Object? stats = null,
     Object? isFollowing = null,
     Object? isFollowedBy = null,
+    Object? isBlocked = null,
   }) {
     return _then(
       _value.copyWith(
@@ -101,6 +109,10 @@ class _$PublicProfileModelCopyWithImpl<$Res, $Val extends PublicProfileModel>
                 ? _value.username
                 : username // ignore: cast_nullable_to_non_nullable
                       as String,
+            displayName: freezed == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
+                      as String?,
             tier: null == tier
                 ? _value.tier
                 : tier // ignore: cast_nullable_to_non_nullable
@@ -124,6 +136,10 @@ class _$PublicProfileModelCopyWithImpl<$Res, $Val extends PublicProfileModel>
             isFollowedBy: null == isFollowedBy
                 ? _value.isFollowedBy
                 : isFollowedBy // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isBlocked: null == isBlocked
+                ? _value.isBlocked
+                : isBlocked // ignore: cast_nullable_to_non_nullable
                       as bool,
           )
           as $Val,
@@ -181,12 +197,14 @@ abstract class _$$PublicProfileModelImplCopyWith<$Res>
   $Res call({
     int id,
     String username,
+    String? displayName,
     String tier,
     PublicProfileDetailsModel? profile,
     SocialLinksModel? socialLinks,
     PublicStatsModel stats,
     bool isFollowing,
     bool isFollowedBy,
+    bool isBlocked,
   });
 
   @override
@@ -213,12 +231,14 @@ class __$$PublicProfileModelImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? tier = null,
     Object? profile = freezed,
     Object? socialLinks = freezed,
     Object? stats = null,
     Object? isFollowing = null,
     Object? isFollowedBy = null,
+    Object? isBlocked = null,
   }) {
     return _then(
       _$PublicProfileModelImpl(
@@ -230,6 +250,10 @@ class __$$PublicProfileModelImplCopyWithImpl<$Res>
             ? _value.username
             : username // ignore: cast_nullable_to_non_nullable
                   as String,
+        displayName: freezed == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
+                  as String?,
         tier: null == tier
             ? _value.tier
             : tier // ignore: cast_nullable_to_non_nullable
@@ -254,6 +278,10 @@ class __$$PublicProfileModelImplCopyWithImpl<$Res>
             ? _value.isFollowedBy
             : isFollowedBy // ignore: cast_nullable_to_non_nullable
                   as bool,
+        isBlocked: null == isBlocked
+            ? _value.isBlocked
+            : isBlocked // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -265,12 +293,14 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
   const _$PublicProfileModelImpl({
     required this.id,
     required this.username,
+    this.displayName,
     this.tier = 'FREE',
     this.profile,
     this.socialLinks,
     required this.stats,
     this.isFollowing = false,
     this.isFollowedBy = false,
+    this.isBlocked = false,
   });
 
   factory _$PublicProfileModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -280,6 +310,8 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
   final int id;
   @override
   final String username;
+  @override
+  final String? displayName;
   @override
   @JsonKey()
   final String tier;
@@ -300,9 +332,14 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
   @JsonKey()
   final bool isFollowedBy;
 
+  /// Whether the current logged-in user has blocked this profile's user.
+  @override
+  @JsonKey()
+  final bool isBlocked;
+
   @override
   String toString() {
-    return 'PublicProfileModel(id: $id, username: $username, tier: $tier, profile: $profile, socialLinks: $socialLinks, stats: $stats, isFollowing: $isFollowing, isFollowedBy: $isFollowedBy)';
+    return 'PublicProfileModel(id: $id, username: $username, displayName: $displayName, tier: $tier, profile: $profile, socialLinks: $socialLinks, stats: $stats, isFollowing: $isFollowing, isFollowedBy: $isFollowedBy, isBlocked: $isBlocked)';
   }
 
   @override
@@ -313,6 +350,8 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.username, username) ||
                 other.username == username) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
             (identical(other.tier, tier) || other.tier == tier) &&
             (identical(other.profile, profile) || other.profile == profile) &&
             (identical(other.socialLinks, socialLinks) ||
@@ -321,7 +360,9 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
             (identical(other.isFollowing, isFollowing) ||
                 other.isFollowing == isFollowing) &&
             (identical(other.isFollowedBy, isFollowedBy) ||
-                other.isFollowedBy == isFollowedBy));
+                other.isFollowedBy == isFollowedBy) &&
+            (identical(other.isBlocked, isBlocked) ||
+                other.isBlocked == isBlocked));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -330,12 +371,14 @@ class _$PublicProfileModelImpl implements _PublicProfileModel {
     runtimeType,
     id,
     username,
+    displayName,
     tier,
     profile,
     socialLinks,
     stats,
     isFollowing,
     isFollowedBy,
+    isBlocked,
   );
 
   /// Create a copy of PublicProfileModel
@@ -359,12 +402,14 @@ abstract class _PublicProfileModel implements PublicProfileModel {
   const factory _PublicProfileModel({
     required final int id,
     required final String username,
+    final String? displayName,
     final String tier,
     final PublicProfileDetailsModel? profile,
     final SocialLinksModel? socialLinks,
     required final PublicStatsModel stats,
     final bool isFollowing,
     final bool isFollowedBy,
+    final bool isBlocked,
   }) = _$PublicProfileModelImpl;
 
   factory _PublicProfileModel.fromJson(Map<String, dynamic> json) =
@@ -374,6 +419,8 @@ abstract class _PublicProfileModel implements PublicProfileModel {
   int get id;
   @override
   String get username;
+  @override
+  String? get displayName;
   @override
   String get tier;
   @override
@@ -390,6 +437,10 @@ abstract class _PublicProfileModel implements PublicProfileModel {
   /// Whether this profile's user follows the current logged-in user.
   @override
   bool get isFollowedBy;
+
+  /// Whether the current logged-in user has blocked this profile's user.
+  @override
+  bool get isBlocked;
 
   /// Create a copy of PublicProfileModel
   /// with the given fields replaced by the non-null parameter values.

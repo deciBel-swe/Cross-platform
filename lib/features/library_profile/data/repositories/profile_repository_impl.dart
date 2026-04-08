@@ -63,6 +63,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<Either<Failure, bool>> updateProfile({
+    String? displayName,
     String? bio,
     String? city,
     String? country,
@@ -71,6 +72,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }) async {
     try {
       final Map<String, dynamic> updateData = {
+        ...?(displayName != null ? {'displayName': displayName} : null),
         ...?(bio != null ? {'bio': bio} : null),
         ...?(city != null ? {'city': city} : null),
         ...?(country != null ? {'country': country} : null),

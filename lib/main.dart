@@ -12,13 +12,13 @@ import 'features/settings/domain/repositories/app_icon_repository.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  var useMockServices = false; 
+  var useMockServices = false;
   try {
     await dotenv.load(fileName: '.env');
     useMockServices =
         (dotenv.env['USE_MOCK_SERVICES'] ?? 'false').toLowerCase() == 'true';
   } catch (_) {
-    useMockServices = false; 
+    useMockServices = false;
   }
 
   // Configure desktop window constraints.

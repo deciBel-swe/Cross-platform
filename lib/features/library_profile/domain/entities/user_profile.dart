@@ -16,6 +16,7 @@ class UserProfile {
     required this.role,
     required this.email,
     required this.username,
+    this.displayName,
     required this.emailVerified,
     required this.tier,
     required this.profileDetails,
@@ -28,6 +29,7 @@ class UserProfile {
   final String role;
   final String email;
   final String username;
+  final String? displayName;
   final bool emailVerified;
   final UserTier tier;
   final UserProfileDetails profileDetails;
