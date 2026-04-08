@@ -1,5 +1,8 @@
 import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 import '../../constants/api_constants.dart';
 import '../../storage/secure_storage_service.dart';
 import '../events/auth_event_bus.dart';
@@ -14,20 +17,21 @@ import '../events/auth_event_bus.dart';
 ///
 /// Uses a concurrency lock (`_refreshLock`) to ensure multiple simultaneous requests
 /// do not trigger multiple concurrent refresh calls.
+@lazySingleton
 class AuthInterceptor extends Interceptor {
-  /// Constructs the interceptor with the required secure storage service and optionally a custom
-  /// Dio instance for the refresh call to prevent infinite interception loops.
-  AuthInterceptor(this._secureStorage, {Dio? refreshDio})
-    : _refreshDio =
-          refreshDio ??
-          (Dio()
-            ..options.baseUrl = ApiConstants.baseUrl
-            ..options.connectTimeout = const Duration(
-              milliseconds: ApiConstants.connectTimeout,
-            )
-            ..options.receiveTimeout = const Duration(
-              milliseconds: ApiConstants.receiveTimeout,
-            ));
+  /// Constructs the interceptor with the required secure storage service.
+  ///
+  /// A dedicated internal Dio instance is created for refresh calls to avoid
+  /// interceptor recursion.
+  AuthInterceptor(this._secureStorage)
+    : _refreshDio = (Dio()
+        ..options.baseUrl = ApiConstants.baseUrl
+        ..options.connectTimeout = const Duration(
+          milliseconds: ApiConstants.connectTimeout,
+        )
+        ..options.receiveTimeout = const Duration(
+          milliseconds: ApiConstants.receiveTimeout,
+        ));
 
   final SecureStorageService _secureStorage;
   final Dio _refreshDio;
@@ -156,46 +160,62 @@ class AuthInterceptor extends Interceptor {
         throw Exception('No refresh token available');
       }
 
+      final oldAccessToken = await _secureStorage.getAccessToken() ?? '';
+      final cookieHeader = 'refreshToken=$refreshToken; accessToken=$oldAccessToken';
+
+      debugPrint('[AuthInterceptor] Refreshing Token: POST /auth/refreshtoken');
+      debugPrint('[AuthInterceptor] Request Headers: {Cookie: $cookieHeader}');
+      debugPrint('[AuthInterceptor] Request Body: {refreshToken: $refreshToken}');
+
       final response = await _refreshDio.post<Map<String, dynamic>>(
         '/auth/refreshtoken',
-        data: {'refreshToken': refreshToken},
+        data: {'refreshToken': refreshToken}, // Keep payload for backward compatibility
+        options: Options(
+          headers: {
+            'Cookie': cookieHeader,
+          },
+        ),
       );
+
+      debugPrint('[AuthInterceptor] Response Status: ${response.statusCode}');
+      debugPrint('[AuthInterceptor] Response Headers: ${response.headers.map}');
+      debugPrint('[AuthInterceptor] Response Body: ${response.data}');
 
       final responseBody = response.data;
       final dataPayload =
           responseBody?['data'] as Map<String, dynamic>? ?? responseBody;
 
-      final newAccessToken = dataPayload?['accessToken'] as String?;
-      final expiresIn = dataPayload?['expiresIn'] as int?;
+      String? newAccessToken = dataPayload?['accessToken'] as String?;
+      final expiresIn = dataPayload?['expiresIn'] as int? ?? 3600;
 
       String? newRefreshToken = dataPayload?['refreshToken'] as String?;
+      
       final cookies = response.headers.map['set-cookie'] ?? <String>[];
       for (final cookie in cookies) {
-        if (cookie.contains('refreshToken=')) {
-          final parts = cookie.split(';');
-          for (final part in parts) {
-            final trimmed = part.trim();
-            if (trimmed.startsWith('refreshToken=')) {
-              newRefreshToken = trimmed.substring('refreshToken='.length);
-              break;
-            }
+        final parts = cookie.split(';');
+        for (final part in parts) {
+          final trimmed = part.trim();
+          if (trimmed.startsWith('refreshToken=')) {
+            newRefreshToken = trimmed.substring('refreshToken='.length);
+          } else if (trimmed.startsWith('accessToken=')) {
+            newAccessToken = trimmed.substring('accessToken='.length);
           }
         }
-        if (newRefreshToken != null && newRefreshToken != refreshToken) break;
       }
 
-      if (newAccessToken != null && expiresIn != null) {
+      if (newAccessToken != null) {
         await _secureStorage.saveRefreshTokens(
           accessToken: newAccessToken,
           expiresIn: expiresIn,
           refreshToken: newRefreshToken,
         );
       } else {
-        throw Exception('Invalid token response format');
+        throw Exception('Invalid token response format: no access token');
       }
 
       completer.complete();
     } catch (e) {
+      debugPrint('[AuthInterceptor] Refresh Error: $e');
       completer.completeError(e);
       rethrow;
     } finally {

@@ -30,7 +30,9 @@ class SecureStorageService {
   /// The [expiryTime] is derived from [LoginResponseModel.expiresIn] (seconds),
   /// as returned by the API.
   Future<void> saveTokenPair(LoginResponseModel response) async {
-    final expiryTime = DateTime.now().add(Duration(seconds: response.expiresIn));
+    final expiryTime = DateTime.now().add(
+      Duration(seconds: response.expiresIn),
+    );
 
     await _storage.write(key: _accessTokenKey, value: response.accessToken);
     await _storage.write(
@@ -41,6 +43,10 @@ class SecureStorageService {
       key: _userKey,
       value: jsonEncode(response.user.toJson()),
     );
+
+    if (response.refreshToken != null && response.refreshToken!.isNotEmpty) {
+      await _storage.write(key: _refreshTokenKey, value: response.refreshToken);
+    }
   }
 
   /// Saves newly refreshed access token and optionally updates the refresh token.

@@ -1,7 +1,7 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/exceptions.dart';
@@ -27,6 +27,11 @@ class UploadRemoteDatasource {
       final tagsRaw = dataMap['tags'];
 
       if (waveformRaw is List) {
+        if (waveformRaw.isEmpty) {
+          throw const ServerException(
+            'Waveform data is empty. Please pick the audio file again.',
+          );
+        }
         // Backend expects `waveformData` as a stringified numeric array.
         final waveformValues = waveformRaw
             .map((value) => (value as num).toDouble().toStringAsFixed(4))

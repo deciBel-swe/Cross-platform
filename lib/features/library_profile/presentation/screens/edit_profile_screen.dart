@@ -1,3 +1,4 @@
+import 'package:csc_picker_plus/csc_picker_plus.dart';
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,9 +27,11 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  late TextEditingController _displayNameController;
   late TextEditingController _bioController;
-  late TextEditingController _cityController;
-  late TextEditingController _countryController;
+
+  String? _selectedCountry;
+  String? _selectedState;
 
   late List<String> _selectedGenres;
   late UserProfile? _user;
@@ -42,11 +45,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         .value;
     _user = userState?.fold((failure) => null, (profile) => profile);
 
+    _displayNameController = TextEditingController(text: _user?.displayName);
     _bioController = TextEditingController(text: _user?.profileDetails.bio);
-    _cityController = TextEditingController(text: _user?.profileDetails.city);
-    _countryController = TextEditingController(
-      text: _user?.profileDetails.country,
-    );
+    _selectedCountry = _user?.profileDetails.country;
+    _selectedState = _user?.profileDetails.city;
 
     _selectedGenres = List<String>.from(
       _user?.profileDetails.favoriteGenres ?? [],
@@ -55,9 +57,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   void dispose() {
+    _displayNameController.dispose();
     _bioController.dispose();
-    _cityController.dispose();
-    _countryController.dispose();
     super.dispose();
   }
 
@@ -65,17 +66,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     UserProfile? user,
     PublicProfileSocialLinks currentSocialLinks,
   ) {
-    if (user == null) return true; // Safety check
-
+    if (user == null) return true;
+    final originalDisplayName = user.displayName;
     final originalBio = user.profileDetails.bio;
     final originalCity = user.profileDetails.city;
     final originalCountry = user.profileDetails.country;
     final originalGenres = user.profileDetails.favoriteGenres;
 
     final textChanged =
-        _bioController.text.trim() != originalBio ||
-        _cityController.text.trim() != originalCity ||
-        _countryController.text.trim() != originalCountry;
+        _displayNameController.text.trim() != (originalDisplayName ?? '') ||
+        _bioController.text.trim() != (originalBio ?? '') ||
+        (_selectedState ?? '') != (originalCity ?? '') ||
+        (_selectedCountry ?? '') != (originalCountry ?? '');
 
     final genresChanged =
         _selectedGenres.length != originalGenres.length ||
@@ -105,13 +107,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       context.pop();
       return;
     }
-
     ref
         .read(profileEditNotifierProvider.notifier)
         .updateGeneralInfo(
+          displayName: _displayNameController.text.trim(),
           bio: _bioController.text.trim(),
-          city: _cityController.text.trim(),
-          country: _countryController.text.trim(),
+          city: (_selectedState ?? '')
+              .replaceAll(
+                RegExp(r'\s*Governorate\s*', caseSensitive: false),
+                '',
+              )
+              .trim(),
+          country: _selectedCountry ?? '',
           genres: _selectedGenres,
           socialLinks: currentSocialLinks,
         );
@@ -163,15 +170,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         shadowColor: AppColors.transparent,
         surfaceTintColor: AppColors.background,
         actions: [
-          // TextButton(
-          //   onPressed: () {
-          //     context.push(RoutePaths.editWebLink);
-          //   },
-          //   child: const Text(
-          //     'Edit Web links',
-          //     style: TextStyle(color: AppColors.accentTeal),
-          //   ),
-          // ),
           if (editState is AsyncLoading)
             const Center(
               child: Padding(
@@ -188,11 +186,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             )
           else
             TextButton(
+              // style: TextButton.styleFrom(
+              //   backgroundColor: AppColors.primary,
+              //   padding: const EdgeInsets.symmetric(horizontal: 16),
+              // ),
               onPressed: _saveProfile,
               child: const Text(
                 'Save',
                 style: TextStyle(
-                  color: AppColors.google,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -225,6 +227,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ProfileTextField(
+                      label: 'Display Name',
+                      controller: _displayNameController,
+                      maxLength: 30,
+                      validator: (value) {
+                        return null; // Not strictly required, could be empty
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    ProfileTextField(
                       label: 'Bio',
                       controller: _bioController,
                       maxLines: 3,
@@ -242,49 +253,60 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    ProfileTextField(
-                      label: 'City',
-                      controller: _cityController,
-                      maxLength: 50,
-                      validator: (value) {
-                        if (value != null &&
-                            value.isNotEmpty &&
-                            value.trim().isEmpty) {
-                          return 'City cannot be only spaces';
-                        }
-                        if (value != null &&
-                            value.trim().isNotEmpty &&
-                            !RegExp(r"^[a-zA-Z\s\-\']+$").hasMatch(value)) {
-                          return 'City contains invalid characters';
-                        }
-                        return null;
+
+                    // Country → State → City picker
+                    CSCPickerPlus(
+                      layout: Layout.vertical,
+                      flagState: CountryFlag.SHOW_IN_DROP_DOWN_ONLY,
+                      showStates: true,
+                      showCities: false,
+                      countryStateLanguage:
+                          CountryStateLanguage.englishOrNative,
+                      currentState: _selectedState,
+                      currentCountry: _selectedCountry,
+                      dropdownDecoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      disabledDropdownDecoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      selectedItemStyle: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                      ),
+                      dropdownHeadingStyle: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      dropdownItemStyle: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                      ),
+                      dropdownDialogRadius: 12.0,
+                      searchBarRadius: 12.0,
+                      onCountryChanged: (value) {
+                        setState(() {
+                          _selectedCountry = value;
+                          _selectedState = null;
+                        });
+                      },
+                      onStateChanged: (value) {
+                        setState(() {
+                          _selectedState = value;
+                        });
                       },
                     ),
-                    const SizedBox(height: 20),
-                    ProfileTextField(
-                      label: 'Country',
-                      controller: _countryController,
-                      maxLength: 50,
-                      validator: (value) {
-                        if (value != null &&
-                            value.isNotEmpty &&
-                            value.trim().isEmpty) {
-                          return 'Country cannot be only spaces';
-                        }
-                        if (value != null &&
-                            value.trim().isNotEmpty &&
-                            !RegExp(r"^[a-zA-Z\s\-\']+$").hasMatch(value)) {
-                          return 'Country contains invalid characters';
-                        }
-                        return null;
-                      },
-                    ),
+
                     const SizedBox(height: 32),
 
                     GenreSelector(
                       availableGenres: availableGenres,
                       selectedGenres: _selectedGenres,
                       onGenreToggled: (genre, isSelected) {
+                        if (isSelected && _selectedGenres.length >= 10) return;
                         setState(() {
                           if (isSelected) {
                             _selectedGenres.add(genre);

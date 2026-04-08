@@ -25,16 +25,26 @@ void main() {
   group('LibraryScreen', () {
     testWidgets('renders Library title and profile icon', (tester) async {
       await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
 
       expect(find.text('Library'), findsOneWidget);
-      expect(find.byIcon(Icons.person), findsOneWidget);
+      expect(find.byIcon(Icons.account_circle), findsOneWidget);
     });
 
     testWidgets('renders navigation row for "Your uploads"', (tester) async {
       await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
 
-      expect(find.text('Your uploads'), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      final uploadsLabel = find.text('Your uploads');
+      expect(uploadsLabel, findsOneWidget);
+
+      expect(
+        find.descendant(
+          of: find.ancestor(of: uploadsLabel, matching: find.byType(Row)),
+          matching: find.byIcon(Icons.chevron_right),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('navigates to profile when profile icon is tapped', (
@@ -55,8 +65,9 @@ void main() {
       );
 
       await tester.pumpWidget(buildTestWidget(router: router));
+      await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.person));
+      await tester.tap(find.byIcon(Icons.account_circle));
       await tester.pumpAndSettle();
 
       expect(find.text('Profile'), findsOneWidget);

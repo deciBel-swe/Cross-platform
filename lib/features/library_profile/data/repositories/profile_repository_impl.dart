@@ -6,7 +6,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/public_profile_social_links.dart';
-import '../../domain/entities/user_profile.dart'; 
+import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';
 import '../models/user_profile_model.dart';
@@ -36,25 +36,34 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Either<Failure, UserProfile>> getUserProfile() async {
     try {
-      // 1. Fetch the raw data model from your Dio data source
       final model = await _remoteDataSource.getUserProfile();
-
-      // 2. Convert to Domain Entity and return on the Right (Success) side
       return Right(model.toEntity());
     } on AuthException catch (e) {
-      // Return Auth errors on the Left side
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
-      // Return Server errors on the Left side
       return Left(ServerFailure(e.message));
     } catch (e) {
-      // Catch any unexpected parsing or network errors
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserProfile>> getPublicProfile(int userId) async {
+    try {
+      final model = await _remoteDataSource.getPublicProfile(userId);
+      return Right(model.toEntity());
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
   Future<Either<Failure, bool>> updateProfile({
+    String? displayName,
     String? bio,
     String? city,
     String? country,
@@ -62,13 +71,17 @@ class ProfileRepositoryImpl implements ProfileRepository {
     PublicProfileSocialLinks? socialLinks,
   }) async {
     try {
-      // FIX: Notice the quotes around the keys!
       final Map<String, dynamic> updateData = {
+        ...?(displayName != null ? {'displayName': displayName} : null),
         ...?(bio != null ? {'bio': bio} : null),
         ...?(city != null ? {'city': city} : null),
         ...?(country != null ? {'country': country} : null),
-        ...?(favoriteGenres != null ? {'favoriteGenres': favoriteGenres} : null),
-        ...?(socialLinks != null ? {'socialLinks': socialLinks.toModel().toJson()} : null),
+        ...?(favoriteGenres != null
+            ? {'favoriteGenres': favoriteGenres}
+            : null),
+        ...?(socialLinks != null
+            ? {'socialLinks': socialLinks.toModel().toJson()}
+            : null),
       };
 
       final success = await _remoteDataSource.updateProfile(updateData);
@@ -80,7 +93,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     }
   }
 
- @override
+  @override
   Future<Either<Failure, bool>> updateImages({
     File? profilePic,
     File? coverPic,
@@ -90,7 +103,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
         profilePic: profilePic,
         coverPic: coverPic,
       );
-      
+
       return Right(success);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

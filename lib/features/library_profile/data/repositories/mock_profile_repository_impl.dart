@@ -39,7 +39,40 @@ class MockProfileRepository implements ProfileRepository {
   }
 
   @override
+  Future<Either<Failure, UserProfile>> getPublicProfile(int userId) async {
+    final publicProfile = UserProfile(
+      id: userId,
+      role: 'USER',
+      email: '',
+      username: 'public_user_$userId',
+      emailVerified: true,
+      tier: userId.isEven ? UserTier.pro : UserTier.free,
+      profileDetails: const UserProfileDetails(
+        bio: 'Public mock profile for moderation testing.',
+        city: 'Toronto',
+        country: 'Canada',
+        profilePic: null,
+        coverPic: null,
+        favoriteGenres: <String>['Indie', 'Electronic'],
+      ),
+      socialLinks: const PublicProfileSocialLinks(
+        instagram: 'https://instagram.com/public_mock_user',
+        twitter: 'https://x.com/public_mock_user',
+        website: 'https://decibel.app/public_mock_user',
+      ),
+      privacySettings: const PrivacySettings(
+        isPrivate: false,
+        showHistory: true,
+      ),
+      stats: const UserStats(followers: 138, following: 140, tracksCount: 5),
+    );
+
+    return Right(publicProfile);
+  }
+
+  @override
   Future<Either<Failure, bool>> updateProfile({
+    String? displayName,
     String? bio,
     String? city,
     String? country,
@@ -53,6 +86,7 @@ class MockProfileRepository implements ProfileRepository {
       role: _profile.role,
       email: _profile.email,
       username: _profile.username,
+      displayName: displayName ?? _profile.displayName,
       emailVerified: _profile.emailVerified,
       tier: _profile.tier,
       profileDetails: UserProfileDetails(

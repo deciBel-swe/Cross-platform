@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../engagement/domain/models/track_action_data.dart';
+import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../library/domain/entities/track.dart';
 
-class TrackTile extends StatelessWidget {
+class TrackTile extends ConsumerWidget {
   const TrackTile({
     super.key,
     required this.track,
-    this.isLiked = false,
     this.onTap,
     this.onMorePressed,
-    this.onLikePressed,
   });
   final Track track;
-  final bool isLiked; // UI state passed from the parent
   final VoidCallback? onTap;
   final VoidCallback? onMorePressed;
-  final VoidCallback? onLikePressed;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
@@ -32,6 +31,10 @@ class TrackTile extends StatelessWidget {
     // High contrast for the title, muted for the subtitle/stats
     final titleColor = isDark ? Colors.white : Colors.black87;
     final subtitleColor = isDark ? Colors.white54 : Colors.black54;
+
+    final trackSocialState = ref.watch(trackSocialProvider);
+    final socialData = trackSocialState.trackStates[track.id.toString()];
+    final isLiked = socialData?.isLiked ?? track.isLiked;
 
     return InkWell(
       onTap: onTap,
@@ -73,7 +76,7 @@ class TrackTile extends StatelessWidget {
                 children: [
                   // Full Title (Artist - Title)
                   Text(
-                    "${track.artist.username} - ${track.title}",
+                    "${track.artist.displayName ?? track.artist.username} - ${track.title}",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.titleMedium?.copyWith(
@@ -85,7 +88,7 @@ class TrackTile extends StatelessWidget {
 
                   // Artist Name Subtitle
                   Text(
-                    track.artist.username,
+                    track.artist.displayName ?? track.artist.username,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodyMedium?.copyWith(color: subtitleColor),
@@ -127,7 +130,15 @@ class TrackTile extends StatelessWidget {
 
                       // Interactive Like Heart
                       GestureDetector(
-                        onTap: onLikePressed,
+                        onTap: () => ref
+                            .read(trackSocialProvider.notifier)
+                            .toggleAction(
+                              track.id,
+                              SocialActionType.like,
+                              initialLikeCount: track.likeCount,
+                              initialRepostCount: track.repostCount,
+                              initialIsLiked: isLiked,
+                            ),
                         behavior: HitTestBehavior
                             .opaque, // Ensures the padding is clickable
                         child: Padding(

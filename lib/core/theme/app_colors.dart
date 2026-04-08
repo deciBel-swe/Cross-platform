@@ -66,6 +66,7 @@ class AppColors {
   /// Used for form validation errors and maximum limits
   static const Color errors = Colors.redAccent;
   static const Color transparent = Colors.transparent;
+  static const Color success = Colors.green;
 
   // ---- Text hierarchy ----
   static const Color textPrimary = Colors.white;
@@ -80,4 +81,5 @@ class AppColors {
   static const Color google = Color(0xFF4285F4);
   static const Color facebook = Color(0xFF1877F2);
   static const Color apple = Colors.white;
+  static const Color instagram = Colors.pink;
 }

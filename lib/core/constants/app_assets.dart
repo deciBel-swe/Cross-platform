@@ -27,11 +27,16 @@ class AppAssets {
       'assets/icon/desktop/app_icon_style6Black.ico';
   static const String style1Icon = 'assets/icon/app_Icon_style1.png';
   static const String style2Icon = 'assets/icon/app_Icon_style2.png';
-  static const String style3Icon = 'assets/icon/white_app_icon_trans_style3.png';
-  static const String style4Icon = 'assets/icon/white_app_icon_trans_style4.png';
-  static const String style5Icon = 'assets/icon/white_app_icon_trans_style5.png';
-  static const String style6WhiteIcon = 'assets/icon/white_app_icon_trans_style6.png';
-  static const String style6BlackIcon = 'assets/icon/black_app_icon_trans_style6.png';
+  static const String style3Icon =
+      'assets/icon/white_app_icon_trans_style3.png';
+  static const String style4Icon =
+      'assets/icon/white_app_icon_trans_style4.png';
+  static const String style5Icon =
+      'assets/icon/white_app_icon_trans_style5.png';
+  static const String style6WhiteIcon =
+      'assets/icon/white_app_icon_trans_style6.png';
+  static const String style6BlackIcon =
+      'assets/icon/black_app_icon_trans_style6.png';
 
   // ---- Start screen backgrounds (mobile) ----
   static const String startBg = 'assets/background/background_startscreen.png';

@@ -13,6 +13,7 @@ class UserProfileModel with _$UserProfileModel {
     @JsonKey(name: 'Role') required String role,
     required String email,
     required String username,
+    String? displayName,
     required bool emailVerified,
     required UserTier tier,
     @JsonKey(name: 'profile') required ProfileDetailsModel profileDetails,
@@ -91,6 +92,7 @@ extension UserProfileModelX on UserProfileModel {
       role: role,
       email: email,
       username: username,
+      displayName: displayName,
       emailVerified: emailVerified,
       tier: tier,
       profileDetails: profileDetails.toEntity(),
@@ -116,10 +118,7 @@ extension ProfileDetailsModelX on ProfileDetailsModel {
 
 extension PrivacySettingsModelX on PrivacySettingsModel {
   PrivacySettings toEntity() {
-    return PrivacySettings(
-      isPrivate: isPrivate,
-      showHistory: showHistory,
-    );
+    return PrivacySettings(isPrivate: isPrivate, showHistory: showHistory);
   }
 }
 
@@ -148,6 +147,7 @@ extension SocialLinksModelX on SocialLinksModel {
     );
   }
 }
+
 extension PublicProfileSocialLinksX on PublicProfileSocialLinks {
   SocialLinksModel toModel() {
     return SocialLinksModel(

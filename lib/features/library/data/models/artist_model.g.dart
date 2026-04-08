@@ -10,7 +10,14 @@ _$ArtistModelImpl _$$ArtistModelImplFromJson(Map<String, dynamic> json) =>
     _$ArtistModelImpl(
       id: (json['id'] as num).toInt(),
       username: json['username'] as String,
+      displayName: json['displayName'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
     );
 
 Map<String, dynamic> _$$ArtistModelImplToJson(_$ArtistModelImpl instance) =>
-    <String, dynamic>{'id': instance.id, 'username': instance.username};
+    <String, dynamic>{
+      'id': instance.id,
+      'username': instance.username,
+      'displayName': instance.displayName,
+      'avatarUrl': instance.avatarUrl,
+    };
