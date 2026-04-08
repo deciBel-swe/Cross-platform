@@ -14,7 +14,6 @@ class GenreConstants {
     'Drum & Bass',
     'Dubstep',
     'Electronic',
-    'Folk & Singer-Songwriter',
     'Hip-hop & Rap',
     'House',
   ];
