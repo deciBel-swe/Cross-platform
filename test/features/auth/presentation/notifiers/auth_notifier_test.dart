@@ -49,12 +49,12 @@ void main() {
     const tUser = AuthUser(id: 1, username: 'test_user', tier: UserTier.free);
 
     test(
-      'should initialize as AuthUnauthenticated when token is expired',
+      'should initialize as AuthUnauthenticated when there is no refresh token',
       () async {
         // Arrange
         when(
-          () => mockSecureStorageService.isAccessTokenExpired(),
-        ).thenAnswer((_) async => true);
+          () => mockSecureStorageService.getRefreshToken(),
+        ).thenAnswer((_) async => null);
 
         final state = await container.read(authStateProvider.future);
 
@@ -64,12 +64,12 @@ void main() {
     );
 
     test(
-      'should initialize as AuthUnauthenticated when token is not expired but getCurrentUser fails',
+      'should initialize as AuthUnauthenticated when there is a refresh token but getCurrentUser fails',
       () async {
         // Arrange
         when(
-          () => mockSecureStorageService.isAccessTokenExpired(),
-        ).thenAnswer((_) async => false);
+          () => mockSecureStorageService.getRefreshToken(),
+        ).thenAnswer((_) async => 'fake_token');
         when(
           () => mockAuthRepository.getCurrentUser(),
         ).thenAnswer((_) async => const Right(null));
@@ -82,12 +82,12 @@ void main() {
     );
 
     test(
-      'should initialize as AuthAuthenticated when token is valid and user is returned',
+      'should initialize as AuthAuthenticated when there is a refresh token and user is returned',
       () async {
         // Arrange
         when(
-          () => mockSecureStorageService.isAccessTokenExpired(),
-        ).thenAnswer((_) async => false);
+          () => mockSecureStorageService.getRefreshToken(),
+        ).thenAnswer((_) async => 'fake_token');
         when(
           () => mockAuthRepository.getCurrentUser(),
         ).thenAnswer((_) async => const Right(tUser));
@@ -109,8 +109,8 @@ void main() {
       () async {
         // Arrange
         when(
-          () => mockSecureStorageService.isAccessTokenExpired(),
-        ).thenAnswer((_) async => true); // Initial state
+          () => mockSecureStorageService.getRefreshToken(),
+        ).thenAnswer((_) async => null); // Initial state
         when(
           () => mockAuthRepository.loginWithGoogle(),
         ).thenAnswer((_) async => const Right(tUser));
@@ -148,8 +148,8 @@ void main() {
       () async {
         // Arrange
         when(
-          () => mockSecureStorageService.isAccessTokenExpired(),
-        ).thenAnswer((_) async => true); // Initial state
+          () => mockSecureStorageService.getRefreshToken(),
+        ).thenAnswer((_) async => null); // Initial state
         when(
           () => mockAuthRepository.loginWithGoogle(),
         ).thenAnswer((_) async => const Left(AuthFailure('Login failed')));
@@ -196,8 +196,8 @@ void main() {
       () async {
         // Arrange
         when(
-          () => mockSecureStorageService.isAccessTokenExpired(),
-        ).thenAnswer((_) async => true); // Initial state
+          () => mockSecureStorageService.getRefreshToken(),
+        ).thenAnswer((_) async => null); // Initial state
         when(
           () => mockAuthRepository.logout(),
         ).thenAnswer((_) async => const Right(unit));
@@ -220,8 +220,8 @@ void main() {
       () async {
         // Arrange
         when(
-          () => mockSecureStorageService.isAccessTokenExpired(),
-        ).thenAnswer((_) async => true); // Initial state
+          () => mockSecureStorageService.getRefreshToken(),
+        ).thenAnswer((_) async => null); // Initial state
         when(
           () => mockAuthRepository.logout(),
         ).thenAnswer((_) async => const Left(ServerFailure('Logout failed')));

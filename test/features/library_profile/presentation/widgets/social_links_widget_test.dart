@@ -13,19 +13,20 @@ class MockWebProfilesNotifier extends WebProfilesNotifier {
   PublicProfileSocialLinks build() => _initialState;
 }
 
-void main() {
-  Widget buildTestWidget(PublicProfileSocialLinks socialLinks) {
-    return ProviderScope(
-      overrides: [
-        webProfilesProvider.overrideWith(
-          () => MockWebProfilesNotifier(socialLinks),
-        ),
-      ],
-      child: MaterialApp(
-        home: Scaffold(body: SocialLinksWidget(socialLinks: socialLinks)),
+Widget buildTestWidget(PublicProfileSocialLinks socialLinks) {
+  return ProviderScope(
+    overrides: [
+      webProfilesProvider.overrideWith(
+        () => MockWebProfilesNotifier(socialLinks),
       ),
-    );
-  }
+    ],
+    child: MaterialApp(
+      home: Scaffold(body: SocialLinksWidget(socialLinks: socialLinks)),
+    ),
+  );
+}
+
+void main() {
 
   group('SocialLinksWidget', () {
     testWidgets('renders nothing when all links are null', (tester) async {
