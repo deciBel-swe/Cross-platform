@@ -30,54 +30,52 @@ class BottomBarWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          border: Border(
-            top: BorderSide(color: Colors.grey.shade200, width: 0.5),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        border: Border(
+          top: BorderSide(color: Colors.grey.shade200, width: 0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Expanded(
+            child: LikeButton(
+              trackId: trackId,
+              isLiked: isLiked,
+              likeCount: initialLikeCount,
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Expanded(
-              child: LikeButton(
-                trackId: trackId,
-                isLiked: isLiked,
-                likeCount: initialLikeCount,
-              ),
+          Expanded(
+            child: RepostButton(
+              trackId: trackId,
+              isReposted: isReposted,
+              repostCount: initialRepostCount,
             ),
-            Expanded(
-              child: RepostButton(
-                trackId: trackId,
-                isReposted: isReposted,
-                repostCount: initialRepostCount,
-              ),
+          ),
+          Expanded(
+            child: _buildTextIconButton(
+              icon: Icons.chat_bubble_outline,
+              text: _formatCount(commentCount),
+              onTap: onCommentPressed,
+              activeColor: Colors.white,
             ),
-            Expanded(
-              child: _buildTextIconButton(
-                icon: Icons.chat_bubble_outline,
-                text: _formatCount(commentCount),
-                onTap: onCommentPressed,
-                activeColor: Colors.white,
-              ),
+          ),
+          Expanded(
+            child: _buildSimpleIconButton(
+              icon: Icons.share_outlined,
+              onTap: onSharePressed,
             ),
-            Expanded(
-              child: _buildSimpleIconButton(
-                icon: Icons.share_outlined,
-                onTap: onSharePressed,
-              ),
+          ),
+          Expanded(
+            child: _buildSimpleIconButton(
+              icon: Icons.more_vert,
+              onTap: onMoreOptionsPressed,
             ),
-            Expanded(
-              child: _buildSimpleIconButton(
-                icon: Icons.more_vert,
-                onTap: onMoreOptionsPressed,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

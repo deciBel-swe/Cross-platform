@@ -25,6 +25,7 @@ class TrackCommentsBottomSheet extends ConsumerStatefulWidget {
     required Track track,
   }) {
     return showModalBottomSheet(
+      useSafeArea: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

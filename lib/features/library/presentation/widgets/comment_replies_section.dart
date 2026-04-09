@@ -63,6 +63,7 @@ class CommentRepliesSection extends ConsumerWidget {
         // 2. Expanded State: Show the list ONLY if there is data
         if (isExpanded && replies.isNotEmpty) ...[
           ListView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: replies.length,

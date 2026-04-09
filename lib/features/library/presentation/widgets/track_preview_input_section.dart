@@ -74,10 +74,6 @@ class _TrackPreviewInputSectionState
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Row(
                 children: [
-                  const Text(
-                    'Replying...',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
                   const Spacer(),
                   GestureDetector(
                     onTap: () {

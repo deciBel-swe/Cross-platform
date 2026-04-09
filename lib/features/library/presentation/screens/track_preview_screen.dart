@@ -22,7 +22,9 @@ class TrackPreviewScreen extends ConsumerWidget {
       body: previewAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => _ErrorView(error: error.toString()),
-        data: (data) => TrackPreviewContent(trackId: trackId, data: data),
+        data: (data) => SafeArea(
+          child: TrackPreviewContent(trackId: trackId, data: data),
+        ),
       ),
     );
   }
