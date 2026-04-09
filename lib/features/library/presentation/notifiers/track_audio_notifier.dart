@@ -13,6 +13,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<PlayerState>? _playerStateSubscription;
+  StreamSubscription<Duration?>? _durationSubscription;
+  StreamSubscription<PlaybackEvent>? _playbackEventSubscription;
 
   bool _isDisposed = false;
   bool _isStopping = false;
@@ -45,9 +47,13 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   Future<void> _disposeCurrentPlayer() async {
     await _positionSubscription?.cancel();
     await _playerStateSubscription?.cancel();
+    await _durationSubscription?.cancel();
+    await _playbackEventSubscription?.cancel();
 
     _positionSubscription = null;
     _playerStateSubscription = null;
+    _durationSubscription = null;
+    _playbackEventSubscription = null;
 
     try {
       await _player?.dispose();
@@ -78,13 +84,41 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         return;
       }
 
+      debugPrint(
+        '[AudioStream] State: ${event.playing ? "Playing" : "Paused"} | Processing: ${event.processingState}',
+      );
+
       state = state.copyWith(isPlaying: event.playing);
 
       if (event.processingState == ProcessingState.completed &&
           !state.isDragging) {
-        // Keep the existing behavior: auto-replay when playback completes.
         replay();
       }
+    }, onError: (_) {});
+
+    _durationSubscription = _audioPlayer.durationStream.listen((duration) {
+      if (_isDisposed || _isStopping || duration == null) {
+        return;
+      }
+
+      if (duration != state.duration) {
+        state = state.copyWith(
+          duration: duration,
+          progress: _calculateProgress(
+            position: state.position,
+            duration: duration,
+          ),
+        );
+      }
+    }, onError: (_) {});
+
+    _playbackEventSubscription = _audioPlayer.playbackEventStream.listen((
+      event,
+    ) {
+      if (_isDisposed) return;
+      debugPrint(
+        '[AudioStream] Buffer Status | Buffered: ${event.bufferedPosition} | Total: ${state.duration}',
+      );
     }, onError: (_) {});
   }
 
@@ -112,6 +146,10 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     state = state.copyWith(isPreparing: true, duration: duration);
 
     try {
+      debugPrint(
+        '[AudioStream] Initializing source: $trackUrl (Network Streaming Active)',
+      );
+
       await _prepareInternal(
         trackId: trackId,
         trackUrl: trackUrl,
@@ -402,7 +440,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
     final uri = Uri.tryParse(normalizedSource);
     if (uri != null && uri.hasScheme) {
-      return _audioPlayer.setUrl(normalizedSource);
+      debugPrint('[AudioStream] Source is Network URL. Using preload: false.');
+      return _audioPlayer.setUrl(normalizedSource, preload: false);
     }
     return _audioPlayer.setFilePath(normalizedSource);
   }
