@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui; // Needed for toByteData
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:croppy/croppy.dart' as cp;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -114,7 +115,22 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
         } else {
           state = AsyncError(failure.message, StackTrace.current);
         }
-      }, (success) => ref.invalidate(userProfileProvider));
+      }, (success) {
+        // Evict the old cached image so CachedNetworkImage fetches fresh
+        // from the server on the next rebuild instead of showing stale cache.
+        final currentProfile = ref.read(userProfileProvider).value;
+        if (currentProfile != null) {
+          currentProfile.fold((_) {}, (profile) {
+            final oldUrl = isProfile
+                ? profile.profileDetails.profilePic
+                : profile.profileDetails.coverPic;
+            if (oldUrl != null) {
+              CachedNetworkImage.evictFromCache(oldUrl);
+            }
+          });
+        }
+        ref.invalidate(userProfileProvider);
+      });
     } catch (e) {
       state = AsyncError("Failed to process image: $e", StackTrace.current);
     }

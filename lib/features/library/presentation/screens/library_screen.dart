@@ -26,6 +26,7 @@ class LibraryScreen extends ConsumerWidget {
           ? null
           : AppBar(
               backgroundColor: AppColors.background,
+              scrolledUnderElevation: 0,
               title: const Text(
                 'Library',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -71,30 +72,10 @@ class _LibraryTab extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       children: [
         _NavigationRow(
-          title: 'Your likes',
-          onTap: () {}, // TODO: Implement Route
-        ),
-        _NavigationRow(
           title: 'Playlists',
           onTap: () {
             context.push(RoutePaths.playlists);
           },
-        ),
-        _NavigationRow(
-          title: 'Albums',
-          onTap: () {}, // TODO: Implement Route
-        ),
-        _NavigationRow(
-          title: 'Following',
-          onTap: () {}, // TODO: Implement Route
-        ),
-        _NavigationRow(
-          title: 'Stations',
-          onTap: () {}, // TODO: Implement Route
-        ),
-        _NavigationRow(
-          title: 'Your insights',
-          onTap: () {}, // TODO: Implement Route
         ),
         _NavigationRow(
           title: 'Following',

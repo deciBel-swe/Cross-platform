@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
 
 /// A square card displaying track artwork, title, and artist.
 ///
@@ -15,12 +16,16 @@ class TrackCard extends StatefulWidget {
     super.key,
     required this.title,
     required this.artist,
+    this.imageUrl,
     this.gradientColors,
     this.onTap,
   });
 
   final String title;
   final String artist;
+
+  /// Optional cover art URL for the track.
+  final String? imageUrl;
 
   /// Optional custom gradient for the artwork placeholder.
   final List<Color>? gradientColors;
@@ -51,7 +56,11 @@ class _TrackCardState extends State<TrackCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ---- Artwork ----
-              _Artwork(isHovered: _isHovered, gradientColors: colors),
+              _Artwork(
+                isHovered: _isHovered,
+                gradientColors: colors,
+                imageUrl: widget.imageUrl,
+              ),
               const SizedBox(height: AppDimensions.paddingSm),
               // ---- Title ----
               Text(
@@ -78,10 +87,15 @@ class _TrackCardState extends State<TrackCard> {
 
 /// Square artwork placeholder with gradient and play overlay on hover.
 class _Artwork extends StatelessWidget {
-  const _Artwork({required this.isHovered, required this.gradientColors});
+  const _Artwork({
+    required this.isHovered,
+    required this.gradientColors,
+    this.imageUrl,
+  });
 
   final bool isHovered;
   final List<Color> gradientColors;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -93,19 +107,16 @@ class _Artwork extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Gradient background
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: gradientColors,
-                ),
-              ),
-              child: const Center(
-                child: Icon(Icons.music_note, color: Colors.white24, size: 48),
-              ),
-            ),
+            // Image or gradient background
+            if (imageUrl != null && imageUrl!.isNotEmpty)
+              DecibelCachedImage(
+                imageUrl: imageUrl!,
+                fit: BoxFit.cover,
+                placeholder: _buildGradientPlaceholder(),
+                errorWidget: _buildGradientPlaceholder(),
+              )
+            else
+              _buildGradientPlaceholder(),
 
             // Hover overlay with play button
             AnimatedOpacity(
@@ -128,6 +139,21 @@ class _Artwork extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildGradientPlaceholder() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: gradientColors,
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.music_note, color: Colors.white24, size: 48),
       ),
     );
   }

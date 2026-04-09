@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -87,7 +88,7 @@ class _PlaylistTrackTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           image: track.coverUrl != null
               ? DecorationImage(
-                  image: NetworkImage(track.coverUrl!),
+                  image: CachedNetworkImageProvider(track.coverUrl!),
                   fit: BoxFit.cover,
                 )
               : null,

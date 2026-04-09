@@ -16,7 +16,6 @@ import '../../features/engagement/presentation/screens/follow_connections_screen
 import '../../features/engagement/presentation/screens/liked_tracks_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/library/presentation/screens/following_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/track_edit_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
@@ -183,7 +182,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'following',
-                    builder: (context, state) => const FollowingScreen(),
+                    builder: (context, state) {
+                      final authState = ref.read(authStateProvider).valueOrNull;
+                      final userId = authState is AuthAuthenticated
+                          ? authState.user.id
+                          : 0;
+                      return FollowConnectionsScreen(
+                        userId: userId,
+                        type: FollowConnectionsType.following,
+                      );
+                    },
                   ),
                   GoRoute(
                     path: 'uploads',

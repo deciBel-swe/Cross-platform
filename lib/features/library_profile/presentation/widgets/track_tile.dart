@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/domain/models/track_action_data.dart';
 import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../library/domain/entities/track.dart';
@@ -54,15 +55,15 @@ class TrackTile extends ConsumerWidget {
                 height: 72,
                 color: AppColors.surface, // Placeholder background
                 child: track.coverUrl != null && track.coverUrl!.isNotEmpty
-                    ? Image.network(
-                        track.coverUrl!,
+                    ? DecibelCachedImage(
+                        imageUrl: track.coverUrl!,
+                        width: 72,
+                        height: 72,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildPlaceholderIcon(),
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return _buildPlaceholderIcon();
-                        },
+                        placeholderIcon: Icons.music_note_rounded,
+                        errorIcon: Icons.music_note_rounded,
+                        iconSize: 32,
+                        iconColor: Colors.grey,
                       )
                     : _buildPlaceholderIcon(),
               ),

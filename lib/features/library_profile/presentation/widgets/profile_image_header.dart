@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../domain/entities/user_profile.dart';
 import '../utils/profile_image_path_utils.dart';
 
@@ -69,11 +70,12 @@ class ProfileImageHeader extends StatelessWidget {
     FilterQuality filterQuality = FilterQuality.low,
   }) {
     if (ProfileImagePathUtils.isRemote(imagePath)) {
-      return Image.network(
-        imagePath,
+      return DecibelCachedImage(
+        imageUrl: imagePath,
         fit: fit,
         filterQuality: filterQuality,
-        errorBuilder: (context, error, stackTrace) => fallback,
+        errorWidget: fallback,
+        placeholder: fallback,
       );
     }
 

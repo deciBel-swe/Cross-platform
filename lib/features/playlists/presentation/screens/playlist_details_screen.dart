@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
 import '../providers/playlist_details_provider.dart';
@@ -325,7 +327,7 @@ class _TrackTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           image: track.coverUrl != null
               ? DecorationImage(
-                  image: NetworkImage(track.coverUrl!),
+                  image: CachedNetworkImageProvider(track.coverUrl!),
                   fit: BoxFit.cover,
                 )
               : null,
@@ -408,8 +410,8 @@ class _MosaicCover extends StatelessWidget {
         ),
         itemCount: 4,
         itemBuilder: (context, index) {
-          return Image.network(
-            tracksWithCovers[index].coverUrl!,
+          return DecibelCachedImage(
+            imageUrl: tracksWithCovers[index].coverUrl!,
             fit: BoxFit.cover,
           );
         },
@@ -418,7 +420,7 @@ class _MosaicCover extends StatelessWidget {
 
     // If we have at least 1, just show the first one taking up the whole space
     if (tracksWithCovers.isNotEmpty) {
-      return Image.network(tracksWithCovers.first.coverUrl!, fit: BoxFit.cover);
+      return DecibelCachedImage(imageUrl: tracksWithCovers.first.coverUrl!, fit: BoxFit.cover);
     }
 
     // fallback if no tracks have covers
