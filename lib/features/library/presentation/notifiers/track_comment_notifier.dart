@@ -29,14 +29,13 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     _trackId = trackId;
     _repository = ref.read(commentRepositoryProvider);
 
-    Future.microtask(() => loadComments());
-
+    Future.delayed(Duration.zero, () => loadComments());
     return const TrackCommentsState(
       comments: [],
       isSubmitting: false,
       selectedTimestampSeconds: null,
       isLoadingComments: false,
-      isLoadingReplies: false,
+      loadingReplyIds: const {},
       repliesByCommentId: {},
       expandedCommentIds: {},
       deletingCommentId: null,
@@ -50,10 +49,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     state = state.copyWith(selectedTimestampSeconds: seconds);
   }
 
-  /// Fetches comments for the current track from the repository.
-  ///
-  /// Supports pagination using [page] and [size].
-  /// Updates the state with sorted comments (oldest → newest).
+  /// Fetches comments and treats everything from the API as a top-level comment.
   Future<void> loadComments({bool loadMore = false, int size = 20}) async {
     if (state.isLoadingComments || (loadMore && state.isLastCommentsPage)) {
       return;
@@ -73,10 +69,20 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
         state = state.copyWith(isLoadingComments: false);
       },
       (paginatedComments) {
+        final topLevelComments = paginatedComments.content.where((c) {
+          if (c.timestampSeconds == null) {
+            return false;
+          }
+          if (c.replyToCommentId != null && c.replyToCommentId != 0) {
+            return false;
+          }
+          return true;
+        }).toList();
+
         final Map<int, Comment> mergedMap = {
           if (loadMore)
             for (var c in state.comments) c.commentid: c,
-          for (var c in paginatedComments.content) c.commentid: c,
+          for (var c in topLevelComments) c.commentid: c,
         };
 
         final mergedList = mergedMap.values.toList();
@@ -96,8 +102,18 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
   ///
   /// Stores replies in [repliesByCommentId] and marks the comment as expanded
   /// so the UI can display them.
+  /// Fetches replies for a specific comment.
+
   Future<void> loadReplies(int commentId, {int page = 0, int size = 5}) async {
-    state = state.copyWith(isLoadingReplies: true);
+    final loadingExpandedIds = Set<int>.from(state.expandedCommentIds)
+      ..add(commentId);
+    final currentLoadingIds = Set<int>.from(state.loadingReplyIds)
+      ..add(commentId);
+
+    state = state.copyWith(
+      loadingReplyIds: currentLoadingIds,
+      expandedCommentIds: loadingExpandedIds,
+    );
 
     final result = await _repository.getReplies(
       commentId: commentId,
@@ -107,7 +123,15 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
 
     result.fold(
       (failure) {
-        state = state.copyWith(isLoadingReplies: false);
+        final rollbackExpandedIds = Set<int>.from(state.expandedCommentIds)
+          ..remove(commentId);
+        final stopLoadingIds = Set<int>.from(state.loadingReplyIds)
+          ..remove(commentId);
+
+        state = state.copyWith(
+          loadingReplyIds: stopLoadingIds,
+          expandedCommentIds: rollbackExpandedIds,
+        );
       },
       (paginatedReplies) {
         final updatedRepliesMap = Map<int, PaginatedReplies>.from(
@@ -133,13 +157,12 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
           );
         }
 
-        final updatedExpandedIds = Set<int>.from(state.expandedCommentIds)
-          ..add(commentId);
+        final stopLoadingIds = Set<int>.from(state.loadingReplyIds)
+          ..remove(commentId);
 
         state = state.copyWith(
           repliesByCommentId: updatedRepliesMap,
-          expandedCommentIds: updatedExpandedIds,
-          isLoadingReplies: false,
+          loadingReplyIds: stopLoadingIds,
         );
       },
     );
@@ -318,10 +341,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
   /// Sets the state to "Reply Mode" for a specific comment.
   /// Prepares the @username string to be shown in the input field.
   void setReplyingTo(Comment comment) {
-    state = state.copyWith(
-      activeReplyCommentId: comment.commentid,
-      replyPrefillText: '@${comment.user.username} ',
-    );
+    state = state.copyWith(activeReplyCommentId: comment.commentid);
 
     // Automatically expand the replies section so the user sees the thread context
     loadReplies(comment.commentid);
@@ -336,7 +356,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
       selectedTimestampSeconds: state.selectedTimestampSeconds,
       isSubmitting: state.isSubmitting,
       isLoadingComments: state.isLoadingComments,
-      isLoadingReplies: state.isLoadingReplies,
+      loadingReplyIds: state.loadingReplyIds,
       repliesByCommentId: state.repliesByCommentId,
       expandedCommentIds: state.expandedCommentIds,
       deletingCommentId: state.deletingCommentId,

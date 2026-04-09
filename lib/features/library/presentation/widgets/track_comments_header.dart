@@ -8,7 +8,7 @@ class TrackCommentsHeader extends ConsumerWidget {
   const TrackCommentsHeader({
     super.key,
     required this.commentCount,
-    required this.trackId, // Ensure you pass trackId from TrackCommentsBottomSheet
+    required this.trackId,
   });
 
   final int commentCount;

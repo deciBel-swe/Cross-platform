@@ -7,11 +7,7 @@ import '../../../library_profile/presentation/widgets/pro_badge.dart';
 import '../../domain/entities/following_user.dart';
 
 class FollowingUserTile extends StatelessWidget {
-  const FollowingUserTile({
-    required this.user,
-    required this.onTap,
-    super.key,
-  });
+  const FollowingUserTile({required this.user, required this.onTap, super.key});
 
   final FollowingUser user;
   final VoidCallback onTap;
@@ -36,8 +32,8 @@ class FollowingUserTile extends StatelessWidget {
                 backgroundColor: AppColors.surfaceVariant,
                 backgroundImage:
                     user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                        ? NetworkImage(user.avatarUrl!)
-                        : null,
+                    ? NetworkImage(user.avatarUrl!)
+                    : null,
                 child: user.avatarUrl == null || user.avatarUrl!.isEmpty
                     ? const Icon(
                         Icons.person,
@@ -102,8 +98,7 @@ class FollowingUserTile extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceVariant,
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.radiusXl),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
                 ),
                 child: Text(
                   'Following',
