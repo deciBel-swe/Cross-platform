@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/decibel_cached_image.dart';
+
 class CommentReactionBar extends StatelessWidget {
   const CommentReactionBar({
     super.key,
@@ -137,16 +139,14 @@ class _UserAvatar extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: imageUrl != null && imageUrl!.trim().isNotEmpty
-          ? Image.network(
-              imageUrl!,
+          ? DecibelCachedImage(
+              imageUrl: imageUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.person,
-                  size: 20,
-                  color: Colors.white54,
-                );
-              },
+              errorWidget: const Icon(
+                Icons.person,
+                size: 20,
+                color: Colors.white54,
+              ),
             )
           : const Icon(Icons.person, size: 20, color: Colors.white54),
     );

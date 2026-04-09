@@ -8,6 +8,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../library_profile/presentation/widgets/pro_badge.dart';
 import '../../domain/entities/paginated_engagers.dart';
 import '../../domain/entities/track_engager.dart';
 import '../providers/follow_connections_provider.dart';
@@ -43,13 +44,9 @@ class FollowConnectionsScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
+        scrolledUnderElevation: 0,
         title: Text(
           primaryTitle[0].toUpperCase() + primaryTitle.substring(1),
-          style: const TextStyle(color: AppColors.onPrimary),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
-          onPressed: () => context.pop(),
         ),
       ),
       body: RefreshIndicator(
@@ -63,6 +60,7 @@ class FollowConnectionsScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppConstants.spacingRegular),
           children: [
+
             _Section(
               title: primaryTitle,
               data: primaryAsync,
@@ -226,12 +224,24 @@ class _ConnectionTile extends ConsumerWidget {
             child: GestureDetector(
               onTap: openProfile,
               behavior: HitTestBehavior.opaque,
-              child: Text(
-                user.username,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.onPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      user.username,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppColors.onPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (user.tier.toUpperCase() == 'PRO') ...[
+                    const SizedBox(width: AppConstants.spacingTiny),
+                    const ProBadge(),
+                  ],
+                ],
               ),
             ),
           ),

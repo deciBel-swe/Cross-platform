@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -31,7 +32,7 @@ class BlockedUserTile extends StatelessWidget {
               backgroundColor: AppColors.surfaceVariant,
               backgroundImage:
                   user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                      ? NetworkImage(user.avatarUrl!)
+                      ? CachedNetworkImageProvider(user.avatarUrl!)
                       : null,
               child: user.avatarUrl == null || user.avatarUrl!.isEmpty
                   ? const Icon(

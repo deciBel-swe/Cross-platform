@@ -171,4 +171,35 @@ class MockFollowRepository implements FollowRepository {
       ),
     );
   }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getFriends({
+    int page = 0,
+    int size = 20,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+
+    // Simulate mutual friends (users who both follow you and you follow back)
+    final users = List<TrackEngager>.generate(3, (index) {
+      final id = 9000 + index + 1;
+      return TrackEngager(
+        id: id,
+        username: 'mutual_friend_$id',
+        avatarUrl: null,
+        tier: 'PRO',
+        isFollowing: true,
+      );
+    });
+
+    return Right(
+      PaginatedEngagers(
+        content: users,
+        pageNumber: 0,
+        pageSize: size,
+        totalElements: 3,
+        totalPages: 1,
+        isLast: true,
+      ),
+    );
+  }
 }
