@@ -2,10 +2,17 @@ import '../../../library/domain/entities/track.dart';
 
 /// Represents the user who created the playlist.
 class PlaylistOwner {
-  const PlaylistOwner({required this.id, required this.username});
+  const PlaylistOwner({
+    required this.id,
+    required this.username,
+    this.displayName,
+    this.avatarUrl,
+  });
 
   final int id;
   final String username;
+  final String? displayName;
+  final String? avatarUrl;
 }
 
 /// The core entity representing a saved Playlist.

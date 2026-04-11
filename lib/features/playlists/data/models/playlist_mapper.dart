@@ -3,7 +3,12 @@ import '../../domain/entities/playlist.dart';
 import 'playlist_model.dart';
 
 extension OwnerModelX on OwnerModel {
-  PlaylistOwner toEntity() => PlaylistOwner(id: id, username: username);
+  PlaylistOwner toEntity() => PlaylistOwner(
+        id: id,
+        username: username,
+        displayName: displayName,
+        avatarUrl: avatarUrl,
+      );
 }
 
 extension PlaylistModelX on PlaylistModel {

@@ -7,8 +7,12 @@ part 'playlist_model.g.dart';
 
 @freezed
 class OwnerModel with _$OwnerModel {
-  const factory OwnerModel({required int id, required String username}) =
-      _OwnerModel;
+  const factory OwnerModel({
+    @JsonKey(name: 'userId') required int id,
+    required String username,
+    String? displayName,
+    String? avatarUrl,
+  }) = _OwnerModel;
 
   factory OwnerModel.fromJson(Map<String, dynamic> json) =>
       _$OwnerModelFromJson(json);
@@ -51,9 +55,11 @@ class PlaylistModel with _$PlaylistModel {
     required String type,
     @Default(false) bool isPrivate,
     @Default(false) bool isLiked,
-    @JsonKey(name: 'CoverArt') String? coverArt,
+    @JsonKey(name: 'coverArtUrl') String? coverArt,
     OwnerModel? owner,
     @PlaylistTracksConverter() @Default([]) List<TrackModel> tracks,
+    @Default(0) int totalDurationSeconds,
+    @Default(0) int trackCount,
   }) = _PlaylistModel;
 
   factory PlaylistModel.fromJson(Map<String, dynamic> json) =>

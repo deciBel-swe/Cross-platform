@@ -21,8 +21,11 @@ OwnerModel _$OwnerModelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$OwnerModel {
+  @JsonKey(name: 'userId')
   int get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
+  String? get displayName => throw _privateConstructorUsedError;
+  String? get avatarUrl => throw _privateConstructorUsedError;
 
   /// Serializes this OwnerModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -41,7 +44,12 @@ abstract class $OwnerModelCopyWith<$Res> {
     $Res Function(OwnerModel) then,
   ) = _$OwnerModelCopyWithImpl<$Res, OwnerModel>;
   @useResult
-  $Res call({int id, String username});
+  $Res call({
+    @JsonKey(name: 'userId') int id,
+    String username,
+    String? displayName,
+    String? avatarUrl,
+  });
 }
 
 /// @nodoc
@@ -58,7 +66,12 @@ class _$OwnerModelCopyWithImpl<$Res, $Val extends OwnerModel>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? id = null, Object? username = null}) {
+  $Res call({
+    Object? id = null,
+    Object? username = null,
+    Object? displayName = freezed,
+    Object? avatarUrl = freezed,
+  }) {
     return _then(
       _value.copyWith(
             id: null == id
@@ -69,6 +82,14 @@ class _$OwnerModelCopyWithImpl<$Res, $Val extends OwnerModel>
                 ? _value.username
                 : username // ignore: cast_nullable_to_non_nullable
                       as String,
+            displayName: freezed == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            avatarUrl: freezed == avatarUrl
+                ? _value.avatarUrl
+                : avatarUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -84,7 +105,12 @@ abstract class _$$OwnerModelImplCopyWith<$Res>
   ) = __$$OwnerModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int id, String username});
+  $Res call({
+    @JsonKey(name: 'userId') int id,
+    String username,
+    String? displayName,
+    String? avatarUrl,
+  });
 }
 
 /// @nodoc
@@ -100,7 +126,12 @@ class __$$OwnerModelImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? id = null, Object? username = null}) {
+  $Res call({
+    Object? id = null,
+    Object? username = null,
+    Object? displayName = freezed,
+    Object? avatarUrl = freezed,
+  }) {
     return _then(
       _$OwnerModelImpl(
         id: null == id
@@ -111,6 +142,14 @@ class __$$OwnerModelImplCopyWithImpl<$Res>
             ? _value.username
             : username // ignore: cast_nullable_to_non_nullable
                   as String,
+        displayName: freezed == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        avatarUrl: freezed == avatarUrl
+            ? _value.avatarUrl
+            : avatarUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -119,19 +158,29 @@ class __$$OwnerModelImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$OwnerModelImpl implements _OwnerModel {
-  const _$OwnerModelImpl({required this.id, required this.username});
+  const _$OwnerModelImpl({
+    @JsonKey(name: 'userId') required this.id,
+    required this.username,
+    this.displayName,
+    this.avatarUrl,
+  });
 
   factory _$OwnerModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$OwnerModelImplFromJson(json);
 
   @override
+  @JsonKey(name: 'userId')
   final int id;
   @override
   final String username;
+  @override
+  final String? displayName;
+  @override
+  final String? avatarUrl;
 
   @override
   String toString() {
-    return 'OwnerModel(id: $id, username: $username)';
+    return 'OwnerModel(id: $id, username: $username, displayName: $displayName, avatarUrl: $avatarUrl)';
   }
 
   @override
@@ -141,12 +190,17 @@ class _$OwnerModelImpl implements _OwnerModel {
             other is _$OwnerModelImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.username, username) ||
-                other.username == username));
+                other.username == username) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
+            (identical(other.avatarUrl, avatarUrl) ||
+                other.avatarUrl == avatarUrl));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, id, username);
+  int get hashCode =>
+      Object.hash(runtimeType, id, username, displayName, avatarUrl);
 
   /// Create a copy of OwnerModel
   /// with the given fields replaced by the non-null parameter values.
@@ -164,17 +218,24 @@ class _$OwnerModelImpl implements _OwnerModel {
 
 abstract class _OwnerModel implements OwnerModel {
   const factory _OwnerModel({
-    required final int id,
+    @JsonKey(name: 'userId') required final int id,
     required final String username,
+    final String? displayName,
+    final String? avatarUrl,
   }) = _$OwnerModelImpl;
 
   factory _OwnerModel.fromJson(Map<String, dynamic> json) =
       _$OwnerModelImpl.fromJson;
 
   @override
+  @JsonKey(name: 'userId')
   int get id;
   @override
   String get username;
+  @override
+  String? get displayName;
+  @override
+  String? get avatarUrl;
 
   /// Create a copy of OwnerModel
   /// with the given fields replaced by the non-null parameter values.
@@ -196,11 +257,13 @@ mixin _$PlaylistModel {
   String get type => throw _privateConstructorUsedError;
   bool get isPrivate => throw _privateConstructorUsedError;
   bool get isLiked => throw _privateConstructorUsedError;
-  @JsonKey(name: 'CoverArt')
+  @JsonKey(name: 'coverArtUrl')
   String? get coverArt => throw _privateConstructorUsedError;
   OwnerModel? get owner => throw _privateConstructorUsedError;
   @PlaylistTracksConverter()
   List<TrackModel> get tracks => throw _privateConstructorUsedError;
+  int get totalDurationSeconds => throw _privateConstructorUsedError;
+  int get trackCount => throw _privateConstructorUsedError;
 
   /// Serializes this PlaylistModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -226,9 +289,11 @@ abstract class $PlaylistModelCopyWith<$Res> {
     String type,
     bool isPrivate,
     bool isLiked,
-    @JsonKey(name: 'CoverArt') String? coverArt,
+    @JsonKey(name: 'coverArtUrl') String? coverArt,
     OwnerModel? owner,
     @PlaylistTracksConverter() List<TrackModel> tracks,
+    int totalDurationSeconds,
+    int trackCount,
   });
 
   $OwnerModelCopyWith<$Res>? get owner;
@@ -258,6 +323,8 @@ class _$PlaylistModelCopyWithImpl<$Res, $Val extends PlaylistModel>
     Object? coverArt = freezed,
     Object? owner = freezed,
     Object? tracks = null,
+    Object? totalDurationSeconds = null,
+    Object? trackCount = null,
   }) {
     return _then(
       _value.copyWith(
@@ -297,6 +364,14 @@ class _$PlaylistModelCopyWithImpl<$Res, $Val extends PlaylistModel>
                 ? _value.tracks
                 : tracks // ignore: cast_nullable_to_non_nullable
                       as List<TrackModel>,
+            totalDurationSeconds: null == totalDurationSeconds
+                ? _value.totalDurationSeconds
+                : totalDurationSeconds // ignore: cast_nullable_to_non_nullable
+                      as int,
+            trackCount: null == trackCount
+                ? _value.trackCount
+                : trackCount // ignore: cast_nullable_to_non_nullable
+                      as int,
           )
           as $Val,
     );
@@ -333,9 +408,11 @@ abstract class _$$PlaylistModelImplCopyWith<$Res>
     String type,
     bool isPrivate,
     bool isLiked,
-    @JsonKey(name: 'CoverArt') String? coverArt,
+    @JsonKey(name: 'coverArtUrl') String? coverArt,
     OwnerModel? owner,
     @PlaylistTracksConverter() List<TrackModel> tracks,
+    int totalDurationSeconds,
+    int trackCount,
   });
 
   @override
@@ -365,6 +442,8 @@ class __$$PlaylistModelImplCopyWithImpl<$Res>
     Object? coverArt = freezed,
     Object? owner = freezed,
     Object? tracks = null,
+    Object? totalDurationSeconds = null,
+    Object? trackCount = null,
   }) {
     return _then(
       _$PlaylistModelImpl(
@@ -404,6 +483,14 @@ class __$$PlaylistModelImplCopyWithImpl<$Res>
             ? _value._tracks
             : tracks // ignore: cast_nullable_to_non_nullable
                   as List<TrackModel>,
+        totalDurationSeconds: null == totalDurationSeconds
+            ? _value.totalDurationSeconds
+            : totalDurationSeconds // ignore: cast_nullable_to_non_nullable
+                  as int,
+        trackCount: null == trackCount
+            ? _value.trackCount
+            : trackCount // ignore: cast_nullable_to_non_nullable
+                  as int,
       ),
     );
   }
@@ -419,9 +506,11 @@ class _$PlaylistModelImpl implements _PlaylistModel {
     required this.type,
     this.isPrivate = false,
     this.isLiked = false,
-    @JsonKey(name: 'CoverArt') this.coverArt,
+    @JsonKey(name: 'coverArtUrl') this.coverArt,
     this.owner,
     @PlaylistTracksConverter() final List<TrackModel> tracks = const [],
+    this.totalDurationSeconds = 0,
+    this.trackCount = 0,
   }) : _tracks = tracks;
 
   factory _$PlaylistModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -442,7 +531,7 @@ class _$PlaylistModelImpl implements _PlaylistModel {
   @JsonKey()
   final bool isLiked;
   @override
-  @JsonKey(name: 'CoverArt')
+  @JsonKey(name: 'coverArtUrl')
   final String? coverArt;
   @override
   final OwnerModel? owner;
@@ -457,8 +546,15 @@ class _$PlaylistModelImpl implements _PlaylistModel {
   }
 
   @override
+  @JsonKey()
+  final int totalDurationSeconds;
+  @override
+  @JsonKey()
+  final int trackCount;
+
+  @override
   String toString() {
-    return 'PlaylistModel(id: $id, title: $title, description: $description, type: $type, isPrivate: $isPrivate, isLiked: $isLiked, coverArt: $coverArt, owner: $owner, tracks: $tracks)';
+    return 'PlaylistModel(id: $id, title: $title, description: $description, type: $type, isPrivate: $isPrivate, isLiked: $isLiked, coverArt: $coverArt, owner: $owner, tracks: $tracks, totalDurationSeconds: $totalDurationSeconds, trackCount: $trackCount)';
   }
 
   @override
@@ -477,7 +573,11 @@ class _$PlaylistModelImpl implements _PlaylistModel {
             (identical(other.coverArt, coverArt) ||
                 other.coverArt == coverArt) &&
             (identical(other.owner, owner) || other.owner == owner) &&
-            const DeepCollectionEquality().equals(other._tracks, _tracks));
+            const DeepCollectionEquality().equals(other._tracks, _tracks) &&
+            (identical(other.totalDurationSeconds, totalDurationSeconds) ||
+                other.totalDurationSeconds == totalDurationSeconds) &&
+            (identical(other.trackCount, trackCount) ||
+                other.trackCount == trackCount));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -493,6 +593,8 @@ class _$PlaylistModelImpl implements _PlaylistModel {
     coverArt,
     owner,
     const DeepCollectionEquality().hash(_tracks),
+    totalDurationSeconds,
+    trackCount,
   );
 
   /// Create a copy of PlaylistModel
@@ -517,9 +619,11 @@ abstract class _PlaylistModel implements PlaylistModel {
     required final String type,
     final bool isPrivate,
     final bool isLiked,
-    @JsonKey(name: 'CoverArt') final String? coverArt,
+    @JsonKey(name: 'coverArtUrl') final String? coverArt,
     final OwnerModel? owner,
     @PlaylistTracksConverter() final List<TrackModel> tracks,
+    final int totalDurationSeconds,
+    final int trackCount,
   }) = _$PlaylistModelImpl;
 
   factory _PlaylistModel.fromJson(Map<String, dynamic> json) =
@@ -538,13 +642,17 @@ abstract class _PlaylistModel implements PlaylistModel {
   @override
   bool get isLiked;
   @override
-  @JsonKey(name: 'CoverArt')
+  @JsonKey(name: 'coverArtUrl')
   String? get coverArt;
   @override
   OwnerModel? get owner;
   @override
   @PlaylistTracksConverter()
   List<TrackModel> get tracks;
+  @override
+  int get totalDurationSeconds;
+  @override
+  int get trackCount;
 
   /// Create a copy of PlaylistModel
   /// with the given fields replaced by the non-null parameter values.
