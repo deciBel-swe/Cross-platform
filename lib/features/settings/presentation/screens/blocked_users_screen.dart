@@ -233,7 +233,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
 
                 return InkWell(
                   onTap: () {
-                    context.push(RoutePaths.publicProfile(user.id));
+                    context.push(RoutePaths.publicProfile(user.id.toString()));
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(

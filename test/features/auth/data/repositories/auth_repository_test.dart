@@ -7,6 +7,7 @@ import 'package:decibel/features/auth/data/datasources/auth_remote_data_source.d
 import 'package:decibel/features/auth/data/models/auth_user_model.dart';
 import 'package:decibel/features/auth/data/models/device_info_model.dart';
 import 'package:decibel/features/auth/data/models/login_response_model.dart';
+import 'package:decibel/features/auth/data/models/refresh_token_response_model.dart';
 import 'package:decibel/features/auth/data/repositories/auth_repository.dart';
 import 'package:decibel/features/auth/domain/entities/auth_user.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,6 +65,12 @@ void main() {
       ),
     );
 
+    const tRefreshTokenResponseModel = RefreshTokenResponseModel(
+      accessToken: 'new_access_token',
+      expiresIn: 3600,
+      refreshToken: 'new_refresh_token',
+    );
+
     test(
       'getCurrentUser should return null if access token is expired and no refresh token',
       () async {
@@ -103,10 +110,17 @@ void main() {
             refreshToken: 'refresh_token',
             accessToken: 'old_access_token',
           ),
-        ).thenAnswer((_) async => tLoginResponseModel);
+        ).thenAnswer((_) async => tRefreshTokenResponseModel);
         when(
-          () => mockSecureStorageService.saveTokenPair(tLoginResponseModel),
+          () => mockSecureStorageService.saveRefreshTokens(
+            accessToken: 'new_access_token',
+            refreshToken: 'new_refresh_token',
+            expiresIn: 3600,
+          ),
         ).thenAnswer((_) async => {});
+        when(
+          () => mockSecureStorageService.getUser(),
+        ).thenAnswer((_) async => tLoginResponseModel.user);
 
         // Act
         final result = await repository.getCurrentUser();

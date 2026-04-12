@@ -20,6 +20,7 @@ import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/track_edit_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
 import '../../features/library/presentation/screens/uploads_library_screen.dart';
+import '../../features/library_profile/presentation/providers/track_repository_provider.dart';
 import '../../features/library_profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/fullscreen_image_screen.dart';
 import '../../features/library_profile/presentation/screens/profile_screen.dart';
@@ -328,24 +329,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
               GoRoute(
-                path: '${RoutePaths.publicProfileBase}/:userId',
+                path: '${RoutePaths.publicProfileBase}/:userIdentifier',
                 redirect: (context, state) {
-                  final raw = state.pathParameters['userId'];
-                  final userId = int.tryParse(raw ?? '');
-                  if (userId == null) {
+                  final userIdentifier = state.pathParameters['userIdentifier']
+                      ?.trim();
+                  if (userIdentifier == null || userIdentifier.isEmpty) {
                     return RoutePaths.home;
                   }
                   return null;
                 },
                 builder: (context, state) {
-                  final userId = int.parse(state.pathParameters['userId']!);
-                  return PublicProfileScreen(userId: userId);
+                  final userIdentifier =
+                      state.pathParameters['userIdentifier']!;
+                  return PublicProfileScreen(userIdentifier: userIdentifier);
                 },
                 routes: [
                   GoRoute(
                     path: 'followers',
+                    redirect: (context, state) {
+                      final raw = state.pathParameters['userIdentifier'];
+                      final userId = int.tryParse(raw ?? '');
+                      if (userId == null) {
+                        return RoutePaths.home;
+                      }
+                      return null;
+                    },
                     builder: (context, state) {
-                      final userId = int.parse(state.pathParameters['userId']!);
+                      final userId = int.parse(
+                        state.pathParameters['userIdentifier']!,
+                      );
                       return FollowConnectionsScreen(
                         userId: userId,
                         type: FollowConnectionsType.followers,
@@ -354,8 +366,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'following',
+                    redirect: (context, state) {
+                      final raw = state.pathParameters['userIdentifier'];
+                      final userId = int.tryParse(raw ?? '');
+                      if (userId == null) {
+                        return RoutePaths.home;
+                      }
+                      return null;
+                    },
                     builder: (context, state) {
-                      final userId = int.parse(state.pathParameters['userId']!);
+                      final userId = int.parse(
+                        state.pathParameters['userIdentifier']!,
+                      );
                       return FollowConnectionsScreen(
                         userId: userId,
                         type: FollowConnectionsType.following,
@@ -383,6 +405,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             child: FullscreenImagePage(imagePath: imagePath),
           );
         },
+      ),
+      GoRoute(
+        path: '/:username/:trackIdentifier',
+        redirect: (context, state) async {
+          final username = state.pathParameters['username']?.trim();
+          final trackIdentifier = state.pathParameters['trackIdentifier']
+              ?.trim();
+
+          if (username == null ||
+              username.isEmpty ||
+              RoutePaths.isReservedDeepLinkSegment(username)) {
+            return RoutePaths.home;
+          }
+
+          if (trackIdentifier == null || trackIdentifier.isEmpty) {
+            return RoutePaths.home;
+          }
+
+          try {
+            final trackRepository = ref.read(trackRepositoryProvider);
+            final resolvedTrackIdEither = await trackRepository
+                .resolveTrackIdentifier(trackIdentifier);
+
+            return resolvedTrackIdEither.fold(
+              (_) => RoutePaths.home,
+              RoutePaths.trackPreview,
+            );
+          } catch (_) {
+            return RoutePaths.home;
+          }
+        },
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/:username',
+        redirect: (context, state) {
+          final username = state.pathParameters['username']?.trim();
+
+          if (username == null ||
+              username.isEmpty ||
+              RoutePaths.isReservedDeepLinkSegment(username)) {
+            return RoutePaths.home;
+          }
+
+          return RoutePaths.publicProfile(username);
+        },
+        builder: (context, state) => const SplashScreen(),
       ),
     ],
   );

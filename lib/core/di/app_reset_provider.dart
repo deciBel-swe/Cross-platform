@@ -1,4 +1,3 @@
-import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,7 +40,9 @@ class AppResetNotifier extends Notifier<Key> {
     await GetIt.instance.reset();
 
     // 4. Re-initialize DI
-    debugPrint('[AppResetNotifier] Re-initializing DI (useMockServices: $_useMockServices)...');
+    debugPrint(
+      '[AppResetNotifier] Re-initializing DI (useMockServices: $_useMockServices)...',
+    );
     configureDependencies(useMockServices: _useMockServices);
 
     // 5. Trigger Riverpod Reset (Destroys the keyed ProviderScope)

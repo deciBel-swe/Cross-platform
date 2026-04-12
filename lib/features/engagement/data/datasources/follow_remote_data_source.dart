@@ -13,10 +13,15 @@ import '../models/paginated_engagers_model.dart';
 /// Handles fetching public profiles and toggling the follow relationship
 /// between the current user and another user.
 abstract class IFollowRemoteDataSource {
-  /// Fetches a public profile for the given [userId].
+  /// Fetches a public profile for the given [userIdentifier].
   ///
-  /// Calls `GET /users/{userId}` and returns a [PublicProfileModel].
-  Future<PublicProfileModel> getPublicProfile(int userId);
+  /// Supports both numeric ids and usernames through the unified
+  /// [ApiConstants.publicProfile] endpoint helper:
+  /// - Numeric identifier -> `GET /users/{id}`
+  /// - Username identifier -> `GET /users/username/{username}`
+  ///
+  /// Returns a normalized [PublicProfileModel].
+  Future<PublicProfileModel> getPublicProfile(String userIdentifier);
 
   /// Follows the user identified by [userId].
   ///
@@ -68,11 +73,12 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
   final DioClient _dioClient;
 
   @override
-  Future<PublicProfileModel> getPublicProfile(int userId) async {
+  Future<PublicProfileModel> getPublicProfile(String userIdentifier) async {
     try {
-      final response = await _dioClient.get<dynamic>(
-        ApiConstants.publicProfile(userId),
-      );
+      final trimmedIdentifier = userIdentifier.trim();
+      final endpoint = ApiConstants.publicProfile(trimmedIdentifier);
+
+      final response = await _dioClient.get<dynamic>(endpoint);
 
       final data = response.data as Map<String, dynamic>?;
       if (data == null) {

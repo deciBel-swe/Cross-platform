@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/paginated_tracks_model.dart';
 import '../models/track_model.dart';
@@ -96,6 +97,45 @@ class LibraryRemoteDatasource {
       }
       return _fetchTrackByIdFallbackFromUserTracks(id);
     }
+  }
+
+  Future<int> resolveTrackIdentifier(String trackIdentifier) async {
+    final trimmed = trackIdentifier.trim();
+    if (trimmed.isEmpty) {
+      throw Exception('Track identifier is empty');
+    }
+
+    final parsedId = int.tryParse(trimmed);
+    if (parsedId != null) {
+      return parsedId;
+    }
+
+    final encodedSlug = Uri.encodeComponent(trimmed);
+    final response = await _dioClient.get<Map<String, dynamic>>(
+      ApiConstants.resolveTrackBySlug(encodedSlug),
+    );
+
+    final payload = response.data;
+    if (payload == null) {
+      throw Exception('Empty track resolve response');
+    }
+
+    final body = payload['data'] is Map<String, dynamic>
+        ? payload['data'] as Map<String, dynamic>
+        : payload;
+
+    final rawId = body['id'];
+    final resolvedId = switch (rawId) {
+      int value => value,
+      String value => int.tryParse(value),
+      _ => null,
+    };
+
+    if (resolvedId == null) {
+      throw Exception('Invalid track resolve response payload');
+    }
+
+    return resolvedId;
   }
 
   Future<TrackModel> updateTrackMetadata({
