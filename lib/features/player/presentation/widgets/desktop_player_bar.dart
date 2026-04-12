@@ -3,13 +3,16 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/router/route_paths.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
+import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
-import '../../../library_profile/presentation/providers/uploads_provider.dart';
 
 /// Desktop player bar rendered at the bottom of the desktop layout.
 class DesktopPlayerBar extends ConsumerWidget {
@@ -19,10 +22,7 @@ class DesktopPlayerBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final audioState = ref.watch(trackAudioProvider);
     final audioNotifier = ref.read(trackAudioProvider.notifier);
-    final track = _resolveCurrentTrack(
-      tracks: ref.watch(uploadsProvider).valueOrNull,
-      trackId: audioState.preparedTrackId,
-    );
+    final track = audioState.currentTrack;
 
     final displayedProgress = audioState.isDragging
         ? (audioState.dragProgress ?? audioState.progress)
@@ -42,13 +42,20 @@ class DesktopPlayerBar extends ConsumerWidget {
         children: [
           Expanded(
             flex: 3,
-            child: _TrackInfo(
-              title: track?.title ?? 'No track playing',
-              artist:
-                  track?.artist.username ??
-                  (audioState.isPrepared
-                      ? 'Selected track'
-                      : 'Select a track to start listening'),
+            child: GestureDetector(
+              onTap: track != null
+                  ? () => context.push(RoutePaths.trackPreview(track.id))
+                  : null,
+              behavior: HitTestBehavior.opaque,
+              child: MouseRegion(
+                cursor: track != null
+                    ? SystemMouseCursors.click
+                    : SystemMouseCursors.basic,
+                child: _TrackInfo(
+                  track: track,
+                  isPrepared: audioState.isPrepared,
+                ),
+              ),
             ),
           ),
           Expanded(
@@ -81,46 +88,46 @@ class DesktopPlayerBar extends ConsumerWidget {
   }
 }
 
-Track? _resolveCurrentTrack({
-  required List<Track>? tracks,
-  required int? trackId,
-}) {
-  if (tracks == null || trackId == null) {
-    return null;
-  }
-
-  for (final track in tracks) {
-    if (track.id == trackId) {
-      return track;
-    }
-  }
-
-  return null;
-}
-
 class _TrackInfo extends StatelessWidget {
-  const _TrackInfo({required this.title, required this.artist});
+  const _TrackInfo({this.track, required this.isPrepared});
 
-  final String title;
-  final String artist;
+  final Track? track;
+  final bool isPrepared;
 
   @override
   Widget build(BuildContext context) {
+    final title = track?.title ?? 'No track playing';
+    final artist =
+        track?.artist.displayName ??
+        track?.artist.username ??
+        (isPrepared
+            ? 'Selected track'
+            : 'Select a track to start listening');
+    final coverUrl = track?.coverUrl;
+
     return Row(
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
+        if (coverUrl != null && coverUrl.isNotEmpty)
+          DecibelCachedImage(
+            imageUrl: coverUrl,
+            width: 48,
+            height: 48,
             borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primaryDark, AppColors.primary],
+          )
+        else
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.primaryDark, AppColors.primary],
+              ),
             ),
+            child: const Icon(Icons.music_note, color: Colors.white70, size: 24),
           ),
-          child: const Icon(Icons.music_note, color: Colors.white70, size: 24),
-        ),
         const SizedBox(width: AppDimensions.paddingSm),
         Flexible(
           child: Column(
@@ -144,11 +151,19 @@ class _TrackInfo extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppDimensions.paddingSm),
-        const Icon(
-          Icons.favorite_border,
-          color: AppColors.textSecondary,
-          size: 20,
-        ),
+        if (track != null)
+          LikeButton(
+            trackId: track!.id,
+            isLiked: track!.isLiked,
+            likeCount: track!.likeCount,
+            iconSize: 20,
+          )
+        else
+          const Icon(
+            Icons.favorite_border,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
       ],
     );
   }

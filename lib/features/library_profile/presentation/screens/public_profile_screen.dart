@@ -17,6 +17,7 @@ import '../../../settings/presentation/providers/blocked_users_provider.dart';
 import '../../domain/entities/public_profile.dart';
 import '../providers/block_provider.dart';
 import '../providers/public_profile_provider.dart';
+import '../providers/track_audio_provider.dart';
 import '../widgets/expandable_bio.dart';
 import '../widgets/social_links_widget.dart';
 import '../widgets/spotlight_section.dart';
@@ -777,7 +778,7 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _PublicTrackCollectionSection extends StatelessWidget {
+class _PublicTrackCollectionSection extends ConsumerWidget {
   const _PublicTrackCollectionSection({
     required this.tracksAsync,
     required this.emptyLabel,
@@ -789,7 +790,7 @@ class _PublicTrackCollectionSection extends StatelessWidget {
   final String errorLabel;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return tracksAsync.when(
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: AppConstants.spacingMedium),
@@ -829,7 +830,11 @@ class _PublicTrackCollectionSection extends StatelessWidget {
             final track = tracks[index];
             return TrackTile(
               track: track,
-              onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+              onTap: () => ref.read(trackAudioProvider.notifier).initializeForTrack(
+                    trackId: track.id,
+                    trackUrl: track.trackUrl ?? '',
+                    track: track,
+                  ),
             );
           },
         );
