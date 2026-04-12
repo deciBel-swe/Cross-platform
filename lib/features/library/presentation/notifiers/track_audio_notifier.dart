@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../domain/entities/track.dart';
@@ -220,7 +221,11 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       dragPosition: null,
     );
 
-    final loadedDuration = await _setSource(trackUrl);
+    final loadedDuration = await _setSource(
+      trackId: trackId,
+      urlOrPath: trackUrl,
+      track: track,
+    );
 
     if (_isDisposed) return;
 
@@ -412,7 +417,11 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       if (_isDisposed) return;
       _createPlayer();
 
-      await _setSource(preparedurl);
+      await _setSource(
+        trackId: state.preparedTrackId!,
+        urlOrPath: preparedurl,
+        track: state.currentTrack,
+      );
       _listenToPlayer();
       await _audioPlayer.seek(Duration.zero);
       if (_isDisposed) return;
@@ -441,18 +450,58 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     await play();
   }
 
-  Future<Duration?> _setSource(String urlOrPath) async {
+  Future<Duration?> _setSource({
+    required int trackId,
+    required String urlOrPath,
+    Track? track,
+  }) async {
     final normalizedSource = urlOrPath.trim();
     if (normalizedSource.isEmpty) {
       // Fail fast for invalid audio source values.
       throw const FormatException('Track source is empty');
     }
 
+    final mediaItem = _buildMediaItem(
+      trackId: trackId,
+      urlOrPath: normalizedSource,
+      track: track,
+    );
+
     final uri = Uri.tryParse(normalizedSource);
     if (uri != null && uri.hasScheme) {
       debugPrint('[AudioStream] Source is Network URL. Using preload: false.');
-      return _audioPlayer.setUrl(normalizedSource, preload: false);
+      return _audioPlayer.setAudioSource(
+        AudioSource.uri(uri, tag: mediaItem),
+        preload: false,
+      );
     }
-    return _audioPlayer.setFilePath(normalizedSource);
+
+    return _audioPlayer.setAudioSource(
+      AudioSource.uri(Uri.file(normalizedSource), tag: mediaItem),
+      preload: false,
+    );
+  }
+
+  MediaItem _buildMediaItem({
+    required int trackId,
+    required String urlOrPath,
+    Track? track,
+  }) {
+    final title = track?.title.trim();
+    final artistName = track?.artist.displayName ?? track?.artist.username;
+    final coverUrl = track?.coverUrl?.trim();
+
+    return MediaItem(
+      id: trackId.toString(),
+      title: (title == null || title.isEmpty) ? 'Unknown track' : title,
+      artist: (artistName == null || artistName.isEmpty)
+          ? 'Unknown artist'
+          : artistName,
+      album: 'Decibel',
+      artUri: (coverUrl != null && coverUrl.isNotEmpty)
+          ? Uri.tryParse(coverUrl)
+          : null,
+      extras: <String, dynamic>{'source': urlOrPath},
+    );
   }
 }
