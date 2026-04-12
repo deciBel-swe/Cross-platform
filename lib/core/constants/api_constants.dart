@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConstants {
@@ -23,6 +24,13 @@ class ApiConstants {
       return _defaultBaseUrl;
     }
     return envBaseUrl;
+  }
+
+  static void validate() {
+    // Trigger getters that use _requiredEnv to catch missing keys early
+    _requiredEnv('GOOGLE_MOBILE_CLIENT_ID');
+    // Add other critical keys here
+    debugPrint("✅ Environment variables validated.");
   }
 
   /// Endpoint for patching the current user's profile

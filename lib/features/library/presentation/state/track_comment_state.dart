@@ -9,7 +9,7 @@ class TrackCommentsState {
     this.selectedTimestampSeconds,
     this.isSubmitting = false,
     this.isLoadingComments = false,
-    this.isLoadingReplies = false,
+    this.loadingReplyIds = const {},
     this.repliesByCommentId = const {},
     this.expandedCommentIds = const {},
     this.deletingCommentId,
@@ -24,7 +24,7 @@ class TrackCommentsState {
   final int? selectedTimestampSeconds;
   final bool isSubmitting;
   final bool isLoadingComments;
-  final bool isLoadingReplies;
+  final Set<int> loadingReplyIds;
   final Map<int, PaginatedReplies> repliesByCommentId;
   final Set<int> expandedCommentIds;
   final int? deletingCommentId;
@@ -39,7 +39,7 @@ class TrackCommentsState {
     int? selectedTimestampSeconds,
     bool? isSubmitting,
     bool? isLoadingComments,
-    bool? isLoadingReplies,
+    Set<int>? loadingReplyIds,
     Map<int, PaginatedReplies>? repliesByCommentId,
     Set<int>? expandedCommentIds,
     int? deletingCommentId,
@@ -47,7 +47,6 @@ class TrackCommentsState {
     int? currentCommentsPage,
     bool? isLastCommentsPage,
     int? activeReplyCommentId,
-    String? replyPrefillText,
   }) {
     return TrackCommentsState(
       comments: comments ?? this.comments,
@@ -55,7 +54,7 @@ class TrackCommentsState {
           selectedTimestampSeconds ?? this.selectedTimestampSeconds,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       isLoadingComments: isLoadingComments ?? this.isLoadingComments,
-      isLoadingReplies: isLoadingReplies ?? this.isLoadingReplies,
+      loadingReplyIds: loadingReplyIds ?? this.loadingReplyIds,
       repliesByCommentId: repliesByCommentId ?? this.repliesByCommentId,
       expandedCommentIds: expandedCommentIds ?? this.expandedCommentIds,
       deletingCommentId: deletingCommentId ?? this.deletingCommentId,
@@ -63,7 +62,6 @@ class TrackCommentsState {
       currentCommentsPage: currentCommentsPage ?? this.currentCommentsPage,
       isLastCommentsPage: isLastCommentsPage ?? this.isLastCommentsPage,
       activeReplyCommentId: activeReplyCommentId ?? this.activeReplyCommentId,
-      replyPrefillText: replyPrefillText ?? this.replyPrefillText,
     );
   }
 }
