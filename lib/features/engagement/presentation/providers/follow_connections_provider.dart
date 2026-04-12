@@ -32,3 +32,15 @@ final suggestedUsersProvider = FutureProvider.autoDispose<PaginatedEngagers>((
     (data) => data,
   );
 });
+
+final friendsProvider = FutureProvider.autoDispose<PaginatedEngagers>((
+  ref,
+) async {
+  final repository = ref.read(followRepositoryProvider);
+  final result = await repository.getFriends();
+
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (data) => data,
+  );
+});

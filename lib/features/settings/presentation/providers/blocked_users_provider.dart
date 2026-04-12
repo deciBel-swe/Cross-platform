@@ -7,7 +7,7 @@ import '../../domain/entities/blocked_user.dart';
 import '../../domain/repositories/blocked_users_repository.dart';
 
 final blockedUsersRepositoryProvider = Provider<BlockedUsersRepository>((ref) {
-  final useMock = dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
+  final useMock = dotenv.isInitialized && dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
 
   if (useMock) {
     return BlockedUsersMockRepository();
@@ -60,15 +60,14 @@ class BlockedUsersState {
   }
 }
 
-class BlockedUsersNotifier extends Notifier<BlockedUsersState> {
+class BlockedUsersListNotifier extends Notifier<BlockedUsersState> {
   static const int _pageSize = 20;
 
-  late final BlockedUsersRepository _repository;
+  BlockedUsersRepository get _repository =>
+      ref.read(blockedUsersRepositoryProvider);
 
   @override
   BlockedUsersState build() {
-    _repository = ref.read(blockedUsersRepositoryProvider);
-    Future.microtask(loadInitial);
     return const BlockedUsersState();
   }
 
@@ -98,7 +97,7 @@ class BlockedUsersNotifier extends Notifier<BlockedUsersState> {
         currentPage: result.pageNumber,
         hasReachedEnd: result.isLast,
       );
-    } catch (e) {
+    } catch (_) {
       state = state.copyWith(
         isLoading: false,
         hasError: true,
@@ -134,7 +133,7 @@ class BlockedUsersNotifier extends Notifier<BlockedUsersState> {
         currentPage: result.pageNumber,
         hasReachedEnd: result.isLast,
       );
-    } catch (e) {
+    } catch (_) {
       state = state.copyWith(
         isLoadingMore: false,
         hasError: true,
@@ -161,7 +160,7 @@ class BlockedUsersNotifier extends Notifier<BlockedUsersState> {
       );
 
       return true;
-    } catch (e) {
+    } catch (_) {
       state = state.copyWith(
         isProcessing: false,
         hasError: true,
@@ -177,7 +176,7 @@ class BlockedUsersNotifier extends Notifier<BlockedUsersState> {
   }
 }
 
-final blockedUsersProvider =
-    NotifierProvider<BlockedUsersNotifier, BlockedUsersState>(
-  BlockedUsersNotifier.new,
+final blockedUsersListProvider =
+    NotifierProvider<BlockedUsersListNotifier, BlockedUsersState>(
+  BlockedUsersListNotifier.new,
 );

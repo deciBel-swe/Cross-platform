@@ -49,6 +49,12 @@ abstract class IFollowRemoteDataSource {
     required int page,
     required int size,
   });
+
+  /// Fetches paginated mutual followers (friends) for current user.
+  Future<PaginatedEngagersModel> getFriends({
+    required int page,
+    required int size,
+  });
 }
 
 /// Concrete implementation of [IFollowRemoteDataSource] using [DioClient].
@@ -163,6 +169,18 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     required int size,
   }) async {
     return _fetchSuggestedUsers(limit: size);
+  }
+
+  @override
+  Future<PaginatedEngagersModel> getFriends({
+    required int page,
+    required int size,
+  }) async {
+    return _fetchPaginatedUsers(
+      path: '/users/me/friends',
+      page: page,
+      size: size,
+    );
   }
 
   Future<PaginatedEngagersModel> _fetchSuggestedUsers({
@@ -354,6 +372,14 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         ) ??
         false;
 
+    final isBlocked =
+        _asBool(
+          payload['isBlocked'] ??
+              relationship['isBlocked'] ??
+              profile['isBlocked'],
+        ) ??
+        false;
+
     return <String, dynamic>{
       'id': _asInt(profile['id']) ?? 0,
       'username': (profile['username'] ?? '').toString(),
@@ -376,6 +402,7 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
       },
       'isFollowing': isFollowing,
       'isFollowedBy': isFollowedBy,
+      'isBlocked': isBlocked,
     };
   }
 

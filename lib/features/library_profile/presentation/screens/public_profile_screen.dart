@@ -13,25 +13,18 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/widgets/follow_button.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../settings/presentation/providers/blocked_users_provider.dart';
 import '../../domain/entities/public_profile.dart';
+import '../providers/block_provider.dart';
 import '../providers/public_profile_provider.dart';
 import '../widgets/expandable_bio.dart';
 import '../widgets/social_links_widget.dart';
 import '../widgets/spotlight_section.dart';
 import '../widgets/track_tile.dart';
 
-/// Screen that displays another user's public profile.
-///
-/// Fetches data from `GET /users/{userId}` via [publicProfileProvider] and
-/// shows the user's bio, stats, social links, and top tracks. Includes a
-/// [FollowButton] that is hidden when viewing the logged-in user's own
-/// profile.
-///
-/// Navigated to via `context.push(RoutePaths.publicProfile(userId))`.
 class PublicProfileScreen extends ConsumerStatefulWidget {
   const PublicProfileScreen({super.key, required this.userId});
 
-  /// The ID of the user whose public profile to display.
   final int userId;
 
   @override
@@ -67,7 +60,6 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     }
   }
 
-  /// Shows/hides the app bar title based on scroll position.
   void _onScroll() {
     if (_scrollController.offset > AppConstants.appBarFadeScrollOffset &&
         !_showAppBarTitle) {
@@ -76,6 +68,100 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             AppConstants.appBarFadeScrollOffset &&
         _showAppBarTitle) {
       setState(() => _showAppBarTitle = false);
+    }
+  }
+
+  Future<bool> _showConfirmDialog(BuildContext context, bool isBlocked) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            backgroundColor: const Color(0xFF2B2B2B),
+            title: Text(
+              isBlocked ? 'Unblock user?' : 'Block user?',
+              style: const TextStyle(color: Colors.white),
+            ),
+            content: Text(
+              isBlocked
+                  ? "They will now be able to follow and interact with you and your content. We won't let them know that you have unblocked them."
+                  : 'This user will no longer be able to follow or interact with you, and you will not see notifications from them.',
+              style: const TextStyle(color: Colors.white70, height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text(
+                  'CANCEL',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(
+                  isBlocked ? 'UNBLOCK' : 'BLOCK',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _handleModerationAction(
+    BuildContext context,
+    PublicProfile? profile,
+    bool isBlocked,
+  ) async {
+    if (profile == null) {
+      return;
+    }
+
+    final confirmed = await _showConfirmDialog(context, isBlocked);
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    final notifier = ref.read(blockedUsersProvider.notifier);
+
+    try {
+      if (isBlocked) {
+        await notifier.unblock(profile.id);
+        return;
+      }
+
+      await notifier.block(
+        profile.id,
+        username: profile.username,
+        avatarUrl: profile.profile?.avatarUrl,
+      );
+
+      ref.read(followStateProvider(profile.id).notifier).forceState(false);
+      ref.read(followBackHintProvider(profile.id).notifier).state = false;
+      ref.invalidate(blockedUsersListProvider);
+
+      if (context.mounted && context.canPop()) {
+        context.pop();
+      }
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+
+      final cleanMessage = error.toString().replaceFirst('Exception: ', '');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isBlocked
+                ? 'Failed to unblock user: $cleanMessage'
+                : 'Failed to block user: $cleanMessage',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
@@ -89,10 +175,30 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(publicProfileProvider(widget.userId));
+    final blockedUserIds = ref.watch(blockedUsersProvider);
+    final isBlocked = blockedUserIds.contains(widget.userId);
+
+    ref.listen<Set<int>>(blockedUsersProvider, (previous, next) {
+      final previousSet = previous ?? <int>{};
+      final nextSet = next;
+
+      final wasBlocked = previousSet.contains(widget.userId);
+      final isNowBlocked = nextSet.contains(widget.userId);
+
+      if (!wasBlocked && isNowBlocked) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User blocked successfully.')),
+        );
+      } else if (wasBlocked && !isNowBlocked) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User unblocked successfully.')),
+        );
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _buildAppBar(context, profileAsync),
+      appBar: _buildAppBar(context, profileAsync, isBlocked),
       body: profileAsync.when(
         loading: () {
           return const Center(child: CircularProgressIndicator());
@@ -107,15 +213,10 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // App Bar
-  // ---------------------------------------------------------------------------
-
-  /// Builds the app bar with a back button and an animated title
-  /// that fades in when the user scrolls past the profile header.
   PreferredSizeWidget _buildAppBar(
     BuildContext context,
     AsyncValue<PublicProfile> profileAsync,
+    bool isBlocked,
   ) {
     final username = profileAsync.valueOrNull?.username ?? '';
 
@@ -146,20 +247,43 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       actions: [
         IconButton(
           icon: const Icon(Icons.share_outlined, color: AppColors.onPrimary),
-          onPressed: () {
-            // TODO: share profile action
+          onPressed: () {},
+        ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: AppColors.onPrimary),
+          color: AppColors.surface,
+          onSelected: (_) {
+            _handleModerationAction(
+              context,
+              profileAsync.valueOrNull,
+              isBlocked,
+            );
           },
+          itemBuilder: (context) => [
+            PopupMenuItem<String>(
+              value: isBlocked ? 'unblock' : 'block',
+              child: Row(
+                children: [
+                  Icon(
+                    isBlocked
+                        ? Icons.remove_circle_outline
+                        : Icons.block_outlined,
+                    color: AppColors.onPrimary,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    isBlocked ? 'Unblock' : 'Block',
+                    style: const TextStyle(color: AppColors.onPrimary),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Profile Body
-  // ---------------------------------------------------------------------------
-
-  /// Builds the scrollable profile body: cover photo, avatar, header,
-  /// follow button, bio, stats, social links, and top tracks.
   Widget _buildProfileBody(BuildContext context, PublicProfile profile) {
     return RefreshIndicator(
       onRefresh: () async => ref
@@ -170,7 +294,6 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
-            // Cover photo + avatar stack
             Stack(
               clipBehavior: Clip.none,
               children: [
@@ -235,11 +358,6 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Error View
-  // ---------------------------------------------------------------------------
-
-  /// Displays a full-screen error state with a retry button.
   Widget _buildErrorView(BuildContext context, Object error) {
     return Center(
       child: Padding(
@@ -279,19 +397,6 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   ref.invalidate(publicProfileProvider(widget.userId)),
               icon: const Icon(Icons.refresh_rounded),
               label: const Text(AppConstants.tryAgain),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.surface,
-                foregroundColor: AppColors.onPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spacingExtraLarge,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    AppConstants.buttonRadius,
-                  ),
-                ),
-              ),
             ),
           ],
         ),
@@ -300,11 +405,6 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   }
 }
 
-// =============================================================================
-// Private Widgets
-// =============================================================================
-
-/// Displays the profile cover photo or a dark placeholder.
 class _CoverPhoto extends StatelessWidget {
   const _CoverPhoto({this.imageUrl});
 
@@ -342,7 +442,6 @@ class _CoverPhoto extends StatelessWidget {
   }
 }
 
-/// Circular avatar with a border ring.
 class _Avatar extends StatelessWidget {
   const _Avatar({this.imageUrl});
 
@@ -376,7 +475,6 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-/// Username, bio, location, and follower/following counts.
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.userId,
@@ -412,8 +510,6 @@ class _ProfileHeader extends StatelessWidget {
         final followAsync = ref.watch(followStateProvider(userId));
         final isFollowing = followAsync.valueOrNull ?? snapshot.isFollowing;
 
-        // Avoid double counting: once snapshot is available, trust backend count.
-        // Apply local delta only while still showing the initial profile fallback.
         final shouldApplyLocalDelta = snapshotAsync.valueOrNull == null;
         final followerDelta = shouldApplyLocalDelta
             ? (isFollowing != profile.isFollowing ? (isFollowing ? 1 : -1) : 0)
@@ -460,20 +556,23 @@ class _ProfileHeaderContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Username
         Text(
-          profile.username,
+          profile.displayName ?? profile.username,
           style: textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: AppColors.onPrimary,
           ),
         ),
-        // Bio
+        Text(
+          '@${profile.username}',
+          style: textTheme.bodyLarge?.copyWith(
+            color: AppColors.onPrimary.withValues(alpha: 0.6),
+          ),
+        ),
         if (bio.isNotEmpty) ...[
           const SizedBox(height: AppConstants.spacingSmall),
           ExpandableBio(bio: bio),
         ],
-        // Location
         if (location.isNotEmpty) ...[
           const SizedBox(height: AppConstants.spacingSmall),
           Text(
@@ -482,7 +581,6 @@ class _ProfileHeaderContent extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppConstants.spacingSmall),
-        // Stats row
         Row(
           children: [
             _StatChip(
@@ -513,7 +611,6 @@ class _ProfileHeaderContent extends StatelessWidget {
   }
 }
 
-/// Displays a single stat as "123 followers".
 class _StatChip extends StatelessWidget {
   const _StatChip({
     required this.count,
@@ -548,10 +645,6 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-/// Row containing the [FollowButton] and social links.
-///
-/// Hides the follow button when the profile belongs to the currently
-/// logged-in user.
 class _ActionRow extends ConsumerWidget {
   const _ActionRow({required this.userId, required this.profile});
 
@@ -567,16 +660,102 @@ class _ActionRow extends ConsumerWidget {
     final followBackHint = ref.watch(followBackHintProvider(userId));
     final isFollowedBy = profile.isFollowedBy || followBackHint;
 
+    final isBlocked = ref.watch(blockedUsersProvider).contains(userId);
+
     return Row(
       children: [
         if (!isOwnProfile) ...[
-          FollowButton(userId: userId, isFollowedBy: isFollowedBy),
+          if (isBlocked)
+            _UnblockButton(userId: userId)
+          else
+            FollowButton(userId: userId, isFollowedBy: isFollowedBy),
           const SizedBox(width: AppConstants.spacingSmall),
         ],
         if (profile.socialLinks != null)
           SocialLinksWidget(socialLinks: profile.socialLinks!),
         const Spacer(),
       ],
+    );
+  }
+}
+
+class _UnblockButton extends ConsumerStatefulWidget {
+  const _UnblockButton({required this.userId});
+
+  final int userId;
+
+  @override
+  ConsumerState<_UnblockButton> createState() => _UnblockButtonState();
+}
+
+class _UnblockButtonState extends ConsumerState<_UnblockButton> {
+  bool _isHovering = false;
+  bool _isPressed = false;
+  bool _isLoading = false;
+
+  Future<void> _handleUnblock() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(blockedUsersProvider.notifier).unblock(widget.userId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to unblock: ${e.toString().replaceAll('Exception: ', '')}',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = (_isHovering || _isPressed)
+        ? Colors.red.withValues(alpha: 0.15)
+        : AppColors.transparent;
+    const foregroundColor = Colors.redAccent;
+    const borderColor = Colors.redAccent;
+
+    return GestureDetector(
+      onTap: _isLoading ? null : _handleUnblock,
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovering = true),
+        onExit: (_) => setState(() => _isHovering = false),
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            border: Border.all(color: borderColor, width: 1.2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          alignment: Alignment.center,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.redAccent,
+                  ),
+                )
+              : const Text(
+                  'Unblock',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: foregroundColor,
+                  ),
+                ),
+        ),
+      ),
     );
   }
 }

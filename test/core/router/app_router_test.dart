@@ -42,6 +42,9 @@ class MockAuthNotifier extends AsyncNotifier<AuthState>
 
   @override
   Future<void> logout() async {}
+
+  @override
+  Future<void> refreshUser() async {}
 }
 
 /// App wrapper to test the router with a mocked state

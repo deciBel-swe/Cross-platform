@@ -9,19 +9,24 @@ class PublicProfile {
   const PublicProfile({
     required this.id,
     required this.username,
+    this.displayName,
     required this.tier,
     this.profile,
     this.socialLinks,
     required this.stats,
     required this.isFollowing,
     required this.isFollowedBy,
+    required this.isBlocked,
   });
 
   /// Unique user identifier.
   final int id;
 
-  /// Display name of the user.
+  /// Display name or unique identifer of the user.
   final String username;
+
+  /// Display name of the user.
+  final String? displayName;
 
   /// Subscription tier (e.g. `'FREE'`, `'PRO'`).
   final String tier;
@@ -40,6 +45,9 @@ class PublicProfile {
 
   /// Whether this user follows the current logged-in user.
   final bool isFollowedBy;
+
+  /// Whether the current logged-in user has blocked this user.
+  final bool isBlocked;
 }
 
 /// Profile details shown on a public profile page.

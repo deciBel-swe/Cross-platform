@@ -138,4 +138,21 @@ class FollowRepositoryImpl implements FollowRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getFriends({
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      final model = await _remoteDataSource.getFriends(page: page, size: size);
+      return Right(model.toEntity());
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

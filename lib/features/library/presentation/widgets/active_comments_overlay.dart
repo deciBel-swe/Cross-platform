@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,7 +47,7 @@ class ActiveCommentsOverlay extends ConsumerWidget {
             backgroundImage:
                 comment.user.avatarUrl != null &&
                     comment.user.avatarUrl!.isNotEmpty
-                ? NetworkImage(comment.user.avatarUrl!)
+                ? CachedNetworkImageProvider(comment.user.avatarUrl!)
                 : null,
             child:
                 (comment.user.avatarUrl == null ||

@@ -49,7 +49,7 @@ class SocialSettingsRepositoryImpl implements SocialSettingsRepository {
   Future<void> updateSocialSettings(SocialSettings settings) async {
     try {
       // Attempt to save to the cloud
-      await _api.put<void>(
+      await _api.patch<void>(
         ApiConstants.userProfilePrivacy,
         data: settings.toJson(),
       );

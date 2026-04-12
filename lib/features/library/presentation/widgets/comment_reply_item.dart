@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/comment_reply.dart';
 
@@ -20,7 +21,7 @@ class CommentReplyItem extends StatelessWidget {
 
             foregroundImage:
                 reply.user.avatarUrl != null && reply.user.avatarUrl!.isNotEmpty
-                ? NetworkImage(reply.user.avatarUrl!)
+                ? CachedNetworkImageProvider(reply.user.avatarUrl!)
                 : null,
 
             child: Icon(

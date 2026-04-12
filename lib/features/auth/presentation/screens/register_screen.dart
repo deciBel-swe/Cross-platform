@@ -12,6 +12,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/auth_validators.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
+import 'login_screen.dart' show AuthLoadingType;
 
 /// Register screen: OAuth buttons, divider, email + date of birth + gender
 /// fields, and a white Continue button.
@@ -32,8 +33,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   String? _selectedGender;
   DateTime? _selectedDateOfBirth;
-  bool _isSubmitting = false;
   bool _obscurePassword = true;
+  AuthLoadingType _loadingType = AuthLoadingType.none;
+
+  bool get _isAnyLoading => _loadingType != AuthLoadingType.none;
 
   @override
   void dispose() {
@@ -71,6 +74,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final country = _countryController.text.trim();
 
     if (displayName.isEmpty) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Display name is required.')),
       );
@@ -79,6 +83,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     final emailValidation = AuthValidators.validateEmail(email);
     if (emailValidation != null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(emailValidation)));
@@ -87,6 +92,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     final passwordValidation = AuthValidators.validatePassword(password);
     if (passwordValidation != null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(passwordValidation)));
@@ -94,13 +100,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     if (_selectedDateOfBirth == null || _selectedGender == null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Date of birth and gender are required.')),
       );
       return;
     }
 
-    setState(() => _isSubmitting = true);
+    setState(() => _loadingType = AuthLoadingType.email);
     try {
       await ref
           .read(authStateProvider.notifier)
@@ -130,12 +137,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         return;
       }
 
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     } finally {
       if (mounted) {
-        setState(() => _isSubmitting = false);
+        setState(() => _loadingType = AuthLoadingType.none);
+      }
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _loadingType = AuthLoadingType.google);
+    try {
+      await ref.read(authStateProvider.notifier).loginWithGoogle();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _loadingType = AuthLoadingType.none);
       }
     }
   }
@@ -165,8 +196,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final authState = ref.watch(authStateProvider);
-    final isAuthLoading = authState.isLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -192,10 +221,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     color: AppColors.google,
                     size: 24,
                   ),
-                  isLoading: isAuthLoading,
-                  onPressed: () {
-                    ref.read(authStateProvider.notifier).loginWithGoogle();
-                  },
+                  isLoading: _loadingType == AuthLoadingType.google,
+                  onPressed: _isAnyLoading ? null : _handleGoogleLogin,
                 ),
                 const SizedBox(height: 12),
                 SocialLoginButton(
@@ -361,7 +388,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextField(
                   controller: _countryController,
                   textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _isSubmitting ? null : _handleRegister(),
+                  onSubmitted: (_) => _isAnyLoading ? null : _handleRegister(),
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
@@ -384,12 +411,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 // ---- Continue button (white) ----
                 ElevatedButton(
-                  onPressed: _isSubmitting ? null : _handleRegister,
+                  onPressed: _isAnyLoading ? null : _handleRegister,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.onPrimary,
                     foregroundColor: AppColors.onBackground,
                   ),
-                  child: _isSubmitting
+                  child: _loadingType == AuthLoadingType.email
                       ? const SizedBox(
                           width: 20,
                           height: 20,

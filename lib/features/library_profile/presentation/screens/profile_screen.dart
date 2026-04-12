@@ -30,7 +30,8 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen>
+    with WidgetsBindingObserver {
   late ScrollController _scrollController;
   bool _showAppBarIcon = false;
   bool _shouldWatchSections = true;
@@ -42,6 +43,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // When the app comes back to the foreground, refresh the profile
+    // so images updated externally (e.g. via the website) are re-fetched.
+    if (state == AppLifecycleState.resumed && !_isPublicProfile) {
+      ref.read(userProfileProvider.notifier).refreshProfile();
+    }
   }
 
   Future<bool> _showConfirmDialog(BuildContext context, bool isBlocked) async {
@@ -199,6 +210,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();

@@ -6,9 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/auth_validators.dart';
-import '../../domain/entities/auth_state.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
+
+enum AuthLoadingType { none, email, google, facebook, apple }
 
 /// Sign-in screen: OAuth buttons, divider, email + password fields,
 /// and a white Continue button.
@@ -23,6 +24,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  AuthLoadingType _loadingType = AuthLoadingType.none;
+
+  bool get _isAnyLoading => _loadingType != AuthLoadingType.none;
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
@@ -30,6 +34,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final emailValidation = AuthValidators.validateEmail(email);
     if (emailValidation != null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(emailValidation)));
@@ -38,15 +43,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final passwordValidation = AuthValidators.validatePassword(password);
     if (passwordValidation != null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(passwordValidation)));
       return;
     }
 
-    await ref
-        .read(authStateProvider.notifier)
-        .loginWithEmailPassword(email: email, password: password);
+    setState(() => _loadingType = AuthLoadingType.email);
+    try {
+      await ref
+          .read(authStateProvider.notifier)
+          .loginWithEmailPassword(email: email, password: password);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _loadingType = AuthLoadingType.none);
+      }
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _loadingType = AuthLoadingType.google);
+    try {
+      await ref.read(authStateProvider.notifier).loginWithGoogle();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _loadingType = AuthLoadingType.none);
+      }
+    }
   }
 
   @override
@@ -82,22 +124,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Watch for the current authentication state to show loading indicators
-    final authState = ref.watch(authStateProvider);
-    final isLoading = authState.isLoading;
-
-    // Listen for errors and show a SnackBar
-    ref.listen<AsyncValue<AuthState>>(authStateProvider, (previous, next) {
-      if (!next.isLoading && next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error.toString().replaceAll('Exception: ', '')),
-            backgroundColor: theme.colorScheme.error,
-          ),
-        );
-      }
-    });
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign in'),
@@ -122,10 +148,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     color: AppColors.google,
                     size: 24,
                   ),
-                  isLoading: isLoading,
-                  onPressed: () {
-                    ref.read(authStateProvider.notifier).loginWithGoogle();
-                  },
+                  isLoading: _loadingType == AuthLoadingType.google,
+                  onPressed: _isAnyLoading ? null : _handleGoogleLogin,
                 ),
                 const SizedBox(height: 12),
                 SocialLoginButton(
@@ -218,12 +242,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 // ---- Continue button (white) ----
                 ElevatedButton(
-                  onPressed: isLoading ? null : _handleLogin,
+                  onPressed: _isAnyLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.onPrimary,
                     foregroundColor: AppColors.onBackground,
                   ),
-                  child: isLoading
+                  child: _loadingType == AuthLoadingType.email
                       ? const SizedBox(
                           width: 20,
                           height: 20,

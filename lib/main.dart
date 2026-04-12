@@ -14,7 +14,6 @@ void main() async {
   // 1. Essential for any native or async initialization
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Load and Validate Environment
   var useMockServices = false;
   try {
     await dotenv.load(fileName: '.env');
@@ -22,17 +21,8 @@ void main() async {
     // Check if we should use mocks
     useMockServices =
         (dotenv.env['USE_MOCK_SERVICES'] ?? 'false').toLowerCase() == 'true';
-
-    // Ensure all required keys exist before we let GetIt start
-    ApiConstants.validate();
-    debugPrint("✅ Environment loaded and validated.");
-  } catch (e) {
-    debugPrint("⚠️ Environment initialization failed: $e");
-    // If it's not a mock build and env failed, the app will crash later anyway.
-    // You might want to set useMockServices = true here for testing safety.
-    if (useMockServices == false) {
-      debugPrint("🚨 Warning: Proceeding without a valid .env file.");
-    }
+  } catch (_) {
+    useMockServices = false;
   }
 
   // 3. Configure Desktop Windows (Non-blocking)

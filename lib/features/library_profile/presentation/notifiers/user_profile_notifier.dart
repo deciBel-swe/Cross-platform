@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,6 +25,11 @@ class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
   }
 
   Future<void> refreshProfile() async {
+    // Evict cached profile images so that if the user changed their
+    // picture externally (e.g. via the website), CachedNetworkImage
+    // will re-download instead of serving the stale cached version.
+    _evictCachedProfileImages();
+
     final minLoadTime = Future<void>.delayed(
       const Duration(milliseconds: 1500),
     );
@@ -68,5 +74,23 @@ class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
         return Right(profile);
       },
     );
+  }
+
+  /// Evicts any currently-cached profile pic and cover photo URLs
+  /// so the next image widget load goes to the network.
+  void _evictCachedProfileImages() {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    current.fold((_) {}, (profile) {
+      final pic = profile.profileDetails.profilePic;
+      final cover = profile.profileDetails.coverPic;
+      if (pic != null && pic.isNotEmpty) {
+        CachedNetworkImage.evictFromCache(pic);
+      }
+      if (cover != null && cover.isNotEmpty) {
+        CachedNetworkImage.evictFromCache(cover);
+      }
+    });
   }
 }

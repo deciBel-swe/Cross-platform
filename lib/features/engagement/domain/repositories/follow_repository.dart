@@ -47,4 +47,10 @@ abstract class FollowRepository {
     int page = 0,
     int size = 20,
   });
+
+  /// Fetches users who follow the current user and are followed back.
+  Future<Either<Failure, PaginatedEngagers>> getFriends({
+    int page = 0,
+    int size = 20,
+  });
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_scroll_controller_provider.dart';
 import '../../../library_profile/presentation/widgets/track_tile.dart';
@@ -13,7 +14,12 @@ class UploadsLibraryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Your Uploads')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Your Uploads'),
+        backgroundColor: AppColors.background,
+        scrolledUnderElevation: 0,
+      ),
       body: const UploadsLibraryBody(),
     );
   }

@@ -27,6 +27,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  late TextEditingController _displayNameController;
   late TextEditingController _bioController;
 
   String? _selectedCountry;
@@ -44,6 +45,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         .value;
     _user = userState?.fold((failure) => null, (profile) => profile);
 
+    _displayNameController = TextEditingController(text: _user?.displayName);
     _bioController = TextEditingController(text: _user?.profileDetails.bio);
     _selectedCountry = _user?.profileDetails.country;
     _selectedState = _user?.profileDetails.city;
@@ -55,6 +57,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   void dispose() {
+    _displayNameController.dispose();
     _bioController.dispose();
     super.dispose();
   }
@@ -64,12 +67,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     PublicProfileSocialLinks currentSocialLinks,
   ) {
     if (user == null) return true;
+    final originalDisplayName = user.displayName;
     final originalBio = user.profileDetails.bio;
     final originalCity = user.profileDetails.city;
     final originalCountry = user.profileDetails.country;
     final originalGenres = user.profileDetails.favoriteGenres;
 
     final textChanged =
+        _displayNameController.text.trim() != (originalDisplayName ?? '') ||
         _bioController.text.trim() != (originalBio ?? '') ||
         (_selectedState ?? '') != (originalCity ?? '') ||
         (_selectedCountry ?? '') != (originalCountry ?? '');
@@ -105,6 +110,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     ref
         .read(profileEditNotifierProvider.notifier)
         .updateGeneralInfo(
+          displayName: _displayNameController.text.trim(),
           bio: _bioController.text.trim(),
           city: (_selectedState ?? '')
               .replaceAll(
@@ -180,11 +186,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             )
           else
             TextButton(
+              // style: TextButton.styleFrom(
+              //   backgroundColor: AppColors.primary,
+              //   padding: const EdgeInsets.symmetric(horizontal: 16),
+              // ),
               onPressed: _saveProfile,
               child: const Text(
                 'Save',
                 style: TextStyle(
-                  color: AppColors.google,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -216,6 +226,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    ProfileTextField(
+                      label: 'Display Name',
+                      controller: _displayNameController,
+                      maxLength: 30,
+                      validator: (value) {
+                        return null; // Not strictly required, could be empty
+                      },
+                    ),
+                    const SizedBox(height: 20),
                     ProfileTextField(
                       label: 'Bio',
                       controller: _bioController,
@@ -287,6 +306,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       availableGenres: availableGenres,
                       selectedGenres: _selectedGenres,
                       onGenreToggled: (genre, isSelected) {
+                        if (isSelected && _selectedGenres.length >= 10) return;
                         setState(() {
                           if (isSelected) {
                             _selectedGenres.add(genre);

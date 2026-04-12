@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../domain/models/track_action_data.dart';
 import '../../domain/repositories/track_social_repository.dart';
+import '../notifiers/liked_tracks_notifier.dart';
 import '../providers/track_social_provider.dart';
 import '../states/track_social_state.dart';
 
@@ -105,6 +107,9 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
             ? await _repository.unrepostTrack(trackId)
             : await _repository.repostTrack(trackId);
       }
+
+      // ── Cross-provider sync after successful API call ──
+      _syncCollections(trackId, actionType, wasActive: wasActive);
     } on AppException {
       _applyStateMutation(
         trackKey,
@@ -133,5 +138,35 @@ class TrackSocialNotifier extends Notifier<TrackSocialState> {
         : trackData.copyWith(isReposted: isActive, repostCount: count);
 
     state = state.copyWith(trackStates: newTrackStates);
+  }
+
+  /// Synchronizes liked/reposted track collections and profile stats
+  /// after a successful engagement API call.
+  void _syncCollections(
+    int trackId,
+    SocialActionType actionType, {
+    required bool wasActive,
+  }) {
+    final isLikeAction = actionType == SocialActionType.like;
+    final collectionProvider =
+        isLikeAction ? likedTracksProvider : repostedTracksProvider;
+
+    if (wasActive) {
+      // Un-liked / un-reposted → remove from the collection immediately.
+      if (ref.exists(collectionProvider)) {
+        ref.read(collectionProvider.notifier).removeTrackLocal(trackId);
+      }
+    } else {
+      // Liked / reposted → refresh the collection so the new track appears.
+      if (ref.exists(collectionProvider)) {
+        ref.read(collectionProvider.notifier).refreshAll();
+      }
+    }
+
+    // Refresh user profile stats in the background (fire-and-forget)
+    // so counts like "Total Tracks", "Followers" etc. stay current.
+    if (ref.exists(userProfileProvider)) {
+      ref.read(userProfileProvider.notifier).refreshProfile();
+    }
   }
 }
