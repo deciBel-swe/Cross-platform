@@ -86,8 +86,12 @@ import '../../features/playlists/domain/repositories/i_playlist_repository.dart'
     as _i582;
 import '../../features/settings/data/datasources/blocked_users_remote_datasource.dart'
     as _i688;
+import '../../features/settings/data/repositories/app_icon_repository_impl.dart'
+    as _i781;
 import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
     as _i292;
+import '../../features/settings/domain/repositories/app_icon_repository.dart'
+    as _i993;
 import '../../features/settings/domain/repositories/blocked_users_repository.dart'
     as _i288;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
@@ -101,6 +105,7 @@ import '../../features/upload/domain/repositories/i_upload_repository.dart'
 import '../network/dio_client.dart' as _i667;
 import '../network/interceptors/auth_interceptor.dart' as _i745;
 import '../storage/secure_storage_service.dart' as _i666;
+import '../storage/shared_prefs_service.dart' as _i573;
 import 'register_module.dart' as _i291;
 
 const String _mock = 'mock';
@@ -119,6 +124,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i183.ImagePicker>(() => registerModule.imagePicker);
+    gh.lazySingleton<_i573.SharedPrefsService>(
+      () => _i573.SharedPrefsService(),
+    );
     gh.lazySingleton<_i667.DioClient>(
       () => _i667.DioClient(
         gh<_i361.Dio>(),
@@ -174,6 +182,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i485.IFollowRemoteDataSource>(
       () => _i485.FollowRemoteDataSource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i993.AppIconRepository>(
+      () => _i781.AppIconRepositoryImpl(gh<_i573.SharedPrefsService>()),
+    );
     gh.lazySingleton<_i106.ProfileRepository>(
       () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
     );
@@ -187,16 +198,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i121.ImageRepository>(
       () => _i423.ImageRepositoryImpl(gh<_i183.ImagePicker>()),
     );
-    gh.lazySingleton<_i590.ITrackSocialRepository>(
-      () => _i529.TrackSocialRepositoryImpl(
-        gh<_i459.TrackSocialRemoteDatasource>(),
-      ),
-      registerFor: {_prod},
-    );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i573.AuthRepository(
         gh<_i107.IAuthRemoteDataSource>(),
         gh<_i666.SecureStorageService>(),
+        gh<_i573.SharedPrefsService>(),
+      ),
+      registerFor: {_prod},
+    );
+    gh.lazySingleton<_i590.ITrackSocialRepository>(
+      () => _i529.TrackSocialRepositoryImpl(
+        gh<_i459.TrackSocialRemoteDatasource>(),
       ),
       registerFor: {_prod},
     );

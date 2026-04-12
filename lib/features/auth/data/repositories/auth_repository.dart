@@ -10,6 +10,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/storage/secure_storage_service.dart';
+import '../../../../core/storage/shared_prefs_service.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
@@ -20,10 +21,15 @@ import '../models/register_local_request_model.dart';
 @Environment('prod')
 @LazySingleton(as: IAuthRepository)
 class AuthRepository implements IAuthRepository {
-  AuthRepository(this._remoteDataSource, this._secureStorageService);
+  AuthRepository(
+    this._remoteDataSource,
+    this._secureStorageService,
+    this._sharedPrefsService,
+  );
 
   final IAuthRemoteDataSource _remoteDataSource;
   final SecureStorageService _secureStorageService;
+  final SharedPrefsService _sharedPrefsService;
 
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
@@ -109,6 +115,16 @@ class AuthRepository implements IAuthRepository {
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
     try {
       final isExpired = await _secureStorageService.isAccessTokenExpired();
+      final hasRefreshToken = (await _secureStorageService.getRefreshToken()) != null;
+
+      if (isExpired && hasRefreshToken) {
+        final refreshResult = await refreshToken();
+        return refreshResult.fold(
+          (failure) => const Right(null), // If refresh fails, user must log in again
+          (user) => Right(user),
+        );
+      }
+
       if (isExpired) {
         return const Right(null);
       }
@@ -117,6 +133,34 @@ class AuthRepository implements IAuthRepository {
       return Right(userModel?.toDomain());
     } catch (e) {
       return const Right(null);
+    }
+  }
+
+  @override
+  Future<Either<Failure, AuthUser>> refreshToken() async {
+    try {
+      final refreshToken = await _secureStorageService.getRefreshToken();
+      final accessToken = await _secureStorageService.getAccessToken();
+
+      if (refreshToken == null || accessToken == null) {
+        return const Left(AuthFailure('No tokens available for refresh'));
+      }
+
+      debugPrint('[AuthRepository] Proactively refreshing token...');
+      final responseModel = await _remoteDataSource.refreshToken(
+        refreshToken: refreshToken,
+        accessToken: accessToken,
+      );
+
+      await _secureStorageService.saveTokenPair(responseModel);
+
+      return Right(responseModel.user.toDomain());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (e) {
+      return Left(AuthFailure('Token refresh failed: $e'));
     }
   }
 
@@ -204,6 +248,7 @@ class AuthRepository implements IAuthRepository {
       return const Left(AuthFailure('An unexpected error occurred.'));
     } finally {
       await _secureStorageService.clearAll();
+      await _sharedPrefsService.clearAll();
     }
   }
 }

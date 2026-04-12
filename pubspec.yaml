@@ -76,6 +76,7 @@ dependencies:
 
   # ---------- Encryption ----------
   crypto: ^3.0.7
+  flutter_cache_manager: ^3.4.1
   # ---------- Google Sign In ----------
 
 dev_dependencies:

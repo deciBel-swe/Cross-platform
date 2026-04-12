@@ -49,6 +49,7 @@ class ApiConstants {
   static const String localLoginEndpoint = '/auth/login/local';
   static const String localRegisterEndpoint = '/auth/register/local';
   static const String logoutEndpoint = '/auth/logout';
+  static const String refreshTokenEndpoint = '/auth/refreshtoken';
   static const String genresEndpoint = '/genres';
 
   static const String userProfileEndpoint = '/users/me';

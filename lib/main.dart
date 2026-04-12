@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
+import 'core/di/app_reset_provider.dart';
 import 'core/di/injection.dart';
 import 'features/settings/domain/repositories/app_icon_repository.dart';
 
@@ -47,5 +48,19 @@ void main() async {
   }
 
   // 6. Start UI
-  runApp(const ProviderScope(child: DecibelApp()));
+  runApp(
+    ProviderScope(
+      child: Consumer(
+        builder: (context, ref, child) {
+          // Initialize environment flag once
+          ref
+              .read(appResetProvider.notifier)
+              .setEnvironment(useMockServices: useMockServices);
+
+          final resetKey = ref.watch(appResetProvider);
+          return ProviderScope(key: resetKey, child: const DecibelApp());
+        },
+      ),
+    ),
+  );
 }

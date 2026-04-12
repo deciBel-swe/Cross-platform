@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/di/app_reset_provider.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/events/auth_event_bus.dart';
+import '../../../../core/storage/secure_storage_service.dart';
 import '../../domain/entities/auth_state.dart';
+import '../../domain/repositories/i_auth_repository.dart';
 import '../providers/auth_provider.dart';
 
 /// Manages the authentication state of the application.
@@ -81,7 +84,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
     try {
       final repo = ref.read(authRepositoryProvider);
-      
+
       debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
       final userEither = await repo.loginWithGoogle();
 
@@ -97,7 +100,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
           return user;
         },
       );
-      
+
       state = AsyncData(AuthAuthenticated(user: user));
     } on AppException catch (e) {
       debugPrint('[AuthNotifier] AppException: ${e.message}');
@@ -130,7 +133,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         (failure) => throw Exception(failure.message),
         (user) => user,
       );
-      
+
       state = AsyncData(AuthAuthenticated(user: user));
     } catch (e) {
       state = const AsyncData(AuthUnauthenticated());
@@ -175,12 +178,22 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       logoutResult.fold(
         (failure) =>
             debugPrint('[AuthNotifier] logout failed: ${failure.message}'),
-        (_) => debugPrint('[AuthNotifier] logout succeeded.'),
+        (_) async {
+          debugPrint('[AuthNotifier] logout succeeded.');
+          await _invalidateUserCaches();
+        },
       );
     } catch (e, st) {
       debugPrint('[AuthNotifier] Unexpected Exception during logout: $e\n$st');
+      await _invalidateUserCaches();
     } finally {
       state = const AsyncData(AuthUnauthenticated());
     }
+  }
+
+  Future<void> _invalidateUserCaches() async {
+    debugPrint('[AuthNotifier] Triggering global state reset...');
+    // Forces a total destruction and recreation of the ProviderScope.
+    await ref.read(appResetProvider.notifier).reset();
   }
 }

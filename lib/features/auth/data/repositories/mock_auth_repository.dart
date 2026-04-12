@@ -60,13 +60,36 @@ class MockAuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
     // Check storage for token expiry; returns true if 400s has passed
-    if (await _secureStorageService.isAccessTokenExpired()) {
+    final isExpired = await _secureStorageService.isAccessTokenExpired();
+    final hasRefreshToken = (await _secureStorageService.getRefreshToken()) != null;
+
+    if (isExpired && hasRefreshToken) {
+      final refreshResult = await refreshToken();
+      return refreshResult.fold(
+        (failure) => const Right(null),
+        (user) => Right(user),
+      );
+    }
+
+    if (isExpired) {
       // Returning null triggers the app's 'Unauthenticated' state/redirect
       return const Right(null);
     }
 
     final user = await _secureStorageService.getUser();
     return Right(user?.toDomain());
+  }
+
+  @override
+  Future<Either<Failure, AuthUser>> refreshToken() async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    final model = LoginResponseModel.fromJson(
+      AuthMockFixtures.mockRefreshedTokenResponse,
+    );
+
+    await _secureStorageService.saveTokenPair(model);
+    return Right(model.user.toDomain());
   }
 
   @override

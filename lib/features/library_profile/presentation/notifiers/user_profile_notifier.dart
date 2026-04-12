@@ -13,7 +13,8 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return getIt<ProfileRepository>();
 });
 
-class UserProfileNotifier extends AsyncNotifier<Either<Failure, UserProfile>> {
+class UserProfileNotifier
+    extends AutoDisposeAsyncNotifier<Either<Failure, UserProfile>> {
   @override
   Future<Either<Failure, UserProfile>> build() async {
     // This runs automatically when the provider is first watched.

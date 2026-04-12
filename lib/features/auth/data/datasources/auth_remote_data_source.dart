@@ -23,6 +23,10 @@ abstract class IAuthRemoteDataSource {
   Future<LoginResponseModel> loginLocal(LoginLocalRequestModel request);
   Future<void> registerLocal(RegisterLocalRequestModel request);
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
+  Future<LoginResponseModel> refreshToken({
+    required String refreshToken,
+    required String accessToken,
+  });
   Future<void> logout();
 }
 
@@ -260,6 +264,40 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   }
 
   @override
+  Future<LoginResponseModel> refreshToken({
+    required String refreshToken,
+    required String accessToken,
+  }) async {
+    try {
+      final cookieHeader = 'refreshToken=$refreshToken; accessToken=$accessToken';
+
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.refreshTokenEndpoint,
+        data: {'refreshToken': refreshToken},
+        options: Options(
+          headers: {
+            'Cookie': cookieHeader,
+          },
+        ),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw AuthException(
+          _parseManualError(response.data, fallback: 'Token refresh failed'),
+        );
+      }
+
+      return _parseLoginResponse(response);
+    } on DioException catch (e) {
+      throw ServerException(
+        _extractDioErrorMessage(e, fallback: 'Token refresh failed'),
+      );
+    } catch (e) {
+      throw AuthException('An unexpected error occurred during token refresh: $e');
+    }
+  }
+
+  @override
   Future<void> logout() async {
     try {
       final response = await _dioClient.post<dynamic>(
@@ -267,7 +305,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         data: const <String, dynamic>{},
       );
 
-      if (response.statusCode != 204) {
+      if (response.statusCode != 200 && response.statusCode != 204) {
         throw AuthException(
           'Backend returned an error. Status Code: ${response.statusCode}',
         );
