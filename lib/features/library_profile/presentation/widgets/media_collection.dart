@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../engagement/presentation/notifiers/liked_tracks_notifier.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import 'tile.dart';
 import 'track_tile.dart';
 
@@ -70,7 +71,11 @@ class MediaCollection extends ConsumerWidget {
                 final track = previewTracks[index];
                 return TrackTile(
                   track: track,
-                  onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+                  onTap: () => ref.read(trackAudioProvider.notifier).initializeForTrack(
+                        trackId: track.id,
+                        trackUrl: track.trackUrl ?? '',
+                        track: track,
+                      ),
                 );
               },
             );
@@ -115,7 +120,11 @@ class MediaCollection extends ConsumerWidget {
                 final track = previewTracks[index];
                 return TrackTile(
                   track: track,
-                  onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+                  onTap: () => ref.read(trackAudioProvider.notifier).initializeForTrack(
+                        trackId: track.id,
+                        trackUrl: track.trackUrl ?? '',
+                        track: track,
+                      ),
                 );
               },
             );

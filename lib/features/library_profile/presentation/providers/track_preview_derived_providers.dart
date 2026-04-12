@@ -32,6 +32,7 @@ final trackPreviewAutoAudioInitProvider = Provider.autoDispose
               .initializeForTrack(
                 trackId: data.track.id,
                 trackUrl: trackUrl,
+                track: data.track,
                 duration: Duration(seconds: trackPeaks.duration),
                 autoPlay: true,
               );

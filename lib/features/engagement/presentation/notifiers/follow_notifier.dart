@@ -9,17 +9,28 @@ class FollowNotifier extends FamilyAsyncNotifier<bool, int> {
   bool _isSeeded = false;
 
   @override
-  FutureOr<bool> build(int arg) {
+  FutureOr<bool> build(int arg) async {
     _isSeeded = false;
-    return false;
+
+    // Use Future.microtask to allow providers that fetch this (like PublicProfileProvider)
+    // to still call setInitialState if they finish first.
+    // However, the cleanest way is just to fetch if build is triggered.
+    final repository = ref.read(followRepositoryProvider);
+    final result = await repository.getPublicProfile(arg);
+
+    return result.fold(
+      (failure) => false,
+      (profile) {
+        _isSeeded = true;
+        return profile.isFollowing;
+      },
+    );
   }
 
   void setInitialState(bool isFollowing) {
-    if (_isSeeded) {
-      return;
-    }
-    _isSeeded = true;
+    if (_isSeeded) return;
     state = AsyncData(isFollowing);
+    _isSeeded = true;
   }
 
   void forceState(bool isFollowing) {

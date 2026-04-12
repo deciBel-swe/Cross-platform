@@ -35,7 +35,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
       isSubmitting: false,
       selectedTimestampSeconds: null,
       isLoadingComments: false,
-      loadingReplyIds: const {},
+      loadingReplyIds: {},
       repliesByCommentId: {},
       expandedCommentIds: {},
       deletingCommentId: null,

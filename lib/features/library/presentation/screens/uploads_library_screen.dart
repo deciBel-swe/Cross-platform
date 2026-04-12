@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_scroll_controller_provider.dart';
 import '../../../library_profile/presentation/widgets/track_tile.dart';
@@ -92,7 +91,11 @@ class UploadsLibraryBody extends ConsumerWidget {
                   key: ValueKey(track.id),
                   track: track,
                   onTap: () {
-                    context.push(RoutePaths.trackPreview(track.id));
+                    ref.read(trackAudioProvider.notifier).initializeForTrack(
+                          trackId: track.id,
+                          trackUrl: track.trackUrl ?? '',
+                          track: track,
+                        );
                   },
                 ),
               );

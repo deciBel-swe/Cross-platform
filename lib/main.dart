@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
-import 'core/constants/api_constants.dart';
 import 'core/di/injection.dart';
 import 'features/settings/domain/repositories/app_icon_repository.dart';
 

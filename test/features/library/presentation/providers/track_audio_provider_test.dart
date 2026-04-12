@@ -27,12 +27,21 @@ void main() {
     when(
       () => mockPlayer.playerStateStream,
     ).thenAnswer((_) => playerStateController.stream);
+    when(
+      () => mockPlayer.durationStream,
+    ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockPlayer.playbackEventStream,
+    ).thenAnswer((_) => const Stream.empty());
 
     // Mock basic properties
     when(() => mockPlayer.play()).thenAnswer((_) async {});
     when(() => mockPlayer.pause()).thenAnswer((_) async {});
     when(() => mockPlayer.stop()).thenAnswer((_) async {});
     when(() => mockPlayer.seek(any())).thenAnswer((_) async {});
+    when(
+      () => mockPlayer.setUrl(any(), preload: any(named: 'preload')),
+    ).thenAnswer((_) async => const Duration(seconds: 100));
     when(
       () => mockPlayer.setUrl(any()),
     ).thenAnswer((_) async => const Duration(seconds: 100));
@@ -85,7 +94,7 @@ void main() {
       expect(state.duration, const Duration(seconds: 100));
 
       verify(
-        () => mockPlayer.setUrl('https://example.com/track.mp3'),
+        () => mockPlayer.setUrl('https://example.com/track.mp3', preload: false),
       ).called(1);
     });
 

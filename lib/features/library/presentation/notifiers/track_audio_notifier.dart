@@ -1,7 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+
+import '../../domain/entities/track.dart';
 import '../state/track_audio_state.dart';
 
 class TrackAudioNotifier extends Notifier<TrackAudioState> {
@@ -125,6 +128,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   Future<void> initializeForTrack({
     required int trackId,
     required String trackUrl,
+    Track? track,
     Duration duration = Duration.zero,
     bool autoPlay = true,
   }) async {
@@ -153,6 +157,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       await _prepareInternal(
         trackId: trackId,
         trackUrl: trackUrl,
+        track: track,
         duration: duration,
       );
 
@@ -171,6 +176,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
           isPrepared: false,
           preparedTrackId: null,
           preparedTrackUrl: null,
+          currentTrack: null,
           isPlaying: false,
           position: Duration.zero,
           progress: 0,
@@ -189,6 +195,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   Future<void> _prepareInternal({
     required int trackId,
     required String trackUrl,
+    Track? track,
     required Duration duration,
   }) async {
     if (_isDisposed) return;
@@ -204,6 +211,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       isPrepared: false,
       preparedTrackId: null,
       preparedTrackUrl: null,
+      currentTrack: null,
       position: Duration.zero,
       progress: 0,
       duration: duration,
@@ -233,6 +241,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       isPrepared: true,
       preparedTrackId: trackId,
       preparedTrackUrl: trackUrl,
+      currentTrack: track,
       duration: resolvedDuration,
       position: Duration.zero,
       progress: 0,
@@ -293,6 +302,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         isPrepared: false,
         preparedTrackId: null,
         preparedTrackUrl: null,
+        currentTrack: null,
         isPlaying: false,
         position: Duration.zero,
         duration: Duration.zero,

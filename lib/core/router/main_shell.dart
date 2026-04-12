@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/player/presentation/widgets/desktop_player_bar.dart';
+import '../../features/player/presentation/widgets/mobile_mini_player.dart';
 import '../theme/app_colors.dart';
 import 'desktop_header.dart';
 import 'desktop_sidebar.dart';
@@ -96,7 +97,17 @@ class _MobileShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      body: Stack(
+        children: [
+          navigationShell,
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 5, // Moved lower as requested
+            child: MobileMiniPlayer(),
+          ),
+        ],
+      ),
       bottomNavigationBar: _BottomNavBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) => navigationShell.goBranch(
