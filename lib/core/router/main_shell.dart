@@ -9,6 +9,7 @@ import '../../features/player/presentation/widgets/mobile_mini_player.dart';
 import '../theme/app_colors.dart';
 import 'desktop_header.dart';
 import 'desktop_sidebar.dart';
+import 'route_paths.dart';
 
 /// SoundCloud-style shell that wraps tabbed content.
 ///
@@ -96,16 +97,20 @@ class _MobileShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+    final hideMiniPlayer = location == RoutePaths.editProfile;
+
     return Scaffold(
       body: Stack(
         children: [
           navigationShell,
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 5, // Moved lower as requested
-            child: MobileMiniPlayer(),
-          ),
+          if (!hideMiniPlayer)
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 5, // Moved lower as requested
+              child: MobileMiniPlayer(),
+            ),
         ],
       ),
       bottomNavigationBar: _BottomNavBar(
