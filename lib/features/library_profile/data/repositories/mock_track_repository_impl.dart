@@ -35,6 +35,20 @@ class MockTrackRepository implements TrackRepository {
   }
 
   @override
+  Future<Either<Failure, int>> resolveTrackIdentifier(
+    String trackIdentifier,
+  ) async {
+    final parsed = int.tryParse(trackIdentifier);
+    if (parsed != null) {
+      return Right(parsed);
+    }
+
+    return Left(
+      ServerFailure('Mock resolver could not resolve track: $trackIdentifier'),
+    );
+  }
+
+  @override
   Future<Either<Failure, String>> fetchTrackStatusById(int id) async {
     // Simulate backend status from current mock track state.
     final trackResult = await fetchTrackById(id);

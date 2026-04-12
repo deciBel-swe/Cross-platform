@@ -12,6 +12,7 @@ abstract class ProfileRepository {
   Future<Either<Failure, UserProfile>> getPublicProfile(int userId);
 
   Future<Either<Failure, bool>> updateProfile({
+    String? displayName,
     String? bio,
     String? city,
     String? country,

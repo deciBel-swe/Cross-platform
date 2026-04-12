@@ -1,44 +1,37 @@
 import 'package:flutter/material.dart';
 
-class CommentReactionBar extends StatefulWidget {
+import '../../../../core/widgets/decibel_cached_image.dart';
+
+class CommentReactionBar extends StatelessWidget {
   const CommentReactionBar({
     super.key,
+    required this.controller,
+    required this.focusNode,
     this.onSendTap,
     this.onReactionTap,
     this.timestamp,
     this.userAvatarUrl,
   });
 
+  final TextEditingController controller;
+  final FocusNode focusNode;
   final String? timestamp;
   final String? userAvatarUrl;
   final ValueChanged<String>? onSendTap;
   final ValueChanged<String>? onReactionTap;
 
   @override
-  State<CommentReactionBar> createState() => _CommentReactionBarState();
-}
-
-class _CommentReactionBarState extends State<CommentReactionBar> {
-  final TextEditingController _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: _controller,
+      valueListenable: controller,
       builder: (context, value, child) {
         final hasText = value.text.trim().isNotEmpty;
 
         return Row(
           children: [
-            _UserAvatar(imageUrl: widget.userAvatarUrl),
+            _UserAvatar(imageUrl: userAvatarUrl),
             const SizedBox(width: 12),
             Expanded(
               child: Container(
@@ -56,22 +49,23 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
                     children: [
                       Expanded(
                         child: TextField(
-                          controller: _controller,
+                          controller: controller,
+                          focusNode: focusNode,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 15,
                           ),
                           decoration: InputDecoration.collapsed(
-                            hintText: widget.timestamp != null
+                            hintText: timestamp != null
                                 ? 'Comment at'
                                 : 'Drop a comment...',
                             hintStyle: const TextStyle(color: Colors.white54),
                           ),
                         ),
                       ),
-                      if (widget.timestamp != null && !hasText) ...[
+                      if (timestamp != null && !hasText) ...[
                         Text(
-                          widget.timestamp!,
+                          timestamp!,
                           style: const TextStyle(
                             color: Colors.white54,
                             fontSize: 13,
@@ -81,17 +75,17 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
                       ] else if (!hasText) ...[
                         _ReactionButton(
                           emoji: '🔥',
-                          onTap: () => widget.onReactionTap?.call('🔥'),
+                          onTap: () => onReactionTap?.call('🔥'),
                         ),
                         const SizedBox(width: 12),
                         _ReactionButton(
                           emoji: '👏',
-                          onTap: () => widget.onReactionTap?.call('👏'),
+                          onTap: () => onReactionTap?.call('👏'),
                         ),
                         const SizedBox(width: 12),
                         _ReactionButton(
                           emoji: '🥺',
-                          onTap: () => widget.onReactionTap?.call('🥺'),
+                          onTap: () => onReactionTap?.call('🥺'),
                         ),
                       ],
                     ],
@@ -103,10 +97,9 @@ class _CommentReactionBarState extends State<CommentReactionBar> {
               const SizedBox(width: 10),
               GestureDetector(
                 onTap: () {
-                  if (_controller.text.trim().isNotEmpty) {
-                    widget.onSendTap?.call(_controller.text.trim());
-                    _controller.clear();
-                    FocusScope.of(context).unfocus();
+                  final text = controller.text.trim();
+                  if (text.isNotEmpty) {
+                    onSendTap?.call(text);
                   }
                 },
                 child: Container(
@@ -146,17 +139,14 @@ class _UserAvatar extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: imageUrl != null && imageUrl!.trim().isNotEmpty
-          ? Image.network(
-              imageUrl!,
+          ? DecibelCachedImage(
+              imageUrl: imageUrl!,
               fit: BoxFit.cover,
-              // Intercepts the 404 or any HTTP failure silently
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.person,
-                  size: 20,
-                  color: Colors.white54,
-                );
-              },
+              errorWidget: const Icon(
+                Icons.person,
+                size: 20,
+                color: Colors.white54,
+              ),
             )
           : const Icon(Icons.person, size: 20, color: Colors.white54),
     );

@@ -28,6 +28,9 @@ abstract class IAuthRepository {
   /// Returns a failure if authentication process gets interrupted, or fails for another reason.
   Future<Either<Failure, AuthUser>> loginWithGoogle();
 
+  /// Refreshes the current authentication token.
+  Future<Either<Failure, AuthUser>> refreshToken();
+
   /// Retrieves the current authenticated user off local storage/session if one exists.
   ///
   /// Returns null if no user is currently logged in or the session has expired.

@@ -1,11 +1,19 @@
 import 'dart:async';
 
+import 'package:dartz/dartz.dart';
+import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/core/router/app_router.dart';
 import 'package:decibel/core/router/route_paths.dart';
 import 'package:decibel/features/auth/domain/entities/auth_state.dart';
 import 'package:decibel/features/auth/domain/entities/auth_user.dart';
 import 'package:decibel/features/auth/presentation/notifiers/auth_notifier.dart';
 import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
+import 'package:decibel/features/library/domain/entities/paginated_tracks.dart';
+import 'package:decibel/features/library/domain/entities/track.dart';
+import 'package:decibel/features/library/domain/entities/track_edit_request.dart';
+import 'package:decibel/features/library/domain/entities/track_peaks.dart';
+import 'package:decibel/features/library_profile/domain/repositories/track_repository.dart';
+import 'package:decibel/features/library_profile/presentation/providers/track_repository_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,6 +50,79 @@ class MockAuthNotifier extends AsyncNotifier<AuthState>
 
   @override
   Future<void> logout() async {}
+
+  @override
+  Future<void> refreshUser() async {}
+}
+
+class FakeTrackRepository implements TrackRepository {
+  FakeTrackRepository({
+    this.resolvedTracksByIdentifier = const <String, int>{},
+  });
+
+  final Map<String, int> resolvedTracksByIdentifier;
+
+  @override
+  Future<Either<Failure, int>> resolveTrackIdentifier(
+    String trackIdentifier,
+  ) async {
+    final parsed = int.tryParse(trackIdentifier);
+    if (parsed != null) {
+      return Right(parsed);
+    }
+
+    final resolved = resolvedTracksByIdentifier[trackIdentifier];
+    if (resolved != null) {
+      return Right(resolved);
+    }
+
+    return Left(ServerFailure('Cannot resolve track: $trackIdentifier'));
+  }
+
+  @override
+  Future<Either<Failure, bool>> deleteTrackCover(int trackId) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, Track>> fetchTrackById(int id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, PaginatedTracks>> fetchMyTracks({
+    required int page,
+    required int size,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, String>> fetchTrackStatusById(int id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, PaginatedTracks>> fetchTracks({
+    required int userId,
+    required int page,
+    required int size,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, Track>> updateTrackMetadata({
+    required int trackId,
+    required TrackEditRequest request,
+  }) {
+    throw UnimplementedError();
+  }
 }
 
 /// App wrapper to test the router with a mocked state
@@ -150,5 +231,146 @@ void main() {
         expect(location, equals(RoutePaths.home));
       },
     );
+
+    testWidgets('should open deep-link profile for non-reserved username', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          authStateProvider.overrideWith(
+            () => MockAuthNotifier(
+              const AuthAuthenticated(
+                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+              ),
+            ),
+          ),
+          trackRepositoryProvider.overrideWithValue(FakeTrackRepository()),
+        ],
+      );
+
+      await tester.pumpWidget(createTestApp(container));
+      await tester.pumpAndSettle();
+
+      final router = container.read(appRouterProvider);
+      router.go('/artistname');
+      await tester.pumpAndSettle();
+
+      final location = router.routerDelegate.currentConfiguration.uri.path;
+      expect(location, equals(RoutePaths.publicProfile('artistname')));
+    });
+
+    testWidgets('should block reserved top-level deep-link segment', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          authStateProvider.overrideWith(
+            () => MockAuthNotifier(
+              const AuthAuthenticated(
+                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+              ),
+            ),
+          ),
+          trackRepositoryProvider.overrideWithValue(FakeTrackRepository()),
+        ],
+      );
+
+      await tester.pumpWidget(createTestApp(container));
+      await tester.pumpAndSettle();
+
+      final router = container.read(appRouterProvider);
+      router.go('/user');
+      await tester.pumpAndSettle();
+
+      final location = router.routerDelegate.currentConfiguration.uri.path;
+      expect(location, equals(RoutePaths.home));
+    });
+
+    testWidgets('should resolve numeric deep-link track directly', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          authStateProvider.overrideWith(
+            () => MockAuthNotifier(
+              const AuthAuthenticated(
+                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+              ),
+            ),
+          ),
+          trackRepositoryProvider.overrideWithValue(FakeTrackRepository()),
+        ],
+      );
+
+      await tester.pumpWidget(createTestApp(container));
+      await tester.pumpAndSettle();
+
+      final router = container.read(appRouterProvider);
+      router.go('/artistname/123');
+      await tester.pumpAndSettle();
+
+      final location = router.routerDelegate.currentConfiguration.uri.path;
+      expect(location, equals(RoutePaths.trackPreview(123)));
+    });
+
+    testWidgets('should resolve slug deep-link track via repository', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          authStateProvider.overrideWith(
+            () => MockAuthNotifier(
+              const AuthAuthenticated(
+                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+              ),
+            ),
+          ),
+          trackRepositoryProvider.overrideWithValue(
+            FakeTrackRepository(
+              resolvedTracksByIdentifier: const <String, int>{
+                'my-cool-track': 77,
+              },
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(createTestApp(container));
+      await tester.pumpAndSettle();
+
+      final router = container.read(appRouterProvider);
+      router.go('/artistname/my-cool-track');
+      await tester.pumpAndSettle();
+
+      final location = router.routerDelegate.currentConfiguration.uri.path;
+      expect(location, equals(RoutePaths.trackPreview(77)));
+    });
+
+    testWidgets('should fall back to home when track slug cannot resolve', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          authStateProvider.overrideWith(
+            () => MockAuthNotifier(
+              const AuthAuthenticated(
+                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+              ),
+            ),
+          ),
+          trackRepositoryProvider.overrideWithValue(FakeTrackRepository()),
+        ],
+      );
+
+      await tester.pumpWidget(createTestApp(container));
+      await tester.pumpAndSettle();
+
+      final router = container.read(appRouterProvider);
+      router.go('/artistname/non-existent-slug');
+      await tester.pumpAndSettle();
+
+      final location = router.routerDelegate.currentConfiguration.uri.path;
+      expect(location, equals(RoutePaths.home));
+    });
   });
 }

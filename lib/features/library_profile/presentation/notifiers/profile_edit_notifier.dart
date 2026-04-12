@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui; // Needed for toByteData
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:croppy/croppy.dart' as cp;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/public_profile_social_links.dart';
 import '../../domain/repositories/update_image.dart';
 import '../providers/user_profile_provider.dart';
@@ -113,13 +115,29 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
         } else {
           state = AsyncError(failure.message, StackTrace.current);
         }
-      }, (success) => ref.invalidate(userProfileProvider));
+      }, (success) {
+        // Evict the old cached image so CachedNetworkImage fetches fresh
+        // from the server on the next rebuild instead of showing stale cache.
+        final currentProfile = ref.read(userProfileProvider).value;
+        if (currentProfile != null) {
+          currentProfile.fold((_) {}, (profile) {
+            final oldUrl = isProfile
+                ? profile.profileDetails.profilePic
+                : profile.profileDetails.coverPic;
+            if (oldUrl != null) {
+              CachedNetworkImage.evictFromCache(oldUrl);
+            }
+          });
+        }
+        ref.invalidate(userProfileProvider);
+      });
     } catch (e) {
       state = AsyncError("Failed to process image: $e", StackTrace.current);
     }
   }
 
   Future<bool> updateGeneralInfo({
+    required String? displayName,
     required String bio,
     required String city,
     required String country,
@@ -132,6 +150,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
       final repository = ref.read(profileRepositoryProvider);
 
       final result = await repository.updateProfile(
+        displayName: displayName,
         bio: bio,
         city: city,
         country: country,
@@ -144,8 +163,13 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
           state = AsyncError(failure.message, StackTrace.current);
           return false;
         },
-        (success) {
+        (success) async {
           ref.invalidate(userProfileProvider);
+          await ref.read(userProfileProvider.future);
+          try {
+            await ref.read(authStateProvider.notifier).refreshUser();
+          } catch (_) {}
+          
           state = const AsyncData(null);
           return true;
         },

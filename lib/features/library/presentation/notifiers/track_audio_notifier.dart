@@ -1,7 +1,11 @@
 import 'dart:async';
+
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+
+import '../../domain/entities/track.dart';
 import '../state/track_audio_state.dart';
 
 class TrackAudioNotifier extends Notifier<TrackAudioState> {
@@ -13,6 +17,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<PlayerState>? _playerStateSubscription;
+  StreamSubscription<Duration?>? _durationSubscription;
+  StreamSubscription<PlaybackEvent>? _playbackEventSubscription;
 
   bool _isDisposed = false;
   bool _isStopping = false;
@@ -45,9 +51,13 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   Future<void> _disposeCurrentPlayer() async {
     await _positionSubscription?.cancel();
     await _playerStateSubscription?.cancel();
+    await _durationSubscription?.cancel();
+    await _playbackEventSubscription?.cancel();
 
     _positionSubscription = null;
     _playerStateSubscription = null;
+    _durationSubscription = null;
+    _playbackEventSubscription = null;
 
     try {
       await _player?.dispose();
@@ -78,19 +88,48 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         return;
       }
 
+      debugPrint(
+        '[AudioStream] State: ${event.playing ? "Playing" : "Paused"} | Processing: ${event.processingState}',
+      );
+
       state = state.copyWith(isPlaying: event.playing);
 
       if (event.processingState == ProcessingState.completed &&
           !state.isDragging) {
-        // Keep the existing behavior: auto-replay when playback completes.
         replay();
       }
+    }, onError: (_) {});
+
+    _durationSubscription = _audioPlayer.durationStream.listen((duration) {
+      if (_isDisposed || _isStopping || duration == null) {
+        return;
+      }
+
+      if (duration != state.duration) {
+        state = state.copyWith(
+          duration: duration,
+          progress: _calculateProgress(
+            position: state.position,
+            duration: duration,
+          ),
+        );
+      }
+    }, onError: (_) {});
+
+    _playbackEventSubscription = _audioPlayer.playbackEventStream.listen((
+      event,
+    ) {
+      if (_isDisposed) return;
+      debugPrint(
+        '[AudioStream] Buffer Status | Buffered: ${event.bufferedPosition} | Total: ${state.duration}',
+      );
     }, onError: (_) {});
   }
 
   Future<void> initializeForTrack({
     required int trackId,
     required String trackUrl,
+    Track? track,
     Duration duration = Duration.zero,
     bool autoPlay = true,
   }) async {
@@ -112,9 +151,14 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     state = state.copyWith(isPreparing: true, duration: duration);
 
     try {
+      debugPrint(
+        '[AudioStream] Initializing source: $trackUrl (Network Streaming Active)',
+      );
+
       await _prepareInternal(
         trackId: trackId,
         trackUrl: trackUrl,
+        track: track,
         duration: duration,
       );
 
@@ -133,6 +177,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
           isPrepared: false,
           preparedTrackId: null,
           preparedTrackUrl: null,
+          currentTrack: null,
           isPlaying: false,
           position: Duration.zero,
           progress: 0,
@@ -151,6 +196,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   Future<void> _prepareInternal({
     required int trackId,
     required String trackUrl,
+    Track? track,
     required Duration duration,
   }) async {
     if (_isDisposed) return;
@@ -166,6 +212,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       isPrepared: false,
       preparedTrackId: null,
       preparedTrackUrl: null,
+      currentTrack: null,
       position: Duration.zero,
       progress: 0,
       duration: duration,
@@ -174,7 +221,11 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       dragPosition: null,
     );
 
-    final loadedDuration = await _setSource(trackUrl);
+    final loadedDuration = await _setSource(
+      trackId: trackId,
+      urlOrPath: trackUrl,
+      track: track,
+    );
 
     if (_isDisposed) return;
 
@@ -195,6 +246,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       isPrepared: true,
       preparedTrackId: trackId,
       preparedTrackUrl: trackUrl,
+      currentTrack: track,
       duration: resolvedDuration,
       position: Duration.zero,
       progress: 0,
@@ -255,6 +307,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         isPrepared: false,
         preparedTrackId: null,
         preparedTrackUrl: null,
+        currentTrack: null,
         isPlaying: false,
         position: Duration.zero,
         duration: Duration.zero,
@@ -364,7 +417,11 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       if (_isDisposed) return;
       _createPlayer();
 
-      await _setSource(preparedurl);
+      await _setSource(
+        trackId: state.preparedTrackId!,
+        urlOrPath: preparedurl,
+        track: state.currentTrack,
+      );
       _listenToPlayer();
       await _audioPlayer.seek(Duration.zero);
       if (_isDisposed) return;
@@ -393,17 +450,58 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     await play();
   }
 
-  Future<Duration?> _setSource(String urlOrPath) async {
+  Future<Duration?> _setSource({
+    required int trackId,
+    required String urlOrPath,
+    Track? track,
+  }) async {
     final normalizedSource = urlOrPath.trim();
     if (normalizedSource.isEmpty) {
       // Fail fast for invalid audio source values.
       throw const FormatException('Track source is empty');
     }
 
+    final mediaItem = _buildMediaItem(
+      trackId: trackId,
+      urlOrPath: normalizedSource,
+      track: track,
+    );
+
     final uri = Uri.tryParse(normalizedSource);
     if (uri != null && uri.hasScheme) {
-      return _audioPlayer.setUrl(normalizedSource);
+      debugPrint('[AudioStream] Source is Network URL. Using preload: false.');
+      return _audioPlayer.setAudioSource(
+        AudioSource.uri(uri, tag: mediaItem),
+        preload: false,
+      );
     }
-    return _audioPlayer.setFilePath(normalizedSource);
+
+    return _audioPlayer.setAudioSource(
+      AudioSource.uri(Uri.file(normalizedSource), tag: mediaItem),
+      preload: false,
+    );
+  }
+
+  MediaItem _buildMediaItem({
+    required int trackId,
+    required String urlOrPath,
+    Track? track,
+  }) {
+    final title = track?.title.trim();
+    final artistName = track?.artist.displayName ?? track?.artist.username;
+    final coverUrl = track?.coverUrl?.trim();
+
+    return MediaItem(
+      id: trackId.toString(),
+      title: (title == null || title.isEmpty) ? 'Unknown track' : title,
+      artist: (artistName == null || artistName.isEmpty)
+          ? 'Unknown artist'
+          : artistName,
+      album: 'Decibel',
+      artUri: (coverUrl != null && coverUrl.isNotEmpty)
+          ? Uri.tryParse(coverUrl)
+          : null,
+      extras: <String, dynamic>{'source': urlOrPath},
+    );
   }
 }

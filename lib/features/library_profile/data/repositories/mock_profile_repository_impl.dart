@@ -72,6 +72,7 @@ class MockProfileRepository implements ProfileRepository {
 
   @override
   Future<Either<Failure, bool>> updateProfile({
+    String? displayName,
     String? bio,
     String? city,
     String? country,
@@ -85,6 +86,7 @@ class MockProfileRepository implements ProfileRepository {
       role: _profile.role,
       email: _profile.email,
       username: _profile.username,
+      displayName: displayName ?? _profile.displayName,
       emailVerified: _profile.emailVerified,
       tier: _profile.tier,
       profileDetails: UserProfileDetails(

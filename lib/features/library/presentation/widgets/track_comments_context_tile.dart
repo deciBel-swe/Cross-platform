@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../domain/entities/track.dart';
 
 /// Displays a brief overview of the current track at the top of the comments section.
@@ -19,12 +20,12 @@ class TrackCommentsContextTile extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: track.coverUrl != null && track.coverUrl!.isNotEmpty
-                ? Image.network(
-                    track.coverUrl!,
+                ? DecibelCachedImage(
+                    imageUrl: track.coverUrl!,
                     width: 48,
                     height: 48,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
+                    errorWidget: Container(
                       width: 48,
                       height: 48,
                       color: theme.colorScheme.surfaceContainerHighest,

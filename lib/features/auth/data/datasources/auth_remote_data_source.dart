@@ -16,6 +16,7 @@ import '../models/device_info_model.dart';
 import '../models/login_local_request_model.dart';
 import '../models/login_response_model.dart';
 import '../models/oauth_exchange_request_dto.dart';
+import '../models/refresh_token_response_model.dart';
 import '../models/register_local_request_model.dart';
 import '../utils/auth_success_page.dart';
 
@@ -23,6 +24,10 @@ abstract class IAuthRemoteDataSource {
   Future<LoginResponseModel> loginLocal(LoginLocalRequestModel request);
   Future<void> registerLocal(RegisterLocalRequestModel request);
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
+  Future<RefreshTokenResponseModel> refreshToken({
+    required String refreshToken,
+    required String accessToken,
+  });
   Future<void> logout();
 }
 
@@ -46,9 +51,9 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         data: payload,
       );
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         throw AuthException(
-          'Backend returned an error. Status Code: ${response.statusCode}',
+          _parseManualError(response.data, fallback: 'Login failed'),
         );
       }
 
@@ -72,9 +77,9 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         data: request.toJson(),
       );
 
-      if (response.statusCode != 201) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         throw AuthException(
-          'Backend returned an error. Status Code: ${response.statusCode}',
+          _parseManualError(response.data, fallback: 'Registration failed'),
         );
       }
     } on DioException catch (e) {
@@ -142,6 +147,24 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         '&response_type=code'
         '&scope=email%20profile',
       );
+
+      // Early error check: pre-flight the auth URL
+      try {
+        final checkResponse = await Dio().getUri<dynamic>(authUrl);
+        if (checkResponse.realUri.toString().contains('oauth/error')) {
+          return Future.error(
+            const AuthException('error while loging with google'),
+          );
+        }
+      } on DioException catch (e) {
+        if (e.response?.realUri.toString().contains('oauth/error') == true) {
+          return Future.error(
+            const AuthException('error while loging with google'),
+          );
+        }
+      } catch (_) {
+        // Ignored, proceed to normal flow if the check fails for some other reason
+      }
 
       HttpServer? localServer;
       try {
@@ -246,6 +269,39 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   }
 
   @override
+  Future<RefreshTokenResponseModel> refreshToken({
+    required String refreshToken,
+    required String accessToken,
+  }) async {
+    try {
+      final cookieHeader =
+          'refreshToken=$refreshToken; accessToken=$accessToken';
+
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.refreshTokenEndpoint,
+        data: {'refreshToken': refreshToken},
+        options: Options(headers: {'Cookie': cookieHeader}),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw AuthException(
+          _parseManualError(response.data, fallback: 'Token refresh failed'),
+        );
+      }
+
+      return _parseRefreshTokenResponse(response);
+    } on DioException catch (e) {
+      throw ServerException(
+        _extractDioErrorMessage(e, fallback: 'Token refresh failed'),
+      );
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during token refresh: $e',
+      );
+    }
+  }
+
+  @override
   Future<void> logout() async {
     try {
       final response = await _dioClient.post<dynamic>(
@@ -253,7 +309,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         data: const <String, dynamic>{},
       );
 
-      if (response.statusCode != 204) {
+      if (response.statusCode != 200 && response.statusCode != 204) {
         throw AuthException(
           'Backend returned an error. Status Code: ${response.statusCode}',
         );
@@ -327,50 +383,104 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       throw const AuthException('Invalid response format from server.');
     }
 
-    final extractedRefreshToken = _extractRefreshToken(response);
+    final cookies = response.headers.map['set-cookie'] ?? <String>[];
+    String? extractedRefreshToken;
+    String? extractedAccessToken;
+
+    for (final cookie in cookies) {
+      final parts = cookie.split(';');
+      for (final part in parts) {
+        final trimmed = part.trim();
+        if (trimmed.startsWith('refreshToken=')) {
+          extractedRefreshToken = trimmed.substring('refreshToken='.length);
+        } else if (trimmed.startsWith('accessToken=')) {
+          extractedAccessToken = trimmed.substring('accessToken='.length);
+        }
+      }
+    }
+
     if (extractedRefreshToken != null && extractedRefreshToken.isNotEmpty) {
       dataMap['refreshToken'] = extractedRefreshToken;
+    }
+    if (extractedAccessToken != null && extractedAccessToken.isNotEmpty) {
+      dataMap['accessToken'] = extractedAccessToken;
     }
 
     return LoginResponseModel.fromJson(dataMap);
   }
 
-  String? _extractRefreshToken(Response<dynamic> response) {
+  RefreshTokenResponseModel _parseRefreshTokenResponse(
+    Response<dynamic> response,
+  ) {
+    final body = response.data;
+
+    Map<String, dynamic> dataMap;
+    if (body is Map<String, dynamic> && body['data'] != null) {
+      dataMap = Map<String, dynamic>.from(body['data'] as Map);
+    } else if (body is Map<String, dynamic>) {
+      dataMap = Map<String, dynamic>.from(body);
+    } else {
+      throw const AuthException('Invalid refresh response format from server.');
+    }
+
     final cookies = response.headers.map['set-cookie'] ?? <String>[];
+    String? extractedRefreshToken;
 
     for (final cookie in cookies) {
-      if (!cookie.contains('refreshToken=')) {
-        continue;
-      }
-
       final parts = cookie.split(';');
       for (final part in parts) {
         final trimmed = part.trim();
         if (trimmed.startsWith('refreshToken=')) {
-          return trimmed.substring('refreshToken='.length);
+          extractedRefreshToken = trimmed.substring('refreshToken='.length);
         }
       }
     }
 
-    return null;
+    final accessToken = dataMap['accessToken'];
+    final expiresInRaw = dataMap['expiresIn'];
+
+    if (accessToken is! String || accessToken.isEmpty) {
+      throw const AuthException('Missing access token in refresh response.');
+    }
+
+    final expiresIn = switch (expiresInRaw) {
+      int value => value,
+      String value => int.tryParse(value),
+      _ => null,
+    };
+
+    if (expiresIn == null || expiresIn <= 0) {
+      throw const AuthException(
+        'Missing or invalid expiresIn in refresh response.',
+      );
+    }
+
+    return RefreshTokenResponseModel(
+      accessToken: accessToken,
+      expiresIn: expiresIn,
+      refreshToken: extractedRefreshToken,
+    );
+  }
+
+  String _parseManualError(Object? data, {required String fallback}) {
+    if (data is Map<String, dynamic>) {
+      final parsed = _parseErrorMap(data);
+      if (parsed != null) return parsed;
+    }
+    return fallback;
   }
 
   String _extractDioErrorMessage(DioException e, {required String fallback}) {
     final data = e.response?.data;
+    final statusCode = e.response?.statusCode;
+
+    if (statusCode == 401) {
+      return 'Incorrect email or password.';
+    }
 
     if (data is Map<String, dynamic>) {
-      final directMessage = data['message'];
-      if (directMessage is String && directMessage.trim().isNotEmpty) {
-        return directMessage.trim();
-      }
-
-      final nestedData = data['data'];
-      if (nestedData is Map<String, dynamic>) {
-        final nestedMessage = nestedData['message'];
-        if (nestedMessage is String && nestedMessage.trim().isNotEmpty) {
-          return nestedMessage.trim();
-        }
-      }
+      final parsed = _parseErrorMap(data);
+      if (parsed != null) return parsed;
     }
 
     final fallbackMessage = e.message?.trim();
@@ -379,5 +489,43 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     }
 
     return fallback;
+  }
+
+  String? _parseErrorMap(Map<String, dynamic> data) {
+    final errors = data['errors'];
+    if (errors is Map<String, dynamic>) {
+      final List<String> fieldErrors = [];
+
+      errors.forEach((key, value) {
+        if (value is List) {
+          fieldErrors.add(value.join('\n'));
+        } else {
+          fieldErrors.add(value.toString());
+        }
+      });
+
+      if (fieldErrors.isNotEmpty) {
+        return fieldErrors.join('\n');
+      }
+    }
+
+    final messageData = data['message'];
+    if (messageData is List && messageData.isNotEmpty) {
+      return messageData.join('\n');
+    }
+
+    if (messageData is String && messageData.trim().isNotEmpty) {
+      return messageData.trim();
+    }
+
+    final nestedData = data['data'];
+    if (nestedData is Map<String, dynamic>) {
+      final nestedMessage = nestedData['message'];
+      if (nestedMessage is String && nestedMessage.trim().isNotEmpty) {
+        return nestedMessage.trim();
+      }
+    }
+
+    return null;
   }
 }

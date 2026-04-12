@@ -6,17 +6,17 @@ import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/public_profile.dart';
 import '../notifiers/public_profile_notifier.dart';
 
-/// Family provider that fetches and caches a public profile by userId.
+/// Family provider that fetches and caches a public profile by user identifier.
 ///
 /// Triggers the initial fetch on first watch, and seeds the
 /// [followStateProvider] with the correct `isFollowing` value.
 ///
 /// Usage:
 /// ```dart
-/// final profileAsync = ref.watch(publicProfileProvider(userId));
+/// final profileAsync = ref.watch(publicProfileProvider(userIdentifier));
 /// ```
 final publicProfileProvider =
-    AsyncNotifierProvider.family<PublicProfileNotifier, PublicProfile, int>(
+    AsyncNotifierProvider.family<PublicProfileNotifier, PublicProfile, String>(
       PublicProfileNotifier.new,
     );
 
@@ -25,11 +25,11 @@ final publicProfileProvider =
 /// Used for lightweight count updates in the header without refreshing
 /// the whole page state.
 final publicProfileSnapshotProvider = FutureProvider.autoDispose
-    .family<PublicProfile, int>((ref, userId) async {
+    .family<PublicProfile, String>((ref, userIdentifier) async {
       ref.watch(followRefreshTickProvider);
 
       final repository = ref.read(followRepositoryProvider);
-      final result = await repository.getPublicProfile(userId);
+      final result = await repository.getPublicProfile(userIdentifier);
 
       return result.fold(
         (failure) => throw Exception(failure.message),

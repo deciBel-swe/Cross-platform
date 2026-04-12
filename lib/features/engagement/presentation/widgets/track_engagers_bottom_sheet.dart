@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -187,12 +188,13 @@ class _EngagerTile extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => context.push(RoutePaths.publicProfile(user.id)),
+            onTap: () =>
+                context.push(RoutePaths.publicProfile(user.id.toString())),
             child: CircleAvatar(
               radius: 20,
               backgroundColor: Colors.white10,
               backgroundImage: user.avatarUrl != null
-                  ? NetworkImage(user.avatarUrl!)
+                  ? CachedNetworkImageProvider(user.avatarUrl!)
                   : null,
               child: user.avatarUrl == null
                   ? const Icon(Icons.person, color: Colors.white54)
@@ -202,7 +204,8 @@ class _EngagerTile extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: GestureDetector(
-              onTap: () => context.push(RoutePaths.publicProfile(user.id)),
+              onTap: () =>
+                  context.push(RoutePaths.publicProfile(user.id.toString())),
               behavior: HitTestBehavior.opaque,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,10 +235,7 @@ class _EngagerTile extends StatelessWidget {
               ),
             ),
           ),
-          _FollowButton(
-            userId: user.id,
-            initialFollowing: user.isFollowing,
-          ),
+          _FollowButton(userId: user.id, initialFollowing: user.isFollowing),
         ],
       ),
     );
@@ -266,10 +266,7 @@ class _ProBadge extends StatelessWidget {
 }
 
 class _FollowButton extends ConsumerStatefulWidget {
-  const _FollowButton({
-    required this.userId,
-    required this.initialFollowing,
-  });
+  const _FollowButton({required this.userId, required this.initialFollowing});
 
   final int userId;
   final bool initialFollowing;

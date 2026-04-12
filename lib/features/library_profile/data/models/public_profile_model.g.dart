@@ -11,6 +11,7 @@ _$PublicProfileModelImpl _$$PublicProfileModelImplFromJson(
 ) => _$PublicProfileModelImpl(
   id: (json['id'] as num).toInt(),
   username: json['username'] as String,
+  displayName: json['displayName'] as String?,
   tier: json['tier'] as String? ?? 'FREE',
   profile: json['profile'] == null
       ? null
@@ -23,6 +24,7 @@ _$PublicProfileModelImpl _$$PublicProfileModelImplFromJson(
   stats: PublicStatsModel.fromJson(json['stats'] as Map<String, dynamic>),
   isFollowing: json['isFollowing'] as bool? ?? false,
   isFollowedBy: json['isFollowedBy'] as bool? ?? false,
+  isBlocked: json['isBlocked'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$$PublicProfileModelImplToJson(
@@ -30,12 +32,14 @@ Map<String, dynamic> _$$PublicProfileModelImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'username': instance.username,
+  'displayName': instance.displayName,
   'tier': instance.tier,
   'profile': instance.profile,
   'socialLinks': instance.socialLinks,
   'stats': instance.stats,
   'isFollowing': instance.isFollowing,
   'isFollowedBy': instance.isFollowedBy,
+  'isBlocked': instance.isBlocked,
 };
 
 _$PublicProfileDetailsModelImpl _$$PublicProfileDetailsModelImplFromJson(

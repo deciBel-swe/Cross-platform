@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dynamic_app_icon_flutter_plus/dynamic_app_icon_flutter_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:injectable/injectable.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../../../core/constants/app_assets.dart';
@@ -10,6 +11,7 @@ import '../../domain/entities/app_icon_option.dart';
 import '../../domain/repositories/app_icon_repository.dart';
 
 /// Applies and persists the selected app icon.
+@LazySingleton(as: AppIconRepository)
 class AppIconRepositoryImpl implements AppIconRepository {
   AppIconRepositoryImpl(this._prefsService);
 

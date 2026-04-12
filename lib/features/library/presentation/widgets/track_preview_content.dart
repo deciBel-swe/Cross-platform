@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../library/presentation/notifiers/track_comment_notifier.dart';
 import '../../../library/presentation/widgets/bottom_bar_widget.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/track_preview_derived_providers.dart';
@@ -13,11 +14,11 @@ import '../../../library_profile/presentation/widgets/track_preview_background.d
 import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
-import '../providers/track_comment_provider.dart';
 import 'active_comments_overlay.dart';
 import 'interactive_waveform.dart';
-import 'track_comment_input_bar.dart';
 import 'track_comments_bottom_sheet.dart';
+import 'track_preview_input_section.dart';
+import 'waveform_not_ready.dart';
 
 class TrackPreviewContent extends ConsumerWidget {
   const TrackPreviewContent({
@@ -50,100 +51,72 @@ class TrackPreviewContent extends ConsumerWidget {
         ? ref.watch(trackPreviewNormalizedPeaksProvider(trackId))
         : null;
 
-    final contentColumn = Column(
+    final mainArea = Stack(
+      children: [
+        TrackPreviewBackground(
+          imageUrl: track.coverUrl,
+          isBlurred: isReady ? playbackUi.shouldBlurBackground : true,
+        ),
+        SafeArea(
+          bottom: false,
+          child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    const TrackPreviewTopBar(),
+                    const SizedBox(height: 16),
+                    TrackPreviewInfo(
+                      title: track.title,
+                      artistName: track.artist.username,
+                      tagLabel: 'Behind this track',
+                    ),
+                    const Spacer(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: ActiveCommentsOverlay(trackId: trackId),
+                    ),
+                    const SizedBox(height: 12),
+                    if (isReady)
+                      InteractiveWaveform(
+                        peaks: peaks!,
+                        audioState: audioState,
+                        audioNotifier: audioNotifier,
+                      )
+                    else
+                      const WaveformNotReady(),
+                    const SizedBox(height: 16),
+                    TrackPreviewInputSection(trackId: trackId),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    return Column(
       children: [
         Expanded(
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(32),
-            ),
-            child: Stack(
-              children: [
-                TrackPreviewBackground(
-                  imageUrl: track.coverUrl,
-                  isBlurred: isReady ? playbackUi.shouldBlurBackground : true,
-                ),
-                SafeArea(
-                  bottom: false,
-                  child: CustomScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    slivers: [
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 8),
-                            const TrackPreviewTopBar(),
-                            const SizedBox(height: 16),
-                            TrackPreviewInfo(
-                              title: track.title,
-                              artistName: track.artist.username,
-                              tagLabel: 'Behind this track',
-                            ),
-
-                            const Spacer(),
-
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              child: ActiveCommentsOverlay(trackId: trackId),
-                            ),
-                            const SizedBox(height: 12),
-
-                            if (isReady)
-                              InteractiveWaveform(
-                                peaks: peaks as List<double>,
-                                audioState: audioState,
-                                audioNotifier: audioNotifier,
-                              )
-                            else
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                child: Text(
-                                  'Waveform is not ready yet.',
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(color: Colors.white70),
-                                ),
-                              ),
-                            const SizedBox(height: 16),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                                vertical: 16.0,
-                              ),
-                              child: CommentReactionBar(
-                                onSendTap: (content) {
-                                  ref
-                                      .read(
-                                        trackCommentsProvider(trackId).notifier,
-                                      )
-                                      .selectTimestamp(
-                                        (audioState.duration.inSeconds *
-                                                audioState.progress)
-                                            .round(),
-                                      );
-
-                                  ref
-                                      .read(
-                                        trackCommentsProvider(trackId).notifier,
-                                      )
-                                      .postComment(content);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          child: isReady
+              ? TrackPreviewPlaybackOverlay(
+                  showPlayIcon: playbackUi.showPlayIcon,
+                  onToggle: () async {
+                    if (audioState.isPreparing) return;
+                    if (audioState.isPlaying) {
+                      await audioNotifier.pause();
+                    } else {
+                      await audioNotifier.play();
+                    }
+                  },
+                  child: mainArea,
+                )
+              : mainArea,
         ),
         BottomBarWidget(
           trackId: trackId,
@@ -173,21 +146,6 @@ class TrackPreviewContent extends ConsumerWidget {
           },
         ),
       ],
-    );
-
-    if (!isReady) return contentColumn;
-
-    return TrackPreviewPlaybackOverlay(
-      showPlayIcon: playbackUi.showPlayIcon,
-      onToggle: () async {
-        if (audioState.isPreparing) return;
-        if (audioState.isPlaying) {
-          await audioNotifier.pause();
-        } else {
-          await audioNotifier.play();
-        }
-      },
-      child: contentColumn,
     );
   }
 

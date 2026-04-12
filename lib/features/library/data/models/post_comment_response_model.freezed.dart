@@ -24,11 +24,13 @@ PostCommentResponseModel _$PostCommentResponseModelFromJson(
 /// @nodoc
 mixin _$PostCommentResponseModel {
   @JsonKey(name: 'id')
-  int get commentId => throw _privateConstructorUsedError;
+  int get commentid => throw _privateConstructorUsedError;
   CommentUserModel get user => throw _privateConstructorUsedError;
   String get body => throw _privateConstructorUsedError;
   int? get timestampSeconds => throw _privateConstructorUsedError;
-  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime? get createdAt => throw _privateConstructorUsedError;
+  int? get replycount => throw _privateConstructorUsedError;
+  int? get replyToCommentId => throw _privateConstructorUsedError;
 
   /// Serializes this PostCommentResponseModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -48,11 +50,13 @@ abstract class $PostCommentResponseModelCopyWith<$Res> {
   ) = _$PostCommentResponseModelCopyWithImpl<$Res, PostCommentResponseModel>;
   @useResult
   $Res call({
-    @JsonKey(name: 'id') int commentId,
+    @JsonKey(name: 'id') int commentid,
     CommentUserModel user,
     String body,
     int? timestampSeconds,
-    DateTime createdAt,
+    DateTime? createdAt,
+    int? replycount,
+    int? replyToCommentId,
   });
 
   $CommentUserModelCopyWith<$Res> get user;
@@ -76,17 +80,19 @@ class _$PostCommentResponseModelCopyWithImpl<
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? commentId = null,
+    Object? commentid = null,
     Object? user = null,
     Object? body = null,
     Object? timestampSeconds = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
+    Object? replycount = freezed,
+    Object? replyToCommentId = freezed,
   }) {
     return _then(
       _value.copyWith(
-            commentId: null == commentId
-                ? _value.commentId
-                : commentId // ignore: cast_nullable_to_non_nullable
+            commentid: null == commentid
+                ? _value.commentid
+                : commentid // ignore: cast_nullable_to_non_nullable
                       as int,
             user: null == user
                 ? _value.user
@@ -100,10 +106,18 @@ class _$PostCommentResponseModelCopyWithImpl<
                 ? _value.timestampSeconds
                 : timestampSeconds // ignore: cast_nullable_to_non_nullable
                       as int?,
-            createdAt: null == createdAt
+            createdAt: freezed == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
+                      as DateTime?,
+            replycount: freezed == replycount
+                ? _value.replycount
+                : replycount // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            replyToCommentId: freezed == replyToCommentId
+                ? _value.replyToCommentId
+                : replyToCommentId // ignore: cast_nullable_to_non_nullable
+                      as int?,
           )
           as $Val,
     );
@@ -130,11 +144,13 @@ abstract class _$$PostCommentResponseModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    @JsonKey(name: 'id') int commentId,
+    @JsonKey(name: 'id') int commentid,
     CommentUserModel user,
     String body,
     int? timestampSeconds,
-    DateTime createdAt,
+    DateTime? createdAt,
+    int? replycount,
+    int? replyToCommentId,
   });
 
   @override
@@ -159,17 +175,19 @@ class __$$PostCommentResponseModelImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? commentId = null,
+    Object? commentid = null,
     Object? user = null,
     Object? body = null,
     Object? timestampSeconds = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
+    Object? replycount = freezed,
+    Object? replyToCommentId = freezed,
   }) {
     return _then(
       _$PostCommentResponseModelImpl(
-        commentId: null == commentId
-            ? _value.commentId
-            : commentId // ignore: cast_nullable_to_non_nullable
+        commentid: null == commentid
+            ? _value.commentid
+            : commentid // ignore: cast_nullable_to_non_nullable
                   as int,
         user: null == user
             ? _value.user
@@ -183,10 +201,18 @@ class __$$PostCommentResponseModelImplCopyWithImpl<$Res>
             ? _value.timestampSeconds
             : timestampSeconds // ignore: cast_nullable_to_non_nullable
                   as int?,
-        createdAt: null == createdAt
+        createdAt: freezed == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
+                  as DateTime?,
+        replycount: freezed == replycount
+            ? _value.replycount
+            : replycount // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        replyToCommentId: freezed == replyToCommentId
+            ? _value.replyToCommentId
+            : replyToCommentId // ignore: cast_nullable_to_non_nullable
+                  as int?,
       ),
     );
   }
@@ -194,21 +220,23 @@ class __$$PostCommentResponseModelImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
+class _$PostCommentResponseModelImpl extends _PostCommentResponseModel {
   const _$PostCommentResponseModelImpl({
-    @JsonKey(name: 'id') required this.commentId,
+    @JsonKey(name: 'id') required this.commentid,
     required this.user,
     required this.body,
     this.timestampSeconds,
-    required this.createdAt,
-  });
+    this.createdAt,
+    this.replycount,
+    this.replyToCommentId,
+  }) : super._();
 
   factory _$PostCommentResponseModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$PostCommentResponseModelImplFromJson(json);
 
   @override
   @JsonKey(name: 'id')
-  final int commentId;
+  final int commentid;
   @override
   final CommentUserModel user;
   @override
@@ -216,11 +244,15 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
   @override
   final int? timestampSeconds;
   @override
-  final DateTime createdAt;
+  final DateTime? createdAt;
+  @override
+  final int? replycount;
+  @override
+  final int? replyToCommentId;
 
   @override
   String toString() {
-    return 'PostCommentResponseModel(commentId: $commentId, user: $user, body: $body, timestampSeconds: $timestampSeconds, createdAt: $createdAt)';
+    return 'PostCommentResponseModel(commentid: $commentid, user: $user, body: $body, timestampSeconds: $timestampSeconds, createdAt: $createdAt, replycount: $replycount, replyToCommentId: $replyToCommentId)';
   }
 
   @override
@@ -228,25 +260,31 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$PostCommentResponseModelImpl &&
-            (identical(other.commentId, commentId) ||
-                other.commentId == commentId) &&
+            (identical(other.commentid, commentid) ||
+                other.commentid == commentid) &&
             (identical(other.user, user) || other.user == user) &&
             (identical(other.body, body) || other.body == body) &&
             (identical(other.timestampSeconds, timestampSeconds) ||
                 other.timestampSeconds == timestampSeconds) &&
             (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+                other.createdAt == createdAt) &&
+            (identical(other.replycount, replycount) ||
+                other.replycount == replycount) &&
+            (identical(other.replyToCommentId, replyToCommentId) ||
+                other.replyToCommentId == replyToCommentId));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
     runtimeType,
-    commentId,
+    commentid,
     user,
     body,
     timestampSeconds,
     createdAt,
+    replycount,
+    replyToCommentId,
   );
 
   /// Create a copy of PostCommentResponseModel
@@ -266,21 +304,24 @@ class _$PostCommentResponseModelImpl implements _PostCommentResponseModel {
   }
 }
 
-abstract class _PostCommentResponseModel implements PostCommentResponseModel {
+abstract class _PostCommentResponseModel extends PostCommentResponseModel {
   const factory _PostCommentResponseModel({
-    @JsonKey(name: 'id') required final int commentId,
+    @JsonKey(name: 'id') required final int commentid,
     required final CommentUserModel user,
     required final String body,
     final int? timestampSeconds,
-    required final DateTime createdAt,
+    final DateTime? createdAt,
+    final int? replycount,
+    final int? replyToCommentId,
   }) = _$PostCommentResponseModelImpl;
+  const _PostCommentResponseModel._() : super._();
 
   factory _PostCommentResponseModel.fromJson(Map<String, dynamic> json) =
       _$PostCommentResponseModelImpl.fromJson;
 
   @override
   @JsonKey(name: 'id')
-  int get commentId;
+  int get commentid;
   @override
   CommentUserModel get user;
   @override
@@ -288,7 +329,11 @@ abstract class _PostCommentResponseModel implements PostCommentResponseModel {
   @override
   int? get timestampSeconds;
   @override
-  DateTime get createdAt;
+  DateTime? get createdAt;
+  @override
+  int? get replycount;
+  @override
+  int? get replyToCommentId;
 
   /// Create a copy of PostCommentResponseModel
   /// with the given fields replaced by the non-null parameter values.

@@ -16,14 +16,20 @@ class MockFollowRepository implements FollowRepository {
   /// Tracks follow state per userId so toggling persists across calls.
   final Map<int, bool> _followState = {};
 
-  /// Returns a fake public profile for any [userId].
+  /// Returns a fake public profile for any [userIdentifier].
   ///
   /// The mock user "demo_artist" has 128 followers and 42 following.
   /// `isFollowing` comes from the in-memory map (defaults to `false`).
   /// `isFollowedBy` is `true` for even userIds (to test Follow Back).
   @override
-  Future<Either<Failure, PublicProfile>> getPublicProfile(int userId) async {
+  Future<Either<Failure, PublicProfile>> getPublicProfile(
+    String userIdentifier,
+  ) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
+
+    final parsedUserId = int.tryParse(userIdentifier);
+    final userId =
+        parsedUserId ?? userIdentifier.toLowerCase().hashCode.abs() % 100000;
 
     final isFollowing = _followState[userId] ?? false;
     final isFollowedBy = userId.isEven; // even IDs "follow you back"
@@ -55,6 +61,7 @@ class MockFollowRepository implements FollowRepository {
         ),
         isFollowing: isFollowing,
         isFollowedBy: isFollowedBy,
+        isBlocked: false,
       ),
     );
   }
@@ -167,6 +174,37 @@ class MockFollowRepository implements FollowRepository {
         totalElements: 80,
         totalPages: 4,
         isLast: page >= 3,
+      ),
+    );
+  }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getFriends({
+    int page = 0,
+    int size = 20,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+
+    // Simulate mutual friends (users who both follow you and you follow back)
+    final users = List<TrackEngager>.generate(3, (index) {
+      final id = 9000 + index + 1;
+      return TrackEngager(
+        id: id,
+        username: 'mutual_friend_$id',
+        avatarUrl: null,
+        tier: 'PRO',
+        isFollowing: true,
+      );
+    });
+
+    return Right(
+      PaginatedEngagers(
+        content: users,
+        pageNumber: 0,
+        pageSize: size,
+        totalElements: 3,
+        totalPages: 1,
+        isLast: true,
       ),
     );
   }

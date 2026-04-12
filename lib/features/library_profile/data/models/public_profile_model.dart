@@ -16,6 +16,7 @@ class PublicProfileModel with _$PublicProfileModel {
   const factory PublicProfileModel({
     required int id,
     required String username,
+    String? displayName,
     @Default('FREE') String tier,
     PublicProfileDetailsModel? profile,
     SocialLinksModel? socialLinks,
@@ -26,6 +27,9 @@ class PublicProfileModel with _$PublicProfileModel {
 
     /// Whether this profile's user follows the current logged-in user.
     @Default(false) bool isFollowedBy,
+
+    /// Whether the current logged-in user has blocked this profile's user.
+    @Default(false) bool isBlocked,
   }) = _PublicProfileModel;
 
   factory PublicProfileModel.fromJson(Map<String, dynamic> json) =>
@@ -74,12 +78,14 @@ extension PublicProfileModelX on PublicProfileModel {
     return PublicProfile(
       id: id,
       username: username,
+      displayName: displayName,
       tier: tier,
       profile: profile?.toEntity(),
       socialLinks: socialLinks?.toEntity(),
       stats: stats.toEntity(),
       isFollowing: isFollowing,
       isFollowedBy: isFollowedBy,
+      isBlocked: isBlocked,
     );
   }
 }

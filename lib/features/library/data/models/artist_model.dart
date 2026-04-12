@@ -7,8 +7,12 @@ part 'artist_model.g.dart';
 
 @freezed
 class ArtistModel with _$ArtistModel {
-  const factory ArtistModel({required int id, required String username}) =
-      _ArtistModel;
+  const factory ArtistModel({
+    required int id,
+    required String username,
+    String? displayName,
+    String? avatarUrl,
+  }) = _ArtistModel;
 
   factory ArtistModel.fromJson(Map<String, dynamic> json) =>
       _$ArtistModelFromJson(json);
@@ -16,6 +20,11 @@ class ArtistModel with _$ArtistModel {
 
 extension ArtistModelX on ArtistModel {
   Artist toEntity() {
-    return Artist(id: id, username: username);
+    return Artist(
+      id: id,
+      username: username,
+      displayName: displayName,
+      avatarUrl: avatarUrl,
+    );
   }
 }

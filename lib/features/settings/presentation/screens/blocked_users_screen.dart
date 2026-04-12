@@ -1,12 +1,14 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/router/route_paths.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimensions.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../domain/entities/blocked_user.dart';
+import '../../../library_profile/domain/entities/blocked_user_summary.dart';
+import '../../../library_profile/presentation/providers/block_provider.dart';
 import '../providers/blocked_users_provider.dart';
-import '../widgets/blocked_user_tile.dart';
 
 class BlockedUsersScreen extends ConsumerStatefulWidget {
   const BlockedUsersScreen({super.key});
@@ -22,6 +24,10 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
+
+    Future.microtask(() async {
+      await ref.read(blockedUsersListProvider.notifier).refresh();
+    });
   }
 
   @override
@@ -37,58 +43,76 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
       return;
     }
 
-    final ScrollPosition position = _scrollController.position;
-    final double threshold = position.maxScrollExtent * 0.8;
+    final position = _scrollController.position;
+    final threshold = position.maxScrollExtent * 0.8;
 
     if (position.pixels >= threshold) {
-      ref.read(blockedUsersProvider.notifier).loadMore();
+      ref.read(blockedUsersListProvider.notifier).loadMore();
     }
   }
 
   Future<void> _showUnblockConfirmation(
     BuildContext context,
-    BlockedUser user,
+    int userId,
+    String username,
   ) async {
     final bool? confirmed = await showModalBottomSheet<bool>(
       context: context,
-      backgroundColor: AppColors.surface,
-      builder: (BuildContext context) {
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(AppDimensions.paddingLg),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Text(
-                  'Unblock ${user.username}?',
-                  style: AppTextStyles.headlineMedium.copyWith(
+                Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white54,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Unblock user?',
+                  style: TextStyle(
+                    color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: AppDimensions.paddingSm),
+                const SizedBox(height: 12),
                 Text(
-                  'They will be able to interact with you again.',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                  'Do you want to unblock $username?',
                   textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, height: 1.5),
                 ),
-                const SizedBox(height: AppDimensions.paddingLg),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Unblock'),
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.paddingSm),
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.pop(sheetContext, false),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(sheetContext, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Unblock'),
                   ),
                 ),
               ],
@@ -98,34 +122,62 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
       },
     );
 
-    if (confirmed != true || !mounted) {
+    if (confirmed != true) {
       return;
     }
 
-    await ref.read(blockedUsersProvider.notifier).unblockUser(userId: user.id);
+    final success = await ref
+        .read(blockedUsersListProvider.notifier)
+        .unblockUser(userId: userId);
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (success) {
+      ref.read(blockedUsersProvider.notifier).markUnblockedLocally(userId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$username unblocked successfully.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to unblock user.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final BlockedUsersState state = ref.watch(blockedUsersProvider);
+    final state = ref.watch(blockedUsersListProvider);
+
+    ref.listen(blockedUsersListProvider, (previous, next) {
+      final summaries = next.users
+          .map(
+            (user) => BlockedUserSummary(
+              id: user.id,
+              username: user.username,
+              avatarUrl: user.avatarUrl,
+            ),
+          )
+          .toList();
+
+      ref.read(blockedUsersProvider.notifier).syncFromBackend(summaries);
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        title: const Text('Blocked users'),
         backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Blocked users',
-          style: AppTextStyles.headlineMedium.copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(blockedUsersProvider.notifier).refresh(),
+        onRefresh: () => ref.read(blockedUsersListProvider.notifier).refresh(),
         child: Builder(
-          builder: (BuildContext context) {
+          builder: (context) {
             if (state.isLoading && state.users.isEmpty) {
               return const Center(child: CircularProgressIndicator());
             }
@@ -133,37 +185,12 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
             if (state.hasError && state.users.isEmpty) {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                children: <Widget>[
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.22),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDimensions.paddingLg,
-                    ),
-                    child: Column(
-                      children: <Widget>[
-                        const Icon(
-                          Icons.wifi_off_rounded,
-                          color: AppColors.textMuted,
-                          size: 54,
-                        ),
-                        const SizedBox(height: AppDimensions.paddingMd),
-                        Text(
-                          'Failed to load blocked users.',
-                          style: AppTextStyles.headlineMedium.copyWith(
-                            fontSize: 20,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: AppDimensions.paddingSm),
-                        TextButton(
-                          onPressed: () {
-                            ref
-                                .read(blockedUsersProvider.notifier)
-                                .loadInitial();
-                          },
-                          child: const Text('Retry'),
-                        ),
-                      ],
+                children: const [
+                  SizedBox(height: 220),
+                  Center(
+                    child: Text(
+                      'Failed to load blocked users.',
+                      style: TextStyle(color: Colors.white70),
                     ),
                   ),
                 ],
@@ -173,56 +200,92 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
             if (state.users.isEmpty) {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                children: <Widget>[
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.22),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDimensions.paddingLg,
-                    ),
-                    child: Column(
-                      children: <Widget>[
-                        const Icon(
-                          Icons.block,
-                          size: 72,
-                          color: AppColors.textMuted,
-                        ),
-                        const SizedBox(height: AppDimensions.paddingMd),
-                        Text(
-                          "You haven't blocked anyone.",
-                          style: AppTextStyles.headlineMedium.copyWith(
-                            fontSize: 22,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                children: const [
+                  SizedBox(height: 220),
+                  Center(
+                    child: Text(
+                      "You haven't blocked anyone.",
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                   ),
                 ],
               );
             }
 
-            final int itemCount =
+            final itemCount =
                 state.users.length + (state.isLoadingMore ? 1 : 0);
 
             return ListView.separated(
               controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
               itemCount: itemCount,
-              separatorBuilder: (_, _) =>
+              separatorBuilder: (context, index) =>
                   const Divider(height: 1, color: AppColors.divider),
               itemBuilder: (BuildContext context, int index) {
                 if (index >= state.users.length) {
                   return const Padding(
-                    padding: EdgeInsets.all(AppDimensions.paddingMd),
+                    padding: EdgeInsets.all(16),
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
 
-                final BlockedUser user = state.users[index];
+                final user = state.users[index];
 
-                return BlockedUserTile(
-                  user: user,
-                  onUnblockTap: () => _showUnblockConfirmation(context, user),
+                return InkWell(
+                  onTap: () {
+                    context.push(RoutePaths.publicProfile(user.id.toString()));
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: Colors.white12,
+                          backgroundImage:
+                              (user.avatarUrl != null &&
+                                  user.avatarUrl!.trim().isNotEmpty)
+                              ? CachedNetworkImageProvider(user.avatarUrl!)
+                              : null,
+                          child:
+                              (user.avatarUrl == null ||
+                                  user.avatarUrl!.trim().isEmpty)
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            user.username,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _showUnblockConfirmation(
+                            context,
+                            user.id,
+                            user.username,
+                          ),
+                          child: const Text(
+                            'Unblock',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               },
             );

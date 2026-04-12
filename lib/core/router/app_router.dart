@@ -16,16 +16,20 @@ import '../../features/engagement/presentation/screens/follow_connections_screen
 import '../../features/engagement/presentation/screens/liked_tracks_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/library/presentation/screens/following_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/track_edit_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
 import '../../features/library/presentation/screens/uploads_library_screen.dart';
+import '../../features/library_profile/presentation/providers/track_repository_provider.dart';
 import '../../features/library_profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/fullscreen_image_screen.dart';
 import '../../features/library_profile/presentation/screens/profile_screen.dart';
 import '../../features/library_profile/presentation/screens/public_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/web_profiles.dart';
+import '../../features/playlists/domain/entities/playlist.dart';
+import '../../features/playlists/presentation/screens/edit_playlist_screen.dart';
+import '../../features/playlists/presentation/screens/playlist_details_screen.dart';
+import '../../features/playlists/presentation/screens/playlists_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
 import '../../features/settings/presentation/screens/blocked_users_screen.dart';
@@ -74,6 +78,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (authState is AuthAuthenticated) {
         debugPrint('[AppRouter] -> Handling as AuthAuthenticated.');
         return isAuthRoute ? RoutePaths.home : null;
+      }
+
+      if (authStateAsync.hasError) {
+        debugPrint(
+          '[AppRouter] -> Error detected: ${authStateAsync.error}\nStackTrace: ${authStateAsync.stackTrace}',
+        );
+        return isAuthRoute && state.matchedLocation != RoutePaths.splash
+            ? null
+            : RoutePaths.start;
       }
 
       debugPrint(
@@ -147,8 +160,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     const NoTransitionPage(child: LibraryScreen()),
                 routes: [
                   GoRoute(
+                    path: 'playlists',
+                    builder: (context, state) => const PlaylistsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) {
+                          final playlist = state.extra as Playlist;
+                          return EditPlaylistScreen(playlist: playlist);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'playlist-tracks',
+                        builder: (context, state) {
+                          final playlist = state.extra as Playlist;
+                          return PlaylistDetailsScreen(
+                            playlistSummary: playlist,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  GoRoute(
                     path: 'following',
-                    builder: (context, state) => const FollowingScreen(),
+                    builder: (context, state) {
+                      final authState = ref.read(authStateProvider).valueOrNull;
+                      final userId = authState is AuthAuthenticated
+                          ? authState.user.id
+                          : 0;
+                      return FollowConnectionsScreen(
+                        userId: userId,
+                        type: FollowConnectionsType.following,
+                      );
+                    },
                   ),
                   GoRoute(
                     path: 'uploads',
@@ -285,24 +329,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
               GoRoute(
-                path: '${RoutePaths.publicProfileBase}/:userId',
+                path: '${RoutePaths.publicProfileBase}/:userIdentifier',
                 redirect: (context, state) {
-                  final raw = state.pathParameters['userId'];
-                  final userId = int.tryParse(raw ?? '');
-                  if (userId == null) {
+                  final userIdentifier = state.pathParameters['userIdentifier']
+                      ?.trim();
+                  if (userIdentifier == null || userIdentifier.isEmpty) {
                     return RoutePaths.home;
                   }
                   return null;
                 },
                 builder: (context, state) {
-                  final userId = int.parse(state.pathParameters['userId']!);
-                  return PublicProfileScreen(userId: userId);
+                  final userIdentifier =
+                      state.pathParameters['userIdentifier']!;
+                  return PublicProfileScreen(userIdentifier: userIdentifier);
                 },
                 routes: [
                   GoRoute(
                     path: 'followers',
+                    redirect: (context, state) {
+                      final raw = state.pathParameters['userIdentifier'];
+                      final userId = int.tryParse(raw ?? '');
+                      if (userId == null) {
+                        return RoutePaths.home;
+                      }
+                      return null;
+                    },
                     builder: (context, state) {
-                      final userId = int.parse(state.pathParameters['userId']!);
+                      final userId = int.parse(
+                        state.pathParameters['userIdentifier']!,
+                      );
                       return FollowConnectionsScreen(
                         userId: userId,
                         type: FollowConnectionsType.followers,
@@ -311,8 +366,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'following',
+                    redirect: (context, state) {
+                      final raw = state.pathParameters['userIdentifier'];
+                      final userId = int.tryParse(raw ?? '');
+                      if (userId == null) {
+                        return RoutePaths.home;
+                      }
+                      return null;
+                    },
                     builder: (context, state) {
-                      final userId = int.parse(state.pathParameters['userId']!);
+                      final userId = int.parse(
+                        state.pathParameters['userIdentifier']!,
+                      );
                       return FollowConnectionsScreen(
                         userId: userId,
                         type: FollowConnectionsType.following,
@@ -340,6 +405,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             child: FullscreenImagePage(imagePath: imagePath),
           );
         },
+      ),
+      GoRoute(
+        path: '/:username/:trackIdentifier',
+        redirect: (context, state) async {
+          final username = state.pathParameters['username']?.trim();
+          final trackIdentifier = state.pathParameters['trackIdentifier']
+              ?.trim();
+
+          if (username == null ||
+              username.isEmpty ||
+              RoutePaths.isReservedDeepLinkSegment(username)) {
+            return RoutePaths.home;
+          }
+
+          if (trackIdentifier == null || trackIdentifier.isEmpty) {
+            return RoutePaths.home;
+          }
+
+          try {
+            final trackRepository = ref.read(trackRepositoryProvider);
+            final resolvedTrackIdEither = await trackRepository
+                .resolveTrackIdentifier(trackIdentifier);
+
+            return resolvedTrackIdEither.fold(
+              (_) => RoutePaths.home,
+              RoutePaths.trackPreview,
+            );
+          } catch (_) {
+            return RoutePaths.home;
+          }
+        },
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/:username',
+        redirect: (context, state) {
+          final username = state.pathParameters['username']?.trim();
+
+          if (username == null ||
+              username.isEmpty ||
+              RoutePaths.isReservedDeepLinkSegment(username)) {
+            return RoutePaths.home;
+          }
+
+          return RoutePaths.publicProfile(username);
+        },
+        builder: (context, state) => const SplashScreen(),
       ),
     ],
   );

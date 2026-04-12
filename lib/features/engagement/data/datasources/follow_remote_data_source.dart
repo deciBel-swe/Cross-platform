@@ -13,10 +13,15 @@ import '../models/paginated_engagers_model.dart';
 /// Handles fetching public profiles and toggling the follow relationship
 /// between the current user and another user.
 abstract class IFollowRemoteDataSource {
-  /// Fetches a public profile for the given [userId].
+  /// Fetches a public profile for the given [userIdentifier].
   ///
-  /// Calls `GET /users/{userId}` and returns a [PublicProfileModel].
-  Future<PublicProfileModel> getPublicProfile(int userId);
+  /// Supports both numeric ids and usernames through the unified
+  /// [ApiConstants.publicProfile] endpoint helper:
+  /// - Numeric identifier -> `GET /users/{id}`
+  /// - Username identifier -> `GET /users/username/{username}`
+  ///
+  /// Returns a normalized [PublicProfileModel].
+  Future<PublicProfileModel> getPublicProfile(String userIdentifier);
 
   /// Follows the user identified by [userId].
   ///
@@ -49,6 +54,12 @@ abstract class IFollowRemoteDataSource {
     required int page,
     required int size,
   });
+
+  /// Fetches paginated mutual followers (friends) for current user.
+  Future<PaginatedEngagersModel> getFriends({
+    required int page,
+    required int size,
+  });
 }
 
 /// Concrete implementation of [IFollowRemoteDataSource] using [DioClient].
@@ -62,11 +73,12 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
   final DioClient _dioClient;
 
   @override
-  Future<PublicProfileModel> getPublicProfile(int userId) async {
+  Future<PublicProfileModel> getPublicProfile(String userIdentifier) async {
     try {
-      final response = await _dioClient.get<dynamic>(
-        ApiConstants.publicProfile(userId),
-      );
+      final trimmedIdentifier = userIdentifier.trim();
+      final endpoint = ApiConstants.publicProfile(trimmedIdentifier);
+
+      final response = await _dioClient.get<dynamic>(endpoint);
 
       final data = response.data as Map<String, dynamic>?;
       if (data == null) {
@@ -163,6 +175,18 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     required int size,
   }) async {
     return _fetchSuggestedUsers(limit: size);
+  }
+
+  @override
+  Future<PaginatedEngagersModel> getFriends({
+    required int page,
+    required int size,
+  }) async {
+    return _fetchPaginatedUsers(
+      path: '/users/me/friends',
+      page: page,
+      size: size,
+    );
   }
 
   Future<PaginatedEngagersModel> _fetchSuggestedUsers({
@@ -354,6 +378,14 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         ) ??
         false;
 
+    final isBlocked =
+        _asBool(
+          payload['isBlocked'] ??
+              relationship['isBlocked'] ??
+              profile['isBlocked'],
+        ) ??
+        false;
+
     return <String, dynamic>{
       'id': _asInt(profile['id']) ?? 0,
       'username': (profile['username'] ?? '').toString(),
@@ -376,6 +408,7 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
       },
       'isFollowing': isFollowing,
       'isFollowedBy': isFollowedBy,
+      'isBlocked': isBlocked,
     };
   }
 

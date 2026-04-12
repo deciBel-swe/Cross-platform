@@ -8,6 +8,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
+import '../../../../core/utils/genre_constants.dart';
 import '../../../library/data/datasources/library_mock_fixtures.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../domain/entities/track_upload_metadata.dart';
@@ -26,24 +27,7 @@ final uploadNotifierProvider =
     );
 
 final genreListProvider = StateProvider<List<String>>((ref) {
-  // Mocked backend data
-  return [
-    "Qur'an",
-    'Alternative Rock',
-    'Ambient',
-    'Classical',
-    'Country',
-    'Dance & EDM',
-    'Dancehall',
-    'Deep House',
-    'Disco',
-    'Drum & Bass',
-    'Dubstep',
-    'Electronic',
-    'Folk & Singer-Songwriter',
-    'Hip-hop & Rap',
-    'House',
-  ];
+  return GenreConstants.genres;
 });
 
 // 3. The Notifier which containing the form logic "Upload Form Controller"
@@ -222,33 +206,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         return;
       }
 
-      // ignore: unused_local_variable
-      List<double> waveFormData = [];
-      try {
-        final waveformService = ref.read(waveformExtractionServiceProvider);
-        waveFormData = await waveformService.extractWaveform(
-          file.path,
-          noOfSamples: 100,
-        );
-        debugPrint(
-          'WaveformDebug extracted (count=${waveFormData.length}): $waveFormData',
-        );
-      } catch (e) {
-        waveFormData = [];
-      }
-
-      if (waveFormData.isEmpty) {
-        state = AsyncValue<TrackUploadMetadata>.error(
-          'Could not extract waveform data from this audio file. Please try another file.',
-          StackTrace.current,
-        ).copyWithPrevious(state);
-        return;
-      }
-
-      final metadata = state.value!.copyWith(
-        audioFile: file,
-        waveFormData: waveFormData,
-      );
+      final metadata = state.value!.copyWith(audioFile: file);
       state = AsyncData(metadata);
     }
   }
@@ -292,9 +250,25 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
   Future<bool> submitTrack() async {
     final currentState = state.value;
     if (currentState == null || currentState.audioFile == null) return false;
-    if (currentState.waveFormData.isEmpty) {
+
+    // ignore: unused_local_variable
+    List<double> waveFormData = [];
+    try {
+      final waveformService = ref.read(waveformExtractionServiceProvider);
+      waveFormData = await waveformService.extractWaveform(
+        currentState.audioFile!.path,
+        noOfSamples: 100,
+      );
+      debugPrint(
+        'WaveformDebug extracted (count=${waveFormData.length}): $waveFormData',
+      );
+    } catch (e) {
+      waveFormData = [];
+    }
+
+    if (waveFormData.isEmpty) {
       state = AsyncValue<TrackUploadMetadata>.error(
-        'Waveform data is required. Please reselect the audio file.',
+        'Could not extract waveform data from this audio file. Please try another file.',
         StackTrace.current,
       ).copyWithPrevious(state);
       return false;
@@ -303,7 +277,9 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
     final repository = ref.read(uploadRepositoryProvider);
-    final result = await repository.uploadTrack(currentState);
+    final result = await repository.uploadTrack(
+      currentState.copyWith(waveFormData: waveFormData),
+    );
 
     return result.fold(
       (failure) {

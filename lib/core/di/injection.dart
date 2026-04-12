@@ -7,10 +7,8 @@ import '../../features/library_profile/data/repositories/mock_genre_repository_i
 import '../../features/library_profile/data/repositories/mock_profile_repository_impl.dart';
 import '../../features/library_profile/domain/repositories/genre_repository.dart';
 import '../../features/library_profile/domain/repositories/profile_repository.dart';
-import '../../features/settings/data/repositories/app_icon_repository_impl.dart';
 import '../../features/settings/data/repositories/mock_social_settings_repository_impl.dart';
 import '../../features/settings/data/repositories/social_settings_repository_impl.dart';
-import '../../features/settings/domain/repositories/app_icon_repository.dart';
 import '../../features/settings/domain/repositories/social_settings_repository.dart';
 import '../network/dio_client.dart';
 import '../storage/shared_prefs_service.dart';
@@ -30,16 +28,6 @@ void configureDependencies({required bool useMockServices}) {
 }
 
 void _registerManualDependencies({required bool useMockServices}) {
-  if (!getIt.isRegistered<SharedPrefsService>()) {
-    getIt.registerLazySingleton<SharedPrefsService>(SharedPrefsService.new);
-  }
-
-  if (!getIt.isRegistered<AppIconRepository>()) {
-    getIt.registerLazySingleton<AppIconRepository>(
-      () => AppIconRepositoryImpl(getIt<SharedPrefsService>()),
-    );
-  }
-
   if (getIt.isRegistered<SocialSettingsRepository>()) {
     getIt.unregister<SocialSettingsRepository>();
   }

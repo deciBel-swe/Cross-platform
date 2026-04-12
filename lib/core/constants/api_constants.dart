@@ -1,9 +1,15 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConstants {
   ApiConstants._();
 
   static String _requiredEnv(String key) {
+    if (!dotenv.isInitialized) {
+      throw StateError(
+        'Missing required environment variable (dotenv uninitialized): $key',
+      );
+    }
     final value = dotenv.env[key]?.trim();
     if (value == null || value.isEmpty) {
       throw StateError('Missing required environment variable: $key');
@@ -14,11 +20,19 @@ class ApiConstants {
   static const String _defaultBaseUrl = 'https://decibel.foo/api';
 
   static String get baseUrl {
+    if (!dotenv.isInitialized) return _defaultBaseUrl;
     final envBaseUrl = dotenv.env['API_BASE_URL']?.trim();
     if (envBaseUrl == null || envBaseUrl.isEmpty) {
       return _defaultBaseUrl;
     }
     return envBaseUrl;
+  }
+
+  static void validate() {
+    // Trigger getters that use _requiredEnv to catch missing keys early
+    _requiredEnv('GOOGLE_MOBILE_CLIENT_ID');
+    // Add other critical keys here
+    debugPrint("✅ Environment variables validated.");
   }
 
   /// Endpoint for patching the current user's profile
@@ -37,21 +51,65 @@ class ApiConstants {
   static const String localLoginEndpoint = '/auth/login/local';
   static const String localRegisterEndpoint = '/auth/register/local';
   static const String logoutEndpoint = '/auth/logout';
+  static const String refreshTokenEndpoint = '/auth/refreshtoken';
   static const String genresEndpoint = '/genres';
 
   static const String userProfileEndpoint = '/users/me';
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
 
-  /// Fetches a public user profile by ID: GET /users/{userId}
-  static String publicProfile(int userId) => '/users/$userId';
+  /// Fetches a public user profile by identifier.
+  ///
+  /// - Numeric value => GET /users/{id}
+  /// - Non-numeric value => GET /users/username/{username}
+  static String publicProfile(Object identifier) {
+    final normalized = identifier.toString().trim();
+    final userId = int.tryParse(normalized);
+    if (userId != null) {
+      return '/users/$userId';
+    }
+    return publicProfileByUsername(normalized);
+  }
+
+  /// Fetches a public user profile by username: GET /users/username/{username}
+  static String publicProfileByUsername(String username) =>
+      '/users/username/${Uri.encodeComponent(username)}';
+
+  /// Resolves a track slug into an internal numeric track ID.
+  static String resolveTrackBySlug(String slug) => '/tracks/resolve/$slug';
 
   /// Follows or unfollows a user: POST|DELETE /users/{userId}/follow
   static String followUser(int userId) => '/users/$userId/follow';
 
+  /// Base endpoint for playlist operations
+  static const String playlists = '/playlists';
+
+  /// Endpoint to get the current authenticated user's playlists
+  static const String myPlaylists = '/users/me/playlists';
+
+  /// Endpoint for operations on a specific playlist for the current user
+  static String myPlaylist(int id) => '/users/me/playlists/$id';
+
+  /// Endpoint to get playlists created by a specific user ID
+  static String userPublicPlaylists(int userId) => '/users/$userId/playlists';
+
+  /// Endpoint for liked playlists
+  static const String likedPlaylists = '/users/me/playlists/liked';
+
+  /// Endpoint for playlist's tracks reordering
+  static String updateTracksOrder(int playlistId) =>
+      '/playlists/$playlistId/tracks/reorder';
+
+  // Endpoint for getting the playlist secret link
+  static String getPlaylistSecretLink(int playlistId) =>
+      '${ApiConstants.playlists}/$playlistId/secret-link';
   // Dio Timeout constants
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;
+
+  static const String tracks = '/tracks';
+  static const String comments = '/comments';
+  static const String replies = '/replies';
 
   // Google OAuth specific constants
   static const String googleAuthUrl =
@@ -61,6 +119,11 @@ class ApiConstants {
   static String get googleMobileClientId =>
       _requiredEnv('GOOGLE_MOBILE_CLIENT_ID');
   static String get googleDesktopClientId {
+    if (!dotenv.isInitialized) {
+      throw StateError(
+        'Missing required environment variable (dotenv uninitialized)',
+      );
+    }
     final desktop = dotenv.env['GOOGLE_DESKTOP_CLIENT_ID']?.trim();
     if (desktop != null && desktop.isNotEmpty) {
       return desktop;
@@ -77,6 +140,9 @@ class ApiConstants {
   }
 
   static String get recaptchaSiteKey {
+    if (!dotenv.isInitialized) {
+      return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';
+    }
     final value = dotenv.env['RECAPTCHA_SITE_KEY']?.trim();
     if (value == null || value.isEmpty) {
       return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';

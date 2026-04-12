@@ -11,7 +11,7 @@ class AuthMockFixtures {
 
     'expiresIn': 400,
     'user': {
-      'id': 101,
+      'id': 0,
       'username': 'mock_user_free',
       'tier': 'FREE',
       'profileUrl': 'https://decibel.example.com/user/mock_user_free',
@@ -32,8 +32,16 @@ class AuthMockFixtures {
     },
   };
 
-  static const Map<String, dynamic> mockRefreshResponse = {
+  static const Map<String, dynamic> mockRefreshedTokenResponse = {
     'accessToken': 'mock_access_token_refreshed',
     'refreshToken': 'mock_refresh_token_refreshed',
+    'expiresIn': 3600,
+    'user': {
+      'id': 0,
+      'username': 'mock_user_free',
+      'tier': 'FREE',
+      'profileUrl': 'https://decibel.example.com/user/mock_user_free',
+      'avatarUrl': 'https://i.pravatar.cc/150?u=mock_user_free',
+    },
   };
 }

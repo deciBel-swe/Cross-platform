@@ -33,10 +33,16 @@ class UserProfileHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          user.username,
+          user.displayName ?? user.username,
           style: textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: AppColors.onPrimary,
+          ),
+        ),
+        Text(
+          '@${user.username}',
+          style: textTheme.bodyLarge?.copyWith(
+            color: AppColors.onPrimary.withValues(alpha: 0.6),
           ),
         ),
         if (bio.isNotEmpty) ...[
