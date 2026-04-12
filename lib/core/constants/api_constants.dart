@@ -58,8 +58,18 @@ class ApiConstants {
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
 
-  /// Fetches a public user profile by id: GET /users/{id}
-  static String publicProfile(int userId) => '/users/$userId';
+  /// Fetches a public user profile by identifier.
+  ///
+  /// - Numeric value => GET /users/{id}
+  /// - Non-numeric value => GET /users/username/{username}
+  static String publicProfile(Object identifier) {
+    final normalized = identifier.toString().trim();
+    final userId = int.tryParse(normalized);
+    if (userId != null) {
+      return '/users/$userId';
+    }
+    return publicProfileByUsername(normalized);
+  }
 
   /// Fetches a public user profile by username: GET /users/username/{username}
   static String publicProfileByUsername(String username) =>

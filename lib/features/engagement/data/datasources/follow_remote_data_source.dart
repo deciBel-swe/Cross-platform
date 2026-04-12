@@ -71,10 +71,7 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
   Future<PublicProfileModel> getPublicProfile(String userIdentifier) async {
     try {
       final trimmedIdentifier = userIdentifier.trim();
-      final parsedUserId = int.tryParse(trimmedIdentifier);
-      final endpoint = parsedUserId != null
-          ? ApiConstants.publicProfile(parsedUserId)
-          : ApiConstants.publicProfileByUsername(trimmedIdentifier);
+      final endpoint = ApiConstants.publicProfile(trimmedIdentifier);
 
       final response = await _dioClient.get<dynamic>(endpoint);
 

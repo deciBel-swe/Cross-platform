@@ -449,12 +449,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             return RoutePaths.home;
           }
 
-          return null;
+          return RoutePaths.publicProfile(username);
         },
-        builder: (context, state) {
-          final username = state.pathParameters['username']!;
-          return PublicProfileScreen(userIdentifier: username);
-        },
+        builder: (context, state) => const SplashScreen(),
       ),
     ],
   );

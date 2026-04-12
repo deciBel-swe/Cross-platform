@@ -256,7 +256,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final location = router.routerDelegate.currentConfiguration.uri.path;
-      expect(location, equals('/artistname'));
+      expect(location, equals(RoutePaths.publicProfile('artistname')));
     });
 
     testWidgets('should block reserved top-level deep-link segment', (
