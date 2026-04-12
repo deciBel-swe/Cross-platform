@@ -115,12 +115,14 @@ class AuthRepository implements IAuthRepository {
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
     try {
       final isExpired = await _secureStorageService.isAccessTokenExpired();
-      final hasRefreshToken = (await _secureStorageService.getRefreshToken()) != null;
+      final hasRefreshToken =
+          (await _secureStorageService.getRefreshToken()) != null;
 
       if (isExpired && hasRefreshToken) {
         final refreshResult = await refreshToken();
         return refreshResult.fold(
-          (failure) => const Right(null), // If refresh fails, user must log in again
+          (failure) =>
+              const Right(null), // If refresh fails, user must log in again
           (user) => Right(user),
         );
       }
@@ -152,9 +154,20 @@ class AuthRepository implements IAuthRepository {
         accessToken: accessToken,
       );
 
-      await _secureStorageService.saveTokenPair(responseModel);
+      await _secureStorageService.saveRefreshTokens(
+        accessToken: responseModel.accessToken,
+        refreshToken: responseModel.refreshToken,
+        expiresIn: responseModel.expiresIn,
+      );
 
-      return Right(responseModel.user.toDomain());
+      final userModel = await _secureStorageService.getUser();
+      if (userModel == null) {
+        return const Left(
+          AuthFailure('Token refreshed but no cached user was found'),
+        );
+      }
+
+      return Right(userModel.toDomain());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {

@@ -16,6 +16,7 @@ import '../models/device_info_model.dart';
 import '../models/login_local_request_model.dart';
 import '../models/login_response_model.dart';
 import '../models/oauth_exchange_request_dto.dart';
+import '../models/refresh_token_response_model.dart';
 import '../models/register_local_request_model.dart';
 import '../utils/auth_success_page.dart';
 
@@ -23,7 +24,7 @@ abstract class IAuthRemoteDataSource {
   Future<LoginResponseModel> loginLocal(LoginLocalRequestModel request);
   Future<void> registerLocal(RegisterLocalRequestModel request);
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
-  Future<LoginResponseModel> refreshToken({
+  Future<RefreshTokenResponseModel> refreshToken({
     required String refreshToken,
     required String accessToken,
   });
@@ -151,11 +152,15 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       try {
         final checkResponse = await Dio().getUri<dynamic>(authUrl);
         if (checkResponse.realUri.toString().contains('oauth/error')) {
-          return Future.error(const AuthException('error while loging with google'));
+          return Future.error(
+            const AuthException('error while loging with google'),
+          );
         }
       } on DioException catch (e) {
         if (e.response?.realUri.toString().contains('oauth/error') == true) {
-          return Future.error(const AuthException('error while loging with google'));
+          return Future.error(
+            const AuthException('error while loging with google'),
+          );
         }
       } catch (_) {
         // Ignored, proceed to normal flow if the check fails for some other reason
@@ -264,21 +269,18 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   }
 
   @override
-  Future<LoginResponseModel> refreshToken({
+  Future<RefreshTokenResponseModel> refreshToken({
     required String refreshToken,
     required String accessToken,
   }) async {
     try {
-      final cookieHeader = 'refreshToken=$refreshToken; accessToken=$accessToken';
+      final cookieHeader =
+          'refreshToken=$refreshToken; accessToken=$accessToken';
 
       final response = await _dioClient.post<dynamic>(
         ApiConstants.refreshTokenEndpoint,
         data: {'refreshToken': refreshToken},
-        options: Options(
-          headers: {
-            'Cookie': cookieHeader,
-          },
-        ),
+        options: Options(headers: {'Cookie': cookieHeader}),
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
@@ -287,13 +289,15 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         );
       }
 
-      return _parseLoginResponse(response);
+      return _parseRefreshTokenResponse(response);
     } on DioException catch (e) {
       throw ServerException(
         _extractDioErrorMessage(e, fallback: 'Token refresh failed'),
       );
     } catch (e) {
-      throw AuthException('An unexpected error occurred during token refresh: $e');
+      throw AuthException(
+        'An unexpected error occurred during token refresh: $e',
+      );
     }
   }
 
@@ -405,6 +409,59 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     return LoginResponseModel.fromJson(dataMap);
   }
 
+  RefreshTokenResponseModel _parseRefreshTokenResponse(
+    Response<dynamic> response,
+  ) {
+    final body = response.data;
+
+    Map<String, dynamic> dataMap;
+    if (body is Map<String, dynamic> && body['data'] != null) {
+      dataMap = Map<String, dynamic>.from(body['data'] as Map);
+    } else if (body is Map<String, dynamic>) {
+      dataMap = Map<String, dynamic>.from(body);
+    } else {
+      throw const AuthException('Invalid refresh response format from server.');
+    }
+
+    final cookies = response.headers.map['set-cookie'] ?? <String>[];
+    String? extractedRefreshToken;
+
+    for (final cookie in cookies) {
+      final parts = cookie.split(';');
+      for (final part in parts) {
+        final trimmed = part.trim();
+        if (trimmed.startsWith('refreshToken=')) {
+          extractedRefreshToken = trimmed.substring('refreshToken='.length);
+        }
+      }
+    }
+
+    final accessToken = dataMap['accessToken'];
+    final expiresInRaw = dataMap['expiresIn'];
+
+    if (accessToken is! String || accessToken.isEmpty) {
+      throw const AuthException('Missing access token in refresh response.');
+    }
+
+    final expiresIn = switch (expiresInRaw) {
+      int value => value,
+      String value => int.tryParse(value),
+      _ => null,
+    };
+
+    if (expiresIn == null || expiresIn <= 0) {
+      throw const AuthException(
+        'Missing or invalid expiresIn in refresh response.',
+      );
+    }
+
+    return RefreshTokenResponseModel(
+      accessToken: accessToken,
+      expiresIn: expiresIn,
+      refreshToken: extractedRefreshToken,
+    );
+  }
+
   String _parseManualError(Object? data, {required String fallback}) {
     if (data is Map<String, dynamic>) {
       final parsed = _parseErrorMap(data);
@@ -417,7 +474,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     final data = e.response?.data;
     final statusCode = e.response?.statusCode;
 
-    if (statusCode == 401){
+    if (statusCode == 401) {
       return 'Incorrect email or password.';
     }
 
