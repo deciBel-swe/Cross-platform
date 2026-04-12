@@ -41,6 +41,16 @@
                 <!-- The scheme is the REVERSE of the Android Client ID -->
                 <data android:scheme="com.googleusercontent.apps.767709617177-l61vbedk9lanvrgirt6e0840a4kijs6u" />
             </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="decibel.foo"
+                    android:pathPrefix="/" />
+            </intent-filter>
         </activity>
 <activity
             android:name="com.yalantis.ucrop.UCropActivity"

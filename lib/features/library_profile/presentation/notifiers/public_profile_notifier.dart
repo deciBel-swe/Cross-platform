@@ -12,13 +12,13 @@ import '../providers/block_provider.dart';
 /// After a successful fetch, it initializes the corresponding
 /// [FollowNotifier] with the server-provided `isFollowing` value so
 /// the [FollowButton] immediately reflects the correct state.
-class PublicProfileNotifier extends FamilyAsyncNotifier<PublicProfile, int> {
+class PublicProfileNotifier extends FamilyAsyncNotifier<PublicProfile, String> {
   /// Fetches the public profile for the user identified by `arg`.
   ///
   /// On success, seeds the follow state provider with the initial
   /// `isFollowing` value from the API response.
   @override
-  FutureOr<PublicProfile> build(int arg) async {
+  FutureOr<PublicProfile> build(String arg) async {
     final repository = ref.read(followRepositoryProvider);
     final result = await repository.getPublicProfile(arg);
 
@@ -26,12 +26,14 @@ class PublicProfileNotifier extends FamilyAsyncNotifier<PublicProfile, int> {
       if (profile.isBlocked) {
         ref.read(blockedUsersProvider.notifier).markBlockedLocally(profile.id);
       } else {
-        ref.read(blockedUsersProvider.notifier).markUnblockedLocally(profile.id);
+        ref
+            .read(blockedUsersProvider.notifier)
+            .markUnblockedLocally(profile.id);
       }
 
       // Seed the follow state provider with the initial value from the profile.
       ref
-          .read(followStateProvider(arg).notifier)
+          .read(followStateProvider(profile.id).notifier)
           .setInitialState(profile.isFollowing);
       return profile;
     });
@@ -54,13 +56,17 @@ class PublicProfileNotifier extends FamilyAsyncNotifier<PublicProfile, int> {
       },
       (profile) {
         if (profile.isBlocked) {
-          ref.read(blockedUsersProvider.notifier).markBlockedLocally(profile.id);
+          ref
+              .read(blockedUsersProvider.notifier)
+              .markBlockedLocally(profile.id);
         } else {
-          ref.read(blockedUsersProvider.notifier).markUnblockedLocally(profile.id);
+          ref
+              .read(blockedUsersProvider.notifier)
+              .markUnblockedLocally(profile.id);
         }
 
         ref
-            .read(followStateProvider(arg).notifier)
+            .read(followStateProvider(profile.id).notifier)
             .setInitialState(profile.isFollowing);
         state = AsyncData(profile);
       },

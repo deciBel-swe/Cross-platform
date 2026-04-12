@@ -26,9 +26,11 @@ class FollowRepositoryImpl implements FollowRepository {
   /// Returns [Right(PublicProfile)] on success,
   /// or [Left(Failure)] if a network or parsing error occurs.
   @override
-  Future<Either<Failure, PublicProfile>> getPublicProfile(int userId) async {
+  Future<Either<Failure, PublicProfile>> getPublicProfile(
+    String userIdentifier,
+  ) async {
     try {
-      final model = await _remoteDataSource.getPublicProfile(userId);
+      final model = await _remoteDataSource.getPublicProfile(userIdentifier);
       return Right(model.toEntity());
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));

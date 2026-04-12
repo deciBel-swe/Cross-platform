@@ -16,15 +16,12 @@ class FollowNotifier extends FamilyAsyncNotifier<bool, int> {
     // to still call setInitialState if they finish first.
     // However, the cleanest way is just to fetch if build is triggered.
     final repository = ref.read(followRepositoryProvider);
-    final result = await repository.getPublicProfile(arg);
+    final result = await repository.getPublicProfile(arg.toString());
 
-    return result.fold(
-      (failure) => false,
-      (profile) {
-        _isSeeded = true;
-        return profile.isFollowing;
-      },
-    );
+    return result.fold((failure) => false, (profile) {
+      _isSeeded = true;
+      return profile.isFollowing;
+    });
   }
 
   void setInitialState(bool isFollowing) {

@@ -6,7 +6,9 @@ class ApiConstants {
 
   static String _requiredEnv(String key) {
     if (!dotenv.isInitialized) {
-      throw StateError('Missing required environment variable (dotenv uninitialized): $key');
+      throw StateError(
+        'Missing required environment variable (dotenv uninitialized): $key',
+      );
     }
     final value = dotenv.env[key]?.trim();
     if (value == null || value.isEmpty) {
@@ -56,8 +58,15 @@ class ApiConstants {
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
 
-  /// Fetches a public user profile by ID: GET /users/{userId}
+  /// Fetches a public user profile by id: GET /users/{id}
   static String publicProfile(int userId) => '/users/$userId';
+
+  /// Fetches a public user profile by username: GET /users/username/{username}
+  static String publicProfileByUsername(String username) =>
+      '/users/username/${Uri.encodeComponent(username)}';
+
+  /// Resolves a track slug into an internal numeric track ID.
+  static String resolveTrackBySlug(String slug) => '/tracks/resolve/$slug';
 
   /// Follows or unfollows a user: POST|DELETE /users/{userId}/follow
   static String followUser(int userId) => '/users/$userId/follow';
@@ -101,7 +110,9 @@ class ApiConstants {
       _requiredEnv('GOOGLE_MOBILE_CLIENT_ID');
   static String get googleDesktopClientId {
     if (!dotenv.isInitialized) {
-      throw StateError('Missing required environment variable (dotenv uninitialized)');
+      throw StateError(
+        'Missing required environment variable (dotenv uninitialized)',
+      );
     }
     final desktop = dotenv.env['GOOGLE_DESKTOP_CLIENT_ID']?.trim();
     if (desktop != null && desktop.isNotEmpty) {
@@ -119,7 +130,8 @@ class ApiConstants {
   }
 
   static String get recaptchaSiteKey {
-    if (!dotenv.isInitialized) return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';
+    if (!dotenv.isInitialized)
+      return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';
     final value = dotenv.env['RECAPTCHA_SITE_KEY']?.trim();
     if (value == null || value.isEmpty) {
       return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';

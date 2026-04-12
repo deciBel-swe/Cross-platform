@@ -10,11 +10,13 @@ import '../entities/paginated_engagers.dart';
 /// Uses [Either] to express success/failure without throwing exceptions
 /// into the domain or presentation layers.
 abstract class FollowRepository {
-  /// Fetches a public profile by [userId] from `GET /users/{userId}`.
+  /// Fetches a public profile by [userIdentifier] from `GET /users/{identifier}`.
   ///
   /// Returns [Right(PublicProfile)] on success, including the relationship
   /// flags `isFollowing` and `isFollowedBy`.
-  Future<Either<Failure, PublicProfile>> getPublicProfile(int userId);
+  Future<Either<Failure, PublicProfile>> getPublicProfile(
+    String userIdentifier,
+  );
 
   /// Follows the user with [userId] via `POST /users/{userId}/follow`.
   ///

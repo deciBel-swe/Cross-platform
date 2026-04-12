@@ -45,9 +45,7 @@ class FollowConnectionsScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         scrolledUnderElevation: 0,
-        title: Text(
-          primaryTitle[0].toUpperCase() + primaryTitle.substring(1),
-        ),
+        title: Text(primaryTitle[0].toUpperCase() + primaryTitle.substring(1)),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -60,7 +58,6 @@ class FollowConnectionsScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppConstants.spacingRegular),
           children: [
-
             _Section(
               title: primaryTitle,
               data: primaryAsync,
@@ -187,7 +184,7 @@ class _ConnectionTile extends ConsumerWidget {
 
       ref.read(followBackHintProvider(user.id).notifier).state =
           isFollowerContext;
-      context.push(RoutePaths.publicProfile(user.id));
+      context.push(RoutePaths.publicProfile(user.id.toString()));
     }
 
     return Padding(

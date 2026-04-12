@@ -24,9 +24,9 @@ import '../widgets/spotlight_section.dart';
 import '../widgets/track_tile.dart';
 
 class PublicProfileScreen extends ConsumerStatefulWidget {
-  const PublicProfileScreen({super.key, required this.userId});
+  const PublicProfileScreen({super.key, required this.userIdentifier});
 
-  final int userId;
+  final String userIdentifier;
 
   @override
   ConsumerState<PublicProfileScreen> createState() =>
@@ -175,16 +175,24 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profileAsync = ref.watch(publicProfileProvider(widget.userId));
+    final profileAsync = ref.watch(
+      publicProfileProvider(widget.userIdentifier),
+    );
+    final parsedUserId = int.tryParse(widget.userIdentifier);
     final blockedUserIds = ref.watch(blockedUsersProvider);
-    final isBlocked = blockedUserIds.contains(widget.userId);
+    final isBlocked =
+        parsedUserId != null && blockedUserIds.contains(parsedUserId);
 
     ref.listen<Set<int>>(blockedUsersProvider, (previous, next) {
       final previousSet = previous ?? <int>{};
       final nextSet = next;
 
-      final wasBlocked = previousSet.contains(widget.userId);
-      final isNowBlocked = nextSet.contains(widget.userId);
+      if (parsedUserId == null) {
+        return;
+      }
+
+      final wasBlocked = previousSet.contains(parsedUserId);
+      final isNowBlocked = nextSet.contains(parsedUserId);
 
       if (!wasBlocked && isNowBlocked) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -288,7 +296,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   Widget _buildProfileBody(BuildContext context, PublicProfile profile) {
     return RefreshIndicator(
       onRefresh: () async => ref
-          .read(publicProfileProvider(widget.userId).notifier)
+          .read(publicProfileProvider(widget.userIdentifier).notifier)
           .refreshProfile(),
       child: SingleChildScrollView(
         controller: _scrollController,
@@ -313,18 +321,19 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 children: [
                   const SizedBox(height: AppConstants.spacingMassive),
                   _ProfileHeader(
-                    userId: widget.userId,
+                    userId: profile.id,
+                    userIdentifier: widget.userIdentifier,
                     profile: profile,
                     isActive: _shouldWatchSections,
                     onFollowersTap: () => _openConnections(
-                      RoutePaths.publicProfileFollowers(widget.userId),
+                      RoutePaths.publicProfileFollowers(profile.id.toString()),
                     ),
                     onFollowingTap: () => _openConnections(
-                      RoutePaths.publicProfileFollowing(widget.userId),
+                      RoutePaths.publicProfileFollowing(profile.id.toString()),
                     ),
                   ),
                   const SizedBox(height: AppConstants.spacingSmall),
-                  _ActionRow(userId: widget.userId, profile: profile),
+                  _ActionRow(userId: profile.id, profile: profile),
                   const SizedBox(height: AppConstants.spacingRegular),
                   const _SectionTitle(title: AppConstants.tracksSectionTitle),
                   const SizedBox(height: AppConstants.spacingSmall),
@@ -395,7 +404,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             const SizedBox(height: AppConstants.spacingExtraLarge),
             ElevatedButton.icon(
               onPressed: () =>
-                  ref.invalidate(publicProfileProvider(widget.userId)),
+                  ref.invalidate(publicProfileProvider(widget.userIdentifier)),
               icon: const Icon(Icons.refresh_rounded),
               label: const Text(AppConstants.tryAgain),
             ),
@@ -479,6 +488,7 @@ class _Avatar extends StatelessWidget {
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.userId,
+    required this.userIdentifier,
     required this.profile,
     required this.isActive,
     required this.onFollowersTap,
@@ -486,6 +496,7 @@ class _ProfileHeader extends StatelessWidget {
   });
 
   final int userId;
+  final String userIdentifier;
   final PublicProfile profile;
   final bool isActive;
   final VoidCallback onFollowersTap;
@@ -505,7 +516,9 @@ class _ProfileHeader extends StatelessWidget {
           );
         }
 
-        final snapshotAsync = ref.watch(publicProfileSnapshotProvider(userId));
+        final snapshotAsync = ref.watch(
+          publicProfileSnapshotProvider(userIdentifier),
+        );
         final snapshot = snapshotAsync.valueOrNull ?? profile;
 
         final followAsync = ref.watch(followStateProvider(userId));
@@ -830,7 +843,9 @@ class _PublicTrackCollectionSection extends ConsumerWidget {
             final track = tracks[index];
             return TrackTile(
               track: track,
-              onTap: () => ref.read(trackAudioProvider.notifier).initializeForTrack(
+              onTap: () => ref
+                  .read(trackAudioProvider.notifier)
+                  .initializeForTrack(
                     trackId: track.id,
                     trackUrl: track.trackUrl ?? '',
                     track: track,

@@ -61,6 +61,18 @@ class TrackRepositoryImpl implements TrackRepository {
   }
 
   @override
+  Future<Either<Failure, int>> resolveTrackIdentifier(
+    String trackIdentifier,
+  ) async {
+    try {
+      final trackId = await _remote.resolveTrackIdentifier(trackIdentifier);
+      return Right(trackId);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, String>> fetchTrackStatusById(int id) async {
     try {
       // Pass-through to backend status endpoint; provider handles polling decisions.
