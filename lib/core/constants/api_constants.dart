@@ -140,8 +140,9 @@ class ApiConstants {
   }
 
   static String get recaptchaSiteKey {
-    if (!dotenv.isInitialized)
+    if (!dotenv.isInitialized) {
       return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';
+    }
     final value = dotenv.env['RECAPTCHA_SITE_KEY']?.trim();
     if (value == null || value.isEmpty) {
       return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';

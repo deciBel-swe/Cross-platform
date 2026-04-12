@@ -6,14 +6,14 @@ import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../domain/entities/public_profile.dart';
 import '../providers/block_provider.dart';
 
-/// Fetches and manages the public profile data for a given userId.
+/// Fetches and manages the public profile data for a given user identifier.
 ///
-/// This is a **family notifier** — each userId gets its own instance.
-/// After a successful fetch, it initializes the corresponding
-/// [FollowNotifier] with the server-provided `isFollowing` value so
-/// the [FollowButton] immediately reflects the correct state.
+/// This is a family notifier, so each numeric id or username gets its own
+/// instance. After a successful fetch, it seeds the corresponding follow state
+/// with the server-provided `isFollowing` value so the UI reflects the current
+/// relationship immediately.
 class PublicProfileNotifier extends FamilyAsyncNotifier<PublicProfile, String> {
-  /// Fetches the public profile for the user identified by `arg`.
+  /// Fetches the public profile for the user identified by [arg].
   ///
   /// On success, seeds the follow state provider with the initial
   /// `isFollowing` value from the API response.

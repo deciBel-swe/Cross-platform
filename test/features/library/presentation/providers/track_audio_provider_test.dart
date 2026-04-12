@@ -10,12 +10,16 @@ import 'package:mocktail/mocktail.dart';
 
 class MockAudioPlayer extends Mock implements AudioPlayer {}
 
+class FakeAudioSource extends Fake implements AudioSource {}
+
 void main() {
   late MockAudioPlayer mockPlayer;
   late StreamController<Duration> positionController;
   late StreamController<PlayerState> playerStateController;
 
   setUp(() {
+    registerFallbackValue(FakeAudioSource());
+
     mockPlayer = MockAudioPlayer();
     positionController = StreamController<Duration>.broadcast();
     playerStateController = StreamController<PlayerState>.broadcast();
@@ -40,13 +44,12 @@ void main() {
     when(() => mockPlayer.stop()).thenAnswer((_) async {});
     when(() => mockPlayer.seek(any())).thenAnswer((_) async {});
     when(
-      () => mockPlayer.setUrl(any(), preload: any(named: 'preload')),
-    ).thenAnswer((_) async => const Duration(seconds: 100));
-    when(
-      () => mockPlayer.setUrl(any()),
-    ).thenAnswer((_) async => const Duration(seconds: 100));
-    when(
-      () => mockPlayer.setFilePath(any()),
+      () => mockPlayer.setAudioSource(
+        any(),
+        preload: any(named: 'preload'),
+        initialIndex: null,
+        initialPosition: null,
+      ),
     ).thenAnswer((_) async => const Duration(seconds: 100));
     when(() => mockPlayer.dispose()).thenAnswer((_) async {});
     when(() => mockPlayer.duration).thenReturn(const Duration(seconds: 100));
@@ -94,7 +97,12 @@ void main() {
       expect(state.duration, const Duration(seconds: 100));
 
       verify(
-        () => mockPlayer.setUrl('https://example.com/track.mp3', preload: false),
+        () => mockPlayer.setAudioSource(
+          any(),
+          preload: false,
+          initialIndex: null,
+          initialPosition: null,
+        ),
       ).called(1);
     });
 

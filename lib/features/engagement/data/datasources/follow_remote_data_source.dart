@@ -15,7 +15,12 @@ import '../models/paginated_engagers_model.dart';
 abstract class IFollowRemoteDataSource {
   /// Fetches a public profile for the given [userIdentifier].
   ///
-  /// Calls `GET /users/{identifier}` and returns a [PublicProfileModel].
+  /// Supports both numeric ids and usernames through the unified
+  /// [ApiConstants.publicProfile] endpoint helper:
+  /// - Numeric identifier -> `GET /users/{id}`
+  /// - Username identifier -> `GET /users/username/{username}`
+  ///
+  /// Returns a normalized [PublicProfileModel].
   Future<PublicProfileModel> getPublicProfile(String userIdentifier);
 
   /// Follows the user identified by [userId].
