@@ -86,7 +86,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
             ? {'favoriteGenres': favoriteGenres}
             : null),
         ...?(socialLinks != null
-            ? {'socialLinks': socialLinks.toModel().toJson()}
+            ? {
+                'socialLinks': {
+                  for (final platform in socialLinks.nonEmptyPlatforms(
+                    includeSupportLink: false,
+                  ))
+                    platform: socialLinks.valueForPlatform(platform),
+                },
+              }
             : null),
       };
 
