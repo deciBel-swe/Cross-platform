@@ -1,97 +1,119 @@
+import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/exceptions.dart';
 import 'package:decibel/features/engagement/domain/models/track_action_data.dart';
 import 'package:decibel/features/engagement/domain/repositories/track_social_repository.dart';
 import 'package:decibel/features/engagement/presentation/providers/track_social_provider.dart';
+import 'package:decibel/features/library/domain/entities/track.dart';
+import 'package:decibel/features/library_profile/domain/repositories/track_repository.dart';
+import 'package:decibel/features/library_profile/presentation/providers/track_repository_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockTrackSocialRepository extends Mock
-    implements ITrackSocialRepository {}
+class MockTrackSocialRepository extends Mock implements ITrackSocialRepository {}
+class MockTrackRepository extends Mock implements TrackRepository {}
+class MockTrack extends Mock implements Track {}
 
 void main() {
-  late MockTrackSocialRepository mockRepository;
+  late MockTrackSocialRepository mockSocialRepo;
+  late MockTrackRepository mockTrackRepo;
 
   setUp(() {
-    mockRepository = MockTrackSocialRepository();
+    mockSocialRepo = MockTrackSocialRepository();
+    mockTrackRepo = MockTrackRepository();
 
-    when(() => mockRepository.likeTrack(any())).thenAnswer((_) async {});
-    when(() => mockRepository.unlikeTrack(any())).thenAnswer((_) async {});
-    when(() => mockRepository.repostTrack(any())).thenAnswer((_) async {});
-    when(() => mockRepository.unrepostTrack(any())).thenAnswer((_) async {});
+    when(() => mockSocialRepo.likeTrack(any())).thenAnswer((_) async {});
+    when(() => mockSocialRepo.unlikeTrack(any())).thenAnswer((_) async {});
+    
+    // Default fetch behavior
+    final mockTrack = MockTrack();
+    when(() => mockTrack.isLiked).thenReturn(false);
+    when(() => mockTrack.likeCount).thenReturn(0);
+    when(() => mockTrack.isReposted).thenReturn(false);
+    when(() => mockTrack.repostCount).thenReturn(0);
+    
+    when(() => mockTrackRepo.fetchTrackById(any())).thenAnswer((_) async => Right(mockTrack));
   });
 
-  test('mergeTrack initializes and updates social state', () {
+  test('build() fetches and verifies state from repository', () async {
     final container = ProviderContainer(
       overrides: [
-        trackSocialRepositoryProvider.overrideWithValue(mockRepository),
+        trackSocialRepositoryProvider.overrideWithValue(mockSocialRepo),
+        trackRepositoryProvider.overrideWithValue(mockTrackRepo),
       ],
     );
     addTearDown(container.dispose);
 
-    final notifier = container.read(trackSocialProvider.notifier);
-
-    notifier.mergeTrack(7, isLiked: true, likeCount: 3);
-    var state = container.read(trackSocialProvider);
-    expect(state.trackStates['7']?.isLiked, isTrue);
-    expect(state.trackStates['7']?.likeCount, 3);
-
-    notifier.mergeTrack(7, isReposted: true, repostCount: 2);
-    state = container.read(trackSocialProvider);
-    expect(state.trackStates['7']?.isLiked, isTrue);
-    expect(state.trackStates['7']?.isReposted, isTrue);
-    expect(state.trackStates['7']?.repostCount, 2);
+    // 1. Initially it should be loading
+    expect(container.read(trackSocialProvider(7)).isLoading, isTrue);
+    
+    // 2. Wait for fetch to complete
+    final data = await container.read(trackSocialProvider(7).future);
+    
+    // 3. Verify data (mock returns all false/0 by default)
+    expect(data.isLiked, isFalse);
+    expect(data.likeCount, 0);
+    verify(() => mockTrackRepo.fetchTrackById(7)).called(1);
   });
 
   test('toggleAction(like) updates state and calls repository', () async {
+    // Configure mock to return specific track status
+    final initialTrack = MockTrack();
+    when(() => initialTrack.isLiked).thenReturn(false);
+    when(() => initialTrack.likeCount).thenReturn(4);
+    when(() => initialTrack.isReposted).thenReturn(false);
+    when(() => initialTrack.repostCount).thenReturn(0);
+    when(() => mockTrackRepo.fetchTrackById(10)).thenAnswer((_) async => Right(initialTrack));
+
     final container = ProviderContainer(
       overrides: [
-        trackSocialRepositoryProvider.overrideWithValue(mockRepository),
+        trackSocialRepositoryProvider.overrideWithValue(mockSocialRepo),
+        trackRepositoryProvider.overrideWithValue(mockTrackRepo),
       ],
     );
     addTearDown(container.dispose);
 
-    final notifier = container.read(trackSocialProvider.notifier);
+    // Wait for initial fetch
+    await container.read(trackSocialProvider(10).future);
 
-    await notifier.toggleAction(
-      10,
+    // Toggle to "Liked"
+    await container.read(trackSocialProvider(10).notifier).toggleAction(
       SocialActionType.like,
-      initialLikeCount: 4,
-      initialIsLiked: false,
     );
 
-    final state = container.read(trackSocialProvider);
-    expect(state.trackStates['10']?.isLiked, isTrue);
-    expect(state.trackStates['10']?.likeCount, 5);
-    expect(state.loadingKeys.contains('like_10'), isFalse);
-    verify(() => mockRepository.likeTrack(10)).called(1);
+    final state = container.read(trackSocialProvider(10));
+    expect(state.value?.isLiked, isTrue);
+    expect(state.value?.likeCount, 5);
+    verify(() => mockSocialRepo.likeTrack(10)).called(1);
   });
 
   test('toggleAction rolls back when repository throws AppException', () async {
-    when(
-      () => mockRepository.likeTrack(any()),
-    ).thenThrow(const ServerException('failed'));
+    when(() => mockSocialRepo.likeTrack(any())).thenThrow(const ServerException('failed'));
+    
+    final originalTrack = MockTrack();
+    when(() => originalTrack.isLiked).thenReturn(false);
+    when(() => originalTrack.likeCount).thenReturn(6);
+    when(() => originalTrack.isReposted).thenReturn(false);
+    when(() => originalTrack.repostCount).thenReturn(0);
+    when(() => mockTrackRepo.fetchTrackById(11)).thenAnswer((_) async => Right(originalTrack));
 
     final container = ProviderContainer(
       overrides: [
-        trackSocialRepositoryProvider.overrideWithValue(mockRepository),
+        trackSocialRepositoryProvider.overrideWithValue(mockSocialRepo),
+        trackRepositoryProvider.overrideWithValue(mockTrackRepo),
       ],
     );
     addTearDown(container.dispose);
 
-    final notifier = container.read(trackSocialProvider.notifier);
+    // Wait for initial fetch
+    await container.read(trackSocialProvider(11).future);
 
-    await notifier.toggleAction(
-      11,
+    await container.read(trackSocialProvider(11).notifier).toggleAction(
       SocialActionType.like,
-      initialLikeCount: 6,
-      initialIsLiked: false,
     );
 
-    final state = container.read(trackSocialProvider);
-    expect(state.trackStates['11']?.isLiked, isFalse);
-    expect(state.trackStates['11']?.likeCount, 6);
-    expect(state.loadingKeys.contains('like_11'), isFalse);
-    verify(() => mockRepository.likeTrack(11)).called(1);
+    final state = container.read(trackSocialProvider(11));
+    expect(state.value?.isLiked, isFalse);
+    expect(state.value?.likeCount, 6);
   });
 }

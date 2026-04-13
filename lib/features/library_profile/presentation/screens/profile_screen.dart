@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
@@ -247,29 +248,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.wifi_off_rounded,
+                Icon(
+                  error is NotFoundFailure
+                      ? Icons.person_off_rounded
+                      : Icons.wifi_off_rounded,
                   color: AppColors.surface,
                   size: AppConstants.errorIconSize,
                 ),
                 const SizedBox(height: AppConstants.spacingRegular),
-                Text(
-                  'Oops! Something went wrong.',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.onPrimary,
-                    fontWeight: FontWeight.bold,
+                if (error is! NotFoundFailure) ...[
+                  Text(
+                    'Oops! Something went wrong.',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                ),
-                const SizedBox(height: AppConstants.spacingSmall),
+                  const SizedBox(height: AppConstants.spacingSmall),
+                ],
                 Text(
-                  error.toString().replaceAll(
-                    AppConstants.errorExceptionPrefix,
-                    '',
-                  ),
+                  error is NotFoundFailure
+                      ? '404 | Not Found'
+                      : error.toString().replaceAll(
+                            AppConstants.errorExceptionPrefix,
+                            '',
+                          ),
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+                  ).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.onPrimary,
+                        fontSize: error is NotFoundFailure ? 18 : null,
+                        fontWeight: error is NotFoundFailure
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
                 ),
                 const SizedBox(height: AppConstants.spacingExtraLarge),
                 ElevatedButton.icon(
@@ -305,9 +318,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               child: SizedBox(
                 height: MediaQuery.of(context).size.height,
                 child: Center(
-                  child: Text(
-                    'Could not load profile: ${failure.message}',
-                    style: const TextStyle(color: AppColors.onPrimary),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        failure is NotFoundFailure
+                            ? Icons.person_off_rounded
+                            : Icons.error_outline_rounded,
+                        color: AppColors.onPrimary.withOpacity(0.5),
+                        size: AppConstants.errorIconSize,
+                      ),
+                      const SizedBox(height: AppConstants.spacingRegular),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppConstants.spacingExtraLarge,
+                        ),
+                        child: Text(
+                          failure is NotFoundFailure
+                              ? '404 | Not Found'
+                              : 'Could not load profile: ${failure.message}',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: AppColors.onPrimary,
+                              ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

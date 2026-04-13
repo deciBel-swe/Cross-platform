@@ -32,7 +32,7 @@ final publicProfileSnapshotProvider = FutureProvider.autoDispose
       final result = await repository.getPublicProfile(userIdentifier);
 
       return result.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (profile) => profile,
       );
     });

@@ -36,9 +36,8 @@ class TrackTile extends ConsumerWidget {
     final titleColor = isDark ? Colors.white : Colors.black87;
     final subtitleColor = isDark ? Colors.white54 : Colors.black54;
 
-    final trackSocialState = ref.watch(trackSocialProvider);
-    final socialData = trackSocialState.trackStates[track.id.toString()];
-    final isLiked = socialData?.isLiked ?? track.isLiked;
+    final trackSocial = ref.watch(trackSocialProvider(track.id));
+    final isLiked = trackSocial.valueOrNull?.isLiked ?? track.isLiked;
 
     return InkWell(
       onTap: onTap,
@@ -134,21 +133,9 @@ class TrackTile extends ConsumerWidget {
 
                       // Interactive Like Heart
                       GestureDetector(
-                        onTap: () {
-                          if (isLiked) {
-                            onLikePressed?.call();
-                          } else {
-                            ref
-                                .read(trackSocialProvider.notifier)
-                                .toggleAction(
-                                  track.id,
-                                  SocialActionType.like,
-                                  initialLikeCount: track.likeCount,
-                                initialRepostCount: track.repostCount,
-                                initialIsLiked: isLiked,
-                              );
-                          }
-                        },
+                        onTap: () => ref
+                            .read(trackSocialProvider(track.id).notifier)
+                            .toggleAction(SocialActionType.like),
                         behavior: HitTestBehavior
                             .opaque, // Ensures the padding is clickable
                         child: Padding(
@@ -171,7 +158,7 @@ class TrackTile extends ConsumerWidget {
             // --- 3. Trailing Menu Button ---
             IconButton(
               icon: const Icon(Icons.more_vert),
-              onPressed: ()=>TrackDetails.show(context,track,ref),
+              onPressed: () => TrackDetails.show(context, track, ref),
               color: subtitleColor,
               padding: EdgeInsets.zero,
               constraints:

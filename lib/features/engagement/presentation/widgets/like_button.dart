@@ -9,7 +9,7 @@ import '../providers/track_social_provider.dart';
 import 'social_action_button.dart';
 import 'track_engagers_bottom_sheet.dart';
 
-class LikeButton extends ConsumerStatefulWidget {
+class LikeButton extends ConsumerWidget {
   const LikeButton({
     super.key,
     required this.trackId,
@@ -18,6 +18,7 @@ class LikeButton extends ConsumerStatefulWidget {
     this.iconSize,
     this.fontSize,
   });
+
   final int trackId;
   final bool isLiked;
   final int likeCount;
@@ -25,54 +26,37 @@ class LikeButton extends ConsumerStatefulWidget {
   final double? fontSize;
 
   @override
-  ConsumerState<LikeButton> createState() => _LikeButtonState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trackSocial = ref.watch(trackSocialProvider(trackId));
 
-class _LikeButtonState extends ConsumerState<LikeButton> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(trackSocialProvider.notifier)
-          .mergeTrack(
-            widget.trackId,
-            isLiked: widget.isLiked,
-            likeCount: widget.likeCount,
-          );
-    });
-  }
+    // Derive state components from AsyncValue
+    final socialData = trackSocial.valueOrNull;
 
-  @override
-  Widget build(BuildContext context) {
-    final providerState = ref.watch(trackSocialProvider);
-    final trackData = providerState.trackStates[widget.trackId.toString()];
-    final isLoading = providerState.loadingKeys.contains(
-      'like_${widget.trackId}',
-    );
+    // Use fetched data if available, otherwise fallback to initial props
+    final isLiked = socialData?.isLiked ?? this.isLiked;
+    final likeCount = socialData?.likeCount ?? this.likeCount;
+    final isLoading = trackSocial.isLoading;
 
     return SocialActionButton(
-      isActive: trackData?.isLiked ?? widget.isLiked,
-      count: trackData?.likeCount ?? widget.likeCount,
+      isActive: isLiked,
+      count: likeCount,
       isLoading: isLoading,
       activeIcon: Icons.favorite,
       inactiveIcon: Icons.favorite_border,
       activeColor: AppColors.primary,
-      onToggle: () => ref
-          .read(trackSocialProvider.notifier)
-          .toggleAction(
-            widget.trackId,
-            SocialActionType.like,
-            initialLikeCount: widget.likeCount,
-            initialIsLiked: widget.isLiked,
+      onToggle:
+          () => ref
+              .read(trackSocialProvider(trackId).notifier)
+              .toggleAction(SocialActionType.like),
+      identifier: 'like_button',
+      onCountTap:
+          () => showTrackEngagersSheet(
+            context,
+            trackId: trackId,
+            type: EngagerType.likers,
           ),
-      onCountTap: () => showTrackEngagersSheet(
-        context,
-        trackId: widget.trackId,
-        type: EngagerType.likers,
-      ),
-      iconSize: widget.iconSize ?? AppConstants.iconSizeMedium,
-      fontSize: widget.fontSize ?? AppConstants.fontSizeRegular,
+      iconSize: iconSize ?? AppConstants.iconSizeMedium,
+      fontSize: fontSize ?? AppConstants.fontSizeRegular,
     );
   }
 }

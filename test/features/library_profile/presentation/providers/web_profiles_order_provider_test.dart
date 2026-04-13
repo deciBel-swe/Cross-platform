@@ -52,10 +52,10 @@ void main() {
 
     test('removePlatform removes only that platform', () {
       getNotifier().addPlatformIfMissing('instagram');
-      getNotifier().addPlatformIfMissing('youtube');
+      getNotifier().addPlatformIfMissing('twitter');
       getNotifier().addPlatformIfMissing('website');
 
-      getNotifier().removePlatform('youtube');
+      getNotifier().removePlatform('twitter');
       expect(container.read(webProfilesOrderProvider), [
         'instagram',
         'website',
@@ -64,12 +64,12 @@ void main() {
 
     test('reorder changes order correctly', () {
       getNotifier().addPlatformIfMissing('instagram');
-      getNotifier().addPlatformIfMissing('youtube');
+      getNotifier().addPlatformIfMissing('twitter');
       getNotifier().addPlatformIfMissing('website');
 
       getNotifier().reorder(0, 2);
       expect(container.read(webProfilesOrderProvider), [
-        'youtube',
+        'twitter',
         'instagram',
         'website',
       ]);
@@ -77,8 +77,8 @@ void main() {
 
     test('updateOrder replaces the whole list', () {
       getNotifier().addPlatformIfMissing('instagram');
-      getNotifier().updateOrder(['youtube', 'website']);
-      expect(container.read(webProfilesOrderProvider), ['youtube', 'website']);
+      getNotifier().updateOrder(['twitter', 'website']);
+      expect(container.read(webProfilesOrderProvider), ['twitter', 'website']);
     });
   });
 
@@ -97,33 +97,33 @@ void main() {
           .saveLink('https://instagram.com/test');
       await container
           .read(webProfilesProvider.notifier)
-          .saveLink('https://youtube.com/@test');
+          .saveLink('https://twitter.com/test');
 
       // 3. Initial ordered state should match order of addition (fallback)
       expect(container.read(orderedWebPlatformsProvider), [
         'instagram',
-        'youtube',
+        'twitter',
       ]);
 
       // 4. Set a custom order
-      getNotifier().updateOrder(['youtube', 'instagram']);
+      getNotifier().updateOrder(['twitter', 'instagram']);
 
       // 5. Verify custom order is respected
       expect(container.read(orderedWebPlatformsProvider), [
-        'youtube',
+        'twitter',
         'instagram',
       ]);
 
       // 6. Add a new platform not in custom order
       await container
           .read(webProfilesProvider.notifier)
-          .saveLink('https://facebook.com/test');
+          .saveLink('https://example.com');
 
       // 7. New platform should appear at the end (fallback)
       expect(container.read(orderedWebPlatformsProvider), [
-        'youtube',
+        'twitter',
         'instagram',
-        'facebook',
+        'website',
       ]);
     });
   });
