@@ -47,7 +47,7 @@ class TrackEngagersNotifier
             size: _pageSize,
           );
 
-    return result.fold((failure) => throw failure.message, (paginated) {
+    return result.fold((failure) => throw failure, (paginated) {
       _isLast = paginated.isLast;
       _items.addAll(paginated.content);
       return PaginatedEngagers(

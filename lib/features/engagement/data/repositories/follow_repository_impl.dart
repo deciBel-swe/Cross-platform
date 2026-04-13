@@ -32,6 +32,8 @@ class FollowRepositoryImpl implements FollowRepository {
     try {
       final model = await _remoteDataSource.getPublicProfile(userIdentifier);
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
@@ -90,6 +92,8 @@ class FollowRepositoryImpl implements FollowRepository {
         size: size,
       );
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
@@ -112,6 +116,8 @@ class FollowRepositoryImpl implements FollowRepository {
         size: size,
       );
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
@@ -132,6 +138,8 @@ class FollowRepositoryImpl implements FollowRepository {
         size: size,
       );
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
@@ -149,6 +157,8 @@ class FollowRepositoryImpl implements FollowRepository {
     try {
       final model = await _remoteDataSource.getFriends(page: page, size: size);
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } on ServerException catch (e) {

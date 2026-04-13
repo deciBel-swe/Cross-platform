@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/auth_state.dart';
@@ -165,10 +166,17 @@ class _Section extends StatelessWidget {
             identifier: 'follow_connections_error',
             label: 'Error: ${error.toString()}',
             child: Text(
-              error.toString().replaceAll('Exception: ', ''),
+              error is NotFoundFailure
+                  ? '404 | Not Found'
+                  : error.toString().replaceAll('Exception: ', ''),
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.errors),
+              ).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.errors,
+                    fontWeight: error is NotFoundFailure
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
             ),
           ),
         ),

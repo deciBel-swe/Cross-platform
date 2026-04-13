@@ -187,7 +187,7 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
           'Unauthorized to fetch profile. Please log in again.',
         );
       } else if (e.response?.statusCode == 404) {
-        throw const ServerException('User profile not found.');
+        throw const NotFoundException('User profile not found.');
       }
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
@@ -250,7 +250,7 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       return UserProfileModel.fromJson(normalizedResponse);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        throw const ServerException('Public profile not found.');
+        throw const NotFoundException('Public profile not found.');
       }
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {

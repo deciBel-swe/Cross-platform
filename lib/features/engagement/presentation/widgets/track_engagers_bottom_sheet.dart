@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -164,10 +165,14 @@ class _TrackEngagersBottomSheetState
     );
   }
 
-  Widget _buildErrorState(String error) {
+  Widget _buildErrorState(Object error) {
+    final message = error is NotFoundFailure
+        ? '404 | Not Found'
+        : error.toString().replaceAll('Exception: ', '');
+
     return Semantics(
       identifier: 'track_engagers_error_state',
-      label: 'Error loading engagers: $error',
+      label: 'Error loading engagers: $message',
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -181,7 +186,7 @@ class _TrackEngagersBottomSheetState
               ),
               const SizedBox(height: 16),
               Text(
-                error,
+                message,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
               ),
