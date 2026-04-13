@@ -173,20 +173,18 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
     _listKey.currentState?.removeItem(
       index,
       (context, animation) => SizeTransition(
-        sizeFactor: animation.drive(
-          CurveTween(curve: const Interval(0.0, 0.5, curve: Curves.easeInOut)),
+        sizeFactor: CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0.0, 0.5, curve: Curves.easeInOut),
         ),
         child: SlideTransition(
-          position: animation.drive(
-            Tween<Offset>(
-              begin: const Offset(1, 0), // Slide out to the right
-              end: Offset.zero,
-            ).chain(
-              CurveTween(
-                curve: const Interval(0.5, 1.0, curve: Curves.easeInOut),
-              ),
-            ),
-          ),
+          position: Tween<Offset>(
+            begin: const Offset(1, 0), // Slide out to the right
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0.5, 1.0, curve: Curves.easeInOut),
+          )),
           child: TrackTile(track: removedTrack),
         ),
       ),
@@ -226,47 +224,42 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
       body: asyncTracks.when(
         skipLoadingOnRefresh: false,
         data: (tracks) {
-          if (tracks.isEmpty && _localTracks.isEmpty) {
-            return RefreshIndicator(
-              onRefresh: () => ref.read(provider.notifier).refreshAll(),
-              child: Stack(
-                children: [
-                  ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: const [SizedBox(height: 100)],
-                  ),
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          widget.emptyStateIcon,
-                          size: 64,
-                          color: Theme.of(context).disabledColor,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          widget.emptyStateMessage,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: Theme.of(context).disabledColor,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
           return RefreshIndicator(
             onRefresh: () => ref.read(provider.notifier).refreshAll(),
-            child: AnimatedList(
-              key: _listKey,
-              controller: _scrollController,
-              initialItemCount: _localTracks.length,
-              physics: const AlwaysScrollableScrollPhysics(),
+            child: Stack(
+              children: [
+                if (tracks.isEmpty && _localTracks.isEmpty)
+                  ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      const SizedBox(height: 100),
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              widget.emptyStateIcon,
+                              size: 64,
+                              color: Theme.of(context).disabledColor,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              widget.emptyStateMessage,
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: Theme.of(context).disabledColor,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                AnimatedList(
+                  key: _listKey,
+                  controller: _scrollController,
+                  initialItemCount: _localTracks.length,
+                  physics: const AlwaysScrollableScrollPhysics(),
               itemBuilder: (context, index, animation) {
                 if (index >= _localTracks.length) {
                   return const SizedBox.shrink();
@@ -282,13 +275,14 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
                           trackUrl: track.trackUrl ?? '',
                           track: track,
                         ),
-                    onMorePressed: () =>
+                        onLikePressed: () =>
                         _handleRemoveFromCollection(track, index),
+                    // onMorePressed: () => TrackDetails.show(context, track, ref),
                   ),
                 );
               },
             ),
-          );
+            ]));
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
