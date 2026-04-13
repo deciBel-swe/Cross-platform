@@ -1,9 +1,8 @@
-/// Main application shell — switches between desktop and mobile layouts.
-library;
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/library_profile/presentation/providers/track_audio_provider.dart';
 import '../../features/player/presentation/widgets/desktop_player_bar.dart';
 import '../../features/player/presentation/widgets/mobile_mini_player.dart';
 import '../theme/app_colors.dart';
@@ -90,26 +89,34 @@ class _DesktopShell extends StatelessWidget {
 // Mobile layout
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _MobileShell extends StatelessWidget {
+class _MobileShell extends ConsumerWidget {
   const _MobileShell({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
     final hideMiniPlayer = location == RoutePaths.editProfile;
+    final miniPlayerVisible = ref.watch(miniPlayerVisibleProvider);
 
     return Scaffold(
       body: Stack(
         children: [
           navigationShell,
           if (!hideMiniPlayer)
-            const Positioned(
+            Positioned(
               left: 0,
               right: 0,
-              bottom: 5, // Moved lower as requested
-              child: MobileMiniPlayer(),
+              bottom: 5,
+              child: AnimatedSlide(
+                offset: miniPlayerVisible
+                    ? Offset.zero
+                    : const Offset(0, 1.5), // slide below the screen
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: const MobileMiniPlayer(),
+              ),
             ),
         ],
       ),

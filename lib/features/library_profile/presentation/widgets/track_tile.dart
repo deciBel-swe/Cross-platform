@@ -7,6 +7,7 @@ import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/domain/models/track_action_data.dart';
 import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../library/domain/entities/track.dart';
+import 'track_details.dart';
 
 class TrackTile extends ConsumerWidget {
   const TrackTile({
@@ -14,10 +15,12 @@ class TrackTile extends ConsumerWidget {
     required this.track,
     this.onTap,
     this.onMorePressed,
+    this.onLikePressed,
   });
   final Track track;
   final VoidCallback? onTap;
   final VoidCallback? onMorePressed;
+  final VoidCallback? onLikePressed;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -131,15 +134,21 @@ class TrackTile extends ConsumerWidget {
 
                       // Interactive Like Heart
                       GestureDetector(
-                        onTap: () => ref
-                            .read(trackSocialProvider.notifier)
-                            .toggleAction(
-                              track.id,
-                              SocialActionType.like,
-                              initialLikeCount: track.likeCount,
-                              initialRepostCount: track.repostCount,
-                              initialIsLiked: isLiked,
-                            ),
+                        onTap: () {
+                          if (isLiked) {
+                            onLikePressed?.call();
+                          } else {
+                            ref
+                                .read(trackSocialProvider.notifier)
+                                .toggleAction(
+                                  track.id,
+                                  SocialActionType.like,
+                                  initialLikeCount: track.likeCount,
+                                initialRepostCount: track.repostCount,
+                                initialIsLiked: isLiked,
+                              );
+                          }
+                        },
                         behavior: HitTestBehavior
                             .opaque, // Ensures the padding is clickable
                         child: Padding(
@@ -162,7 +171,7 @@ class TrackTile extends ConsumerWidget {
             // --- 3. Trailing Menu Button ---
             IconButton(
               icon: const Icon(Icons.more_vert),
-              onPressed: onMorePressed,
+              onPressed: ()=>TrackDetails.show(context,track,ref),
               color: subtitleColor,
               padding: EdgeInsets.zero,
               constraints:
