@@ -78,9 +78,14 @@ class _TrackEngagersBottomSheetState
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            widget.type == EngagerType.likers ? 'Likes' : 'Reposts',
-            style: AppTextStyles.sectionTitle,
+          Semantics(
+            identifier: 'track_engagers_title',
+            label: widget.type == EngagerType.likers ? 'Likes' : 'Reposts',
+            container: true,
+            child: Text(
+              widget.type == EngagerType.likers ? 'Likes' : 'Reposts',
+              style: AppTextStyles.sectionTitle,
+            ),
           ),
           const SizedBox(height: 16),
           const Divider(height: 1, color: Colors.white12),
@@ -89,8 +94,12 @@ class _TrackEngagersBottomSheetState
               data: (paginated) => paginated.content.isEmpty
                   ? _buildEmptyState()
                   : _buildList(paginated.content, paginated.isLast),
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+              loading: () => Center(
+                child: Semantics(
+                  identifier: 'track_engagers_loading',
+                  label: 'Loading engagers',
+                  child: const CircularProgressIndicator(color: AppColors.primary),
+                ),
               ),
               error: (error, _) => _buildErrorState(error.toString()),
             ),
@@ -101,75 +110,100 @@ class _TrackEngagersBottomSheetState
   }
 
   Widget _buildList(List<TrackEngager> engagers, bool isLast) {
-    return ListView.separated(
-      controller: widget.scrollController,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      itemCount: engagers.length + (isLast ? 0 : 1),
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        if (index < engagers.length) {
-          return _EngagerTile(user: engagers[index]);
-        } else {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.primary,
+    return Semantics(
+      identifier: 'track_engagers_list',
+      child: ListView.separated(
+        controller: widget.scrollController,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        itemCount: engagers.length + (isLast ? 0 : 1),
+        separatorBuilder: (context, index) => const SizedBox(height: 16),
+        itemBuilder: (context, index) {
+          if (index < engagers.length) {
+            return _EngagerTile(user: engagers[index]);
+          } else {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Semantics(
+                  identifier: 'track_engagers_load_more',
+                  label: 'Loading more',
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.people_outline, size: 48, color: Colors.white24),
-          const SizedBox(height: 16),
-          Text(
-            widget.type == EngagerType.likers
-                ? 'No likes yet'
-                : 'No reposts yet',
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white54),
-          ),
-        ],
+    return Semantics(
+      identifier: 'track_engagers_empty_state',
+      label: widget.type == EngagerType.likers
+          ? 'No likes yet'
+          : 'No reposts yet',
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.people_outline, size: 48, color: Colors.white24),
+            const SizedBox(height: 16),
+            Text(
+              widget.type == EngagerType.likers
+                  ? 'No likes yet'
+                  : 'No reposts yet',
+              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white54),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildErrorState(String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.errors),
-            const SizedBox(height: 16),
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () => ref.invalidate(
-                trackEngagersProvider((
-                  trackId: widget.trackId,
-                  type: widget.type,
-                )),
+    return Semantics(
+      identifier: 'track_engagers_error_state',
+      label: 'Error loading engagers: $error',
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 48,
+                color: AppColors.errors,
               ),
-              child: const Text(
-                'Try Again',
-                style: TextStyle(color: AppColors.primary),
+              const SizedBox(height: 16),
+              Text(
+                error,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Semantics(
+                identifier: 'track_engagers_retry_button',
+                button: true,
+                child: TextButton(
+                  onPressed: () => ref.invalidate(
+                    trackEngagersProvider((
+                      trackId: widget.trackId,
+                      type: widget.type,
+                    )),
+                  ),
+                  child: const Text(
+                    'Try Again',
+                    style: TextStyle(color: AppColors.primary),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -183,60 +217,75 @@ class _EngagerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () =>
-                context.push(RoutePaths.publicProfile(user.id.toString())),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.white10,
-              backgroundImage: user.avatarUrl != null
-                  ? CachedNetworkImageProvider(user.avatarUrl!)
-                  : null,
-              child: user.avatarUrl == null
-                  ? const Icon(Icons.person, color: Colors.white54)
-                  : null,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () =>
-                  context.push(RoutePaths.publicProfile(user.id.toString())),
-              behavior: HitTestBehavior.opaque,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        user.username,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      if (user.tier == 'PRO') ...[
-                        const SizedBox(width: 4),
-                        const _ProBadge(),
-                      ],
-                    ],
-                  ),
-                  Text(
-                    'Artist', // Placeholder for now
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: Colors.white54,
-                    ),
-                  ),
-                ],
+    return Semantics(
+      identifier: 'engager_tile_${user.id}',
+      label: 'User ${user.username}',
+      container: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Semantics(
+              identifier: 'engager_avatar_${user.id}',
+              label: '${user.username}\'s avatar',
+              button: true,
+              child: GestureDetector(
+                onTap: () =>
+                    context.push(RoutePaths.publicProfile(user.id.toString())),
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.white10,
+                  backgroundImage: user.avatarUrl != null
+                      ? CachedNetworkImageProvider(user.avatarUrl!)
+                      : null,
+                  child: user.avatarUrl == null
+                      ? const Icon(Icons.person, color: Colors.white54)
+                      : null,
+                ),
               ),
             ),
-          ),
-          _FollowButton(userId: user.id, initialFollowing: user.isFollowing),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Semantics(
+                identifier: 'engager_name_${user.id}',
+                label: user.username,
+                button: true,
+                child: GestureDetector(
+                  onTap: () =>
+                      context.push(RoutePaths.publicProfile(user.id.toString())),
+                  behavior: HitTestBehavior.opaque,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            user.username,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          if (user.tier == 'PRO') ...[
+                            const SizedBox(width: 4),
+                            const _ProBadge(),
+                          ],
+                        ],
+                      ),
+                      Text(
+                        'Artist', // Placeholder for now
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            _FollowButton(userId: user.id, initialFollowing: user.isFollowing),
+          ],
+        ),
       ),
     );
   }
@@ -296,23 +345,28 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
         ref.watch(followStateProvider(widget.userId)).valueOrNull ??
         widget.initialFollowing;
 
-    return OutlinedButton(
-      onPressed: () {
-        ref.read(followStateProvider(widget.userId).notifier).toggleFollow();
-      },
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(
-          color: isFollowing ? Colors.white24 : AppColors.primary,
+    return Semantics(
+      identifier: 'follow_button_${widget.userId}',
+      label: isFollowing ? 'Following' : 'Follow',
+      button: true,
+      child: OutlinedButton(
+        onPressed: () {
+          ref.read(followStateProvider(widget.userId).notifier).toggleFollow();
+        },
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+            color: isFollowing ? Colors.white24 : AppColors.primary,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          minimumSize: const Size(0, 32),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        minimumSize: const Size(0, 32),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      ),
-      child: Text(
-        isFollowing ? 'Following' : 'Follow',
-        style: TextStyle(
-          color: isFollowing ? Colors.white70 : AppColors.primary,
-          fontSize: 12,
+        child: Text(
+          isFollowing ? 'Following' : 'Follow',
+          style: TextStyle(
+            color: isFollowing ? Colors.white70 : AppColors.primary,
+            fontSize: 12,
+          ),
         ),
       ),
     );

@@ -120,6 +120,7 @@ class _RepostButtonState extends ConsumerState<RepostButton> {
       inactiveIcon: Icons.repeat,
       activeColor: AppColors.primary,
       onToggle: () => _handleTap(context, isCurrentlyReposted),
+      identifier: 'repost_button',
       onCountTap: () => showTrackEngagersSheet(
         context,
         trackId: widget.trackId,

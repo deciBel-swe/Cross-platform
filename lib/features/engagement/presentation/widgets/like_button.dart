@@ -66,6 +66,7 @@ class _LikeButtonState extends ConsumerState<LikeButton> {
             initialLikeCount: widget.likeCount,
             initialIsLiked: widget.isLiked,
           ),
+      identifier: 'like_button',
       onCountTap: () => showTrackEngagersSheet(
         context,
         trackId: widget.trackId,
