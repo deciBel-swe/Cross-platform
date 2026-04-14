@@ -31,7 +31,7 @@ abstract class IPlaylistRemoteDataSource {
   );
   Future<void> deletePlayList(int playListId);
 
-  Future<void> addTrackToPlaylist(int playlistId, int trackId);
+  Future<PlaylistModel> addTrackToPlaylist(int playlistId, int trackId);
 
   Future<void> removeTrackFromPlaylist(int playlistId, int trackId);
 }
@@ -148,7 +148,9 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
 
       final data = response.data;
 
-      if (data == null) {return [];}
+      if (data == null) {
+        return [];
+      }
 
       List<dynamic> contentList = [];
 
@@ -158,14 +160,10 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         contentList = data;
       }
 
-      return contentList
-          .where((item) => item != null)
-          .map((json) {
-            final cleanMap = Map<String, dynamic>.from(json as Map);
-            return PlaylistModel.fromJson(cleanMap);
-          })
-          .toList();
-
+      return contentList.where((item) => item != null).map((json) {
+        final cleanMap = Map<String, dynamic>.from(json as Map);
+        return PlaylistModel.fromJson(cleanMap);
+      }).toList();
     } on DioException catch (error) {
       throw ServerException(error.message ?? 'Failed to fetch playlists');
     } catch (error, stackTrace) {
@@ -224,14 +222,31 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   }
 
   @override
-  Future<void> addTrackToPlaylist(int playlistId, int trackId) async {
+  Future<PlaylistModel> addTrackToPlaylist(int playlistId, int trackId) async {
     try {
-      await _dioClient.post<dynamic>(
-        '${ApiConstants.playlists}$playlistId/tracks',
-        data: {'trackId': trackId},
+      final response = await _dioClient.post<Map<String, dynamic>>(
+        '${ApiConstants.playlists}/$playlistId/tracks',
+        data: <String, dynamic>{'trackId': trackId},
+        options: Options(
+          contentType: Headers.jsonContentType,
+          headers: <String, dynamic>{
+            Headers.acceptHeader: Headers.jsonContentType,
+          },
+        ),
       );
+
+      final data = response.data;
+      if (data == null) {
+        throw ServerException('Empty response from server');
+      }
+
+      return PlaylistModel.fromJson(data);
     } on DioException catch (error) {
-      throw ServerException(error.message ?? 'Failed to add track to playlist');
+      throw ServerException(
+        error.response?.data?.toString() ??
+            error.message ??
+            'Failed to add track to playlist',
+      );
     } catch (error) {
       throw ServerException('Failed to execute add track request: $error');
     }
@@ -241,7 +256,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   Future<void> removeTrackFromPlaylist(int playlistId, int trackId) async {
     try {
       await _dioClient.delete<dynamic>(
-        '${ApiConstants.playlists}$playlistId/tracks/$trackId',
+        '${ApiConstants.playlists}/$playlistId/tracks/$trackId',
       );
     } on DioException catch (error) {
       throw ServerException(
