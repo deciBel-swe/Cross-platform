@@ -137,4 +137,29 @@ class AppConstants {
   static const String tracksSectionTitle = 'Tracks';
 
   static const String statSeparator = '-';
+
+  // ==========================================
+  // FEATURE: UPGRADE
+  // ==========================================
+
+  static const String upgradeActionCancelAtPeriodEnd = 'Cancel at period end';
+
+  static const String upgradeActionSubscribeNow = 'Subscribe now';
+
+  static const String upgradeActionRenewSubscription = 'Renew subscription';
+
+  static const String upgradeCheckoutLaunchFailed =
+      'Could not open checkout page.';
+
+  static const String upgradeCheckoutStarted =
+      'Checkout opened. Complete payment then return to the app.';
+
+  static const String upgradeSubscriptionCancelSuccess =
+      'Subscription will cancel at period end.';
+
+  static const String upgradeSubscriptionRenewSuccess =
+      'Subscription renewed successfully.';
+
+  static const String upgradeStatusLoadFailed =
+      'Could not load subscription status.';
 }

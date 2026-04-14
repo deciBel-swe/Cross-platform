@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/subscription_tier_helper.dart';
 import '../../domain/entities/user_profile.dart';
 import 'expandable_bio.dart';
+import 'pro_badge.dart';
 
 class UserProfileHeader extends StatelessWidget {
   const UserProfileHeader({
@@ -19,6 +21,12 @@ class UserProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final tierValue = switch (user.tier) {
+      UserTier.free => 'FREE',
+      UserTier.pro => 'PRO',
+      UserTier.artistPro => 'ARTIST_PRO',
+    };
+    final isPremium = SubscriptionTierHelper.isPremium(tierValue);
     final city = user.profileDetails.city?.trim() ?? '';
     final country = user.profileDetails.country?.trim() ?? '';
     final locationStr = switch ((city.isNotEmpty, country.isNotEmpty)) {
@@ -32,12 +40,20 @@ class UserProfileHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          user.displayName ?? user.username,
-          style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.onPrimary,
-          ),
+        Row(
+          children: [
+            Text(
+              user.displayName ?? user.username,
+              style: textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
+            ),
+            if (isPremium) ...[
+              const SizedBox(width: AppConstants.spacingSmall),
+              const ProBadge(),
+            ],
+          ],
         ),
         Text(
           '@${user.username}',

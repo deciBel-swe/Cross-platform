@@ -2,66 +2,216 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../library_profile/presentation/providers/public_profile_provider.dart';
+import '../../../library_profile/presentation/providers/user_profile_provider.dart';
+import '../../domain/entities/subscription_status.dart';
+import '../notifiers/upgrade_notifier.dart';
+import '../providers/upgrade_providers.dart';
 
 /// Upgrade page showcasing premium features with a CTA banner.
-class UpgradeScreen extends StatelessWidget {
+class UpgradeScreen extends ConsumerStatefulWidget {
   const UpgradeScreen({super.key});
 
   @override
+  ConsumerState<UpgradeScreen> createState() => _UpgradeScreenState();
+}
+
+class _UpgradeScreenState extends ConsumerState<UpgradeScreen>
+    with WidgetsBindingObserver {
+  static const UpgradeViewState _fallbackState = UpgradeViewState(
+    subscription: SubscriptionStatus(
+      status: 'INACTIVE',
+      plan: 'FREE',
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
+    ),
+  );
+
+  bool _awaitingCheckoutReturn = false;
+  bool _isPrimaryActionRunning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _awaitingCheckoutReturn) {
+      _awaitingCheckoutReturn = false;
+      ref.read(upgradeNotifierProvider.notifier).refreshStatus();
+      _invalidateProfileBadges();
+    }
+  }
+
+  void _invalidateProfileBadges() {
+    ref.invalidate(userProfileProvider);
+    ref.invalidate(publicProfileProvider);
+    ref.invalidate(publicProfileSnapshotProvider);
+  }
+
+  Future<void> _onPrimaryActionTap(UpgradeViewState viewState) async {
+    if (_isPrimaryActionRunning) {
+      return;
+    }
+
+    _isPrimaryActionRunning = true;
+
+    final subscription = viewState.subscription;
+    final notifier = ref.read(upgradeNotifierProvider.notifier);
+
+    try {
+      if (!subscription.isActive) {
+        final checkoutResult = await notifier.startCheckout();
+        if (checkoutResult.isLeft()) {
+          checkoutResult.fold(_showFailureMessage, (_) {});
+        } else {
+          final checkoutUrl = checkoutResult.getOrElse(() => '');
+          await _launchCheckout(checkoutUrl);
+        }
+        return;
+      }
+
+      if (!subscription.cancelAtPeriodEnd) {
+        final cancelResult = await notifier.cancelAtPeriodEnd();
+        cancelResult.fold(_showFailureMessage, (updatedSubscription) {
+          _invalidateProfileBadges();
+          _showMessage(AppConstants.upgradeSubscriptionCancelSuccess);
+        });
+        return;
+      }
+
+      final renewResult = await notifier.renewSubscription();
+      renewResult.fold(_showFailureMessage, (updatedSubscription) {
+        _invalidateProfileBadges();
+        _showMessage(AppConstants.upgradeSubscriptionRenewSuccess);
+      });
+    } finally {
+      _isPrimaryActionRunning = false;
+    }
+  }
+
+  Future<void> _launchCheckout(String checkoutUrl) async {
+    final uri = Uri.tryParse(checkoutUrl);
+    if (uri == null) {
+      _showMessage(AppConstants.upgradeCheckoutLaunchFailed);
+      return;
+    }
+
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched) {
+      _showMessage(AppConstants.upgradeCheckoutLaunchFailed);
+      return;
+    }
+
+    _awaitingCheckoutReturn = true;
+    _invalidateProfileBadges();
+    _showMessage(AppConstants.upgradeCheckoutStarted);
+  }
+
+  void _showFailureMessage(Failure failure) {
+    _showMessage(failure.message.replaceFirst('Exception: ', ''));
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _resolvePrimaryActionLabel(SubscriptionStatus subscription) {
+    if (!subscription.isActive) {
+      return AppConstants.upgradeActionSubscribeNow;
+    }
+
+    return subscription.cancelAtPeriodEnd
+        ? AppConstants.upgradeActionRenewSubscription
+        : AppConstants.upgradeActionCancelAtPeriodEnd;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDesktop = _isDesktopLayout(context);
+
+    ref.listen<AsyncValue<UpgradeViewState>>(upgradeNotifierProvider, (
+      previous,
+      next,
+    ) {
+      if (next.hasError && previous?.error != next.error) {
+        _showMessage(next.error.toString().replaceFirst('Exception: ', ''));
+      }
+    });
+
+    final upgradeState = ref.watch(upgradeNotifierProvider);
+    final viewState = upgradeState.valueOrNull ?? _fallbackState;
+    final subscription = viewState.subscription;
+
+    final isBusy =
+        upgradeState.isLoading ||
+        viewState.isAnyActionInProgress ||
+        _isPrimaryActionRunning;
+
+    final ctaLabel = _resolvePrimaryActionLabel(subscription);
+
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              backgroundColor: AppColors.background,
+              scrolledUnderElevation: 0,
+              title: const Text(
+                'Upgrade',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
       body: ListView(
         padding: const EdgeInsets.all(AppDimensions.paddingLg),
         children: [
           // ---- Hero banner ----
           const _UpgradeHero(),
 
-          const SizedBox(height: AppDimensions.paddingXl),
+          const SizedBox(height: AppDimensions.paddingLg),
 
-          // ---- Feature comparison ----
-          const Text('Why Upgrade?', style: AppTextStyles.sectionTitle),
-          const SizedBox(height: AppDimensions.paddingMd),
-
-          const _FeatureRow(
-            icon: Icons.headphones,
-            title: 'Ad-free listening',
-            description: 'Enjoy uninterrupted music without any ads.',
-            isFree: false,
-          ),
-          const _FeatureRow(
-            icon: Icons.high_quality,
-            title: 'HQ audio streaming',
-            description: 'Listen in high-quality 256kbps AAC.',
-            isFree: false,
-          ),
-          const _FeatureRow(
-            icon: Icons.download,
-            title: 'Offline listening',
-            description: 'Download tracks and listen anywhere.',
-            isFree: false,
-          ),
-          const _FeatureRow(
-            icon: Icons.skip_next,
-            title: 'Unlimited skips',
-            description: 'Skip as many tracks as you want.',
-            isFree: true,
-          ),
-          const _FeatureRow(
-            icon: Icons.playlist_play,
-            title: 'Unlimited playlists',
-            description: 'Create and save as many playlists as you like.',
-            isFree: true,
-          ),
-          const _FeatureRow(
-            icon: Icons.upload,
-            title: 'Extended uploads',
-            description: 'Upload up to 6 hours of audio content.',
-            isFree: false,
+          Container(
+            padding: const EdgeInsets.all(AppDimensions.paddingMd),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Current plan: ${subscription.plan}',
+                  style: AppTextStyles.cardTitle,
+                ),
+                const SizedBox(height: AppDimensions.paddingSm),
+                Text(
+                  'Status: ${subscription.status}',
+                  style: AppTextStyles.cardSubtitle,
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: AppDimensions.paddingXl),
@@ -71,7 +221,7 @@ class UpgradeScreen extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: isBusy ? null : () => _onPrimaryActionTap(viewState),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -84,18 +234,7 @@ class UpgradeScreen extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                child: const Text('Start Free Trial'),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppDimensions.paddingMd),
-
-          Center(
-            child: Text(
-              'Try free for 30 days. Cancel anytime.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+                child: Text(ctaLabel),
               ),
             ),
           ),
@@ -105,6 +244,14 @@ class UpgradeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
 }
 
 /// Hero banner with gradient and tagline.
@@ -134,7 +281,7 @@ class _UpgradeHero extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.paddingMd),
           const Text(
-            'Decibel Go+',
+            'Decibel PRO',
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w800,
@@ -151,79 +298,6 @@ class _UpgradeHero extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.paddingLg),
         ],
-      ),
-    );
-  }
-}
-
-/// A single feature comparison row.
-class _FeatureRow extends StatelessWidget {
-  const _FeatureRow({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.isFree,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-  final bool isFree;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            ),
-            child: Icon(icon, color: AppColors.primary, size: 22),
-          ),
-          const SizedBox(width: AppDimensions.paddingMd),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTextStyles.cardTitle),
-                const SizedBox(height: 2),
-                Text(description, style: AppTextStyles.cardSubtitle),
-              ],
-            ),
-          ),
-          _Badge(isPremium: !isFree),
-        ],
-      ),
-    );
-  }
-}
-
-/// Small badge showing "Free" or "Go+".
-class _Badge extends StatelessWidget {
-  const _Badge({required this.isPremium});
-
-  final bool isPremium;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: isPremium ? AppColors.primary : AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        isPremium ? 'Go+' : 'Free',
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: isPremium ? Colors.white : AppColors.textSecondary,
-        ),
       ),
     );
   }
