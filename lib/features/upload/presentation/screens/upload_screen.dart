@@ -46,6 +46,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
           onPressed: () => context.pop(),
         ),
@@ -57,22 +58,34 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TrackInfoChecklist(metadata: metadata),
+              Semantics(
+                header: true,
+                label: 'Track completion checklist',
+                child: TrackInfoChecklist(metadata: metadata),
+              ),
               const SizedBox(height: 24),
 
-              const FileSelectionHeader(),
+              Semantics(
+                header: true,
+                label: 'Select your track file',
+                child: FileSelectionHeader(),
+              ),
               const SizedBox(height: 24),
 
               // The main card containing the metadata and privacy forms
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.borderDark),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [TrackDetailsForm(), PrivacySettings()],
+              Semantics(
+                label: 'Track details and settings',
+                container: true,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.borderDark),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [TrackDetailsForm(), PrivacySettings()],
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

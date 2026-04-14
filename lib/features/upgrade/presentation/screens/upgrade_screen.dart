@@ -188,29 +188,39 @@ class _UpgradeScreenState extends ConsumerState<UpgradeScreen>
         padding: const EdgeInsets.all(AppDimensions.paddingLg),
         children: [
           // ---- Hero banner ----
-          const _UpgradeHero(),
+          Semantics(
+            header: true,
+            label: 'Decibel Pro subscription features overview',
+            child: const _UpgradeHero(),
+          ),
 
           const SizedBox(height: AppDimensions.paddingLg),
 
-          Container(
-            padding: const EdgeInsets.all(AppDimensions.paddingMd),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Current plan: ${subscription.plan}',
-                  style: AppTextStyles.cardTitle,
+          Semantics(
+            container: true,
+            label: 'Your subscription details',
+            child: MergeSemantics(
+              child: Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingMd),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                 ),
-                const SizedBox(height: AppDimensions.paddingSm),
-                Text(
-                  'Status: ${subscription.status}',
-                  style: AppTextStyles.cardSubtitle,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Current plan: ${subscription.plan}',
+                      style: AppTextStyles.cardTitle,
+                    ),
+                    const SizedBox(height: AppDimensions.paddingSm),
+                    Text(
+                      'Status: ${subscription.status}',
+                      style: AppTextStyles.cardSubtitle,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
 
@@ -220,21 +230,27 @@ class _UpgradeScreenState extends ConsumerState<UpgradeScreen>
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
-              child: ElevatedButton(
-                onPressed: isBusy ? null : () => _onPrimaryActionTap(viewState),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(26),
+              child: Semantics(
+                button: true,
+                enabled: !isBusy,
+                label: isBusy ? 'Action in progress' : ctaLabel,
+                child: ElevatedButton(
+                  onPressed:
+                      isBusy ? null : () => _onPrimaryActionTap(viewState),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  child: Text(ctaLabel),
                 ),
-                child: Text(ctaLabel),
               ),
             ),
           ),
@@ -274,10 +290,13 @@ class _UpgradeHero extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: AppDimensions.paddingLg),
-          Image.asset(
-            'assets/icon/white_app_icon_trans.png',
-            width: 64,
-            height: 64,
+          Semantics(
+            label: 'Decibel App Icon',
+            child: Image.asset(
+              'assets/icon/white_app_icon_trans.png',
+              width: 64,
+              height: 64,
+            ),
           ),
           const SizedBox(height: AppDimensions.paddingMd),
           const Text(
