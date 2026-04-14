@@ -23,30 +23,16 @@ class PublicProfileSocialLinks {
   final String? website;
   final String? supportLink;
 
-  // 🔥 IMPORTANT FIX: only visible platforms (NO supportLink)
-  static List<String> get displayPlatforms => [
-        WebProfilePlatformUtils.instagram,
-        WebProfilePlatformUtils.twitter,
-        WebProfilePlatformUtils.youtube,
-        WebProfilePlatformUtils.tiktok,
-        WebProfilePlatformUtils.linkedin,
-        WebProfilePlatformUtils.snapchat,
-        WebProfilePlatformUtils.facebook,
-        WebProfilePlatformUtils.website,
-      ];
+  // 🔥 IMPORTANT FIX: only visible platforms
+  static List<String> get displayPlatforms =>
+      WebProfilePlatformUtils.displayPlatforms;
 
-  // keep allPlatforms unchanged (backend safety)
-  static List<String> get allPlatforms =>
-      WebProfilePlatformUtils.allPlatforms;
+  // keep allPlatforms consistent with utils
+  static List<String> get allPlatforms => WebProfilePlatformUtils.allPlatforms;
 
   bool get isEmpty =>
       _isNullOrEmpty(instagram) &&
       _isNullOrEmpty(twitter) &&
-      _isNullOrEmpty(youtube) &&
-      _isNullOrEmpty(tiktok) &&
-      _isNullOrEmpty(linkedin) &&
-      _isNullOrEmpty(snapchat) &&
-      _isNullOrEmpty(facebook) &&
       _isNullOrEmpty(website);
 
   bool _isNullOrEmpty(String? value) {

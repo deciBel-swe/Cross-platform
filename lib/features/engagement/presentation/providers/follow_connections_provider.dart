@@ -16,7 +16,7 @@ final followConnectionsProvider = FutureProvider.autoDispose
           : await repository.getFollowing(userId: params.userId);
 
       return result.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (data) => data,
       );
     });
@@ -28,7 +28,7 @@ final suggestedUsersProvider = FutureProvider.autoDispose<PaginatedEngagers>((
   final result = await repository.getSuggestedUsers();
 
   return result.fold(
-    (failure) => throw Exception(failure.message),
+    (failure) => throw failure,
     (data) => data,
   );
 });
@@ -40,7 +40,7 @@ final friendsProvider = FutureProvider.autoDispose<PaginatedEngagers>((
   final result = await repository.getFriends();
 
   return result.fold(
-    (failure) => throw Exception(failure.message),
+    (failure) => throw failure,
     (data) => data,
   );
 });

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/subscription_tier_helper.dart';
@@ -379,29 +380,41 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.wifi_off_rounded,
+            Icon(
+              error is NotFoundFailure
+                  ? Icons.person_off_rounded
+                  : Icons.wifi_off_rounded,
               color: AppColors.surface,
               size: AppConstants.errorIconSize,
             ),
             const SizedBox(height: AppConstants.spacingRegular),
-            Text(
-              AppConstants.errorGeneric,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.onPrimary,
-                fontWeight: FontWeight.bold,
+            if (error is! NotFoundFailure) ...[
+              Text(
+                AppConstants.errorGeneric,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
-            ),
-            const SizedBox(height: AppConstants.spacingSmall),
+              const SizedBox(height: AppConstants.spacingSmall),
+            ],
             Text(
-              error.toString().replaceAll(
-                AppConstants.errorExceptionPrefix,
-                '',
-              ),
+              error is NotFoundFailure
+                  ? '404 | Not Found'
+                  : error.toString().replaceAll(
+                        AppConstants.errorExceptionPrefix,
+                        '',
+                      ),
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+              ).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onPrimary,
+                    fontSize: error is NotFoundFailure ? 18 : null,
+                    fontWeight: error is NotFoundFailure
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
             ),
             const SizedBox(height: AppConstants.spacingExtraLarge),
             ElevatedButton.icon(

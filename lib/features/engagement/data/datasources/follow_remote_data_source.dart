@@ -95,7 +95,7 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized. Please log in again.');
       } else if (e.response?.statusCode == 404) {
-        throw const ServerException('User not found.');
+        throw const NotFoundException('User not found.');
       }
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
@@ -518,7 +518,7 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     if (e.response?.statusCode == 401) {
       throw const AuthException('Unauthorized. Please log in again.');
     } else if (e.response?.statusCode == 404) {
-      throw const ServerException('User not found.');
+      throw const NotFoundException('User not found.');
     }
 
     final responseData = e.response?.data;

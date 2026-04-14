@@ -157,7 +157,9 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
           responseData['username'] ?? profileMap['username'],
         ),
         'displayName': _asNullableString(
-          responseData['displayName'] ?? profileMap['displayName'] ?? profileMap['DisplayName'],
+          responseData['displayName'] ??
+              profileMap['displayName'] ??
+              profileMap['DisplayName'],
         ),
         'emailVerified': _asBool(responseData['emailVerified']),
         'tier': _asString(
@@ -187,7 +189,7 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
           'Unauthorized to fetch profile. Please log in again.',
         );
       } else if (e.response?.statusCode == 404) {
-        throw const ServerException('User profile not found.');
+        throw const NotFoundException('User profile not found.');
       }
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
@@ -226,7 +228,9 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         'email': '',
         'username': responseData['username'] ?? '',
         'displayName': _asNullableString(
-          responseData['displayName'] ?? profile['displayName'] ?? profile['DisplayName'],
+          responseData['displayName'] ??
+              profile['displayName'] ??
+              profile['DisplayName'],
         ),
         'emailVerified': true,
         'tier': responseData['tier'] ?? 'FREE',
@@ -250,7 +254,7 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       return UserProfileModel.fromJson(normalizedResponse);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        throw const ServerException('Public profile not found.');
+        throw const NotFoundException('Public profile not found.');
       }
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
