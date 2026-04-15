@@ -16,6 +16,8 @@ import '../../features/engagement/presentation/screens/follow_connections_screen
 import '../../features/engagement/presentation/screens/liked_tracks_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/library/domain/entities/track.dart';
+import '../../features/library/presentation/screens/add_to_playlist_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/track_edit_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
@@ -159,6 +161,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: LibraryScreen()),
                 routes: [
+                  GoRoute(
+                    path: 'add-to-playlist',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final track = state.extra as Track;
+                      return AddToPlaylistScreen(
+                        key: UniqueKey(),
+                        track: track,
+                      );
+                    },
+                  ),
                   GoRoute(
                     path: 'playlists',
                     builder: (context, state) => const PlaylistsScreen(),

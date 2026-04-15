@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/notifiers/track_comment_notifier.dart';
 import '../../../library/presentation/widgets/bottom_bar_widget.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
@@ -134,10 +135,17 @@ class TrackPreviewContent extends ConsumerWidget {
             );
           },
           onSharePressed: () {},
+          onAddToPlaylistPressed: () async {
+            await Future.delayed(Duration.zero);
+            if (context.mounted) {
+              context.push(RoutePaths.addToPlaylist, extra: track);
+            }
+          },
           onMoreOptionsPressed: () async {
             final action = await _showTrackOptionsBottomSheet(
               context: context,
               isOwner: isOwner,
+              track: track,
             );
 
             if (action == _TrackOptionsAction.queue) {
@@ -159,6 +167,7 @@ class TrackPreviewContent extends ConsumerWidget {
   Future<_TrackOptionsAction?> _showTrackOptionsBottomSheet({
     required BuildContext context,
     required bool isOwner,
+    required Track track,
   }) async {
     return showModalBottomSheet<_TrackOptionsAction>(
       context: context,
@@ -186,6 +195,20 @@ class TrackPreviewContent extends ConsumerWidget {
                   onTap: () =>
                       Navigator.of(sheetContext).pop(_TrackOptionsAction.edit),
                 ),
+              ListTile(
+                leading: const Icon(Icons.playlist_add, color: Colors.white),
+                title: const Text(
+                  'Add to playlist',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () async {
+                  Navigator.of(sheetContext).pop();
+                  await Future.delayed(Duration.zero);
+                  if (context.mounted) {
+                    context.push(RoutePaths.addToPlaylist, extra: track);
+                  }
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.close, color: Colors.white70),
                 title: const Text(

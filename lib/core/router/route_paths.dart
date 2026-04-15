@@ -49,8 +49,10 @@ class RoutePaths {
   static const String trackPreviewBase = '/library/track-preview';
   static const String trackEditBase = '/library/track-edit';
   static const String playlists = '/library/playlists';
+  static const String createPlaylist = '/library/playlists/create';
   static const String editPlaylist = '/library/playlists/edit';
   static const String playlistTracks = '/library/playlists/playlist-tracks';
+  static const String addToPlaylist = '/library/add-to-playlist';
 
   static String trackPreview(int trackId) => '$trackPreviewBase/$trackId';
   static String trackEdit(int trackId) => '$trackEditBase/$trackId';
