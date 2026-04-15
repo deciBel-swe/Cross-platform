@@ -68,7 +68,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
               Semantics(
                 header: true,
                 label: 'Select your track file',
-                child: FileSelectionHeader(),
+                child: const FileSelectionHeader(),
               ),
               const SizedBox(height: 24),
 

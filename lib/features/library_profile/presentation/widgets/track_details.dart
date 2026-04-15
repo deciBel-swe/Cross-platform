@@ -78,7 +78,10 @@ class TrackDetails extends ConsumerWidget {
       onAddToPlaylist: () {
        //dummy karim is supposed to implement it 
       },
-      onAddToQueue: () {/* dummy */},
+      onAddToQueue: () {
+        ref.read(trackAudioProvider.notifier).addToQueue(track);
+        context.pop();
+      },
       onGoToArtist: goToArtist,
       onGoToAlbum: () {/* dummy */},
       onShare: () {/* dummy */},

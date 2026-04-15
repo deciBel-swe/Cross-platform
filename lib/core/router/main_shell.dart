@@ -97,7 +97,11 @@ class _MobileShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
-    final hideMiniPlayer = location == RoutePaths.editProfile;
+    final hideMiniPlayer =
+        location == RoutePaths.editProfile ||
+        location.startsWith(RoutePaths.settings) ||
+        location == RoutePaths.upload ||
+        location.startsWith(RoutePaths.uploadLibrary);
     final miniPlayerVisible = ref.watch(miniPlayerVisibleProvider);
 
     return Scaffold(

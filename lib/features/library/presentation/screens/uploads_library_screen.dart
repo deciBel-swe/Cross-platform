@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimensions.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_scroll_controller_provider.dart';
@@ -81,7 +82,12 @@ class UploadsLibraryBody extends ConsumerWidget {
           child: ListView.builder(
             controller: scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              16 + AppDimensions.mobileMiniPlayerReservedSpace,
+            ),
             itemCount: tracks.length,
             itemBuilder: (context, index) {
               final track = tracks[index];
@@ -95,6 +101,7 @@ class UploadsLibraryBody extends ConsumerWidget {
                           trackId: track.id,
                           trackUrl: track.trackUrl ?? '',
                           track: track,
+                          queue: tracks,
                         );
                   },
                 ),

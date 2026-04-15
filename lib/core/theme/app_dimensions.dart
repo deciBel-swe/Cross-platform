@@ -13,6 +13,14 @@ class AppDimensions {
   // ---- Player bar ----
   static const double playerBarHeight = 72;
 
+  // ---- Mobile mini player ----
+  static const double mobileMiniPlayerHeight = 64;
+  static const double mobileMiniPlayerHorizontalPadding = 20;
+  static const double mobileMiniPlayerVerticalPadding = 8;
+  static const double mobileMiniPlayerBottomOffset = 5;
+  static const double mobileMiniPlayerReservedSpace =
+      mobileMiniPlayerHeight + (mobileMiniPlayerVerticalPadding * 2) + mobileMiniPlayerBottomOffset;
+
   // ---- Header ----
   static const double headerHeight = 56;
 

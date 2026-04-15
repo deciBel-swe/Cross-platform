@@ -873,6 +873,7 @@ class _PublicTrackCollectionSection extends ConsumerWidget {
                     trackId: track.id,
                     trackUrl: track.trackUrl ?? '',
                     track: track,
+                    queue: tracks,
                   ),
             );
           },

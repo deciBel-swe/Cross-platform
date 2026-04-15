@@ -14,6 +14,7 @@ import '../../../library_profile/presentation/widgets/track_preview_background.d
 import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import 'active_comments_overlay.dart';
 import 'interactive_waveform.dart';
 import 'track_comments_bottom_sheet.dart';
@@ -139,6 +140,12 @@ class TrackPreviewContent extends ConsumerWidget {
               isOwner: isOwner,
             );
 
+            if (action == _TrackOptionsAction.queue) {
+              if (!context.mounted) return;
+              await QueueBottomSheet.show(context);
+              return;
+            }
+
             if (action == _TrackOptionsAction.edit) {
               if (!context.mounted) return;
               await context.push(RoutePaths.trackEdit(trackId));
@@ -161,6 +168,14 @@ class TrackPreviewContent extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              ListTile(
+                leading: const Icon(Icons.queue_music, color: Colors.white),
+                title: const Text(
+                  'Queue',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () => Navigator.of(sheetContext).pop(_TrackOptionsAction.queue),
+              ),
               if (isOwner)
                 ListTile(
                   leading: const Icon(Icons.edit, color: Colors.white),
@@ -188,4 +203,4 @@ class TrackPreviewContent extends ConsumerWidget {
   }
 }
 
-enum _TrackOptionsAction { edit, cancel }
+enum _TrackOptionsAction { queue, edit, cancel }
