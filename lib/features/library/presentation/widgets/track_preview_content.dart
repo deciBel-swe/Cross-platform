@@ -136,7 +136,7 @@ class TrackPreviewContent extends ConsumerWidget {
           },
           onSharePressed: () {},
           onAddToPlaylistPressed: () async {
-            await Future.delayed(Duration.zero);
+            await Future<void>.delayed(Duration.zero);
             if (context.mounted) {
               context.push(RoutePaths.addToPlaylist, extra: track);
             }
@@ -183,7 +183,8 @@ class TrackPreviewContent extends ConsumerWidget {
                   'Queue',
                   style: TextStyle(color: Colors.white),
                 ),
-                onTap: () => Navigator.of(sheetContext).pop(_TrackOptionsAction.queue),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_TrackOptionsAction.queue),
               ),
               if (isOwner)
                 ListTile(
@@ -203,7 +204,7 @@ class TrackPreviewContent extends ConsumerWidget {
                 ),
                 onTap: () async {
                   Navigator.of(sheetContext).pop();
-                  await Future.delayed(Duration.zero);
+                  await Future<void>.delayed(Duration.zero);
                   if (context.mounted) {
                     context.push(RoutePaths.addToPlaylist, extra: track);
                   }

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../playlists/domain/entities/playlist.dart';
 import '../../../playlists/presentation/widgets/create_playlist_bottom_sheet.dart';
@@ -144,6 +143,7 @@ class _PlaylistItem extends ConsumerWidget {
         final success = await notifier.addTrack(
           playlistId: playlist.id,
           trackId: track.id,
+          track: track,
         );
 
         if (!context.mounted) return;

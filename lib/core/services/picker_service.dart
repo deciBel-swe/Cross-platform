@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 abstract class IPickerService {
   Future<File?> pickAudioFile();
@@ -29,6 +31,8 @@ class PickerService implements IPickerService {
       }
       return null;
     } catch (e) {
+      // Print the error so you know exactly why it failed
+      debugPrint('Error picking audio file: $e');
       return null;
     } finally {
       _isAudioPickerActive = false;
@@ -48,20 +52,43 @@ class PickerService implements IPickerService {
   @override
   Future<Duration?> getAudioDuration(String filePath) async {
     final player = AudioPlayer();
-    await player.setFilePath(filePath).catchError((_) => null);
+    try {
+      final duration = await player.setAudioSource(
+        AudioSource.uri(
+          Uri.file(filePath),
 
-    await player.processingStateStream
-        .firstWhere(
-          (state) =>
-              state == ProcessingState.ready || state == ProcessingState.idle,
-        )
-        .catchError((_) => ProcessingState.idle);
-
-    final duration = player.duration;
-    await player.dispose().catchError((_) {});
-
-    return duration;
+          tag: MediaItem(
+            id: 'duration_check_${DateTime.now().millisecondsSinceEpoch}',
+            title: 'Uploading Track...',
+          ),
+        ),
+      );
+      return duration;
+    } catch (e) {
+      debugPrint('Error getting audio duration: $e');
+      return null;
+    } finally {
+      await player.dispose();
+    }
   }
+
+  // @override
+  // Future<Duration?> getAudioDuration(String filePath) async {
+  //   final player = AudioPlayer();
+  //   await player.setFilePath(filePath).catchError((_) => null);
+
+  //   await player.processingStateStream
+  //       .firstWhere(
+  //         (state) =>
+  //             state == ProcessingState.ready || state == ProcessingState.idle,
+  //       )
+  //       .catchError((_) => ProcessingState.idle);
+
+  //   final duration = player.duration;
+  //   await player.dispose().catchError((_) {});
+
+  //   return duration;
+  // }
 }
 
 // Provide it to Riverpod

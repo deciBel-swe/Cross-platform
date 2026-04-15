@@ -237,7 +237,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
 
       final data = response.data;
       if (data == null) {
-        throw ServerException('Empty response from server');
+        throw const ServerException('Empty response from server');
       }
 
       return PlaylistModel.fromJson(data);

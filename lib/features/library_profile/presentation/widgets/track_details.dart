@@ -20,9 +20,14 @@ import '../providers/track_audio_provider.dart';
 /// TrackDetails.show(context, track, ref);
 /// ```
 class TrackDetails extends ConsumerWidget {
-  const TrackDetails({super.key, required this.track});
+  const TrackDetails({
+    super.key,
+    required this.track,
+    required this.parentContext,
+  });
 
   final Track track;
+  final BuildContext parentContext;
 
   // ─── Static launcher ───────────────────────────────────────────────────────
 
@@ -36,19 +41,19 @@ class TrackDetails extends ConsumerWidget {
     WidgetRef ref,
   ) async {
     // Hide the mini player before the sheet appears.
-  final miniPlayerNotifier = ref.read(miniPlayerVisibleProvider.notifier);
-  miniPlayerNotifier.state=false;
+    final miniPlayerNotifier = ref.read(miniPlayerVisibleProvider.notifier);
+    miniPlayerNotifier.state = false;
     try {
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         barrierColor: Colors.black54,
-        builder: (_) => TrackDetails(track: track),
+        builder: (_) => TrackDetails(track: track, parentContext: context),
       );
     } finally {
       // Always restore the mini player, even if the sheet throws.
-      miniPlayerNotifier.state=true;
+      miniPlayerNotifier.state = true;
       // ref.read(miniPlayerVisibleProvider.notifier).state = true;
     }
   }
@@ -58,11 +63,12 @@ class TrackDetails extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider).valueOrNull;
-    final currentUserId =
-        authState is AuthAuthenticated ? authState.user.id : null;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
 
-    final isOwnTrack = currentUserId != null &&
-        currentUserId == track.artist.id;
+    final isOwnTrack =
+        currentUserId != null && currentUserId == track.artist.id;
 
     void goToArtist() {
       context.pop(); // dismiss the sheet first
@@ -76,17 +82,33 @@ class TrackDetails extends ConsumerWidget {
     return _SheetContent(
       track: track,
       onAddToPlaylist: () {
-       //dummy karim is supposed to implement it 
+        // Close the sheet, then push the AddToPlaylist route using the parent
+        // context (the one that opened this sheet) so navigation uses an
+        // active context and doesn't complete a future twice.
+        Navigator.of(context).pop();
+        Future.microtask(() {
+          if (parentContext.mounted) {
+            parentContext.push(RoutePaths.addToPlaylist, extra: track);
+          }
+        });
       },
       onAddToQueue: () {
         ref.read(trackAudioProvider.notifier).addToQueue(track);
         context.pop();
       },
       onGoToArtist: goToArtist,
-      onGoToAlbum: () {/* dummy */},
-      onShare: () {/* dummy */},
-      onCopyLink: () {/* dummy */},
-      onReport: () {/* dummy */},
+      onGoToAlbum: () {
+        /* dummy */
+      },
+      onShare: () {
+        /* dummy */
+      },
+      onCopyLink: () {
+        /* dummy */
+      },
+      onReport: () {
+        /* dummy */
+      },
     );
   }
 }
@@ -396,9 +418,9 @@ class _MetaChip extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textMuted,
-                fontWeight: FontWeight.w500,
-              ),
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
@@ -422,10 +444,10 @@ class _GenreChip extends StatelessWidget {
       child: Text(
         genre,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-              fontSize: 10,
-            ),
+          color: AppColors.primary,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
+        ),
       ),
     );
   }
@@ -446,8 +468,7 @@ class _ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isDestructive ? AppColors.errors : AppColors.textSecondary;
+    final color = isDestructive ? AppColors.errors : AppColors.textSecondary;
 
     return InkWell(
       onTap: onTap,
@@ -463,9 +484,9 @@ class _ActionTile extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w500,
-                  ),
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),

@@ -610,4 +610,11 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       extras: <String, dynamic>{'source': urlOrPath},
     );
   }
+
+  Future<void> setVolume(double volume) async {
+    if (_isDisposed || _isStopping) return;
+    try {
+      await _audioPlayer.setVolume(volume);
+    } catch (_) {}
+  }
 }
