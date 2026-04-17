@@ -31,11 +31,9 @@ class _MobileMiniPlayerState extends ConsumerState<MobileMiniPlayer> {
     final audioState = ref.watch(trackAudioProvider);
     final audioNotifier = ref.read(trackAudioProvider.notifier);
 
-    if (!audioState.isPrepared || audioState.currentTrack == null) {
-      return const SizedBox.shrink();
-    }
+    final track = audioState.currentTrack;
+    if (track == null) return const SizedBox.shrink();
 
-    final track = audioState.currentTrack!;
     final coverUrl = track.coverUrl;
     final title = track.title;
     final artistName = track.artist.displayName ?? track.artist.username;
@@ -92,7 +90,10 @@ class _MobileMiniPlayerState extends ConsumerState<MobileMiniPlayer> {
                     switchInCurve: Curves.easeOutCubic,
                     switchOutCurve: Curves.easeInCubic,
                     transitionBuilder: (child, animation) {
-                      final begin = Offset(_swipeDirection == 1 ? -0.15 : 0.15, 0);
+                      final begin = Offset(
+                        _swipeDirection == 1 ? -0.15 : 0.15,
+                        0,
+                      );
                       final slide = Tween<Offset>(
                         begin: begin,
                         end: Offset.zero,
@@ -108,6 +109,7 @@ class _MobileMiniPlayerState extends ConsumerState<MobileMiniPlayer> {
                         const SizedBox(width: 10),
                         GestureDetector(
                           onTap: () {
+                            if (!audioState.isPrepared) return;
                             if (audioState.isPlaying) {
                               audioNotifier.pause();
                             } else {
@@ -135,7 +137,7 @@ class _MobileMiniPlayerState extends ConsumerState<MobileMiniPlayer> {
                                       end: Alignment.bottomRight,
                                       colors: [
                                         AppColors.primaryDark,
-                                        AppColors.primary
+                                        AppColors.primary,
                                       ],
                                     ),
                                   ),
@@ -155,7 +157,9 @@ class _MobileMiniPlayerState extends ConsumerState<MobileMiniPlayer> {
                                   audioState.isPlaying
                                       ? Icons.pause
                                       : Icons.play_arrow,
-                                  color: Colors.white,
+                                  color: audioState.isPrepared
+                                      ? Colors.white
+                                      : Colors.white38,
                                   size: 24,
                                 ),
                               ),
