@@ -19,6 +19,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   StreamSubscription<PlayerState>? _playerStateSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
   StreamSubscription<PlaybackEvent>? _playbackEventSubscription;
+  StreamSubscription<int?>? _currentIndexSubscription;
 
   bool _isDisposed = false;
   bool _isStopping = false;
@@ -53,11 +54,13 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     await _playerStateSubscription?.cancel();
     await _durationSubscription?.cancel();
     await _playbackEventSubscription?.cancel();
+    await _currentIndexSubscription?.cancel();
 
     _positionSubscription = null;
     _playerStateSubscription = null;
     _durationSubscription = null;
     _playbackEventSubscription = null;
+    _currentIndexSubscription = null;
 
     try {
       await _player?.dispose();
@@ -96,7 +99,13 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
       if (event.processingState == ProcessingState.completed &&
           !state.isDragging) {
-        replay();
+        final currentIndex =
+            state.queue.indexWhere((t) => t.id == state.currentTrack?.id);
+        if (currentIndex != -1 && currentIndex < state.queue.length - 1) {
+          skipNext();
+        } else {
+          replay();
+        }
       }
     }, onError: (_) {});
 
@@ -113,6 +122,29 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
             duration: duration,
           ),
         );
+      }
+    }, onError: (_) {});
+
+    _currentIndexSubscription = _audioPlayer.currentIndexStream.listen((index) {
+      if (_isDisposed || _isStopping || index == null) {
+        return;
+      }
+
+      final queue = state.queue;
+      if (index >= 0 && index < queue.length) {
+        final track = queue[index];
+        if (state.currentTrack?.id != track.id) {
+          debugPrint('[AudioStream] Track changed to: ${track.title}');
+          state = state.copyWith(
+            currentTrack: track,
+            preparedTrackId: track.id,
+            preparedTrackUrl: track.trackUrl,
+            isPrepared: true,
+            position: Duration.zero,
+            progress: 0,
+            duration: _audioPlayer.duration ?? Duration.zero,
+          );
+        }
       }
     }, onError: (_) {});
 
@@ -262,6 +294,12 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
   Future<void> skipNext() async {
     if (_isDisposed || _isStopping) return;
+
+    if (_audioPlayer.hasNext) {
+      await _audioPlayer.seekToNext();
+      return;
+    }
+
     final currentId = state.preparedTrackId;
     if (currentId == null) return;
 
@@ -286,6 +324,12 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
   Future<void> skipPrevious() async {
     if (_isDisposed || _isStopping) return;
+
+    if (_audioPlayer.hasPrevious) {
+      await _audioPlayer.seekToPrevious();
+      return;
+    }
+
     final currentId = state.preparedTrackId;
     if (currentId == null) return;
 
@@ -350,6 +394,14 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (_isDisposed || _isStopping) return;
     final queue = state.queue;
     if (index < 0 || index >= queue.length) return;
+
+    if (_audioPlayer.audioSource is ConcatenatingAudioSource) {
+      await _audioPlayer.seek(Duration.zero, index: index);
+      if (!state.isPlaying) {
+        await play();
+      }
+      return;
+    }
 
     final selected = queue[index];
     await initializeForTrack(

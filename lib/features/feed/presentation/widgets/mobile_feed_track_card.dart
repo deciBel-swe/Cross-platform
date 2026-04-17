@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/number_formatter.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 
@@ -164,15 +165,6 @@ class _MobileRightActions extends ConsumerWidget {
   final bool initialIsReposted;
   final int commentCount;
 
-  String _formatCount(int number) {
-    if (number >= 1000000) {
-      return '${(number / 1000000).toStringAsFixed(1)}M';
-    } else if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(number % 1000 == 0 ? 0 : 1)}K';
-    }
-    return number.toString();
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
@@ -214,9 +206,10 @@ class _MobileRightActions extends ConsumerWidget {
               ),
               const SizedBox(height: AppDimensions.paddingXs),
               Text(
-                _formatCount(commentCount),
+                NumberFormatter.formatCompact(commentCount),
                 style: AppTextStyles.cardTitle.copyWith(
                   color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

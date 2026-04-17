@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
+import '../../../../core/widgets/track_options_bottom_sheet.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/notifiers/track_comment_notifier.dart';
 import '../../../library/presentation/widgets/bottom_bar_widget.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
@@ -142,89 +142,27 @@ class TrackPreviewContent extends ConsumerWidget {
             }
           },
           onMoreOptionsPressed: () async {
-            final action = await _showTrackOptionsBottomSheet(
+            final action = await showTrackOptionsBottomSheet(
               context: context,
               isOwner: isOwner,
-              track: track,
             );
 
-            if (action == _TrackOptionsAction.queue) {
-              if (!context.mounted) return;
-              await QueueBottomSheet.show(context);
-              return;
-            }
+            if (!context.mounted) return;
 
-            if (action == _TrackOptionsAction.edit) {
-              if (!context.mounted) return;
-              await context.push(RoutePaths.trackEdit(trackId));
+            switch (action) {
+              case TrackOptionsAction.queue:
+                await QueueBottomSheet.show(context);
+              case TrackOptionsAction.edit:
+                await context.push(RoutePaths.trackEdit(trackId));
+              case TrackOptionsAction.addToPlaylist:
+                await context.push(RoutePaths.addToPlaylist, extra: track);
+              case TrackOptionsAction.cancel:
+              case null:
+                break;
             }
           },
         ),
       ],
     );
   }
-
-  Future<_TrackOptionsAction?> _showTrackOptionsBottomSheet({
-    required BuildContext context,
-    required bool isOwner,
-    required Track track,
-  }) async {
-    return showModalBottomSheet<_TrackOptionsAction>(
-      context: context,
-      backgroundColor: Colors.black,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.queue_music, color: Colors.white),
-                title: const Text(
-                  'Queue',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackOptionsAction.queue),
-              ),
-              if (isOwner)
-                ListTile(
-                  leading: const Icon(Icons.edit, color: Colors.white),
-                  title: const Text(
-                    'Edit track',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () =>
-                      Navigator.of(sheetContext).pop(_TrackOptionsAction.edit),
-                ),
-              ListTile(
-                leading: const Icon(Icons.playlist_add, color: Colors.white),
-                title: const Text(
-                  'Add to playlist',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () async {
-                  Navigator.of(sheetContext).pop();
-                  await Future<void>.delayed(Duration.zero);
-                  if (context.mounted) {
-                    context.push(RoutePaths.addToPlaylist, extra: track);
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.close, color: Colors.white70),
-                title: const Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackOptionsAction.cancel),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
-
-enum _TrackOptionsAction { queue, edit, cancel }

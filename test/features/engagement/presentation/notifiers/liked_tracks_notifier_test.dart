@@ -1,9 +1,16 @@
+import 'dart:async';
+
+import 'package:dartz/dartz.dart';
+import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/engagement/domain/repositories/track_social_repository.dart';
 import 'package:decibel/features/engagement/presentation/notifiers/liked_tracks_notifier.dart';
 import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:decibel/features/library/domain/entities/paginated_tracks.dart';
 import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:decibel/features/library/domain/entities/track_status.dart';
+import 'package:decibel/features/library_profile/domain/entities/user_profile.dart';
+import 'package:decibel/features/library_profile/presentation/notifiers/user_profile_notifier.dart';
+import 'package:decibel/features/library_profile/presentation/providers/user_profile_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -31,6 +38,19 @@ Track _track(int id) => Track(
 void main() {
   late MockTrackSocialRepository mockRepository;
 
+  const mockProfile = UserProfile(
+    id: 1,
+    role: 'USER',
+    email: 'test@example.com',
+    username: 'tester',
+    displayName: 'Tester',
+    emailVerified: true,
+    tier: UserTier.free,
+    profileDetails: UserProfileDetails(bio: '', favoriteGenres: []),
+    privacySettings: PrivacySettings(isPrivate: false, showHistory: true),
+    stats: UserStats(followers: 0, following: 0, tracksCount: 0),
+  );
+
   setUp(() async {
     mockRepository = MockTrackSocialRepository();
     await GetIt.I.reset();
@@ -47,7 +67,13 @@ void main() {
   });
 
   test('liked provider fetches first page from liked endpoint', () async {
-    when(() => mockRepository.getLikedTracks(page: 0, size: 20)).thenAnswer(
+    when(
+      () => mockRepository.getLikedTracks(
+        page: 0,
+        size: 20,
+        username: any(named: 'username'),
+      ),
+    ).thenAnswer(
       (_) async => PaginatedTracks(
         content: [_track(1)],
         pageNumber: 0,
@@ -58,18 +84,33 @@ void main() {
       ),
     );
 
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [
+        userProfileProvider.overrideWith(
+          () => _MockUserProfileNotifier(mockProfile),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
 
     final value = await container.read(likedTracksProvider.future);
 
     expect(value, hasLength(1));
     expect(value.first.id, 1);
-    verify(() => mockRepository.getLikedTracks(page: 0, size: 20)).called(1);
+    verify(
+      () =>
+          mockRepository.getLikedTracks(page: 0, size: 20, username: 'tester'),
+    ).called(1);
   });
 
   test('reposted provider fetches first page from reposted endpoint', () async {
-    when(() => mockRepository.getRepostedTracks(page: 0, size: 20)).thenAnswer(
+    when(
+      () => mockRepository.getRepostedTracks(
+        page: 0,
+        size: 20,
+        username: any(named: 'username'),
+      ),
+    ).thenAnswer(
       (_) async => PaginatedTracks(
         content: [_track(5)],
         pageNumber: 0,
@@ -80,18 +121,36 @@ void main() {
       ),
     );
 
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [
+        userProfileProvider.overrideWith(
+          () => _MockUserProfileNotifier(mockProfile),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
 
     final value = await container.read(repostedTracksProvider.future);
 
     expect(value, hasLength(1));
     expect(value.first.id, 5);
-    verify(() => mockRepository.getRepostedTracks(page: 0, size: 20)).called(1);
+    verify(
+      () => mockRepository.getRepostedTracks(
+        page: 0,
+        size: 20,
+        username: 'tester',
+      ),
+    ).called(1);
   });
 
   test('loadMore appends only unique tracks', () async {
-    when(() => mockRepository.getLikedTracks(page: 0, size: 20)).thenAnswer(
+    when(
+      () => mockRepository.getLikedTracks(
+        page: 0,
+        size: 20,
+        username: any(named: 'username'),
+      ),
+    ).thenAnswer(
       (_) async => PaginatedTracks(
         content: [_track(1)],
         pageNumber: 0,
@@ -102,7 +161,13 @@ void main() {
       ),
     );
 
-    when(() => mockRepository.getLikedTracks(page: 1, size: 20)).thenAnswer(
+    when(
+      () => mockRepository.getLikedTracks(
+        page: 1,
+        size: 20,
+        username: any(named: 'username'),
+      ),
+    ).thenAnswer(
       (_) async => PaginatedTracks(
         content: [_track(1), _track(2)],
         pageNumber: 1,
@@ -113,7 +178,13 @@ void main() {
       ),
     );
 
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [
+        userProfileProvider.overrideWith(
+          () => _MockUserProfileNotifier(mockProfile),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
 
     await container.read(likedTracksProvider.future);
@@ -126,7 +197,13 @@ void main() {
   });
 
   test('removeTrackLocal removes matching track id', () async {
-    when(() => mockRepository.getLikedTracks(page: 0, size: 20)).thenAnswer(
+    when(
+      () => mockRepository.getLikedTracks(
+        page: 0,
+        size: 20,
+        username: any(named: 'username'),
+      ),
+    ).thenAnswer(
       (_) async => PaginatedTracks(
         content: [_track(1), _track(2)],
         pageNumber: 0,
@@ -137,7 +214,13 @@ void main() {
       ),
     );
 
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [
+        userProfileProvider.overrideWith(
+          () => _MockUserProfileNotifier(mockProfile),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
 
     await container.read(likedTracksProvider.future);
@@ -147,4 +230,14 @@ void main() {
     expect(tracks, isNotNull);
     expect(tracks!.map((t) => t.id).toList(), [2]);
   });
+}
+
+class _MockUserProfileNotifier extends UserProfileNotifier {
+  _MockUserProfileNotifier(this._profile);
+  final UserProfile _profile;
+
+  @override
+  Future<Either<Failure, UserProfile>> build() async {
+    return Right(_profile);
+  }
 }

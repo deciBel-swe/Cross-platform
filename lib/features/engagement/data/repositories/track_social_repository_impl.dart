@@ -18,12 +18,12 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
   Future<PaginatedTracks> getLikedTracks({
     int page = 0,
     int size = 20,
-    int? userId,
+    String? username,
   }) async {
     final model = await _datasource.getLikedTracks(
       page: page,
       size: size,
-      userId: userId,
+      username: username,
     );
     return model.toEntity();
   }
@@ -32,12 +32,12 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
   Future<PaginatedTracks> getRepostedTracks({
     int page = 0,
     int size = 20,
-    int? userId,
+    String? username,
   }) async {
     final model = await _datasource.getRepostedTracks(
       page: page,
       size: size,
-      userId: userId,
+      username: username,
     );
     return model.toEntity();
   }

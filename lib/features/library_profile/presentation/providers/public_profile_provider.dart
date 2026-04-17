@@ -38,23 +38,23 @@ final publicProfileSnapshotProvider = FutureProvider.autoDispose
     });
 
 final publicLikedTracksProvider = FutureProvider.autoDispose
-    .family<List<Track>, int>((ref, userId) async {
+    .family<List<Track>, String>((ref, username) async {
       final repository = ref.read(trackSocialRepositoryProvider);
       final page = await repository.getLikedTracks(
         page: 0,
         size: 3,
-        userId: userId,
+        username: username,
       );
       return page.content;
     });
 
 final publicRepostedTracksProvider = FutureProvider.autoDispose
-    .family<List<Track>, int>((ref, userId) async {
+    .family<List<Track>, String>((ref, username) async {
       final repository = ref.read(trackSocialRepositoryProvider);
       final page = await repository.getRepostedTracks(
         page: 0,
         size: 3,
-        userId: userId,
+        username: username,
       );
       return page.content;
     });

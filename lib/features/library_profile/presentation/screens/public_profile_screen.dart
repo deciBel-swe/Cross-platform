@@ -24,6 +24,7 @@ import '../widgets/expandable_bio.dart';
 import '../widgets/pro_badge.dart';
 import '../widgets/social_links_widget.dart';
 import '../widgets/spotlight_section.dart';
+import '../widgets/tile.dart';
 import '../widgets/track_tile.dart';
 
 class PublicProfileScreen extends ConsumerStatefulWidget {
@@ -342,21 +343,35 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   const SizedBox(height: AppConstants.spacingSmall),
                   TopTracksSection(userId: profile.id),
                   const SizedBox(height: AppConstants.spacingLarge),
-                  const _SectionTitle(title: 'Likes'),
+                  Tile(
+                    title: 'Likes',
+                    buttonText: 'See All',
+                    onButtonPressed: () => context.push(
+                      RoutePaths.publicProfileLikes(profile.username),
+                    ),
+                  ),
                   const SizedBox(height: AppConstants.spacingSmall),
                   _PublicTrackCollectionSection(
                     tracksAsync: _shouldWatchSections
-                        ? ref.watch(publicLikedTracksProvider(profile.id))
+                        ? ref.watch(publicLikedTracksProvider(profile.username))
                         : const AsyncData(<Track>[]),
                     emptyLabel: 'No likes yet',
                     errorLabel: 'Could not load likes',
                   ),
                   const SizedBox(height: AppConstants.spacingLarge),
-                  const _SectionTitle(title: 'Reposts'),
+                  Tile(
+                    title: 'Reposts',
+                    buttonText: 'See All',
+                    onButtonPressed: () => context.push(
+                      RoutePaths.publicProfileReposts(profile.username),
+                    ),
+                  ),
                   const SizedBox(height: AppConstants.spacingSmall),
                   _PublicTrackCollectionSection(
                     tracksAsync: _shouldWatchSections
-                        ? ref.watch(publicRepostedTracksProvider(profile.id))
+                        ? ref.watch(
+                          publicRepostedTracksProvider(profile.username),
+                        )
                         : const AsyncData(<Track>[]),
                     emptyLabel: 'No reposts yet',
                     errorLabel: 'Could not load reposts',

@@ -36,7 +36,7 @@ void main() {
   }
 
   test('getLikedTracks maps datasource model to domain entity', () async {
-    when(() => mockDatasource.getLikedTracks(page: 0, size: 20)).thenAnswer(
+    when(() => mockDatasource.getLikedTracks(page: 0, size: 20, username: any(named: 'username'))).thenAnswer(
       (_) async => PaginatedTracksModel(
         content: [buildTrackModel(1)],
         pageNumber: 0,
@@ -51,11 +51,11 @@ void main() {
 
     expect(result.content, hasLength(1));
     expect(result.content.first.id, 1);
-    verify(() => mockDatasource.getLikedTracks(page: 0, size: 20)).called(1);
+    verify(() => mockDatasource.getLikedTracks(page: 0, size: 20, username: any(named: 'username'))).called(1);
   });
 
   test('getRepostedTracks maps datasource model to domain entity', () async {
-    when(() => mockDatasource.getRepostedTracks(page: 1, size: 10)).thenAnswer(
+    when(() => mockDatasource.getRepostedTracks(page: 1, size: 10, username: any(named: 'username'))).thenAnswer(
       (_) async => PaginatedTracksModel(
         content: [buildTrackModel(3)],
         pageNumber: 1,
@@ -69,7 +69,7 @@ void main() {
     final result = await repository.getRepostedTracks(page: 1, size: 10);
 
     expect(result.content.single.id, 3);
-    verify(() => mockDatasource.getRepostedTracks(page: 1, size: 10)).called(1);
+    verify(() => mockDatasource.getRepostedTracks(page: 1, size: 10, username: any(named: 'username'))).called(1);
   });
 
   test('fetchTrackLikers returns Right on success', () async {

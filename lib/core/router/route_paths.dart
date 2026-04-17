@@ -67,6 +67,10 @@ class RoutePaths {
       '$publicProfileBase/$userIdentifier$publicProfileFollowersBase';
   static String publicProfileFollowing(String userIdentifier) =>
       '$publicProfileBase/$userIdentifier$publicProfileFollowingBase';
+  static String publicProfileLikes(String userIdentifier) =>
+      '$publicProfileBase/$userIdentifier/likes';
+  static String publicProfileReposts(String userIdentifier) =>
+      '$publicProfileBase/$userIdentifier/reposts';
 
   static String deepLinkProfile(String username) => '/$username';
 

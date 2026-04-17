@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/number_formatter.dart';
 
 class SocialActionButton extends StatefulWidget {
   const SocialActionButton({
@@ -104,11 +106,12 @@ class _SocialActionButtonState extends State<SocialActionButton>
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Text(
-                '${widget.count}',
+                NumberFormatter.formatCompact(widget.count),
                 key: ValueKey<int>(widget.count),
                 style: TextStyle(
                   color: AppColors.onPrimary,
                   fontSize: widget.fontSize,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

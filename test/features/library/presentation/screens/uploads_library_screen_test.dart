@@ -50,7 +50,7 @@ class FakeTrackSocialRepository implements ITrackSocialRepository {
   Future<PaginatedTracks> getLikedTracks({
     int page = 0,
     int size = 20,
-    int? userId,
+    String? username,
   }) async {
     return const PaginatedTracks(
       content: <Track>[],
@@ -66,7 +66,7 @@ class FakeTrackSocialRepository implements ITrackSocialRepository {
   Future<PaginatedTracks> getRepostedTracks({
     int page = 0,
     int size = 20,
-    int? userId,
+    String? username,
   }) async {
     return const PaginatedTracks(
       content: <Track>[],

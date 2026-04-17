@@ -11,14 +11,19 @@ import '../notifiers/liked_tracks_notifier.dart';
 import '../providers/track_social_provider.dart';
 
 class LikedTracksScreen extends StatelessWidget {
-  const LikedTracksScreen({super.key});
+  const LikedTracksScreen({super.key, this.username});
+
+  final String? username;
 
   @override
   Widget build(BuildContext context) {
-    return const TrackCollectionScreen(
+    return TrackCollectionScreen(
       collectionType: TrackCollectionType.liked,
-      title: 'Your Likes',
-      emptyStateMessage: 'Tracks you like will appear here.',
+      username: username,
+      title: username != null ? 'Likes' : 'Your Likes',
+      emptyStateMessage: username != null
+          ? 'This user has no likes yet.'
+          : 'Tracks you like will appear here.',
       emptyStateIcon: Icons.favorite_rounded,
       errorPrefix: 'Failed to load likes',
       removeAction: SocialActionType.like,
@@ -27,14 +32,19 @@ class LikedTracksScreen extends StatelessWidget {
 }
 
 class RepostedTracksScreen extends StatelessWidget {
-  const RepostedTracksScreen({super.key});
+  const RepostedTracksScreen({super.key, this.username});
+
+  final String? username;
 
   @override
   Widget build(BuildContext context) {
-    return const TrackCollectionScreen(
+    return TrackCollectionScreen(
       collectionType: TrackCollectionType.reposted,
-      title: 'Your Reposts',
-      emptyStateMessage: 'Tracks you repost will appear here.',
+      username: username,
+      title: username != null ? 'Reposts' : 'Your Reposts',
+      emptyStateMessage: username != null
+          ? 'This user has no reposts yet.'
+          : 'Tracks you repost will appear here.',
       emptyStateIcon: Icons.repeat_rounded,
       errorPrefix: 'Failed to load reposts',
       removeAction: SocialActionType.repost,
@@ -51,6 +61,7 @@ class TrackCollectionScreen extends ConsumerStatefulWidget {
     required this.emptyStateIcon,
     required this.errorPrefix,
     required this.removeAction,
+    this.username,
   });
 
   final TrackCollectionType collectionType;
@@ -59,6 +70,7 @@ class TrackCollectionScreen extends ConsumerStatefulWidget {
   final IconData emptyStateIcon;
   final String errorPrefix;
   final SocialActionType removeAction;
+  final String? username;
 
   @override
   ConsumerState<TrackCollectionScreen> createState() =>
@@ -71,6 +83,8 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
   late final ScrollController _scrollController;
 
   TrackCollectionType get _collectionType => widget.collectionType;
+  (TrackCollectionType, String?) get _providerArg =>
+      (_collectionType, widget.username);
 
   @override
   void initState() {
@@ -78,9 +92,8 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
 
-    final initialTracks = ref
-        .read(trackCollectionProvider(_collectionType))
-        .valueOrNull;
+    final initialTracks =
+        ref.read(trackCollectionProvider(_providerArg)).valueOrNull;
     if (initialTracks != null && initialTracks.isNotEmpty) {
       _localTracks.addAll(initialTracks);
     }
@@ -93,7 +106,7 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
     final currentScroll = _scrollController.position.pixels;
     const delta = 200.0;
     if (maxScroll - currentScroll <= delta) {
-      ref.read(trackCollectionProvider(_collectionType).notifier).loadMore();
+      ref.read(trackCollectionProvider(_providerArg).notifier).loadMore();
     }
   }
 
@@ -200,13 +213,13 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
     // 3. Optimistic update: notify collection notifier to remove it from state
     // so it doesn't reappear on partial refresh.
     ref
-        .read(trackCollectionProvider(_collectionType).notifier)
+        .read(trackCollectionProvider(_providerArg).notifier)
         .removeTrackLocal(track.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = trackCollectionProvider(_collectionType);
+    final provider = trackCollectionProvider(_providerArg);
     final asyncTracks = ref.watch(provider);
 
     ref.listen<AsyncValue<List<Track>>>(provider, (previous, next) {
@@ -280,8 +293,8 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
                           track: track,
                           queue: _localTracks,
                         ),
-                        onLikePressed: () =>
-                        _handleRemoveFromCollection(track, index),
+                        onLikePressed: widget.username == null ? () =>
+                        _handleRemoveFromCollection(track, index) : null,
                     // onMorePressed: () => TrackDetails.show(context, track, ref),
                   ),
                 );

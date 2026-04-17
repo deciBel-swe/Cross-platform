@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 
 /// Queue manager bottom sheet.
@@ -86,7 +87,8 @@ class QueueBottomSheet extends ConsumerWidget {
                     itemCount: queue.length,
                     itemBuilder: (context, index) {
                       final track = queue[index];
-                      final isCurrent = currentId != null && track.id == currentId;
+                      final isCurrent =
+                          currentId != null && track.id == currentId;
 
                       return Dismissible(
                         key: ValueKey('queue_${track.id}'),
@@ -94,7 +96,9 @@ class QueueBottomSheet extends ConsumerWidget {
                         background: Container(
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.only(right: 16),
-                          color: theme.colorScheme.error.withValues(alpha: 0.25),
+                          color: theme.colorScheme.error.withValues(
+                            alpha: 0.25,
+                          ),
                           child: Icon(
                             Icons.delete_outline,
                             color: theme.colorScheme.error,
@@ -107,16 +111,46 @@ class QueueBottomSheet extends ConsumerWidget {
                             horizontal: 8,
                             vertical: 2,
                           ),
-                          leading: ReorderableDragStartListener(
-                            index: index,
-                            child: const Icon(Icons.drag_handle, color: Colors.white54),
+                          leading: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ReorderableDragStartListener(
+                                index: index,
+                                child: const Icon(
+                                  Icons.drag_handle,
+                                  color: Colors.white54,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: DecibelCachedImage(
+                                    imageUrl: track.coverUrl ?? '',
+                                    fit: BoxFit.cover,
+                                    errorWidget: Container(
+                                      color: Colors.white10,
+                                      child: const Icon(
+                                        Icons.music_note,
+                                        size: 20,
+                                        color: Colors.white24,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           title: Text(
                             track.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isCurrent
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                           subtitle: Text(
@@ -144,4 +178,3 @@ class QueueBottomSheet extends ConsumerWidget {
     );
   }
 }
-

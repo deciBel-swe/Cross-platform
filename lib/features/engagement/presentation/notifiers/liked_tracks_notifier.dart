@@ -5,24 +5,27 @@ import 'package:get_it/get_it.dart';
 
 import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../domain/repositories/track_social_repository.dart';
 
 enum TrackCollectionType { liked, reposted }
 
 /// Notifier to manage paginated user track collections (likes/reposts).
-class TrackCollectionNotifier
-    extends AutoDisposeFamilyAsyncNotifier<List<Track>, TrackCollectionType> {
+class TrackCollectionNotifier extends AutoDisposeFamilyAsyncNotifier<List<Track>,
+    (TrackCollectionType, String?)> {
   int _currentPage = 0;
   bool _isLastPage = false;
   bool _isLoadingMore = false;
 
   late final ITrackSocialRepository _repository;
   late final TrackCollectionType _collectionType;
+  String? _username;
 
   @override
-  FutureOr<List<Track>> build(TrackCollectionType collectionType) async {
+  FutureOr<List<Track>> build((TrackCollectionType, String?) arg) async {
     _repository = GetIt.I<ITrackSocialRepository>();
-    _collectionType = collectionType;
+    _collectionType = arg.$1;
+    _username = arg.$2;
     return _fetchInitial();
   }
 
@@ -37,11 +40,27 @@ class TrackCollectionNotifier
     return response.content;
   }
 
-  Future<PaginatedTracks> _fetchPage({required int page, required int size}) {
-    if (_collectionType == TrackCollectionType.reposted) {
-      return _repository.getRepostedTracks(page: page, size: size);
+  Future<PaginatedTracks> _fetchPage(
+      {required int page, required int size}) async {
+    String? username = _username;
+    if (username == null) {
+      // If no username provided, try to get current user's username
+      final profileAsync = await ref.read(userProfileProvider.future);
+      username = profileAsync.fold((l) => null, (r) => r.username);
     }
-    return _repository.getLikedTracks(page: page, size: size);
+
+    if (_collectionType == TrackCollectionType.reposted) {
+      return _repository.getRepostedTracks(
+        page: page,
+        size: size,
+        username: username,
+      );
+    }
+    return _repository.getLikedTracks(
+      page: page,
+      size: size,
+      username: username,
+    );
   }
 
   Future<void> refreshAll() async {
@@ -101,11 +120,15 @@ class TrackCollectionNotifier
 /// Assumes it is registered with get_it / injectable or a Riverpod provider.
 /// Since the repository uses injectable, we might need a standard get_it accessor.
 final trackCollectionProvider = AsyncNotifierProvider.autoDispose
-    .family<TrackCollectionNotifier, List<Track>, TrackCollectionType>(
-      TrackCollectionNotifier.new,
-    );
-
-final likedTracksProvider = trackCollectionProvider(TrackCollectionType.liked);
-final repostedTracksProvider = trackCollectionProvider(
-  TrackCollectionType.reposted,
+    .family<TrackCollectionNotifier, List<Track>, (TrackCollectionType, String?)>(
+  TrackCollectionNotifier.new,
 );
+
+final likedTracksProvider = trackCollectionProvider((
+  TrackCollectionType.liked,
+  null,
+));
+final repostedTracksProvider = trackCollectionProvider((
+  TrackCollectionType.reposted,
+  null,
+));

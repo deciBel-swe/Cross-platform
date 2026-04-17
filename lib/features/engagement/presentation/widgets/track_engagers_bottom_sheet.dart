@@ -1,12 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:go_router/go_router.dart';
+
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../library_profile/presentation/widgets/pro_badge.dart';
 import '../../domain/entities/track_engager.dart';
 import '../notifiers/track_engagers_notifier.dart';
 import '../providers/follow_state_provider.dart';
@@ -111,19 +115,25 @@ class _TrackEngagersBottomSheetState
   }
 
   Widget _buildList(List<TrackEngager> engagers, bool isLast) {
+    final authState = ref.watch(authStateProvider).valueOrNull;
+    final currentUserId = authState is AuthAuthenticated ? authState.user.id : null;
+
     return Semantics(
       identifier: 'track_engagers_list',
       child: ListView.separated(
         controller: widget.scrollController,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingRegular),
         itemCount: engagers.length + (isLast ? 0 : 1),
-        separatorBuilder: (context, index) => const SizedBox(height: 16),
+        separatorBuilder: (context, index) => const SizedBox(height: AppConstants.spacingSmall),
         itemBuilder: (context, index) {
           if (index < engagers.length) {
-            return _EngagerTile(user: engagers[index]);
+            return _EngagerTile(
+              user: engagers[index],
+              currentUserId: currentUserId,
+            );
           } else {
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingRegular),
               child: Center(
                 child: Semantics(
                   identifier: 'track_engagers_load_more',
@@ -216,18 +226,34 @@ class _TrackEngagersBottomSheetState
 }
 
 class _EngagerTile extends StatelessWidget {
-  const _EngagerTile({required this.user});
+  const _EngagerTile({
+    required this.user,
+    required this.currentUserId,
+  });
 
   final TrackEngager user;
+  final int? currentUserId;
 
   @override
   Widget build(BuildContext context) {
+    final isCurrentUser = currentUserId != null && user.id == currentUserId;
+
+    void openProfile() {
+      Navigator.of(context).pop();
+
+      if (isCurrentUser) {
+        context.go(RoutePaths.profile);
+      } else {
+        context.push(RoutePaths.publicProfile(user.id.toString()));
+      }
+    }
+
     return Semantics(
       identifier: 'engager_tile_${user.id}',
       label: 'User ${user.username}',
       container: true,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingRegular),
         child: Row(
           children: [
             Semantics(
@@ -235,84 +261,68 @@ class _EngagerTile extends StatelessWidget {
               label: '${user.username}\'s avatar',
               button: true,
               child: GestureDetector(
-                onTap: () =>
-                    context.push(RoutePaths.publicProfile(user.id.toString())),
+                onTap: openProfile,
                 child: CircleAvatar(
                   radius: 20,
-                  backgroundColor: Colors.white10,
-                  backgroundImage: user.avatarUrl != null
-                      ? CachedNetworkImageProvider(user.avatarUrl!)
-                      : null,
-                  child: user.avatarUrl == null
-                      ? const Icon(Icons.person, color: Colors.white54)
-                      : null,
+                  backgroundColor: AppColors.surface,
+                  child: ClipOval(
+                    child: user.avatarUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: user.avatarUrl!,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Icon(
+                              Icons.person,
+                              color: AppColors.onPrimary,
+                            ),
+                            errorWidget: (context, url, error) => const Icon(
+                              Icons.person,
+                              color: AppColors.onPrimary,
+                            ),
+                          )
+                        : const Icon(Icons.person, color: AppColors.onPrimary),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppConstants.spacingSmall),
             Expanded(
               child: Semantics(
                 identifier: 'engager_name_${user.id}',
                 label: user.username,
                 button: true,
                 child: GestureDetector(
-                  onTap: () =>
-                      context.push(RoutePaths.publicProfile(user.id.toString())),
+                  onTap: openProfile,
                   behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            user.username,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          if (user.tier == 'PRO') ...[
-                            const SizedBox(width: 4),
-                            const _ProBadge(),
-                          ],
-                        ],
-                      ),
-                      Text(
-                        'Artist', // Placeholder for now
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: Colors.white54,
+                      Flexible(
+                        child: Text(
+                          user.username,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: AppColors.onPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
+                      if (user.tier.toUpperCase() == 'PRO') ...[
+                        const SizedBox(width: AppConstants.spacingTiny),
+                        const ProBadge(),
+                      ],
                     ],
                   ),
                 ),
               ),
             ),
-            _FollowButton(userId: user.id, initialFollowing: user.isFollowing),
+            if (!isCurrentUser)
+              _FollowButton(
+                userId: user.id,
+                initialFollowing: user.isFollowing,
+              ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProBadge extends StatelessWidget {
-  const _ProBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(2),
-      ),
-      child: const Text(
-        'PRO',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 8,
-          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -345,7 +355,6 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the global follow state for this user.
     final isFollowing =
         ref.watch(followStateProvider(widget.userId)).valueOrNull ??
         widget.initialFollowing;
@@ -360,17 +369,15 @@ class _FollowButtonState extends ConsumerState<_FollowButton> {
         },
         style: OutlinedButton.styleFrom(
           side: BorderSide(
-            color: isFollowing ? Colors.white24 : AppColors.primary,
+            color: isFollowing ? AppColors.borderLight : AppColors.primary,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
           minimumSize: const Size(0, 32),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
         child: Text(
           isFollowing ? 'Following' : 'Follow',
           style: TextStyle(
-            color: isFollowing ? Colors.white70 : AppColors.primary,
-            fontSize: 12,
+            color: isFollowing ? AppColors.onPrimary : AppColors.primary,
+            fontSize: AppConstants.fontSizeSmall,
           ),
         ),
       ),

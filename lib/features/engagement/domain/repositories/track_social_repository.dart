@@ -14,14 +14,14 @@ abstract class ITrackSocialRepository {
   Future<PaginatedTracks> getLikedTracks({
     int page = 0,
     int size = 20,
-    int? userId,
+    String? username,
   });
 
   /// Fetches reposted tracks for the current user.
   Future<PaginatedTracks> getRepostedTracks({
     int page = 0,
     int size = 20,
-    int? userId,
+    String? username,
   });
 
   /// Fetches a paginated list of users who liked [trackId].

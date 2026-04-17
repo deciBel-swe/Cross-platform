@@ -16,6 +16,7 @@ void main() {
   late MockAudioPlayer mockPlayer;
   late StreamController<Duration> positionController;
   late StreamController<PlayerState> playerStateController;
+  late StreamController<int?> currentIndexController;
 
   setUp(() {
     registerFallbackValue(FakeAudioSource());
@@ -23,6 +24,7 @@ void main() {
     mockPlayer = MockAudioPlayer();
     positionController = StreamController<Duration>.broadcast();
     playerStateController = StreamController<PlayerState>.broadcast();
+    currentIndexController = StreamController<int?>.broadcast();
 
     // Mock streams
     when(
@@ -37,12 +39,20 @@ void main() {
     when(
       () => mockPlayer.playbackEventStream,
     ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockPlayer.currentIndexStream,
+    ).thenAnswer((_) => currentIndexController.stream);
 
     // Mock basic properties
     when(() => mockPlayer.play()).thenAnswer((_) async {});
     when(() => mockPlayer.pause()).thenAnswer((_) async {});
     when(() => mockPlayer.stop()).thenAnswer((_) async {});
-    when(() => mockPlayer.seek(any())).thenAnswer((_) async {});
+    when(() => mockPlayer.seek(any(), index: any(named: 'index')))
+        .thenAnswer((_) async {});
+    when(() => mockPlayer.hasNext).thenReturn(false);
+    when(() => mockPlayer.hasPrevious).thenReturn(false);
+    when(() => mockPlayer.seekToNext()).thenAnswer((_) async {});
+    when(() => mockPlayer.seekToPrevious()).thenAnswer((_) async {});
     when(
       () => mockPlayer.setAudioSource(
         any(),
@@ -62,6 +72,7 @@ void main() {
     TrackAudioNotifier.audioPlayerFactory = null;
     positionController.close();
     playerStateController.close();
+    currentIndexController.close();
   });
 
   ProviderContainer createContainer() {
@@ -171,7 +182,8 @@ void main() {
 
       await notifier.seek(const Duration(seconds: 30));
 
-      verify(() => mockPlayer.seek(const Duration(seconds: 30))).called(1);
+      verify(() => mockPlayer.seek(const Duration(seconds: 30), index: any(named: 'index')))
+          .called(1);
 
       final state = container.read(trackAudioProvider);
       expect(state.position, const Duration(seconds: 30));

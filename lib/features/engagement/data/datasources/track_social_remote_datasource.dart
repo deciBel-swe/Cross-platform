@@ -11,10 +11,6 @@ class TrackSocialRemoteDatasource {
   TrackSocialRemoteDatasource(this._dioClient);
   final DioClient _dioClient;
 
-  int? _cachedCurrentUserId;
-  Future<int?>? _currentUserIdInFlight;
-  String? _cachedLikedMeEndpoint;
-  String? _cachedRepostedMeEndpoint;
 
   Future<void> likeTrack(int trackId) async {
     try {
@@ -42,76 +38,34 @@ class TrackSocialRemoteDatasource {
 
   Future<PaginatedTracksModel> getLikedTracks({
     int page = 0,
-    int size = 10,
-    int? userId,
+    int size = 20,
+    String? username,
   }) async {
-    final meEndpoints = <String>[
-      if (userId == null && _cachedLikedMeEndpoint != null)
-        _cachedLikedMeEndpoint!,
-      if (userId == null) '/users/me/liked-tracks',
-    ];
+    final endpoint = username != null
+        ? '/users/$username/liked-tracks'
+        : '/users/me/liked-tracks';
 
-    final firstPass = _uniqueEndpoints(meEndpoints);
-    try {
-      return await _fetchTrackCollection(
-        endpoints: firstPass,
-        page: page,
-        size: size,
-        onSuccess: (endpoint) {
-          if (userId == null && endpoint.startsWith('/users/me/')) {
-            _cachedLikedMeEndpoint = endpoint;
-          }
-        },
-      );
-    } on AppException {
-      final resolvedUserId = userId ?? await _resolveCurrentUserId();
-      final fallbackEndpoints = <String>[
-        if (resolvedUserId != null) '/users/$resolvedUserId/liked-tracks',
-      ];
-
-      return _fetchTrackCollection(
-        endpoints: _uniqueEndpoints(fallbackEndpoints),
-        page: page,
-        size: size,
-      );
-    }
+    return _fetchTrackCollection(
+      endpoints: [endpoint],
+      page: page,
+      size: size,
+    );
   }
 
   Future<PaginatedTracksModel> getRepostedTracks({
     int page = 0,
-    int size = 10,
-    int? userId,
+    int size = 20,
+    String? username,
   }) async {
-    final meEndpoints = <String>[
-      if (userId == null && _cachedRepostedMeEndpoint != null)
-        _cachedRepostedMeEndpoint!,
-      if (userId == null) '/users/me/repost',
-    ];
+    final endpoint = username != null
+        ? '/users/$username/reposted-tracks'
+        : '/users/me/reposted-tracks';
 
-    final firstPass = _uniqueEndpoints(meEndpoints);
-    try {
-      return await _fetchTrackCollection(
-        endpoints: firstPass,
-        page: page,
-        size: size,
-        onSuccess: (endpoint) {
-          if (userId == null && endpoint.startsWith('/users/me/')) {
-            _cachedRepostedMeEndpoint = endpoint;
-          }
-        },
-      );
-    } on AppException {
-      final resolvedUserId = userId ?? await _resolveCurrentUserId();
-      final fallbackEndpoints = <String>[
-        if (resolvedUserId != null) '/users/$resolvedUserId/repost',
-      ];
-
-      return _fetchTrackCollection(
-        endpoints: _uniqueEndpoints(fallbackEndpoints),
-        page: page,
-        size: size,
-      );
-    }
+    return _fetchTrackCollection(
+      endpoints: [endpoint],
+      page: page,
+      size: size,
+    );
   }
 
   Future<PaginatedTracksModel> _fetchTrackCollection({
@@ -168,57 +122,6 @@ class TrackSocialRemoteDatasource {
     return result;
   }
 
-  Future<int?> _resolveCurrentUserId() async {
-    if (_cachedCurrentUserId != null) {
-      return _cachedCurrentUserId;
-    }
-
-    final inFlight = _currentUserIdInFlight;
-    if (inFlight != null) {
-      return inFlight;
-    }
-
-    _currentUserIdInFlight = _fetchCurrentUserId();
-    final resolved = await _currentUserIdInFlight;
-    _currentUserIdInFlight = null;
-
-    if (resolved != null) {
-      _cachedCurrentUserId = resolved;
-    }
-
-    return resolved;
-  }
-
-  Future<int?> _fetchCurrentUserId() async {
-    try {
-      final response = await _dioClient.get<Map<String, dynamic>>('/users/me');
-      final body = response.data;
-      if (body == null) {
-        return null;
-      }
-
-      final data = body['data'];
-      final payload = data is Map<String, dynamic> ? data : body;
-      final profile = payload['profile'];
-      final profileMap = profile is Map<String, dynamic>
-          ? profile
-          : const <String, dynamic>{};
-
-      final topLevelId = payload['id'];
-      if (topLevelId is num) {
-        return topLevelId.toInt();
-      }
-
-      final nestedId = profileMap['id'];
-      if (nestedId is num) {
-        return nestedId.toInt();
-      }
-
-      return null;
-    } catch (_) {
-      return null;
-    }
-  }
 
   Future<void> unrepostTrack(int trackId) async {
     try {

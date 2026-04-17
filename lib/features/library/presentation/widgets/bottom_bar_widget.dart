@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/number_formatter.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 
@@ -60,7 +61,7 @@ class BottomBarWidget extends ConsumerWidget {
           Expanded(
             child: _buildTextIconButton(
               icon: Icons.chat_bubble_outline,
-              text: _formatCount(commentCount),
+              text: NumberFormatter.formatCompact(commentCount),
               onTap: onCommentPressed,
               activeColor: Colors.white,
             ),
@@ -88,15 +89,6 @@ class BottomBarWidget extends ConsumerWidget {
     );
   }
 
-  String _formatCount(int number) {
-    if (number >= 1000000) {
-      return '${(number / 1000000).toStringAsFixed(1)}M';
-    } else if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(number % 1000 == 0 ? 0 : 1)}K';
-    }
-    return number.toString();
-  }
-
   Widget _buildTextIconButton({
     required IconData icon,
     required String text,
@@ -114,13 +106,13 @@ class BottomBarWidget extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 24, color: activeColor),
+              Icon(icon, size: 20, color: activeColor),
               const SizedBox(width: 6.0),
               Text(
                 text,
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: activeColor,
                 ),
               ),
@@ -137,7 +129,8 @@ class BottomBarWidget extends ConsumerWidget {
   }) {
     return Center(
       child: IconButton(
-        icon: Icon(icon, color: Colors.white),
+        icon: Icon(icon, size: 20, color: Colors.white),
+        iconSize: 20,
         onPressed: onTap,
         splashColor: Colors.black,
         highlightColor: Colors.black,

@@ -397,6 +397,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       );
                     },
                   ),
+                  GoRoute(
+                    path: 'likes',
+                    builder: (context, state) {
+                      final username = state.pathParameters['userIdentifier']!;
+                      return LikedTracksScreen(username: username);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'reposts',
+                    builder: (context, state) {
+                      final username = state.pathParameters['userIdentifier']!;
+                      return RepostedTracksScreen(username: username);
+                    },
+                  ),
                 ],
               ),
             ],
