@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
+import 'core/constants/stripe_constants.dart';
 import 'core/di/app_reset_provider.dart';
 import 'core/di/injection.dart';
 import 'features/settings/domain/repositories/app_icon_repository.dart';
@@ -39,6 +41,8 @@ void main() async {
   configureDependencies(useMockServices: useMockServices);
 
   if (Platform.isAndroid || Platform.isIOS) {
+    await _initializeStripeSafely();
+
     await JustAudioBackground.init(
       androidNotificationChannelId: 'com.decibel.decibel.audio',
       androidNotificationChannelName: 'Decibel Playback',
@@ -80,4 +84,13 @@ void main() async {
       ),
     ),
   );
+}
+
+Future<void> _initializeStripeSafely() async {
+  try {
+    Stripe.publishableKey = StripeConstants.publishableKey;
+    await Stripe.instance.applySettings().timeout(const Duration(seconds: 8));
+  } catch (error) {
+    debugPrint('[Stripe] Initialization skipped: $error');
+  }
 }

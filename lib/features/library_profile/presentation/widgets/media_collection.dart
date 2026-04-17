@@ -75,6 +75,7 @@ class MediaCollection extends ConsumerWidget {
                         trackId: track.id,
                         trackUrl: track.trackUrl ?? '',
                         track: track,
+                        queue: tracks,
                       ),
                 );
               },
@@ -124,6 +125,7 @@ class MediaCollection extends ConsumerWidget {
                         trackId: track.id,
                         trackUrl: track.trackUrl ?? '',
                         track: track,
+                        queue: tracks,
                       ),
                 );
               },

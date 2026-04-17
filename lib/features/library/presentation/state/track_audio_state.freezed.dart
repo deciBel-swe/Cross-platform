@@ -27,6 +27,9 @@ mixin _$TrackAudioState {
   /// widget (desktop bar, mobile mini-player, etc.) can access cover art,
   /// display name, like status, etc. without a separate lookup.
   Track? get currentTrack => throw _privateConstructorUsedError;
+
+  /// Playback queue used for skip next/previous (based on where playback started).
+  List<Track> get queue => throw _privateConstructorUsedError;
   bool get isPlaying => throw _privateConstructorUsedError;
   bool get isDragging => throw _privateConstructorUsedError;
   double? get dragProgress => throw _privateConstructorUsedError;
@@ -55,6 +58,7 @@ abstract class $TrackAudioStateCopyWith<$Res> {
     int? preparedTrackId,
     String? preparedTrackUrl,
     Track? currentTrack,
+    List<Track> queue,
     bool isPlaying,
     bool isDragging,
     double? dragProgress,
@@ -85,6 +89,7 @@ class _$TrackAudioStateCopyWithImpl<$Res, $Val extends TrackAudioState>
     Object? preparedTrackId = freezed,
     Object? preparedTrackUrl = freezed,
     Object? currentTrack = freezed,
+    Object? queue = null,
     Object? isPlaying = null,
     Object? isDragging = null,
     Object? dragProgress = freezed,
@@ -115,6 +120,10 @@ class _$TrackAudioStateCopyWithImpl<$Res, $Val extends TrackAudioState>
                 ? _value.currentTrack
                 : currentTrack // ignore: cast_nullable_to_non_nullable
                       as Track?,
+            queue: null == queue
+                ? _value.queue
+                : queue // ignore: cast_nullable_to_non_nullable
+                      as List<Track>,
             isPlaying: null == isPlaying
                 ? _value.isPlaying
                 : isPlaying // ignore: cast_nullable_to_non_nullable
@@ -164,6 +173,7 @@ abstract class _$$TrackAudioStateImplCopyWith<$Res>
     int? preparedTrackId,
     String? preparedTrackUrl,
     Track? currentTrack,
+    List<Track> queue,
     bool isPlaying,
     bool isDragging,
     double? dragProgress,
@@ -193,6 +203,7 @@ class __$$TrackAudioStateImplCopyWithImpl<$Res>
     Object? preparedTrackId = freezed,
     Object? preparedTrackUrl = freezed,
     Object? currentTrack = freezed,
+    Object? queue = null,
     Object? isPlaying = null,
     Object? isDragging = null,
     Object? dragProgress = freezed,
@@ -223,6 +234,10 @@ class __$$TrackAudioStateImplCopyWithImpl<$Res>
             ? _value.currentTrack
             : currentTrack // ignore: cast_nullable_to_non_nullable
                   as Track?,
+        queue: null == queue
+            ? _value._queue
+            : queue // ignore: cast_nullable_to_non_nullable
+                  as List<Track>,
         isPlaying: null == isPlaying
             ? _value.isPlaying
             : isPlaying // ignore: cast_nullable_to_non_nullable
@@ -265,6 +280,7 @@ class _$TrackAudioStateImpl implements _TrackAudioState {
     this.preparedTrackId,
     this.preparedTrackUrl,
     this.currentTrack,
+    final List<Track> queue = const <Track>[],
     this.isPlaying = false,
     this.isDragging = false,
     this.dragProgress,
@@ -272,7 +288,7 @@ class _$TrackAudioStateImpl implements _TrackAudioState {
     this.progress = 0.0,
     this.position = Duration.zero,
     this.duration = Duration.zero,
-  });
+  }) : _queue = queue;
 
   @override
   @JsonKey()
@@ -291,6 +307,19 @@ class _$TrackAudioStateImpl implements _TrackAudioState {
   /// display name, like status, etc. without a separate lookup.
   @override
   final Track? currentTrack;
+
+  /// Playback queue used for skip next/previous (based on where playback started).
+  final List<Track> _queue;
+
+  /// Playback queue used for skip next/previous (based on where playback started).
+  @override
+  @JsonKey()
+  List<Track> get queue {
+    if (_queue is EqualUnmodifiableListView) return _queue;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_queue);
+  }
+
   @override
   @JsonKey()
   final bool isPlaying;
@@ -313,7 +342,7 @@ class _$TrackAudioStateImpl implements _TrackAudioState {
 
   @override
   String toString() {
-    return 'TrackAudioState(isPreparing: $isPreparing, isPrepared: $isPrepared, preparedTrackId: $preparedTrackId, preparedTrackUrl: $preparedTrackUrl, currentTrack: $currentTrack, isPlaying: $isPlaying, isDragging: $isDragging, dragProgress: $dragProgress, dragPosition: $dragPosition, progress: $progress, position: $position, duration: $duration)';
+    return 'TrackAudioState(isPreparing: $isPreparing, isPrepared: $isPrepared, preparedTrackId: $preparedTrackId, preparedTrackUrl: $preparedTrackUrl, currentTrack: $currentTrack, queue: $queue, isPlaying: $isPlaying, isDragging: $isDragging, dragProgress: $dragProgress, dragPosition: $dragPosition, progress: $progress, position: $position, duration: $duration)';
   }
 
   @override
@@ -331,6 +360,7 @@ class _$TrackAudioStateImpl implements _TrackAudioState {
                 other.preparedTrackUrl == preparedTrackUrl) &&
             (identical(other.currentTrack, currentTrack) ||
                 other.currentTrack == currentTrack) &&
+            const DeepCollectionEquality().equals(other._queue, _queue) &&
             (identical(other.isPlaying, isPlaying) ||
                 other.isPlaying == isPlaying) &&
             (identical(other.isDragging, isDragging) ||
@@ -355,6 +385,7 @@ class _$TrackAudioStateImpl implements _TrackAudioState {
     preparedTrackId,
     preparedTrackUrl,
     currentTrack,
+    const DeepCollectionEquality().hash(_queue),
     isPlaying,
     isDragging,
     dragProgress,
@@ -383,6 +414,7 @@ abstract class _TrackAudioState implements TrackAudioState {
     final int? preparedTrackId,
     final String? preparedTrackUrl,
     final Track? currentTrack,
+    final List<Track> queue,
     final bool isPlaying,
     final bool isDragging,
     final double? dragProgress,
@@ -407,6 +439,10 @@ abstract class _TrackAudioState implements TrackAudioState {
   /// display name, like status, etc. without a separate lookup.
   @override
   Track? get currentTrack;
+
+  /// Playback queue used for skip next/previous (based on where playback started).
+  @override
+  List<Track> get queue;
   @override
   bool get isPlaying;
   @override

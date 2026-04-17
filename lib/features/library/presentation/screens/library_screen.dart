@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../upgrade/presentation/widgets/get_pro_button.dart';
 
 class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key});
@@ -32,13 +33,7 @@ class LibraryScreen extends ConsumerWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               actions: [
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'GET PRO',
-                    style: TextStyle(color: AppColors.primary),
-                  ),
-                ),
+                const GetProButton(),
                 IconButton(onPressed: () {}, icon: const Icon(Icons.cast)),
                 IconButton(
                   onPressed: goToSettings,

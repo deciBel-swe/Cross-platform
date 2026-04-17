@@ -17,6 +17,7 @@ class TrackMetadataModel with _$TrackMetadataModel {
     required List<double> waveFormData,
     String? description,
     List<String>? tags,
+    @Default('') String uploadId,
   }) = _TrackMetadataModel;
 
   factory TrackMetadataModel.fromJson(Map<String, dynamic> json) =>
@@ -32,6 +33,7 @@ extension TrackUploadMetadataX on TrackUploadMetadata {
       title: title,
       genre: genre,
       isPrivate: isPrivate,
+      uploadId: uploadId,
 
       description: description.isEmpty ? null : description,
       releaseDate: formattedDate,

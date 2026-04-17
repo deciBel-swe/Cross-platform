@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimensions.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/widgets/track_tile.dart';
@@ -260,6 +261,9 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
                   controller: _scrollController,
                   initialItemCount: _localTracks.length,
                   physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(
+                    bottom: AppDimensions.mobileMiniPlayerReservedSpace,
+                  ),
               itemBuilder: (context, index, animation) {
                 if (index >= _localTracks.length) {
                   return const SizedBox.shrink();
@@ -274,6 +278,7 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
                           trackId: track.id,
                           trackUrl: track.trackUrl ?? '',
                           track: track,
+                          queue: _localTracks,
                         ),
                         onLikePressed: () =>
                         _handleRemoveFromCollection(track, index),

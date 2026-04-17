@@ -9,6 +9,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/subscription_tier_helper.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
@@ -20,6 +21,7 @@ import '../providers/block_provider.dart';
 import '../providers/public_profile_provider.dart';
 import '../providers/track_audio_provider.dart';
 import '../widgets/expandable_bio.dart';
+import '../widgets/pro_badge.dart';
 import '../widgets/social_links_widget.dart';
 import '../widgets/spotlight_section.dart';
 import '../widgets/track_tile.dart';
@@ -577,18 +579,27 @@ class _ProfileHeaderContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final isPremium = SubscriptionTierHelper.isPremium(profile.tier);
     final bio = profile.profile?.bio?.trim() ?? '';
     final location = profile.profile?.location?.trim() ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          profile.displayName ?? profile.username,
-          style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.onPrimary,
-          ),
+        Row(
+          children: [
+            Text(
+              profile.displayName ?? profile.username,
+              style: textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.onPrimary,
+              ),
+            ),
+            if (isPremium) ...[
+              const SizedBox(width: AppConstants.spacingSmall),
+              const ProBadge(),
+            ],
+          ],
         ),
         Text(
           '@${profile.username}',
@@ -862,6 +873,7 @@ class _PublicTrackCollectionSection extends ConsumerWidget {
                     trackId: track.id,
                     trackUrl: track.trackUrl ?? '',
                     track: track,
+                    queue: tracks,
                   ),
             );
           },

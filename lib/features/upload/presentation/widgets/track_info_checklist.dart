@@ -25,24 +25,28 @@ class TrackInfoChecklist extends StatelessWidget {
     final progress = completed / 4.0;
     final theme = Theme.of(context);
 
-    return GestureDetector(
-      onTap: () {
-        _showChecklistDetails(
-          context,
-          completed,
-          progress,
-          hasTitle,
-          hasArtwork,
-          hasGenre,
-          hasDescription,
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-        ),
+    return Semantics(
+      button: true,
+      label: 'View track info completion checklist',
+      onTapHint: 'Open detailed checklist',
+      child: GestureDetector(
+        onTap: () {
+          _showChecklistDetails(
+            context,
+            completed,
+            progress,
+            hasTitle,
+            hasArtwork,
+            hasGenre,
+            hasDescription,
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+          ),
         child: Row(
           children: [
             Expanded(
@@ -67,44 +71,48 @@ class TrackInfoChecklist extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: CircularProgressIndicator(
-                    value: progress,
-                    backgroundColor: Colors.grey[900],
-                    color: AppColors.accentPurple,
-                    strokeWidth: 3,
+            Semantics(
+              label: 'Completion progress: $completed of 4 tasks finished',
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      backgroundColor: Colors.grey[900],
+                      color: AppColors.accentPurple,
+                      strokeWidth: 3,
+                    ),
                   ),
-                ),
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: '$completed',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '$completed',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
-                      const TextSpan(
-                        text: '/4',
-                        style: TextStyle(color: Colors.white54, fontSize: 10),
-                      ),
-                    ],
+                        const TextSpan(
+                          text: '/4',
+                          style: TextStyle(color: Colors.white54, fontSize: 10),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // The Split-Layout Bottom Sheet
 
@@ -281,10 +289,12 @@ class _ChecklistItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: subtitle != null
-          ? CrossAxisAlignment.start
-          : CrossAxisAlignment.center,
+    return Semantics(
+      label: '$title: ${isCompleted ? 'Completed' : 'Remaining'}',
+      child: Row(
+        crossAxisAlignment: subtitle != null
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
       children: [
         // The Custom Icon (White filled checkmark vs outline)
         Icon(
@@ -320,7 +330,8 @@ class _ChecklistItem extends StatelessWidget {
             ],
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 }

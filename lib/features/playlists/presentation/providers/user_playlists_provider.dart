@@ -38,6 +38,34 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
     );
   }
 
+  /// Adds a [track] into the matching playlist locally (mock, client-only).
+  /// Prevents duplicates and updates UI immediately without contacting backend.
+  void addTrackLocally(int playlistId, Track track) {
+    if (state.value == null) return;
+    final updatedList = state.value!.map((p) {
+      if (p.id == playlistId) {
+        // avoid duplicates
+        final already = p.tracks.any((t) => t.id == track.id);
+        final newTracks = List<Track>.from(p.tracks);
+        if (!already) newTracks.add(track);
+        return Playlist(
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          type: p.type,
+          isPrivate: p.isPrivate,
+          isLiked: p.isLiked,
+          coverArt: p.coverArt,
+          owner: p.owner,
+          tracks: newTracks,
+        );
+      }
+      return p;
+    }).toList();
+
+    state = AsyncData(updatedList);
+  }
+
   /// Deletes a playlist and instantly updates the UI if the backend call succeeds.
   Future<Either<Failure, void>> deletePlaylist(int playlistId) async {
     final result = await _repository.deletePlaylist(playlistId);
@@ -87,11 +115,19 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
     if (state.value != null) {
       final updatedList = state.value!.map((p) {
         if (p.id == playlistId) {
-          final newTracks = p.tracks.where((t) => !trackIdsToRemove.contains(t.id)).toList();
+          final newTracks = p.tracks
+              .where((t) => !trackIdsToRemove.contains(t.id))
+              .toList();
           return Playlist(
-            id: p.id, title: p.title, description: p.description, type: p.type,
-            isPrivate: p.isPrivate, isLiked: p.isLiked, coverArt: p.coverArt,
-            owner: p.owner, tracks: newTracks, 
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            type: p.type,
+            isPrivate: p.isPrivate,
+            isLiked: p.isLiked,
+            coverArt: p.coverArt,
+            owner: p.owner,
+            tracks: newTracks,
           );
         }
         return p;
@@ -107,9 +143,15 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
         if (p.id == playlistId) {
           final newTracks = List<Track>.from(p.tracks)..addAll(restoredTracks);
           return Playlist(
-            id: p.id, title: p.title, description: p.description, type: p.type,
-            isPrivate: p.isPrivate, isLiked: p.isLiked, coverArt: p.coverArt,
-            owner: p.owner, tracks: newTracks,
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            type: p.type,
+            isPrivate: p.isPrivate,
+            isLiked: p.isLiked,
+            coverArt: p.coverArt,
+            owner: p.owner,
+            tracks: newTracks,
           );
         }
         return p;
@@ -124,9 +166,14 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
       final updatedList = state.value!.map((p) {
         if (p.id == updatedPlaylist.id) {
           return Playlist(
-            id: updatedPlaylist.id, title: updatedPlaylist.title, description: updatedPlaylist.description,
-            type: updatedPlaylist.type, isPrivate: updatedPlaylist.isPrivate, isLiked: updatedPlaylist.isLiked,
-            coverArt: updatedPlaylist.coverArt, owner: updatedPlaylist.owner, 
+            id: updatedPlaylist.id,
+            title: updatedPlaylist.title,
+            description: updatedPlaylist.description,
+            type: updatedPlaylist.type,
+            isPrivate: updatedPlaylist.isPrivate,
+            isLiked: updatedPlaylist.isLiked,
+            coverArt: updatedPlaylist.coverArt,
+            owner: updatedPlaylist.owner,
             tracks: p.tracks,
           );
         }

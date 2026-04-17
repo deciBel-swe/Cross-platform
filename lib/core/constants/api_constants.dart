@@ -54,6 +54,11 @@ class ApiConstants {
   static const String refreshTokenEndpoint = '/auth/refreshtoken';
   static const String genresEndpoint = '/genres';
 
+  static const String subscriptionCancelEndpoint = '/subscription/cancel';
+  static const String subscriptionCheckoutEndpoint = '/subscription/checkout';
+  static const String subscriptionRenewEndpoint = '/subscription/renew';
+  static const String subscriptionStatusEndpoint = '/subscription/status';
+
   static const String userProfileEndpoint = '/users/me';
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';

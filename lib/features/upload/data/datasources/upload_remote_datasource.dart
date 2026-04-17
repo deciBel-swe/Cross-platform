@@ -55,6 +55,8 @@ class UploadRemoteDatasource {
         dataMap['isPrivate'] = (dataMap['isPrivate'] as bool).toString();
       }
 
+      dataMap['uploadId'] = model.uploadId;
+
       dataMap.removeWhere((key, value) => value == null);
       final formData = FormData.fromMap(dataMap);
 

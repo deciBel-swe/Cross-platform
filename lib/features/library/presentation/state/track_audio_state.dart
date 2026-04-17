@@ -16,6 +16,8 @@ class TrackAudioState with _$TrackAudioState {
     /// widget (desktop bar, mobile mini-player, etc.) can access cover art,
     /// display name, like status, etc. without a separate lookup.
     Track? currentTrack,
+    /// Playback queue used for skip next/previous (based on where playback started).
+    @Default(<Track>[]) List<Track> queue,
     @Default(false) bool isPlaying,
     @Default(false) bool isDragging,
     double? dragProgress,

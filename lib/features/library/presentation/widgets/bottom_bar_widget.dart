@@ -15,6 +15,7 @@ class BottomBarWidget extends ConsumerWidget {
     required this.commentCount,
     required this.onCommentPressed,
     required this.onSharePressed,
+    required this.onAddToPlaylistPressed,
     required this.onMoreOptionsPressed,
   });
 
@@ -26,6 +27,7 @@ class BottomBarWidget extends ConsumerWidget {
   final int commentCount;
   final VoidCallback onCommentPressed;
   final VoidCallback onSharePressed;
+  final VoidCallback onAddToPlaylistPressed; // 2. Add this
   final VoidCallback onMoreOptionsPressed;
 
   @override
@@ -61,6 +63,12 @@ class BottomBarWidget extends ConsumerWidget {
               text: _formatCount(commentCount),
               onTap: onCommentPressed,
               activeColor: Colors.white,
+            ),
+          ),
+          Expanded(
+            child: _buildSimpleIconButton(
+              icon: Icons.playlist_add_outlined,
+              onTap: onAddToPlaylistPressed,
             ),
           ),
           Expanded(

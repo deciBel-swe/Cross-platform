@@ -130,6 +130,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     required int trackId,
     required String trackUrl,
     Track? track,
+    List<Track>? queue,
     Duration duration = Duration.zero,
     bool autoPlay = true,
   }) async {
@@ -148,7 +149,11 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       return;
     }
 
-    state = state.copyWith(isPreparing: true, duration: duration);
+    state = state.copyWith(
+      isPreparing: true,
+      duration: duration,
+      queue: queue ?? state.queue,
+    );
 
     try {
       debugPrint(
@@ -252,6 +257,107 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       progress: 0,
       dragProgress: null,
       dragPosition: null,
+    );
+  }
+
+  Future<void> skipNext() async {
+    if (_isDisposed || _isStopping) return;
+    final currentId = state.preparedTrackId;
+    if (currentId == null) return;
+
+    final queue = state.queue;
+    if (queue.isEmpty) return;
+
+    final currentIndex = queue.indexWhere((t) => t.id == currentId);
+    if (currentIndex == -1) return;
+
+    final nextIndex = currentIndex + 1;
+    if (nextIndex >= queue.length) return;
+
+    final nextTrack = queue[nextIndex];
+    await initializeForTrack(
+      trackId: nextTrack.id,
+      trackUrl: nextTrack.trackUrl ?? '',
+      track: nextTrack,
+      queue: queue,
+      autoPlay: true,
+    );
+  }
+
+  Future<void> skipPrevious() async {
+    if (_isDisposed || _isStopping) return;
+    final currentId = state.preparedTrackId;
+    if (currentId == null) return;
+
+    final queue = state.queue;
+    if (queue.isEmpty) return;
+
+    final currentIndex = queue.indexWhere((t) => t.id == currentId);
+    if (currentIndex == -1) return;
+
+    final previousIndex = currentIndex - 1;
+    if (previousIndex < 0) return;
+
+    final previousTrack = queue[previousIndex];
+    await initializeForTrack(
+      trackId: previousTrack.id,
+      trackUrl: previousTrack.trackUrl ?? '',
+      track: previousTrack,
+      queue: queue,
+      autoPlay: true,
+    );
+  }
+
+  void addToQueue(Track track) {
+    if (_isDisposed) return;
+
+    final nextQueue = List<Track>.from(state.queue);
+    final alreadyInQueue = nextQueue.any((t) => t.id == track.id);
+    if (alreadyInQueue) return;
+
+    nextQueue.add(track);
+    state = state.copyWith(queue: nextQueue);
+  }
+
+  void removeFromQueue(int trackId) {
+    if (_isDisposed) return;
+
+    final nextQueue = state.queue.where((t) => t.id != trackId).toList();
+    if (nextQueue.length == state.queue.length) return;
+
+    state = state.copyWith(queue: nextQueue);
+  }
+
+  void reorderQueue(int oldIndex, int newIndex) {
+    if (_isDisposed) return;
+    if (oldIndex < 0 || oldIndex >= state.queue.length) return;
+
+    final nextQueue = List<Track>.from(state.queue);
+
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+
+    if (newIndex < 0 || newIndex >= nextQueue.length) return;
+
+    final item = nextQueue.removeAt(oldIndex);
+    nextQueue.insert(newIndex, item);
+
+    state = state.copyWith(queue: nextQueue);
+  }
+
+  Future<void> playFromQueueIndex(int index) async {
+    if (_isDisposed || _isStopping) return;
+    final queue = state.queue;
+    if (index < 0 || index >= queue.length) return;
+
+    final selected = queue[index];
+    await initializeForTrack(
+      trackId: selected.id,
+      trackUrl: selected.trackUrl ?? '',
+      track: selected,
+      queue: queue,
+      autoPlay: true,
     );
   }
 
@@ -503,5 +609,12 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
           : null,
       extras: <String, dynamic>{'source': urlOrPath},
     );
+  }
+
+  Future<void> setVolume(double volume) async {
+    if (_isDisposed || _isStopping) return;
+    try {
+      await _audioPlayer.setVolume(volume);
+    } catch (_) {}
   }
 }

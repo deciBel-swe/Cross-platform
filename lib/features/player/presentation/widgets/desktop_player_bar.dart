@@ -4,8 +4,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/router/route_paths.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -13,6 +13,7 @@ import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import 'queue_bottom_sheet.dart';
 
 /// Desktop player bar rendered at the bottom of the desktop layout.
 class DesktopPlayerBar extends ConsumerWidget {
@@ -79,9 +80,14 @@ class DesktopPlayerBar extends ConsumerWidget {
               onSeekStart: (_) => audioNotifier.onDragStart(),
               onSeekChanged: audioNotifier.onDragUpdate,
               onSeekEnd: audioNotifier.onDragEnd,
+              onSkipNext: audioNotifier.skipNext,
+              onSkipPrevious: audioNotifier.skipPrevious,
             ),
           ),
-          const Expanded(flex: 3, child: _VolumeControls()),
+          Expanded(
+            flex: 3,
+            child: _VolumeControls(audioNotifier: audioNotifier),
+          ),
         ],
       ),
     );
@@ -100,9 +106,7 @@ class _TrackInfo extends StatelessWidget {
     final artist =
         track?.artist.displayName ??
         track?.artist.username ??
-        (isPrepared
-            ? 'Selected track'
-            : 'Select a track to start listening');
+        (isPrepared ? 'Selected track' : 'Select a track to start listening');
     final coverUrl = track?.coverUrl;
 
     return Row(
@@ -126,7 +130,11 @@ class _TrackInfo extends StatelessWidget {
                 colors: [AppColors.primaryDark, AppColors.primary],
               ),
             ),
-            child: const Icon(Icons.music_note, color: Colors.white70, size: 24),
+            child: const Icon(
+              Icons.music_note,
+              color: Colors.white70,
+              size: 24,
+            ),
           ),
         const SizedBox(width: AppDimensions.paddingSm),
         Flexible(
@@ -180,6 +188,8 @@ class _PlaybackControls extends StatelessWidget {
     required this.onSeekStart,
     required this.onSeekChanged,
     required this.onSeekEnd,
+    required this.onSkipNext,
+    required this.onSkipPrevious,
   });
 
   final bool isPrepared;
@@ -191,6 +201,8 @@ class _PlaybackControls extends StatelessWidget {
   final ValueChanged<double> onSeekStart;
   final ValueChanged<double> onSeekChanged;
   final ValueChanged<double> onSeekEnd;
+  final VoidCallback onSkipNext;
+  final VoidCallback onSkipPrevious;
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +216,11 @@ class _PlaybackControls extends StatelessWidget {
           children: [
             const _ControlButton(icon: Icons.shuffle, size: 18),
             const SizedBox(width: AppDimensions.paddingMd),
-            const _ControlButton(icon: Icons.skip_previous, size: 24),
+            _ControlButton(
+              icon: Icons.skip_previous,
+              size: 24,
+              onTap: isPrepared ? onSkipPrevious : null,
+            ),
             const SizedBox(width: AppDimensions.paddingSm),
             GestureDetector(
               onTap: isPrepared ? onPlayPausePressed : null,
@@ -223,7 +239,11 @@ class _PlaybackControls extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppDimensions.paddingSm),
-            const _ControlButton(icon: Icons.skip_next, size: 24),
+            _ControlButton(
+              icon: Icons.skip_next,
+              size: 24,
+              onTap: isPrepared ? onSkipNext : null,
+            ),
             const SizedBox(width: AppDimensions.paddingMd),
             const _ControlButton(icon: Icons.repeat, size: 18),
           ],
@@ -272,17 +292,42 @@ class _PlaybackControls extends StatelessWidget {
   }
 }
 
-class _VolumeControls extends StatelessWidget {
-  const _VolumeControls();
+// Turned into a StatefulWidget so we can track the slider locally
+class _VolumeControls extends StatefulWidget {
+  const _VolumeControls({required this.audioNotifier});
+
+  final dynamic audioNotifier; // Passed in from the ref
+
+  @override
+  State<_VolumeControls> createState() => _VolumeControlsState();
+}
+
+class _VolumeControlsState extends State<_VolumeControls> {
+  double _volume = 1.0; // Default max volume
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        const _ControlButton(icon: Icons.queue_music, size: 20),
+        _ControlButton(
+          icon: Icons.queue_music,
+          size: 20,
+          onTap: () {
+            showModalBottomSheet<void>(
+              context: context,
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (context) => const QueueBottomSheet(),
+            );
+          },
+        ),
         const SizedBox(width: AppDimensions.paddingSm),
-        const Icon(Icons.volume_up, size: 20, color: AppColors.textSecondary),
+        Icon(
+          _volume == 0 ? Icons.volume_off : Icons.volume_up,
+          size: 20,
+          color: AppColors.textSecondary,
+        ),
         SizedBox(
           width: 100,
           child: SliderTheme(
@@ -294,7 +339,13 @@ class _VolumeControls extends StatelessWidget {
               inactiveTrackColor: AppColors.surfaceLight,
               thumbColor: Colors.white,
             ),
-            child: Slider(value: 0.7, onChanged: (_) {}),
+            child: Slider(
+              value: _volume,
+              onChanged: (val) {
+                setState(() => _volume = val);
+                widget.audioNotifier.setVolume(val);
+              },
+            ),
           ),
         ),
       ],
@@ -303,10 +354,11 @@ class _VolumeControls extends StatelessWidget {
 }
 
 class _ControlButton extends StatefulWidget {
-  const _ControlButton({required this.icon, required this.size});
+  const _ControlButton({required this.icon, required this.size, this.onTap});
 
   final IconData icon;
   final double size;
+  final VoidCallback? onTap;
 
   @override
   State<_ControlButton> createState() => _ControlButtonState();
@@ -317,14 +369,21 @@ class _ControlButtonState extends State<_ControlButton> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: Icon(
-        widget.icon,
-        size: widget.size,
-        color: _isHovered ? Colors.white : AppColors.textSecondary,
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: widget.onTap != null
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        child: Icon(
+          widget.icon,
+          size: widget.size,
+          color: _isHovered && widget.onTap != null
+              ? Colors.white
+              : AppColors.textSecondary,
+        ),
       ),
     );
   }

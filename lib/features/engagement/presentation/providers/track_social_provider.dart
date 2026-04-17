@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../domain/models/track_action_data.dart';
 import '../../domain/repositories/track_social_repository.dart';
 import '../notifiers/track_action_notifier.dart';
-import '../../domain/models/track_action_data.dart';
 
 /// Bridges [ITrackSocialRepository] from GetIt into Riverpod.
 final trackSocialRepositoryProvider = Provider<ITrackSocialRepository>(

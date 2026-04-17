@@ -325,7 +325,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         failure is NotFoundFailure
                             ? Icons.person_off_rounded
                             : Icons.error_outline_rounded,
-                        color: AppColors.onPrimary.withOpacity(0.5),
+                        color: AppColors.onPrimary.withValues(alpha: 0.5),
                         size: AppConstants.errorIconSize,
                       ),
                       const SizedBox(height: AppConstants.spacingRegular),

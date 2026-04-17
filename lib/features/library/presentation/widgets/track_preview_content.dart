@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/notifiers/track_comment_notifier.dart';
 import '../../../library/presentation/widgets/bottom_bar_widget.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
@@ -14,6 +15,7 @@ import '../../../library_profile/presentation/widgets/track_preview_background.d
 import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import 'active_comments_overlay.dart';
 import 'interactive_waveform.dart';
 import 'track_comments_bottom_sheet.dart';
@@ -133,11 +135,24 @@ class TrackPreviewContent extends ConsumerWidget {
             );
           },
           onSharePressed: () {},
+          onAddToPlaylistPressed: () async {
+            await Future<void>.delayed(Duration.zero);
+            if (context.mounted) {
+              context.push(RoutePaths.addToPlaylist, extra: track);
+            }
+          },
           onMoreOptionsPressed: () async {
             final action = await _showTrackOptionsBottomSheet(
               context: context,
               isOwner: isOwner,
+              track: track,
             );
+
+            if (action == _TrackOptionsAction.queue) {
+              if (!context.mounted) return;
+              await QueueBottomSheet.show(context);
+              return;
+            }
 
             if (action == _TrackOptionsAction.edit) {
               if (!context.mounted) return;
@@ -152,6 +167,7 @@ class TrackPreviewContent extends ConsumerWidget {
   Future<_TrackOptionsAction?> _showTrackOptionsBottomSheet({
     required BuildContext context,
     required bool isOwner,
+    required Track track,
   }) async {
     return showModalBottomSheet<_TrackOptionsAction>(
       context: context,
@@ -161,6 +177,15 @@ class TrackPreviewContent extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              ListTile(
+                leading: const Icon(Icons.queue_music, color: Colors.white),
+                title: const Text(
+                  'Queue',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_TrackOptionsAction.queue),
+              ),
               if (isOwner)
                 ListTile(
                   leading: const Icon(Icons.edit, color: Colors.white),
@@ -171,6 +196,20 @@ class TrackPreviewContent extends ConsumerWidget {
                   onTap: () =>
                       Navigator.of(sheetContext).pop(_TrackOptionsAction.edit),
                 ),
+              ListTile(
+                leading: const Icon(Icons.playlist_add, color: Colors.white),
+                title: const Text(
+                  'Add to playlist',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () async {
+                  Navigator.of(sheetContext).pop();
+                  await Future<void>.delayed(Duration.zero);
+                  if (context.mounted) {
+                    context.push(RoutePaths.addToPlaylist, extra: track);
+                  }
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.close, color: Colors.white70),
                 title: const Text(
@@ -188,4 +227,4 @@ class TrackPreviewContent extends ConsumerWidget {
   }
 }
 
-enum _TrackOptionsAction { edit, cancel }
+enum _TrackOptionsAction { queue, edit, cancel }

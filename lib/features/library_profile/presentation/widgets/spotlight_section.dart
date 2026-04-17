@@ -60,6 +60,7 @@ class TopTracksSection extends ConsumerWidget {
                           trackId: track.id,
                           trackUrl: track.trackUrl ?? '',
                           track: track,
+                          queue: topTracks,
                         );
                   },
                   onMorePressed: () {
