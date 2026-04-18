@@ -34,6 +34,7 @@ class RoutePaths {
   static const String socialSettings = '/library/settings/social-settings';
   static const String blockedUsers =
       '/library/settings/social-settings/blocked';
+  static const String notificationSettings = '/library/settings/notifications';
   static const String upgrade = '/upgrade';
   static const String player = '/player';
   static const String profile = '/profile';

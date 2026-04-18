@@ -5,15 +5,18 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-/// Settings window that surfaces configurable app preferences.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   static const String _title = 'Settings';
   static const String _basicSettingsTitle = 'Basic Settings';
   static const String _basicSettingsSubtitle = 'Core app preferences';
+  static const String _notificationSettingsTitle = 'Notifications';
+  static const String _notificationSettingsSubtitle =
+      'Push and activity notifications';
   static const String _socalSettingsTitle = 'Social Settings';
   static const String _socalSettingsSubtitle = 'Privacy Settings';
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
@@ -25,6 +28,11 @@ class SettingsScreen extends ConsumerWidget {
             title: _basicSettingsTitle,
             subtitle: _basicSettingsSubtitle,
             onTap: () => context.push(RoutePaths.basicSettings),
+          ),
+          _SettingsNavigationTile(
+            title: _notificationSettingsTitle,
+            subtitle: _notificationSettingsSubtitle,
+            onTap: () => context.push(RoutePaths.notificationSettings),
           ),
           _SettingsNavigationTile(
             title: _socalSettingsTitle,

@@ -40,6 +40,7 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/social_settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/upload/presentation/screens/upload_screen.dart';
+import '../../features/settings/presentation/screens/notification_settings_screen.dart';
 import '../theme/app_colors.dart';
 import 'go_router_refresh_stream.dart';
 import 'main_shell.dart';
@@ -259,6 +260,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'settings',
                     builder: (context, state) => const SettingsScreen(),
                     routes: [
+                      GoRoute(
+                        path: 'notifications',
+                        builder: (context, state) =>
+                            const NotificationSettingsScreen(),
+                      ),
                       GoRoute(
                         path: 'social-settings',
                         builder: (context, state) =>
