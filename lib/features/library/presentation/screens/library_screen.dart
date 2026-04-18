@@ -81,6 +81,10 @@ class _LibraryTab extends StatelessWidget {
           onTap: () => context.go(RoutePaths.uploadLibrary),
         ),
         _NavigationRow(
+          title: 'Downloads',
+          onTap: () => context.go(RoutePaths.libraryDownloads),
+        ),
+        _NavigationRow(
           title: 'Your likes',
           onTap: () => context.go(RoutePaths.libraryLikes),
         ),

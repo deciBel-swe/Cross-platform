@@ -22,6 +22,7 @@ import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/track_edit_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
 import '../../features/library/presentation/screens/uploads_library_screen.dart';
+import '../../features/library/presentation/screens/downloads_screen.dart';
 import '../../features/library_profile/presentation/providers/track_repository_provider.dart';
 import '../../features/library_profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/fullscreen_image_screen.dart';
@@ -210,6 +211,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'uploads',
                     builder: (context, state) => const UploadsLibraryScreen(),
+                  ),
+                  GoRoute(
+                    path: 'downloads',
+                    builder: (context, state) => const DownloadsScreen(),
                   ),
                   GoRoute(
                     path: 'likes',

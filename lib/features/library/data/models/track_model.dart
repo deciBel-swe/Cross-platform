@@ -72,4 +72,25 @@ extension TrackModelX on TrackModel {
       createdAt: createdAt,
     );
   }
+
+  static TrackModel fromEntity(Track track) {
+    return TrackModel(
+      id: track.id,
+      title: track.title,
+      artist: ArtistModelX.fromEntity(track.artist),
+      trackUrl: track.trackUrl,
+      coverUrl: track.coverUrl,
+      waveformUrl: track.waveformUrl,
+      genre: track.genre,
+      tags: track.tags,
+      state: TrackStatusModelX.fromEntity(track.state),
+      releaseDate: track.releaseDate,
+      playCount: track.playCount,
+      likeCount: track.likeCount,
+      repostCount: track.repostCount,
+      isLiked: track.isLiked,
+      isReposted: track.isReposted,
+      createdAt: track.createdAt,
+    );
+  }
 }
