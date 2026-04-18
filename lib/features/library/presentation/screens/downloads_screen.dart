@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../offline/presentation/providers/offline_tracks_provider.dart';
 import '../../../library_profile/presentation/widgets/track_tile.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 
 class DownloadsScreen extends ConsumerWidget {
   const DownloadsScreen({super.key});
@@ -40,7 +41,14 @@ class DownloadsScreen extends ConsumerWidget {
                 child: TrackTile(
                   track: track,
                   onTap: () {
-                    // Tap handles playback. The `offlineTracksProvider` already populated `trackUrl` with the `file://` local URI.
+                    ref
+                        .read(trackAudioProvider.notifier)
+                        .initializeForTrack(
+                          trackId: track.id,
+                          trackUrl: track.trackUrl ?? '',
+                          track: track,
+                          autoPlay: true,
+                        );
                   },
                 ),
               );
