@@ -36,6 +36,12 @@ import '../../features/engagement/domain/repositories/follow_repository.dart'
     as _i557;
 import '../../features/engagement/domain/repositories/track_social_repository.dart'
     as _i590;
+import '../../features/home/data/datasources/history_remote_datasource.dart'
+    as _i870;
+import '../../features/home/data/repositories/history_repository_impl.dart'
+    as _i694;
+import '../../features/home/domain/repositories/history_repository.dart'
+    as _i419;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
 import '../../features/library/data/datasources/track_comments_remote_data_source.dart'
@@ -149,11 +155,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i464.UploadRemoteDatasource>(
       () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i870.HistoryRemoteDatasource>(
+      () => _i870.HistoryRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i688.BlockedUsersRemoteDatasource>(
       () => _i688.BlockedUsersRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i419.HistoryRepository>(
+      () => _i694.HistoryRepositoryImpl(gh<_i870.HistoryRemoteDatasource>()),
     );
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i690.MockTrackRepository(),

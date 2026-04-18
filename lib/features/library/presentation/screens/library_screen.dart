@@ -88,6 +88,10 @@ class _LibraryTab extends StatelessWidget {
           title: 'Your reposts',
           onTap: () => context.go(RoutePaths.libraryReposts),
         ),
+        _NavigationRow(
+          title: 'Recently Played',
+          onTap: () => context.push(RoutePaths.recentlyPlayed),
+        ),
       ],
     );
   }

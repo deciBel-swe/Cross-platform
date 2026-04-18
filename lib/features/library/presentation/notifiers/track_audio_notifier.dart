@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
+
+import '../../../home/presentation/providers/history_provider.dart';
 import '../../domain/entities/track.dart';
 import '../state/track_audio_state.dart';
 
@@ -160,12 +162,16 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         '[AudioStream] Initializing source: $trackUrl (Network Streaming Active)',
       );
 
-      await _prepareInternal(
+            await _prepareInternal(
         trackId: trackId,
         trackUrl: trackUrl,
         track: track,
         duration: duration,
       );
+
+      if (track != null) {
+        ref.read(historyProvider.notifier).addLocalRecentlyPlayed(track);
+      }
 
       if (autoPlay) {
         await play();

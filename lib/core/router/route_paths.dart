@@ -53,6 +53,7 @@ class RoutePaths {
   static const String editPlaylist = '/library/playlists/edit';
   static const String playlistTracks = '/library/playlists/playlist-tracks';
   static const String addToPlaylist = '/library/add-to-playlist';
+  static const String recentlyPlayed = '/library/recently-played';
 
   static String trackPreview(int trackId) => '$trackPreviewBase/$trackId';
   static String trackEdit(int trackId) => '$trackEditBase/$trackId';
