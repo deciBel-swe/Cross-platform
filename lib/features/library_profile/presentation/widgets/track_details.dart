@@ -134,7 +134,8 @@ class TrackDetails extends ConsumerWidget {
         }
 
         ref.read(trackDownloadProvider.notifier).downloadTrack(track).then((_) {
-          final state = ref.read(trackDownloadProvider);
+          if (!parentContext.mounted) return;
+          final state = ProviderScope.containerOf(parentContext).read(trackDownloadProvider);
           if (state.hasError) {
             ScaffoldMessenger.of(parentContext).showSnackBar(
               SnackBar(
