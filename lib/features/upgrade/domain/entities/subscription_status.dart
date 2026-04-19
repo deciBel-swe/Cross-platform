@@ -9,7 +9,6 @@ part 'subscription_status.freezed.dart';
 /// Domain entity representing the user's subscription state.
 @freezed
 class SubscriptionStatus with _$SubscriptionStatus {
-  const SubscriptionStatus._();
 
   const factory SubscriptionStatus({
     required String status,
@@ -18,6 +17,7 @@ class SubscriptionStatus with _$SubscriptionStatus {
     required bool cancelAtPeriodEnd,
   }) = _SubscriptionStatus;
 
+  const SubscriptionStatus._();
   // Derived helpers
 
   String get normalizedStatus => status.trim().toUpperCase();

@@ -65,7 +65,7 @@ class DownloadsScreen extends ConsumerWidget {
           label: 'Loading downloads',
           child: const Center(child: CircularProgressIndicator()),
         ),
-        error: (error, StackTrace) => Center(
+        error: (error, stackTrace) => Center(
           child: Semantics(
             label: 'Error loading downloads',
             child: Text(

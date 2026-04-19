@@ -4,11 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../auth/domain/entities/auth_user.dart';
+import '../../../library_profile/domain/entities/user_profile.dart';
 import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../upgrade/presentation/widgets/get_pro_button.dart';
-// import '../../library_profile/domain/entities/user_profile.dart';
-// import '../../library_profile/presentation/providers/user_profile_provider.dart';
 
 class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key});
@@ -82,7 +80,7 @@ class _LibraryTab extends ConsumerWidget {
       (profile) => profile,
     );
     final isPro =
-        userProfile?.tier == UserTier.artist ||
+        userProfile?.tier == UserTier.pro ||
         userProfile?.tier == UserTier.artistPro;
 
     // final isPro=true;

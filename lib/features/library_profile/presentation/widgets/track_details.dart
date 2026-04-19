@@ -12,10 +12,10 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../offline/presentation/providers/track_download_provider.dart';
 import '../../domain/entities/user_profile.dart';
 import '../providers/track_audio_provider.dart';
 import '../providers/user_profile_provider.dart';
-import '../../../offline/presentation/providers/track_download_provider.dart';
 
 /// A SoundCloud-style bottom sheet showing quick actions for a [Track].
 ///
@@ -327,6 +327,7 @@ class _SheetContent extends StatelessWidget {
             label: 'Download',
             onTap: onDownload,
             enabled: isPro,
+            isDestructive: false,
           ),
           // _ActionTile(
           //   icon: Icons.flag_outlined,
