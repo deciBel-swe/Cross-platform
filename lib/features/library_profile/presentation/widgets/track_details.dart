@@ -88,9 +88,10 @@ class TrackDetails extends ConsumerWidget {
       (_) => null,
       (profile) => profile,
     );
-    // final isPro = userProfile?.tier == UserTier.pro ||
-    //     userProfile?.tier == UserTier.artistPro;
-    const isPro = true;
+    final isPro =
+        userProfile?.tier == UserTier.pro ||
+        userProfile?.tier == UserTier.artistPro;
+    // const isPro = true;
     return _SheetContent(
       track: track,
       isPro: isPro,
