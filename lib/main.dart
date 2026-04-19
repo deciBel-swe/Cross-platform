@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +18,13 @@ import 'features/settings/domain/repositories/app_icon_repository.dart';
 void main() async {
   // 1. Essential for any native or async initialization
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Firebase.initializeApp();
+    debugPrint("Firebase connected to the backend!");
+  } catch (e) {
+    debugPrint("Firebase failed to initialize. Details: $e");
+  }
 
   var useMockServices = false;
   try {

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "727268564288",
+    "project_id": "decibel-foo-v2",
+    "storage_bucket": "decibel-foo-v2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:727268564288:android:a2a7248ccb8b5a397faea5",
+        "android_client_info": {
+          "package_name": "com.decibel.decibel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgqkcwcEd3g1BPYtpM7ymPjp5_F_R9BNw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
