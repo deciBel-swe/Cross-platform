@@ -71,7 +71,9 @@ class MediaCollection extends ConsumerWidget {
                 final track = previewTracks[index];
                 return TrackTile(
                   track: track,
-                  onTap: () => ref.read(trackAudioProvider.notifier).initializeForTrack(
+                  onTap: () => ref
+                      .read(trackAudioProvider.notifier)
+                      .initializeForTrack(
                         trackId: track.id,
                         trackUrl: track.trackUrl ?? '',
                         track: track,
@@ -121,7 +123,9 @@ class MediaCollection extends ConsumerWidget {
                 final track = previewTracks[index];
                 return TrackTile(
                   track: track,
-                  onTap: () => ref.read(trackAudioProvider.notifier).initializeForTrack(
+                  onTap: () => ref
+                      .read(trackAudioProvider.notifier)
+                      .initializeForTrack(
                         trackId: track.id,
                         trackUrl: track.trackUrl ?? '',
                         track: track,

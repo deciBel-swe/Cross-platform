@@ -31,10 +31,7 @@ final publicProfileSnapshotProvider = FutureProvider.autoDispose
       final repository = ref.read(followRepositoryProvider);
       final result = await repository.getPublicProfile(userIdentifier);
 
-      return result.fold(
-        (failure) => throw failure,
-        (profile) => profile,
-      );
+      return result.fold((failure) => throw failure, (profile) => profile);
     });
 
 final publicLikedTracksProvider = FutureProvider.autoDispose

@@ -78,6 +78,10 @@ import '../../features/library_profile/domain/repositories/track_repository.dart
     as _i127;
 import '../../features/library_profile/domain/repositories/update_image.dart'
     as _i728;
+import '../../features/notifications/data/datasources/notification_remote_datasource.dart'
+    as _i923;
+import '../../features/notifications/domain/repositories/notification_repository.dart'
+    as _i367;
 import '../../features/playlists/data/datasources/playlist_remote_datasource.dart'
     as _i108;
 import '../../features/playlists/data/repositories/playlist_repository.dart'
@@ -103,6 +107,7 @@ import '../../features/upload/data/repository/upload_repository_impl.dart'
 import '../../features/upload/domain/repositories/i_upload_repository.dart'
     as _i43;
 import '../network/dio_client.dart' as _i667;
+import '../network/firebase_messaging_service.dart.dart' as _i565;
 import '../network/interceptors/auth_interceptor.dart' as _i745;
 import '../storage/secure_storage_service.dart' as _i666;
 import '../storage/shared_prefs_service.dart' as _i573;
@@ -124,6 +129,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i183.ImagePicker>(() => registerModule.imagePicker);
+    gh.lazySingleton<_i565.FirebaseMessagingService>(
+      () => _i565.FirebaseMessagingService(),
+    );
     gh.lazySingleton<_i573.SharedPrefsService>(
       () => _i573.SharedPrefsService(),
     );
@@ -135,6 +143,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i923.INotificationRemoteDataSource>(
+      () => _i923.NotificationRemoteDataSource(gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i238.TrackCommentsMockRepository(),
@@ -191,6 +202,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i43.IUploadRepository>(
       () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
       registerFor: {_prod},
+    );
+    gh.factory<_i367.INotificationRepository>(
+      () => _i367.NotificationRepository(
+        gh<_i923.INotificationRemoteDataSource>(),
+      ),
     );
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),

@@ -11,11 +11,13 @@ class TrackAudioState with _$TrackAudioState {
     @Default(false) bool isPrepared,
     int? preparedTrackId,
     String? preparedTrackUrl,
+
     /// The full track entity for the currently prepared track.
     /// Populated by [TrackAudioNotifier.initializeForTrack] so that any
     /// widget (desktop bar, mobile mini-player, etc.) can access cover art,
     /// display name, like status, etc. without a separate lookup.
     Track? currentTrack,
+
     /// Playback queue used for skip next/previous (based on where playback started).
     @Default(<Track>[]) List<Track> queue,
     @Default(false) bool isPlaying,

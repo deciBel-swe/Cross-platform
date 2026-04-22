@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
+import '../../../notifications/presentation/widgets/notification_bell_badge.dart';
 import '../../../upgrade/presentation/widgets/get_pro_button.dart';
 import '../widgets/liked_tracks_shortcut.dart';
 
@@ -29,6 +30,10 @@ class HomeScreen extends StatelessWidget {
                     context.push(RoutePaths.upload);
                   },
                 ),
+
+                const NotificationBellBadge(),
+
+                const SizedBox(width: 8),
               ],
             ),
       body: const Column(

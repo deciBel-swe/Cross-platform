@@ -40,6 +40,7 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/social_settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/upload/presentation/screens/upload_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../theme/app_colors.dart';
 import 'go_router_refresh_stream.dart';
 import 'main_shell.dart';
@@ -402,6 +403,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: RoutePaths.notifications, // Ensure this is defined in route_paths.dart as '/notifications'
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/profile-image',

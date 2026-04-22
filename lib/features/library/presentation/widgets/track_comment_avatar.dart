@@ -14,7 +14,9 @@ class TrackCommentAvatar extends StatelessWidget {
     return CircleAvatar(
       radius: 18,
       backgroundColor: theme.colorScheme.surfaceContainerHighest,
-      backgroundImage: hasValidUrl ? CachedNetworkImageProvider(avatarUrl!) : null,
+      backgroundImage: hasValidUrl
+          ? CachedNetworkImageProvider(avatarUrl!)
+          : null,
       onBackgroundImageError: hasValidUrl
           ? (exception, stackTrace) => debugPrint('Image failed: $exception')
           : null,

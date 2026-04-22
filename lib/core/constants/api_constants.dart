@@ -116,6 +116,12 @@ class ApiConstants {
   static const String comments = '/comments';
   static const String replies = '/replies';
 
+  // --- Notifications ---
+  static const String notifications = '/notifications';
+  static const String unreadNotificationCount = '/notifications/unread-count';
+  static const String markAllNotificationsRead = '/notifications/mark-all-read';
+  static const String deviceTokens = '/notifications/device-tokens';
+
   // Google OAuth specific constants
   static const String googleAuthUrl =
       'https://accounts.google.com/o/oauth2/v2/auth';

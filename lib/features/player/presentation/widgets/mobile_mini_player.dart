@@ -92,7 +92,10 @@ class _MobileMiniPlayerState extends ConsumerState<MobileMiniPlayer> {
                     switchInCurve: Curves.easeOutCubic,
                     switchOutCurve: Curves.easeInCubic,
                     transitionBuilder: (child, animation) {
-                      final begin = Offset(_swipeDirection == 1 ? -0.15 : 0.15, 0);
+                      final begin = Offset(
+                        _swipeDirection == 1 ? -0.15 : 0.15,
+                        0,
+                      );
                       final slide = Tween<Offset>(
                         begin: begin,
                         end: Offset.zero,
@@ -135,7 +138,7 @@ class _MobileMiniPlayerState extends ConsumerState<MobileMiniPlayer> {
                                       end: Alignment.bottomRight,
                                       colors: [
                                         AppColors.primaryDark,
-                                        AppColors.primary
+                                        AppColors.primary,
                                       ],
                                     ),
                                   ),

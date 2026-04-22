@@ -32,13 +32,10 @@ class BlockedUserTile extends StatelessWidget {
               backgroundColor: AppColors.surfaceVariant,
               backgroundImage:
                   user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                      ? CachedNetworkImageProvider(user.avatarUrl!)
-                      : null,
+                  ? CachedNetworkImageProvider(user.avatarUrl!)
+                  : null,
               child: user.avatarUrl == null || user.avatarUrl!.isEmpty
-                  ? const Icon(
-                      Icons.person,
-                      color: AppColors.textMuted,
-                    )
+                  ? const Icon(Icons.person, color: AppColors.textMuted)
                   : null,
             ),
             const SizedBox(width: AppDimensions.paddingMd),

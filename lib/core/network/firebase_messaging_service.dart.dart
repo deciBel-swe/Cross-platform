@@ -18,7 +18,7 @@ class FirebaseMessagingService {
       badge: true,
       sound: true,
     );
-    
+
     return settings.authorizationStatus == AuthorizationStatus.authorized;
   }
 

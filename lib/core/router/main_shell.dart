@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/library_profile/presentation/providers/track_audio_provider.dart';
+import '../../features/notifications/presentation/providers/device_token_provider.dart';
 import '../../features/player/presentation/widgets/desktop_player_bar.dart';
 import '../../features/player/presentation/widgets/mobile_mini_player.dart';
 import '../theme/app_colors.dart';
@@ -14,14 +15,16 @@ import 'route_paths.dart';
 ///
 /// - **Desktop (≥ 801 px):** sidebar + header + content + player bar.
 /// - **Mobile (< 801 px):** content + bottom navigation bar.
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = _isDesktopLayout(context);
+
+    ref.watch(syncDeviceTokenProvider);
 
     if (isDesktop) {
       return _DesktopShell(navigationShell: navigationShell);
