@@ -78,6 +78,16 @@ import '../../features/library_profile/domain/repositories/track_repository.dart
     as _i127;
 import '../../features/library_profile/domain/repositories/update_image.dart'
     as _i728;
+import '../../features/offline/data/datasources/offline_local_data_source.dart'
+    as _i776;
+import '../../features/offline/data/repositories/offline_repository_impl.dart'
+    as _i720;
+import '../../features/offline/domain/repositories/i_offline_repository.dart'
+    as _i753;
+import '../../features/offline/domain/usecases/download_track_usecase.dart'
+    as _i272;
+import '../../features/offline/domain/usecases/get_offline_tracks_usecase.dart'
+    as _i212;
 import '../../features/playlists/data/datasources/playlist_remote_datasource.dart'
     as _i108;
 import '../../features/playlists/data/repositories/playlist_repository.dart'
@@ -152,6 +162,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i776.OfflineLocalDataSource>(
+      () => _i776.OfflineLocalDataSource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i688.BlockedUsersRemoteDatasource>(
       () => _i688.BlockedUsersRemoteDatasource(gh<_i667.DioClient>()),
     );
@@ -172,6 +185,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i43.IUploadRepository>(
       () => const _i580.MockUploadRepository(),
       registerFor: {_mock},
+    );
+    gh.lazySingleton<_i753.IOfflineRepository>(
+      () => _i720.OfflineRepositoryImpl(gh<_i776.OfflineLocalDataSource>()),
     );
     gh.lazySingleton<_i364.IProfileRemoteDataSource>(
       () => _i364.ProfileRemoteDataSource(gh<_i667.DioClient>()),
@@ -211,6 +227,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i459.TrackSocialRemoteDatasource>(),
       ),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i272.DownloadTrackUseCase>(
+      () => _i272.DownloadTrackUseCase(gh<_i753.IOfflineRepository>()),
+    );
+    gh.lazySingleton<_i212.GetOfflineTracksUseCase>(
+      () => _i212.GetOfflineTracksUseCase(gh<_i753.IOfflineRepository>()),
     );
     gh.factory<_i582.IPlaylistRepository>(
       () => _i757.PlaylistRepository(gh<_i108.IPlaylistRemoteDataSource>()),

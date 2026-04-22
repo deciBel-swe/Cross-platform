@@ -86,7 +86,7 @@ class DesktopPlayerBar extends ConsumerWidget {
           ),
           Expanded(
             flex: 3,
-            child: _VolumeControls(audioNotifier: audioNotifier),
+            child: _VolumeControls(onVolumeChanged: audioNotifier.setVolume),
           ),
         ],
       ),
@@ -294,10 +294,9 @@ class _PlaybackControls extends StatelessWidget {
 
 // Turned into a StatefulWidget so we can track the slider locally
 class _VolumeControls extends StatefulWidget {
-  const _VolumeControls({required this.audioNotifier});
+  const _VolumeControls({required this.onVolumeChanged});
 
-  final dynamic audioNotifier; // Passed in from the ref
-
+  final ValueChanged<double> onVolumeChanged;
   @override
   State<_VolumeControls> createState() => _VolumeControlsState();
 }
@@ -343,7 +342,7 @@ class _VolumeControlsState extends State<_VolumeControls> {
               value: _volume,
               onChanged: (val) {
                 setState(() => _volume = val);
-                widget.audioNotifier.setVolume(val);
+                widget.onVolumeChanged(val);
               },
             ),
           ),

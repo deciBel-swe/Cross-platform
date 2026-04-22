@@ -61,4 +61,13 @@ class DioClient {
   }) {
     return _dio.delete(path, queryParameters: queryParams);
   }
+
+  // Helper method for Download requests
+  Future<Response<dynamic>> download(
+    String urlPath,
+    Object savePath, {
+    Options? options,
+  }) {
+    return _dio.download(urlPath, savePath, options: options);
+  }
 }
