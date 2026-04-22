@@ -117,8 +117,9 @@ class ApiConstants {
   static const String replies = '/replies';
 
   static const String notificationSettingsEndpoint = '/notifications/settings';
-static const String notificationDeviceTokensEndpoint =
-    '/notifications/device-tokens';
+  static const String notificationDeviceTokensEndpoint =
+      '/notifications/device-tokens';
+
   // Google OAuth specific constants
   static const String googleAuthUrl =
       'https://accounts.google.com/o/oauth2/v2/auth';
