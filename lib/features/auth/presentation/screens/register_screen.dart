@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:csc_picker_plus/csc_picker_plus.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/router/route_paths.dart';
@@ -13,7 +14,6 @@ import '../../../../core/utils/auth_validators.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
 import 'login_screen.dart' show AuthLoadingType;
-import 'package:csc_picker_plus/csc_picker_plus.dart';
 
 /// Register screen: OAuth buttons, divider, email + date of birth + gender
 /// fields, and a white Continue button.
@@ -413,11 +413,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   dropdownDialogRadius: 12.0,
                   searchBarRadius: 12.0,
                   onCountryChanged: (value) {
-                    _countryController.text = value?.toString() ?? '';
+                    _countryController.text = value.toString();
                     _cityController.clear();
                   },
                   onStateChanged: (value) {
-                    _cityController.text = value?.toString() ?? '';
+                    _cityController.text = value.toString();
                   },
                 ),
 
