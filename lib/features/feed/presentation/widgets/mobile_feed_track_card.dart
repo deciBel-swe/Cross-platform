@@ -8,6 +8,8 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
+import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
+import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 
 /// Reusable mobile feed track card matching the native-style post layout.
 class MobileFeedTrackCard extends StatelessWidget {
@@ -91,19 +93,7 @@ class MobileFeedTrackCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.surface,
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow,
-                        color: AppColors.textPrimary,
-                        size: 30,
-                      ),
-                    ),
+                    const _CardPlayButton(),
                     const SizedBox(width: AppDimensions.paddingSm),
                     Expanded(
                       child: Column(
@@ -147,7 +137,50 @@ class MobileFeedTrackCard extends StatelessWidget {
   }
 }
 
-class _MobileRightActions extends ConsumerWidget {
+class _CardPlayButton extends StatefulWidget {
+  const _CardPlayButton();
+
+  @override
+  State<_CardPlayButton> createState() => _CardPlayButtonState();
+}
+
+class _CardPlayButtonState extends State<_CardPlayButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _isHovered ? AppColors.primary : AppColors.surface,
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  )
+                ]
+              : [],
+        ),
+        child: Icon(
+          Icons.play_arrow,
+          color: _isHovered ? Colors.white : AppColors.textPrimary,
+          size: 30,
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileRightActions extends ConsumerStatefulWidget {
   const _MobileRightActions({
     required this.trackId,
     required this.initialLikeCount,
@@ -164,6 +197,30 @@ class _MobileRightActions extends ConsumerWidget {
   final bool initialIsReposted;
   final int commentCount;
 
+  @override
+  ConsumerState<_MobileRightActions> createState() =>
+      _MobileRightActionsState();
+}
+
+class _MobileRightActionsState extends ConsumerState<_MobileRightActions> {
+  late int _currentCommentCount;
+  bool _isCommentHovered = false;
+  bool _isAddHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentCommentCount = widget.commentCount;
+  }
+
+  @override
+  void didUpdateWidget(_MobileRightActions oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.commentCount != widget.commentCount) {
+      _currentCommentCount = widget.commentCount;
+    }
+  }
+
   String _formatCount(int number) {
     if (number >= 1000000) {
       return '${(number / 1000000).toStringAsFixed(1)}M';
@@ -174,65 +231,93 @@ class _MobileRightActions extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Column(
       children: [
         const Icon(Icons.volume_off_outlined, color: AppColors.textPrimary),
         const SizedBox(height: AppDimensions.paddingMd),
 
         LikeButton(
-          trackId: trackId,
-          isLiked: initialIsLiked,
-          likeCount: initialLikeCount,
-          iconSize: 32,
-          fontSize: 14,
+          trackId: widget.trackId,
+          isLiked: widget.initialIsLiked,
+          likeCount: widget.initialLikeCount,
+          iconSize: 23,
+          fontSize: 12,
+          isVertical: true,
         ),
 
         const SizedBox(height: AppDimensions.paddingMd),
 
         RepostButton(
-          trackId: trackId,
-          isReposted: initialIsReposted,
-          repostCount: initialRepostCount,
-          iconSize: 32,
-          fontSize: 14,
+          trackId: widget.trackId,
+          isReposted: widget.initialIsReposted,
+          repostCount: widget.initialRepostCount,
+          iconSize: 28,
+          fontSize: 12,
+          isVertical: true,
         ),
 
         const SizedBox(height: AppDimensions.paddingMd),
 
         // COMMENT BUTTON
         GestureDetector(
-          onTap: () {
-            // Future feature: Open comments bottom sheet
+          onTap: () async {
+            final data = await ref.read(
+              trackPreviewProvider(widget.trackId).future,
+            );
+            if (!context.mounted) return;
+            TrackCommentsBottomSheet.show(
+              context,
+              trackId: widget.trackId,
+              track: data.track,
+            );
           },
-          child: Column(
-            children: [
-              const Icon(
-                Icons.mode_comment_outlined,
-                color: AppColors.textPrimary,
-                size: 32,
-              ),
-              const SizedBox(height: AppDimensions.paddingXs),
-              Text(
-                _formatCount(commentCount),
-                style: AppTextStyles.cardTitle.copyWith(
-                  color: AppColors.textPrimary,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _isCommentHovered = true),
+            onExit: (_) => setState(() => _isCommentHovered = false),
+            cursor: SystemMouseCursors.click,
+            child: Column(
+              children: [
+                Icon(
+                  Icons.mode_comment_outlined,
+                  color: _isCommentHovered ? AppColors.primary : AppColors.textPrimary,
+                  size: 28,
                 ),
-              ),
-            ],
+                const SizedBox(height: AppDimensions.paddingXs),
+                Text(
+                  _formatCount(_currentCommentCount),
+                  style: AppTextStyles.cardTitle.copyWith(
+                    color: _isCommentHovered ? AppColors.primary : AppColors.textPrimary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
 
         const SizedBox(height: AppDimensions.paddingMd),
-        const Icon(
-          Icons.add_box_outlined,
-          color: AppColors.textPrimary,
-          size: 32,
-        ),
-        const SizedBox(height: AppDimensions.paddingXs),
-        Text(
-          'Add',
-          style: AppTextStyles.cardTitle.copyWith(color: AppColors.textPrimary),
+        MouseRegion(
+          onEnter: (_) => setState(() => _isAddHovered = true),
+          onExit: (_) => setState(() => _isAddHovered = false),
+          cursor: SystemMouseCursors.click,
+          child: Column(
+            children: [
+              Icon(
+                Icons.add_box_outlined,
+                color: _isAddHovered ? AppColors.primary : AppColors.textPrimary,
+                size: 28,
+              ),
+              const SizedBox(height: AppDimensions.paddingXs),
+              Text(
+                'Add',
+                style: AppTextStyles.cardTitle.copyWith(
+                  color: _isAddHovered ? AppColors.primary : AppColors.textPrimary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
