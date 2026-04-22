@@ -6,5 +6,5 @@ import '../notifiers/track_download_notifier.dart';
 
 final trackDownloadProvider =
     StateNotifierProvider<TrackDownloadNotifier, AsyncValue<String?>>((ref) {
-  return TrackDownloadNotifier(getIt<DownloadTrackUseCase>());
-});
+      return TrackDownloadNotifier(getIt<DownloadTrackUseCase>());
+    });

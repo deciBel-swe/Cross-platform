@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/failures.dart';
+import 'package:decibel/core/network/network_providers.dart';
+import 'package:decibel/core/network/stomp_websocket_client.dart';
 import 'package:decibel/core/router/route_paths.dart';
 import 'package:decibel/core/services/waveform_extraction_service.dart';
 import 'package:decibel/core/storage/secure_storage_service.dart';
@@ -36,6 +39,8 @@ class MockAuthRepository extends Mock implements IAuthRepository {}
 
 class FakeTrackUploadMetadata extends Fake implements TrackUploadMetadata {}
 
+class MockStompWebSocketClient extends Mock implements StompWebSocketClient {}
+
 /// Custom Notifier just for testing.
 /// This allows us to seed the starting state exactly how we want it
 /// without having to manually click through the UI to set it up.
@@ -54,6 +59,7 @@ void main() {
   late MockWaveformExtractionService mockWaveformService;
   late MockSecureStorageService mockSecureStorage;
   late MockAuthRepository mockAuthRepo;
+  late MockStompWebSocketClient mockStompClient;
 
   setUpAll(() {
     registerFallbackValue(FakeTrackUploadMetadata());
@@ -64,6 +70,12 @@ void main() {
     mockWaveformService = MockWaveformExtractionService();
     mockSecureStorage = MockSecureStorageService();
     mockAuthRepo = MockAuthRepository();
+    mockStompClient = MockStompWebSocketClient();
+
+    when(() => mockStompClient.connect()).thenAnswer((_) async {});
+    when(
+      () => mockStompClient.subscribeToUploadProgress(any(), any()),
+    ).thenReturn(null);
 
     if (!GetIt.I.isRegistered<SecureStorageService>()) {
       GetIt.I.registerSingleton<SecureStorageService>(mockSecureStorage);
@@ -113,7 +125,10 @@ void main() {
 
     // Tell the repository to return a Success
     when(
-      () => mockRepo.uploadTrack(any()),
+      () => mockRepo.uploadTrack(
+        any(),
+        onSendProgress: any(named: 'onSendProgress'),
+      ),
     ).thenAnswer((_) async => Right(uploadedTrack));
 
     await tester.pumpWidget(
@@ -123,6 +138,7 @@ void main() {
           waveformExtractionServiceProvider.overrideWithValue(
             mockWaveformService,
           ),
+          stompWebSocketClientProvider.overrideWithValue(mockStompClient),
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(validState),
           ),
@@ -152,7 +168,12 @@ void main() {
 
     // 3. Assert
     // Verify the repository was actually called with our data
-    verify(() => mockRepo.uploadTrack(any())).called(1);
+    verify(
+      () => mockRepo.uploadTrack(
+        any(),
+        onSendProgress: any(named: 'onSendProgress'),
+      ),
+    ).called(1);
 
     // Verify GoRouter was told to navigate to the library
     verify(() => mockRouter.go(RoutePaths.uploadLibrary)).called(1);
@@ -170,7 +191,10 @@ void main() {
 
     // Tell the repository to return a Failure
     when(
-      () => mockRepo.uploadTrack(any()),
+      () => mockRepo.uploadTrack(
+        any(),
+        onSendProgress: any(named: 'onSendProgress'),
+      ),
     ).thenAnswer((_) async => const Left(ServerFailure('Upload timeout')));
 
     await tester.pumpWidget(
@@ -180,6 +204,7 @@ void main() {
           waveformExtractionServiceProvider.overrideWithValue(
             mockWaveformService,
           ),
+          stompWebSocketClientProvider.overrideWithValue(mockStompClient),
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(validState),
           ),
@@ -203,7 +228,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // 3. Assert
-    verify(() => mockRepo.uploadTrack(any())).called(1);
+    verify(
+      () => mockRepo.uploadTrack(
+        any(),
+        onSendProgress: any(named: 'onSendProgress'),
+      ),
+    ).called(1);
 
     // Check that the backend error message was shown in the SnackBar
     expect(find.text('Upload timeout'), findsOneWidget);
@@ -224,6 +254,7 @@ void main() {
           waveformExtractionServiceProvider.overrideWithValue(
             mockWaveformService,
           ),
+          stompWebSocketClientProvider.overrideWithValue(mockStompClient),
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(fakeStateNoFile),
           ),
@@ -247,7 +278,12 @@ void main() {
 
     // Assert: Check for the Audio File error
     expect(find.text('Please select an audio file to upload.'), findsOneWidget);
-    verifyNever(() => mockRepo.uploadTrack(any()));
+    verifyNever(
+      () => mockRepo.uploadTrack(
+        any(),
+        onSendProgress: any(named: 'onSendProgress'),
+      ),
+    );
   });
 
   testWidgets('shows error snackbar when no genre is selected', (tester) async {
@@ -267,6 +303,7 @@ void main() {
           waveformExtractionServiceProvider.overrideWithValue(
             mockWaveformService,
           ),
+          stompWebSocketClientProvider.overrideWithValue(mockStompClient),
           // Inject the Notifier with the seeded state
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(fakeStateWithFileOnly),
@@ -293,7 +330,12 @@ void main() {
     expect(find.text('Please select a genre for your track.'), findsOneWidget);
 
     // Prove that the repository was NEVER called because validation failed
-    verifyNever(() => mockRepo.uploadTrack(any()));
+    verifyNever(
+      () => mockRepo.uploadTrack(
+        any(),
+        onSendProgress: any(named: 'onSendProgress'),
+      ),
+    );
   });
 
   testWidgets('shows error snackbar when genre exceeds 100 characters', (
@@ -315,6 +357,7 @@ void main() {
           waveformExtractionServiceProvider.overrideWithValue(
             mockWaveformService,
           ),
+          stompWebSocketClientProvider.overrideWithValue(mockStompClient),
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(fakeState),
           ),
@@ -342,6 +385,11 @@ void main() {
       find.text('Genre must be less than 100 characters.'),
       findsOneWidget,
     );
-    verifyNever(() => mockRepo.uploadTrack(any()));
+    verifyNever(
+      () => mockRepo.uploadTrack(
+        any(),
+        onSendProgress: any(named: 'onSendProgress'),
+      ),
+    );
   });
 }

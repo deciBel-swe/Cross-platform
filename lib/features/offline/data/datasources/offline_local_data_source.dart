@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:path_provider/path_provider.dart';
 
-
 import '../../../../core/network/dio_client.dart';
 import '../../../library/data/models/track_model.dart';
 import '../../../library/domain/entities/track.dart';
@@ -41,7 +40,9 @@ class OfflineLocalDataSource {
     final metaFile = File(metaPath);
     if (!await metaFile.exists()) {
       // Modify URL of saved metadata so that `TrackModel` points to the local path.
-      final localizedModel = TrackModelX.fromEntity(track).copyWith(trackUrl: savePath);
+      final localizedModel = TrackModelX.fromEntity(
+        track,
+      ).copyWith(trackUrl: savePath);
       await metaFile.writeAsString(jsonEncode(localizedModel.toJson()));
     }
 

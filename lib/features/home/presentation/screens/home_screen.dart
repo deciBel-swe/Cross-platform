@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../upgrade/presentation/widgets/get_pro_button.dart';
+import '../../../upload/presentation/widgets/global_upload_progress_wrapper.dart';
 import '../widgets/liked_tracks_shortcut.dart';
 
 /// Empty Home page – placeholder.
@@ -23,11 +24,13 @@ class HomeScreen extends StatelessWidget {
               title: const Text('Home'),
               actions: [
                 const GetProButton(),
-                IconButton(
-                  icon: const Icon(Icons.cloud_upload),
-                  onPressed: () {
-                    context.push(RoutePaths.upload);
-                  },
+                GlobalUploadProgressWrapper(
+                  child: IconButton(
+                    icon: const Icon(Icons.cloud_upload),
+                    onPressed: () {
+                      context.push(RoutePaths.upload);
+                    },
+                  ),
                 ),
               ],
             ),

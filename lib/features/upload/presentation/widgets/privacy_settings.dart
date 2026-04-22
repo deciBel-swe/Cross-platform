@@ -34,6 +34,47 @@ class PrivacySettings extends ConsumerWidget {
           style: TextStyle(color: AppColors.textMuted, fontSize: 12),
         ),
 
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String>(
+          value: metadata.access,
+          dropdownColor: AppColors.surface,
+          decoration: InputDecoration(
+            labelText: 'Access Level',
+            labelStyle: const TextStyle(color: AppColors.textHint),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.borderDark),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.borderDark),
+            ),
+          ),
+          style: const TextStyle(color: AppColors.onPrimary),
+          items: const [
+            DropdownMenuItem(
+              value: 'PLAYABLE',
+              child: Text('Playable (Full Track)'),
+            ),
+            DropdownMenuItem(
+              value: 'PREVIEW',
+              child: Text('Preview (Snippet Only)'),
+            ),
+            DropdownMenuItem(
+              value: 'BLOCKED',
+              child: Text('Blocked (Not Playable)'),
+            ),
+          ],
+          onChanged: isLoading
+              ? null
+              : (val) {
+                  if (val != null) {
+                    ref.read(uploadNotifierProvider.notifier).updateAccess(val);
+                  }
+                },
+        ),
+        const SizedBox(height: 16),
+
         // Public / Private Radio
         Row(
           children: [

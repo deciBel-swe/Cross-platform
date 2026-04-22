@@ -277,7 +277,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     final nextTrack = queue[nextIndex];
     await initializeForTrack(
       trackId: nextTrack.id,
-      trackUrl: nextTrack.trackUrl ?? '',
+      trackUrl: nextTrack.trackUrl ?? nextTrack.trackPreviewUrl ?? '',
       track: nextTrack,
       queue: queue,
       autoPlay: true,
@@ -301,7 +301,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     final previousTrack = queue[previousIndex];
     await initializeForTrack(
       trackId: previousTrack.id,
-      trackUrl: previousTrack.trackUrl ?? '',
+      trackUrl: previousTrack.trackUrl ?? previousTrack.trackPreviewUrl ?? '',
       track: previousTrack,
       queue: queue,
       autoPlay: true,
@@ -354,7 +354,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     final selected = queue[index];
     await initializeForTrack(
       trackId: selected.id,
-      trackUrl: selected.trackUrl ?? '',
+      trackUrl: selected.trackUrl ?? selected.trackPreviewUrl ?? '',
       track: selected,
       queue: queue,
       autoPlay: true,

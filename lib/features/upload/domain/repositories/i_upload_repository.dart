@@ -5,5 +5,8 @@ import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 
 abstract class IUploadRepository {
-  Future<Either<Failure, Track>> uploadTrack(TrackUploadMetadata metadata);
+  Future<Either<Failure, Track>> uploadTrack(
+    TrackUploadMetadata metadata, {
+    void Function(int count, int total)? onSendProgress,
+  });
 }

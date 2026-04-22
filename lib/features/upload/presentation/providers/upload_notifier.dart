@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
+
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/network_providers.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
@@ -14,6 +15,7 @@ import '../../../library/data/datasources/library_mock_fixtures.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 import '../../domain/repositories/i_upload_repository.dart';
+import 'global_upload_progress_provider.dart';
 
 // 1. Bridge GitIt (Dependency Injection) to Riverpod (State Management)
 final uploadRepositoryProvider = Provider<IUploadRepository>((ref) {
@@ -56,6 +58,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       description: '',
       tags: [],
       releaseDate: null,
+      access: 'PLAYABLE',
     );
   }
 
@@ -106,6 +109,10 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
   void updateReleaseDate(DateTime date) =>
       _updateState((state) => state.copyWith(releaseDate: date));
+
+  void updateAccess(String access) =>
+      _updateState((state) => state.copyWith(access: access));
+
   void clearReleaseDate() {
     final currentState = state.value;
     if (currentState != null) {
@@ -161,6 +168,12 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     final pickerService = ref.read(pickerServiceProvider);
 
     final file = await pickerService.pickAudioFile();
+
+    // YIELD EXECUTION: The Android FilePicker returns via an Intent. The Flutter UI
+    // needs to re-sync its surface immediately. Blocking the UI with synchronous
+    // getters or heavy plugin initialization will cause a SurfaceSyncGroup ANR.
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+
     if (file != null) {
       final audioSizeInMB = file.lengthSync() / (1024 * 1024);
 
@@ -194,19 +207,8 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         return;
       }
 
-      // Duration check, in windows we have some problem to access the file and extract
-      // the duration from it, so we used "just_audio_windows" in addition and trying to
-      // catch windows crashes during upload the audio file
-      final duration = await pickerService.getAudioDuration(file.path);
-
-      if (duration == null || duration.inSeconds < 1) {
-        state = AsyncValue<TrackUploadMetadata>.error(
-          "Audio file must be at least 1 second long.",
-          StackTrace.current,
-        ).copyWithPrevious(state);
-        return;
-      }
-
+      // The duration check has been entirely relocated to `submitTrack()` out of this synchronous block
+      // to avoid instantiating ExoPlayer/MediaCodec during Android surface reconstruction!
       final metadata = state.value!.copyWith(audioFile: file);
       state = AsyncData(metadata);
     }
@@ -252,8 +254,33 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     final currentState = state.value;
     if (currentState == null || currentState.audioFile == null) return false;
 
+    final globalProgressNotifier = ref.read(
+      globalUploadProgressProvider.notifier,
+    );
+
     // ignore: unused_local_variable
     List<double> waveFormData = [];
+    // Delay slightly to yield execution so the router transition to Home can finish drawing.
+    // This prevents Android SurfaceSyncGroup ANRs if the native extraction blocks the thread briefly.
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+
+    // Consolidate duration check here, when the surface is fully stable and we're async.
+    final pickerService = ref.read(pickerServiceProvider);
+    final duration = await pickerService.getAudioDuration(
+      currentState.audioFile!.path,
+    );
+
+    if (duration == null || duration.inSeconds < 1) {
+      final msg = "Audio file must be at least 1 second long.";
+      debugPrint('Validation Error: $msg');
+      state = AsyncValue<TrackUploadMetadata>.error(
+        msg,
+        StackTrace.current,
+      ).copyWithPrevious(state);
+      globalProgressNotifier.error();
+      return false;
+    }
+
     try {
       final waveformService = ref.read(waveformExtractionServiceProvider);
       waveFormData = await waveformService.extractWaveform(
@@ -279,13 +306,58 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     final uploadId = const Uuid().v4();
 
+    globalProgressNotifier.startUpload();
+
+    final stompClient = ref.read(stompWebSocketClientProvider);
+    await stompClient.connect();
+
+    stompClient.subscribeToUploadProgress(uploadId, (progress, status) {
+      globalProgressNotifier.updateProcessingProgress(progress);
+      if (status == 'READY') {
+        globalProgressNotifier.finish();
+      } else if (status == 'FAILED') {
+        globalProgressNotifier.error();
+      }
+    });
+
     final repository = ref.read(uploadRepositoryProvider);
-    final result = await repository.uploadTrack(
+    var result = await repository.uploadTrack(
       currentState.copyWith(waveFormData: waveFormData, uploadId: uploadId),
+      onSendProgress: (count, total) {
+        if (total > 0) {
+          globalProgressNotifier.updateUploadProgress((count / total) * 100);
+        }
+      },
     );
+
+    // Intercept "out of free tracks" error and retry seamlessly
+    final initialFailure = result.fold((l) => l, (r) => null);
+    if (initialFailure != null &&
+        (initialFailure.message.contains('BLOCKED') ||
+            initialFailure.message.contains('out of free tracks'))) {
+      debugPrint(
+        'Free user out of tracks! Retrying upload automatically as BLOCKED...',
+      );
+      globalProgressNotifier.updateUploadProgress(0);
+
+      result = await repository.uploadTrack(
+        currentState.copyWith(
+          waveFormData: waveFormData,
+          uploadId: uploadId,
+          access: 'BLOCKED',
+        ),
+        onSendProgress: (count, total) {
+          if (total > 0) {
+            globalProgressNotifier.updateUploadProgress((count / total) * 100);
+          }
+        },
+      );
+    }
 
     return result.fold(
       (failure) {
+        debugPrint('Upload ServerException: ${failure.message}');
+        globalProgressNotifier.error();
         state = AsyncValue<TrackUploadMetadata>.error(
           failure.message,
           StackTrace.current,
@@ -293,6 +365,8 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         return false;
       },
       (track) {
+        globalProgressNotifier.startProcessing();
+
         // Optimistically update the list to show "Processing" instantly
         final notifier = ref.read(uploadsProvider.notifier);
         notifier.addTrack(track);

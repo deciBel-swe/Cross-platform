@@ -34,39 +34,36 @@ class RepostButton extends ConsumerWidget {
     if (isCurrentlyReposted) {
       showDialog<bool>(
         context: context,
-        builder:
-            (ctx) => AlertDialog(
-              backgroundColor: AppColors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  AppConstants.buttonRadius * 2,
-                ),
-              ),
-              title: const Text(
-                AppConstants.repostRemoveTitle,
-                style: TextStyle(color: AppColors.onPrimary),
-              ),
-              content: const Text(
-                AppConstants.repostRemoveMessage,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppConstants.buttonRadius * 2),
+          ),
+          title: const Text(
+            AppConstants.repostRemoveTitle,
+            style: TextStyle(color: AppColors.onPrimary),
+          ),
+          content: const Text(
+            AppConstants.repostRemoveMessage,
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => ctx.pop(false),
+              child: const Text(
+                AppConstants.cancel,
                 style: TextStyle(color: AppColors.textSecondary),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => ctx.pop(false),
-                  child: const Text(
-                    AppConstants.cancel,
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => ctx.pop(true),
-                  child: const Text(
-                    AppConstants.remove,
-                    style: TextStyle(color: AppColors.primary),
-                  ),
-                ),
-              ],
             ),
+            TextButton(
+              onPressed: () => ctx.pop(true),
+              child: const Text(
+                AppConstants.remove,
+                style: TextStyle(color: AppColors.primary),
+              ),
+            ),
+          ],
+        ),
       ).then((confirmed) {
         if (confirmed == true) {
           ref
@@ -102,12 +99,11 @@ class RepostButton extends ConsumerWidget {
       activeColor: AppColors.primary,
       onToggle: () => _handleTap(context, ref, isCurrentlyReposted),
       identifier: 'repost_button',
-      onCountTap:
-          () => showTrackEngagersSheet(
-            context,
-            trackId: trackId,
-            type: EngagerType.reposters,
-          ),
+      onCountTap: () => showTrackEngagersSheet(
+        context,
+        trackId: trackId,
+        type: EngagerType.reposters,
+      ),
       iconSize: iconSize ?? AppConstants.iconSizeMedium,
       fontSize: fontSize ?? AppConstants.fontSizeRegular,
     );

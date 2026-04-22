@@ -6,7 +6,10 @@ import '../../domain/usecases/get_offline_tracks_usecase.dart';
 import '../notifiers/offline_tracks_notifier.dart';
 
 final offlineTracksProvider =
-    StateNotifierProvider.autoDispose<OfflineTracksNotifier, AsyncValue<List<Track>>>(
-        (ref) {
-  return OfflineTracksNotifier(getIt<GetOfflineTracksUseCase>())..loadTracks();
-});
+    StateNotifierProvider.autoDispose<
+      OfflineTracksNotifier,
+      AsyncValue<List<Track>>
+    >((ref) {
+      return OfflineTracksNotifier(getIt<GetOfflineTracksUseCase>())
+        ..loadTracks();
+    });

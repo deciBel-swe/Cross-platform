@@ -7,11 +7,13 @@ class Track {
     required this.title,
     required this.artist,
     this.trackUrl,
+    this.trackPreviewUrl,
     this.coverUrl,
     this.waveformUrl,
     required this.genre,
     required this.tags,
     required this.state,
+    this.access,
     required this.releaseDate,
     required this.playCount,
     required this.likeCount,
@@ -25,11 +27,13 @@ class Track {
   final String title;
   final Artist artist;
   final String? trackUrl;
+  final String? trackPreviewUrl;
   final String? coverUrl;
   final String? waveformUrl;
   final String genre;
   final List<String> tags;
   final TrackStatus state;
+  final String? access;
   final DateTime releaseDate;
   final int playCount;
   final int likeCount;

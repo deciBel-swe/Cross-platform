@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../providers/global_upload_progress_provider.dart';
 import '../providers/upload_notifier.dart';
 import '../widgets/files_selection_header.dart';
 import '../widgets/privacy_settings.dart';
@@ -31,6 +32,36 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
     // Get the metadata from the notifier to edit its parameters in there fields
     final uploadState = ref.watch(uploadNotifierProvider);
     final metadata = uploadState.value;
+
+    final isGlobalUploading = ref.watch(globalUploadProgressProvider).isUploading;
+
+    if (isGlobalUploading) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          leading: IconButton(
+            tooltip: 'Back',
+            icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: AppColors.primary),
+              SizedBox(height: 16),
+              Text(
+                'An upload is currently in progress...',
+                style: TextStyle(color: AppColors.onPrimary),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     // Safety check: Show a loader while the Notifier initializes its starting state
     if (metadata == null) {

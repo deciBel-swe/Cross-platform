@@ -392,9 +392,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
               Text(
                 AppConstants.errorGeneric,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: AppColors.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: AppConstants.spacingSmall),
             ],
@@ -402,19 +402,17 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
               error is NotFoundFailure
                   ? '404 | Not Found'
                   : error.toString().replaceAll(
-                        AppConstants.errorExceptionPrefix,
-                        '',
-                      ),
+                      AppConstants.errorExceptionPrefix,
+                      '',
+                    ),
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onPrimary,
-                    fontSize: error is NotFoundFailure ? 18 : null,
-                    fontWeight: error is NotFoundFailure
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.onPrimary,
+                fontSize: error is NotFoundFailure ? 18 : null,
+                fontWeight: error is NotFoundFailure
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
             ),
             const SizedBox(height: AppConstants.spacingExtraLarge),
             ElevatedButton.icon(

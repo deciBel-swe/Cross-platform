@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/upload/presentation/widgets/global_upload_progress_wrapper.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_dimensions.dart';
 import 'route_paths.dart';
@@ -31,10 +32,12 @@ class DesktopHeader extends StatelessWidget {
           const SizedBox(width: AppDimensions.paddingMd),
 
           // ---- Upload button ----
-          _HeaderIconButton(
-            icon: Icons.upload_outlined,
-            tooltip: 'Upload',
-            onPressed: () => context.push(RoutePaths.upload),
+          GlobalUploadProgressWrapper(
+            child: _HeaderIconButton(
+              icon: Icons.upload_outlined,
+              tooltip: 'Upload',
+              onPressed: () => context.push(RoutePaths.upload),
+            ),
           ),
 
           const SizedBox(width: AppDimensions.paddingXs),

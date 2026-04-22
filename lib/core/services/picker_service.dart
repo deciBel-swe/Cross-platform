@@ -56,10 +56,9 @@ class PickerService implements IPickerService {
       final duration = await player.setAudioSource(
         AudioSource.uri(
           Uri.file(filePath),
-
           tag: MediaItem(
             id: 'duration_check_${DateTime.now().millisecondsSinceEpoch}',
-            title: 'Uploading Track...',
+            title: 'Analyzing track...',
           ),
         ),
       );
@@ -68,7 +67,11 @@ class PickerService implements IPickerService {
       debugPrint('Error getting audio duration: $e');
       return null;
     } finally {
-      await player.dispose();
+      // Defer dispose to prevent `java.lang.IllegalStateException: sending message to a Handler on a dead thread`
+      // ExoPlayer needs a moment to cleanly detach native MediaCodec decoders.
+      Future.delayed(const Duration(seconds: 2), () {
+        player.dispose();
+      });
     }
   }
 

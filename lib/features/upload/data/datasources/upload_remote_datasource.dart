@@ -17,8 +17,9 @@ class UploadRemoteDatasource {
   Future<TrackModel> uploadTrack(
     File audioFile,
     File? coverImage,
-    TrackMetadataModel model,
-  ) async {
+    TrackMetadataModel model, {
+    void Function(int count, int total)? onSendProgress,
+  }) async {
     try {
       // Build multipart payload from metadata and normalize keys to backend contract.
       final Map<String, dynamic> dataMap = model.toJson();
@@ -80,10 +81,11 @@ class UploadRemoteDatasource {
         );
       }
 
-      // Single upload call; waveform processing continues on backend after this.
+      // Single upload call (V2 endpoint)
       final response = await _dioClient.post<dynamic>(
-        '/tracks/upload',
+        '/tracks/upload/v2',
         data: formData,
+        onSendProgress: onSendProgress,
         options: Options(contentType: 'multipart/form-data'),
       );
 

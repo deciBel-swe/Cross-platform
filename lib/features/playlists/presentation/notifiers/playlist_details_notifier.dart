@@ -56,7 +56,9 @@ class PlaylistDetailsNotifier
     _pendingDeletions.addAll(tracksToDelete);
 
     final idsToRemove = tracksToDelete.map((t) => t.id).toList();
-    ref.read(userPlaylistsProvider.notifier).removeTracksLocally(arg, idsToRemove);
+    ref
+        .read(userPlaylistsProvider.notifier)
+        .removeTracksLocally(arg, idsToRemove);
 
     // Optimistically update the UI to hide deleted tracks instantly
     if (state.value != null) {
@@ -89,7 +91,9 @@ class PlaylistDetailsNotifier
   void undoDeletions() {
     _deletionTimer?.cancel();
 
-    ref.read(userPlaylistsProvider.notifier).restoreTracksLocally(arg, _pendingDeletions);
+    ref
+        .read(userPlaylistsProvider.notifier)
+        .restoreTracksLocally(arg, _pendingDeletions);
 
     _pendingDeletions.clear();
 

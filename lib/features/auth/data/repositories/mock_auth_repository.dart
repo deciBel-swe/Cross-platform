@@ -61,7 +61,8 @@ class MockAuthRepository implements IAuthRepository {
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
     // Check storage for token expiry; returns true if 400s has passed
     final isExpired = await _secureStorageService.isAccessTokenExpired();
-    final hasRefreshToken = (await _secureStorageService.getRefreshToken()) != null;
+    final hasRefreshToken =
+        (await _secureStorageService.getRefreshToken()) != null;
 
     if (isExpired && hasRefreshToken) {
       final refreshResult = await refreshToken();

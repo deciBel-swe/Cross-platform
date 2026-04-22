@@ -12,11 +12,7 @@ class WebProfilePlatformUtils {
   static const String website = 'website';
   static const String supportLink = 'supportLink';
 
-  static const List<String> displayPlatforms = [
-    instagram,
-    twitter,
-    website,
-  ];
+  static const List<String> displayPlatforms = [instagram, twitter, website];
 
   static const List<String> allPlatforms = displayPlatforms;
 

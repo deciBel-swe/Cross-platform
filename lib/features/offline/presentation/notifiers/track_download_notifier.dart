@@ -5,7 +5,7 @@ import '../../domain/usecases/download_track_usecase.dart';
 
 class TrackDownloadNotifier extends StateNotifier<AsyncValue<String?>> {
   TrackDownloadNotifier(this._downloadTrackUseCase)
-      : super(const AsyncValue.data(null));
+    : super(const AsyncValue.data(null));
 
   final DownloadTrackUseCase _downloadTrackUseCase;
 

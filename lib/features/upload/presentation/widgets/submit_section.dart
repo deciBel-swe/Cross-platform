@@ -84,38 +84,19 @@ class SubmitSection extends ConsumerWidget {
 
                 // 2. Trigger the upload API call
                 if (isFormValid && hasAudioFile) {
-                  final success = await ref
-                      .read(uploadNotifierProvider.notifier)
-                      .submitTrack();
+                  // Fire and forget upload, keep running in background!
+                  ref.read(uploadNotifierProvider.notifier).submitTrack();
 
-                  // Best Practice: safety check after an 'await'
-                  if (!context.mounted) return;
-
-                  // 3. Handle the Backend Result
-                  if (success) {
-                    context.go(RoutePaths.uploadLibrary);
-                  } else {
-                    // If Failed, Grab the exact error from the latest AsyncValue and show it.
-                    final latestState = ref.read(uploadNotifierProvider);
-                    String errorMessage;
-                    if (latestState is AsyncError) {
-                      errorMessage = latestState.error.toString();
-                    } else {
-                      errorMessage =
-                          'Failed to upload track. Please try again.';
-                    }
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          errorMessage,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        backgroundColor: AppColors.errors,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
+                  // 3. Immediately kick user out to home screen per requirements
+                  context.go(RoutePaths.home);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Upload started in background...'),
+                      backgroundColor: AppColors.accentTeal,
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
                 }
               },
         child: isLoading

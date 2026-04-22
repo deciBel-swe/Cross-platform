@@ -30,7 +30,7 @@ class LibraryScreen extends ConsumerWidget {
           : AppBar(
               backgroundColor: AppColors.background,
               scrolledUnderElevation: 0,
-              title:  Semantics(
+              title: Semantics(
                 header: true,
                 child: const Text(
                   'Library',

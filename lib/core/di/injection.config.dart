@@ -114,6 +114,7 @@ import '../../features/upload/domain/repositories/i_upload_repository.dart'
     as _i43;
 import '../network/dio_client.dart' as _i667;
 import '../network/interceptors/auth_interceptor.dart' as _i745;
+import '../network/stomp_websocket_client.dart' as _i352;
 import '../storage/secure_storage_service.dart' as _i666;
 import '../storage/shared_prefs_service.dart' as _i573;
 import 'register_module.dart' as _i291;
@@ -271,6 +272,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i745.AuthInterceptor>(
       () => _i745.AuthInterceptor(gh<_i666.SecureStorageService>()),
+    );
+    gh.lazySingleton<_i352.StompWebSocketClient>(
+      () => _i352.StompWebSocketClient(gh<_i666.SecureStorageService>()),
     );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i229.TrackCommentsRepository(

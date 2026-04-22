@@ -18,6 +18,7 @@ class TrackMetadataModel with _$TrackMetadataModel {
     String? description,
     List<String>? tags,
     @Default('') String uploadId,
+    @Default('PLAYABLE') String access,
   }) = _TrackMetadataModel;
 
   factory TrackMetadataModel.fromJson(Map<String, dynamic> json) =>
@@ -34,6 +35,7 @@ extension TrackUploadMetadataX on TrackUploadMetadata {
       genre: genre,
       isPrivate: isPrivate,
       uploadId: uploadId,
+      access: access,
 
       description: description.isEmpty ? null : description,
       releaseDate: formattedDate,

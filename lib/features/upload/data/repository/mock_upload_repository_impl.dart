@@ -42,8 +42,9 @@ class MockUploadRepository implements IUploadRepository {
 
   @override
   Future<Either<Failure, Track>> uploadTrack(
-    TrackUploadMetadata metadata,
-  ) async {
+    TrackUploadMetadata metadata, {
+    void Function(int count, int total)? onSendProgress,
+  }) async {
     final audioFile = metadata.audioFile;
     if (audioFile == null) {
       return const Left(ServerFailure('Audio file is required'));

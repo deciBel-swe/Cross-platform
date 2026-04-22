@@ -25,11 +25,13 @@ mixin _$TrackModel {
   String get title => throw _privateConstructorUsedError;
   ArtistModel get artist => throw _privateConstructorUsedError;
   String? get trackUrl => throw _privateConstructorUsedError;
+  String? get trackPreviewUrl => throw _privateConstructorUsedError;
   String? get coverUrl => throw _privateConstructorUsedError;
   String? get waveformUrl => throw _privateConstructorUsedError;
   String get genre => throw _privateConstructorUsedError;
   List<String> get tags => throw _privateConstructorUsedError;
   TrackStatusModel get state => throw _privateConstructorUsedError;
+  String? get access => throw _privateConstructorUsedError;
   DateTime get releaseDate => throw _privateConstructorUsedError;
   int get playCount => throw _privateConstructorUsedError;
   int get likeCount => throw _privateConstructorUsedError;
@@ -60,11 +62,13 @@ abstract class $TrackModelCopyWith<$Res> {
     String title,
     ArtistModel artist,
     String? trackUrl,
+    String? trackPreviewUrl,
     String? coverUrl,
     String? waveformUrl,
     String genre,
     List<String> tags,
     TrackStatusModel state,
+    String? access,
     DateTime releaseDate,
     int playCount,
     int likeCount,
@@ -96,11 +100,13 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
     Object? title = null,
     Object? artist = null,
     Object? trackUrl = freezed,
+    Object? trackPreviewUrl = freezed,
     Object? coverUrl = freezed,
     Object? waveformUrl = freezed,
     Object? genre = null,
     Object? tags = null,
     Object? state = null,
+    Object? access = freezed,
     Object? releaseDate = null,
     Object? playCount = null,
     Object? likeCount = null,
@@ -127,6 +133,10 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
                 ? _value.trackUrl
                 : trackUrl // ignore: cast_nullable_to_non_nullable
                       as String?,
+            trackPreviewUrl: freezed == trackPreviewUrl
+                ? _value.trackPreviewUrl
+                : trackPreviewUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
             coverUrl: freezed == coverUrl
                 ? _value.coverUrl
                 : coverUrl // ignore: cast_nullable_to_non_nullable
@@ -147,6 +157,10 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
                 ? _value.state
                 : state // ignore: cast_nullable_to_non_nullable
                       as TrackStatusModel,
+            access: freezed == access
+                ? _value.access
+                : access // ignore: cast_nullable_to_non_nullable
+                      as String?,
             releaseDate: null == releaseDate
                 ? _value.releaseDate
                 : releaseDate // ignore: cast_nullable_to_non_nullable
@@ -205,11 +219,13 @@ abstract class _$$TrackModelImplCopyWith<$Res>
     String title,
     ArtistModel artist,
     String? trackUrl,
+    String? trackPreviewUrl,
     String? coverUrl,
     String? waveformUrl,
     String genre,
     List<String> tags,
     TrackStatusModel state,
+    String? access,
     DateTime releaseDate,
     int playCount,
     int likeCount,
@@ -241,11 +257,13 @@ class __$$TrackModelImplCopyWithImpl<$Res>
     Object? title = null,
     Object? artist = null,
     Object? trackUrl = freezed,
+    Object? trackPreviewUrl = freezed,
     Object? coverUrl = freezed,
     Object? waveformUrl = freezed,
     Object? genre = null,
     Object? tags = null,
     Object? state = null,
+    Object? access = freezed,
     Object? releaseDate = null,
     Object? playCount = null,
     Object? likeCount = null,
@@ -272,6 +290,10 @@ class __$$TrackModelImplCopyWithImpl<$Res>
             ? _value.trackUrl
             : trackUrl // ignore: cast_nullable_to_non_nullable
                   as String?,
+        trackPreviewUrl: freezed == trackPreviewUrl
+            ? _value.trackPreviewUrl
+            : trackPreviewUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
         coverUrl: freezed == coverUrl
             ? _value.coverUrl
             : coverUrl // ignore: cast_nullable_to_non_nullable
@@ -292,6 +314,10 @@ class __$$TrackModelImplCopyWithImpl<$Res>
             ? _value.state
             : state // ignore: cast_nullable_to_non_nullable
                   as TrackStatusModel,
+        access: freezed == access
+            ? _value.access
+            : access // ignore: cast_nullable_to_non_nullable
+                  as String?,
         releaseDate: null == releaseDate
             ? _value.releaseDate
             : releaseDate // ignore: cast_nullable_to_non_nullable
@@ -333,11 +359,13 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
     required this.title,
     required this.artist,
     this.trackUrl,
+    this.trackPreviewUrl,
     this.coverUrl,
     this.waveformUrl,
     required this.genre,
     final List<String> tags = const <String>[],
     required this.state,
+    this.access,
     required this.releaseDate,
     this.playCount = 0,
     this.likeCount = 0,
@@ -359,6 +387,8 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
   @override
   final String? trackUrl;
   @override
+  final String? trackPreviewUrl;
+  @override
   final String? coverUrl;
   @override
   final String? waveformUrl;
@@ -375,6 +405,8 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
 
   @override
   final TrackStatusModel state;
+  @override
+  final String? access;
   @override
   final DateTime releaseDate;
   @override
@@ -397,7 +429,7 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'TrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, tags: $tags, state: $state, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, isLiked: $isLiked, isReposted: $isReposted, createdAt: $createdAt)';
+    return 'TrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, tags: $tags, state: $state, access: $access, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, isLiked: $isLiked, isReposted: $isReposted, createdAt: $createdAt)';
   }
 
   @override
@@ -409,11 +441,13 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
       ..add(DiagnosticsProperty('title', title))
       ..add(DiagnosticsProperty('artist', artist))
       ..add(DiagnosticsProperty('trackUrl', trackUrl))
+      ..add(DiagnosticsProperty('trackPreviewUrl', trackPreviewUrl))
       ..add(DiagnosticsProperty('coverUrl', coverUrl))
       ..add(DiagnosticsProperty('waveformUrl', waveformUrl))
       ..add(DiagnosticsProperty('genre', genre))
       ..add(DiagnosticsProperty('tags', tags))
       ..add(DiagnosticsProperty('state', state))
+      ..add(DiagnosticsProperty('access', access))
       ..add(DiagnosticsProperty('releaseDate', releaseDate))
       ..add(DiagnosticsProperty('playCount', playCount))
       ..add(DiagnosticsProperty('likeCount', likeCount))
@@ -433,6 +467,8 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
             (identical(other.artist, artist) || other.artist == artist) &&
             (identical(other.trackUrl, trackUrl) ||
                 other.trackUrl == trackUrl) &&
+            (identical(other.trackPreviewUrl, trackPreviewUrl) ||
+                other.trackPreviewUrl == trackPreviewUrl) &&
             (identical(other.coverUrl, coverUrl) ||
                 other.coverUrl == coverUrl) &&
             (identical(other.waveformUrl, waveformUrl) ||
@@ -440,6 +476,7 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
             (identical(other.genre, genre) || other.genre == genre) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
             (identical(other.state, state) || other.state == state) &&
+            (identical(other.access, access) || other.access == access) &&
             (identical(other.releaseDate, releaseDate) ||
                 other.releaseDate == releaseDate) &&
             (identical(other.playCount, playCount) ||
@@ -463,11 +500,13 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
     title,
     artist,
     trackUrl,
+    trackPreviewUrl,
     coverUrl,
     waveformUrl,
     genre,
     const DeepCollectionEquality().hash(_tags),
     state,
+    access,
     releaseDate,
     playCount,
     likeCount,
@@ -497,11 +536,13 @@ abstract class _TrackModel implements TrackModel {
     required final String title,
     required final ArtistModel artist,
     final String? trackUrl,
+    final String? trackPreviewUrl,
     final String? coverUrl,
     final String? waveformUrl,
     required final String genre,
     final List<String> tags,
     required final TrackStatusModel state,
+    final String? access,
     required final DateTime releaseDate,
     final int playCount,
     final int likeCount,
@@ -523,6 +564,8 @@ abstract class _TrackModel implements TrackModel {
   @override
   String? get trackUrl;
   @override
+  String? get trackPreviewUrl;
+  @override
   String? get coverUrl;
   @override
   String? get waveformUrl;
@@ -532,6 +575,8 @@ abstract class _TrackModel implements TrackModel {
   List<String> get tags;
   @override
   TrackStatusModel get state;
+  @override
+  String? get access;
   @override
   DateTime get releaseDate;
   @override

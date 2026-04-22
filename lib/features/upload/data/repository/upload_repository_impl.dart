@@ -17,8 +17,9 @@ class UploadRepository implements IUploadRepository {
 
   @override
   Future<Either<Failure, Track>> uploadTrack(
-    TrackUploadMetadata metadata,
-  ) async {
+    TrackUploadMetadata metadata, {
+    void Function(int count, int total)? onSendProgress,
+  }) async {
     try {
       if (metadata.audioFile == null) {
         return const Left(ServerFailure('Audio file is required'));
@@ -30,6 +31,7 @@ class UploadRepository implements IUploadRepository {
         metadata.audioFile!,
         metadata.coverImage,
         model,
+        onSendProgress: onSendProgress,
       );
 
       return Right(trackModel.toEntity());
