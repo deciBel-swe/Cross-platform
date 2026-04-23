@@ -41,4 +41,14 @@ class UploadRepository implements IUploadRepository {
       );
     }
   }
+
+  @override
+  Stream<double> watchUploadProgress(String correlationId) {
+    return _remoteDatasource.watchUploadProgress(correlationId);
+  }
+
+  @override
+  void cancelProgressSubscription(String uploadId) {
+    _remoteDatasource.disconnectWebSocket(uploadId);
+  }
 }

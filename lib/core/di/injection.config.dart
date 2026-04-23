@@ -104,6 +104,7 @@ import '../../features/upload/domain/repositories/i_upload_repository.dart'
     as _i43;
 import '../network/dio_client.dart' as _i667;
 import '../network/interceptors/auth_interceptor.dart' as _i745;
+import '../network/websocket_client.dart' as _i777;
 import '../storage/secure_storage_service.dart' as _i666;
 import '../storage/shared_prefs_service.dart' as _i573;
 import 'register_module.dart' as _i291;
@@ -146,9 +147,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i459.TrackSocialRemoteDatasource>(
       () => _i459.TrackSocialRemoteDatasource(gh<_i667.DioClient>()),
     );
-    gh.factory<_i464.UploadRemoteDatasource>(
-      () => _i464.UploadRemoteDatasource(gh<_i667.DioClient>()),
-    );
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
@@ -187,10 +185,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i106.ProfileRepository>(
       () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
-    );
-    gh.lazySingleton<_i43.IUploadRepository>(
-      () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
-      registerFor: {_prod},
     );
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),
@@ -249,6 +243,19 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i745.AuthInterceptor>(
       () => _i745.AuthInterceptor(gh<_i666.SecureStorageService>()),
+    );
+    gh.lazySingleton<_i777.WebSocketClient>(
+      () => _i777.WebSocketClient(gh<_i666.SecureStorageService>()),
+    );
+    gh.factory<_i464.UploadRemoteDatasource>(
+      () => _i464.UploadRemoteDatasource(
+        gh<_i667.DioClient>(),
+        gh<_i777.WebSocketClient>(),
+      ),
+    );
+    gh.lazySingleton<_i43.IUploadRepository>(
+      () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
+      registerFor: {_prod},
     );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i229.TrackCommentsRepository(

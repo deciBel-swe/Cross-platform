@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:mime/mime.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
@@ -13,7 +14,6 @@ import '../../../library/data/datasources/library_mock_fixtures.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 import '../../domain/repositories/i_upload_repository.dart';
-import 'package:uuid/uuid.dart';
 
 // 1. Bridge GitIt (Dependency Injection) to Riverpod (State Management)
 final uploadRepositoryProvider = Provider<IUploadRepository>((ref) {
@@ -29,6 +29,11 @@ final uploadNotifierProvider =
 
 final genreListProvider = StateProvider<List<String>>((ref) {
   return GenreConstants.genres;
+});
+
+// Maps an integer track ID to its String WebSocket UUID
+final activeUploadsMapProvider = StateProvider<Map<int, String>>((ref) {
+  return {};
 });
 
 // 3. The Notifier which containing the form logic "Upload Form Controller"
@@ -56,6 +61,8 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       description: '',
       tags: [],
       releaseDate: null,
+      uploadId: const Uuid().v4(),
+      access: 'PLAYABLE',
     );
   }
 
@@ -119,6 +126,8 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
           description: currentState.description,
           tags: currentState.tags,
           isPrivate: currentState.isPrivate,
+          uploadId: currentState.uploadId,
+          access: currentState.access,
           releaseDate: null,
         ),
       );
@@ -252,7 +261,6 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     final currentState = state.value;
     if (currentState == null || currentState.audioFile == null) return false;
 
-    // ignore: unused_local_variable
     List<double> waveFormData = [];
     try {
       final waveformService = ref.read(waveformExtractionServiceProvider);
@@ -260,16 +268,14 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         currentState.audioFile!.path,
         noOfSamples: 100,
       );
-      debugPrint(
-        'WaveformDebug extracted (count=${waveFormData.length}): $waveFormData',
-      );
+      debugPrint('WaveformDebug extracted: $waveFormData');
     } catch (e) {
       waveFormData = [];
     }
 
     if (waveFormData.isEmpty) {
       state = AsyncValue<TrackUploadMetadata>.error(
-        'Could not extract waveform data from this audio file. Please try another file.',
+        'Could not extract waveform data from this audio file.',
         StackTrace.current,
       ).copyWithPrevious(state);
       return false;
@@ -277,11 +283,11 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
-    final uploadId = Uuid().v4();
-
     final repository = ref.read(uploadRepositoryProvider);
+    
+    // We do NOT generate a new Uuid here. We use the one already in currentState
     final result = await repository.uploadTrack(
-      currentState.copyWith(waveFormData: waveFormData, uploadId: uploadId),
+      currentState.copyWith(waveFormData: waveFormData), 
     );
 
     return result.fold(
@@ -293,16 +299,40 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         return false;
       },
       (track) {
-        // Optimistically update the list to show "Processing" instantly
+        // 1. Extract the uploadId from the state
+        final uploadId = currentState.uploadId;
+        
+        // 2. Save the mapping in memory (track.id -> uploadId)
+        if (uploadId != null) {
+          ref.read(activeUploadsMapProvider.notifier).update(
+            (mapState) => {...mapState, track.id: uploadId},
+          );
+        }
+
+        // 3. Optimistically update the list to show "Processing" instantly
         final notifier = ref.read(uploadsProvider.notifier);
         notifier.addTrack(track);
         notifier.invalidateCache();
 
-        // Start background waveform extraction for the new track
+        // 4. Start background waveform extraction for the new track
         final filePath = currentState.audioFile!.path;
         unawaited(_runBackgroundExtraction(track.id, filePath));
 
-        state = const AsyncData(TrackUploadMetadata());
+        // 5. Reset the form properly for the NEXT upload
+        state = AsyncData(
+          TrackUploadMetadata(
+            audioFile: null,
+            coverImage: null,
+            title: '',
+            genre: '',
+            description: '',
+            tags: [],
+            isPrivate: currentState.isPrivate,
+            releaseDate: null,
+            uploadId: const Uuid().v4(),
+            access: 'PLAYABLE',
+          ),
+        );
         return true;
       },
     );

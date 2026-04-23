@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_scroll_controller_provider.dart';
 import '../../../library_profile/presentation/widgets/track_tile.dart';
+import '../../../upload/presentation/providers/upload_notifier.dart';
+import '../../../upload/presentation/widgets/upload_progress_indecator.dart';
 
 class UploadsLibraryScreen extends ConsumerWidget {
   const UploadsLibraryScreen({super.key});
@@ -93,17 +97,40 @@ class UploadsLibraryBody extends ConsumerWidget {
               final track = tracks[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
-                child: TrackTile(
-                  key: ValueKey(track.id),
-                  track: track,
-                  onTap: () {
-                    ref.read(trackAudioProvider.notifier).initializeForTrack(
-                          trackId: track.id,
-                          trackUrl: track.trackUrl ?? '',
-                          track: track,
-                          queue: tracks,
-                        );
-                  },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TrackTile(
+                      key: ValueKey(track.id),
+                      track: track,
+                      // Disable tapping if it is still uploading
+                      onTap: track.state.toString() == 'PROCESSING' ? null : () {
+                        context.push(RoutePaths.trackPreview(track.id));
+                      },
+                    ),
+                    
+                    // Show the progress bar ONLY if the track is processing
+                    if (track.state.toString() == 'PROCESSING') ...[
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            // Read the memory map we made in the notifier
+                            final uploadMap = ref.watch(activeUploadsMapProvider);
+                            
+                            // Get the UUID, fallback to ID string just to be safe
+                            final websocketId = uploadMap[track.id] ?? track.id.toString();
+
+                            return UploadProgressIndicator(
+                              correlationId: websocketId,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               );
             },

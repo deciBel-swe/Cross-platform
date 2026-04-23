@@ -510,7 +510,7 @@ class LibraryRemoteDatasource {
     final normalizedState = switch (rawState) {
       'FINISHED' => 'FINISHED',
       'PROCESSING' || 'UPLOADING' => 'PROCESSING',
-      _ => hasWaveformUrl ? 'FINISHED' : 'PROCESSING',
+      _ => 'FINISHED',
     };
 
     final normalized = <String, dynamic>{
