@@ -84,99 +84,99 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 onTabChanged: _switchTab,
               ),
             ),
-      body: feedAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _ErrorView(
-          message: error.toString(),
-          onRetry: () {
-            if (_selectedTab == FeedTab.following) {
-              ref.read(feedProvider.notifier).refresh();
-            } else {
-              ref.read(discoverFeedProvider.notifier).refresh();
-            }
-          },
-        ),
-        data: (feedState) {
-          final tracks = feedState.tracks.cast<FeedTrack>();
-          if (tracks.isEmpty) {
-            return _EmptyFeedView(isDesktop: isDesktop, tab: _selectedTab);
-          }
-
-          return RefreshIndicator(
-            onRefresh: () async {
-              if (_selectedTab == FeedTab.following) {
-                await ref.read(feedProvider.notifier).refresh();
-              } else {
-                await ref.read(discoverFeedProvider.notifier).refresh();
-              }
-            },
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: EdgeInsets.fromLTRB(
-                isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
-                isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
-                isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
-                AppDimensions.paddingLg,
+      body: Column(
+        children: [
+          if (isDesktop)
+            Padding(
+              padding: const EdgeInsets.all(AppDimensions.paddingLg),
+              child: _DesktopFeedHeader(
+                selectedTab: _selectedTab,
+                onTabChanged: _switchTab,
               ),
-              itemCount: tracks.length + 1, // +1 for header (desktop) or footer
-              itemBuilder: (context, index) {
-                // Desktop header
-                if (index == 0 && isDesktop) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _DesktopFeedHeader(
-                        selectedTab: _selectedTab,
-                        onTabChanged: _switchTab,
-                      ),
-                      const SizedBox(height: AppDimensions.paddingLg),
-                    ],
-                  );
-                }
-
-                final trackIndex = isDesktop ? index - 1 : index;
-
-                // Footer — load-more indicator or sentinel
-                if (trackIndex == tracks.length) {
-                  if (feedState.isLoadingMore) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: AppDimensions.paddingMd,
-                      ),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
+            ),
+          Expanded(
+            child: feedAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => _ErrorView(
+                message: error.toString(),
+                onRetry: () {
+                  if (_selectedTab == FeedTab.following) {
+                    ref.read(feedProvider.notifier).refresh();
+                  } else {
+                    ref.read(discoverFeedProvider.notifier).refresh();
                   }
-                  return const SizedBox.shrink();
+                },
+              ),
+              data: (feedState) {
+                final tracks = feedState.tracks.cast<FeedTrack>();
+                if (tracks.isEmpty) {
+                  return _EmptyFeedView(isDesktop: isDesktop, tab: _selectedTab);
                 }
 
-                final track = tracks[trackIndex];
-                return Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: AppDimensions.paddingSm,
-                  ),
-                  child: FeedItem(
-                    trackId: track.id,
-                    userName: track.feedActorName,
-                    action: track.feedAction,
-                    trackTitle: track.title,
-                    trackArtist: track.displayArtistName,
-                    timeAgo: _timeAgo(track.feedTimestamp),
-                    genre: track.genre,
-                    likeCount: track.likeCount,
-                    repostCount: track.repostCount,
-                    isLiked: track.isLiked,
-                    isReposted: track.isARepost,
-                    plays: _formatCount(track.playCount),
-                    commentCount: track.commentCount,
-                    duration: _formatDuration(track.duration),
-                    waveformPeaks: _buildPeaks(seed: track.id),
-                    gradientColors: _colorsForTrack(track.id),
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    if (_selectedTab == FeedTab.following) {
+                      await ref.read(feedProvider.notifier).refresh();
+                    } else {
+                      await ref.read(discoverFeedProvider.notifier).refresh();
+                    }
+                  },
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: EdgeInsets.fromLTRB(
+                      isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
+                      isDesktop ? 0 : AppDimensions.paddingMd,
+                      isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
+                      AppDimensions.paddingLg,
+                    ),
+                    itemCount: tracks.length + 1,
+                    itemBuilder: (context, index) {
+                      final trackIndex = index;
+
+                      // Footer — load-more indicator or sentinel
+                      if (trackIndex == tracks.length) {
+                        if (feedState.isLoadingMore) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: AppDimensions.paddingMd,
+                            ),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      }
+
+                      final track = tracks[trackIndex];
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppDimensions.paddingSm,
+                        ),
+                        child: FeedItem(
+                          trackId: track.id,
+                          userName: track.feedActorName,
+                          action: track.feedAction,
+                          trackTitle: track.title,
+                          trackArtist: track.displayArtistName,
+                          timeAgo: _timeAgo(track.feedTimestamp),
+                          genre: track.genre,
+                          likeCount: track.likeCount,
+                          repostCount: track.repostCount,
+                          isLiked: track.isLiked,
+                          isReposted: track.isARepost,
+                          plays: _formatCount(track.playCount),
+                          commentCount: track.commentCount,
+                          duration: _formatDuration(track.duration),
+                          waveformPeaks: _buildPeaks(seed: track.id),
+                          gradientColors: _colorsForTrack(track.id),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
