@@ -11,7 +11,6 @@ import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
-import '../../../library_profile/presentation/providers/track_repository_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
 import 'mobile_feed_track_card.dart';
 
@@ -79,88 +78,91 @@ class FeedItem extends StatelessWidget {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _Avatar(colors: colors, userName: userName),
-              const SizedBox(width: AppDimensions.paddingSm),
-              Expanded(
-                child: RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(text: userName, style: AppTextStyles.cardTitle),
-                      TextSpan(
-                        text: ' $action $timeAgo',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+    return Semantics(
+      label: 'Feed item: $trackTitle by $trackArtist',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _Avatar(colors: colors, userName: userName),
+                const SizedBox(width: AppDimensions.paddingSm),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(text: userName, style: AppTextStyles.cardTitle),
+                        TextSpan(
+                          text: ' $action $timeAgo',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.paddingMd),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ArtworkTile(colors: colors, title: trackTitle),
+                const SizedBox(width: AppDimensions.paddingMd),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const _PlayButton(),
+                          const SizedBox(width: AppDimensions.paddingMd),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  trackArtist,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                Text(
+                                  trackTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.sectionTitle.copyWith(
+                                    fontSize: 33,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _GenreChip(genre: genre),
+                        ],
+                      ),
+                      const SizedBox(height: AppDimensions.paddingMd),
+                      _WaveformStrip(peaks: waveformPeaks, duration: duration),
+                      const SizedBox(height: AppDimensions.paddingMd),
+                      _DesktopFeedActions(
+                        trackId: trackId,
+                        initialLikeCount: likeCount,
+                        initialRepostCount: repostCount,
+                        initialIsLiked: isLiked,
+                        initialIsReposted: isReposted,
+                        commentCount: commentCount,
+                        plays: plays,
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.paddingMd),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _ArtworkTile(colors: colors, title: trackTitle),
-              const SizedBox(width: AppDimensions.paddingMd),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const _PlayButton(),
-                        const SizedBox(width: AppDimensions.paddingMd),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                trackArtist,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              Text(
-                                trackTitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.sectionTitle.copyWith(
-                                  fontSize: 33,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _GenreChip(genre: genre),
-                      ],
-                    ),
-                    const SizedBox(height: AppDimensions.paddingMd),
-                    _WaveformStrip(peaks: waveformPeaks, duration: duration),
-                    const SizedBox(height: AppDimensions.paddingMd),
-                    _DesktopFeedActions(
-                      trackId: trackId,
-                      initialLikeCount: likeCount,
-                      initialRepostCount: repostCount,
-                      initialIsLiked: isLiked,
-                      initialIsReposted: isReposted,
-                      commentCount: commentCount,
-                      plays: plays,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -207,52 +209,55 @@ class _MobileFeedItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 12,
-                backgroundColor: AppColors.surfaceLight,
-                child: Icon(
-                  Icons.person,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(width: AppDimensions.paddingSm),
-              Expanded(
-                child: Text(
-                  '$userName $action · $timeAgo',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.headlineMedium.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+    return Semantics(
+      label: '$userName $action $timeAgo',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const CircleAvatar(
+                  radius: 12,
+                  backgroundColor: AppColors.surfaceLight,
+                  child: Icon(
+                    Icons.person,
+                    size: 16,
+                    color: AppColors.textSecondary,
                   ),
                 ),
-              ),
-              const SizedBox(width: AppDimensions.paddingSm),
-              const Icon(Icons.more_vert, color: AppColors.textSecondary),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.paddingMd),
-          MobileFeedTrackCard(
-            trackId: trackId,
-            title: trackTitle,
-            artist: trackArtist,
-            duration: duration,
-            likeCount: likeCount,
-            repostCount: repostCount,
-            isLiked: isLiked,
-            isReposted: isReposted,
-            commentCount: commentCount,
-            gradientColors: gradientColors,
-          ),
-        ],
+                const SizedBox(width: AppDimensions.paddingSm),
+                Expanded(
+                  child: Text(
+                    '$userName $action · $timeAgo',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.headlineMedium.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.paddingSm),
+                const Icon(Icons.more_vert, color: AppColors.textSecondary),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.paddingMd),
+            MobileFeedTrackCard(
+              trackId: trackId,
+              title: trackTitle,
+              artist: trackArtist,
+              duration: duration,
+              likeCount: likeCount,
+              repostCount: repostCount,
+              isLiked: isLiked,
+              isReposted: isReposted,
+              commentCount: commentCount,
+              gradientColors: gradientColors,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -334,27 +339,31 @@ class _PlayButtonState extends State<_PlayButton> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: _isHovered ? AppColors.primary : AppColors.surfaceVariant,
-          boxShadow: _isHovered
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    spreadRadius: 2,
-                  )
-                ]
-              : [],
-        ),
-        child: Icon(
-          Icons.play_arrow,
-          color: _isHovered ? Colors.white : AppColors.textSecondary,
-          size: 34,
+      child: Semantics(
+        button: true,
+        label: 'Play track',
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _isHovered ? AppColors.primary : AppColors.surfaceVariant,
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    )
+                  ]
+                : [],
+          ),
+          child: Icon(
+            Icons.play_arrow,
+            color: _isHovered ? Colors.white : AppColors.textSecondary,
+            size: 34,
+          ),
         ),
       ),
     );
@@ -368,18 +377,21 @@ class _GenreChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingSm,
-        vertical: AppDimensions.paddingXs,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Text(
-        '#$genre',
-        style: AppTextStyles.cardTitle.copyWith(fontWeight: FontWeight.w700),
+    return Semantics(
+      label: 'Genre: $genre',
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingSm,
+          vertical: AppDimensions.paddingXs,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Text(
+          '#$genre',
+          style: AppTextStyles.cardTitle.copyWith(fontWeight: FontWeight.w700),
+        ),
       ),
     );
   }
@@ -514,41 +526,45 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
           ),
         ),
         const SizedBox(width: AppDimensions.paddingMd),
-        GestureDetector(
-          onTap: () async {
-            final data = await ref.read(trackPreviewProvider(widget.trackId).future);
-            if (!context.mounted) return;
-            
-            await TrackCommentsBottomSheet.show(
-              context,
-              trackId: widget.trackId,
-              track: data.track,
-            );
-          },
-          behavior: HitTestBehavior.opaque,
-          child: MouseRegion(
-            onEnter: (_) => setState(() => _isCommentHovered = true),
-            onExit: (_) => setState(() => _isCommentHovered = false),
-            cursor: SystemMouseCursors.click,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.mode_comment_outlined,
-                  size: 14,
-                  color: _isCommentHovered
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary.withValues(alpha: 0.8),
-                ),
-                const SizedBox(width: AppDimensions.paddingXs),
-                AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: _isCommentHovered ? AppColors.textPrimary : AppColors.textSecondary,
+        Semantics(
+          button: true,
+          label: 'View $_currentCommentCount comments',
+          child: GestureDetector(
+            onTap: () async {
+              final data = await ref.read(trackPreviewProvider(widget.trackId).future);
+              if (!context.mounted) return;
+              
+              await TrackCommentsBottomSheet.show(
+                context,
+                trackId: widget.trackId,
+                track: data.track,
+              );
+            },
+            behavior: HitTestBehavior.opaque,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isCommentHovered = true),
+              onExit: (_) => setState(() => _isCommentHovered = false),
+              cursor: SystemMouseCursors.click,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.mode_comment_outlined,
+                    size: 14,
+                    color: _isCommentHovered
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary.withValues(alpha: 0.8),
                   ),
-                  child: Text(_formatCount(_currentCommentCount)),
-                ),
-              ],
+                  const SizedBox(width: AppDimensions.paddingXs),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: _isCommentHovered ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
+                    child: Text(_formatCount(_currentCommentCount)),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

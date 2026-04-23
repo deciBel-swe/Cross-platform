@@ -8,9 +8,14 @@ import '../models/paginated_feed_model.dart';
 /// Abstract contract for the feed remote datasource.
 abstract class IFeedRemoteDatasource {
   Future<PaginatedFeedModel> getFeed({required int page, required int size});
+  Future<PaginatedFeedModel> getDiscoverFeed({
+    required int artistId,
+    required int page,
+    required int size,
+  });
 }
 
-/// Production implementation that calls `/feed` and parses the response.
+/// Production implementation that calls `/feed` and `/stations/artist` and parses the response.
 @LazySingleton(as: IFeedRemoteDatasource)
 class FeedRemoteDatasource implements IFeedRemoteDatasource {
   const FeedRemoteDatasource(this._dioClient);
@@ -44,6 +49,43 @@ class FeedRemoteDatasource implements IFeedRemoteDatasource {
       return PaginatedFeedModel.fromJson(payload);
     } on DioException catch (e) {
       throw ServerException(e.message ?? 'Feed request failed');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<PaginatedFeedModel> getDiscoverFeed({
+    required int artistId,
+    required int page,
+    required int size,
+  }) async {
+    try {
+      final response = await _dioClient.get<dynamic>(
+        '/stations/likes',
+        queryParams: <String, Object?>{
+          // 'artistId': 15,
+          'page': page,
+          'size': size,
+        },
+      );
+
+      final data = response.data;
+      if (data == null) throw const ServerException('Empty discover response');
+
+      final Map<String, dynamic> payload;
+      if (data is Map<String, dynamic>) {
+        payload = data['data'] is Map<String, dynamic>
+            ? data['data'] as Map<String, dynamic>
+            : data;
+      } else {
+        throw const ServerException('Unexpected discover response shape');
+      }
+
+      return PaginatedFeedModel.fromJson(payload);
+    } on DioException catch (e) {
+      throw ServerException(e.message ?? 'Discover request failed');
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException(e.toString());

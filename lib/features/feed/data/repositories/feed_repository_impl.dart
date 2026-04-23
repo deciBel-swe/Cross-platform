@@ -31,4 +31,24 @@ class FeedRepositoryImpl implements IFeedRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, PaginatedFeed>> getDiscoverFeed({
+    required int artistId,
+    required int page,
+    required int size,
+  }) async {
+    try {
+      final model = await _remote.getDiscoverFeed(
+        artistId: artistId,
+        page: page,
+        size: size,
+      );
+      return Right(model.toEntity());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }
