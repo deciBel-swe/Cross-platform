@@ -37,6 +37,7 @@ import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
 import '../../features/settings/presentation/screens/blocked_users_screen.dart';
 import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
+import '../../features/settings/presentation/screens/notification_settings_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/social_settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
@@ -264,6 +265,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'settings',
                     builder: (context, state) => const SettingsScreen(),
                     routes: [
+                      GoRoute(
+                        path: 'notifications',
+                        builder: (context, state) =>
+                            const NotificationSettingsScreen(),
+                      ),
                       GoRoute(
                         path: 'social-settings',
                         builder: (context, state) =>

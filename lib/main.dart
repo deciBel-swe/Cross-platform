@@ -14,6 +14,10 @@ import 'core/di/app_reset_provider.dart';
 import 'core/di/injection.dart';
 import 'features/settings/domain/repositories/app_icon_repository.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'features/settings/data/services/device_token_registration_service.dart';
+
 void main() async {
   // 1. Essential for any native or async initialization
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +43,7 @@ void main() async {
   // 4. Dependency Injection (CRITICAL: Added 'await')
   // Many injectable setups return Future<GetIt>. If yours does, you MUST await it.
   configureDependencies(useMockServices: useMockServices);
+  await _initializePushIfAndroid();
 
   if (Platform.isAndroid || Platform.isIOS) {
     await _initializeStripeSafely();
@@ -92,5 +97,37 @@ Future<void> _initializeStripeSafely() async {
     await Stripe.instance.applySettings().timeout(const Duration(seconds: 8));
   } catch (error) {
     debugPrint('[Stripe] Initialization skipped: $error');
+  }
+}
+
+Future<void> _initializePushIfAndroid() async {
+  if (!Platform.isAndroid) return;
+
+  try {
+    await Firebase.initializeApp();
+
+    final messaging = FirebaseMessaging.instance;
+
+    final permission = await messaging.requestPermission();
+
+    debugPrint('[FCM] permission: ${permission.authorizationStatus}');
+
+    final token = await messaging.getToken();
+
+    if (token != null) {
+      debugPrint('[FCM] token: $token');
+
+      final service = DeviceTokenRegistrationService(getIt());
+      await service.registerMobileToken(token);
+    }
+
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      debugPrint('[FCM] refreshed token: $newToken');
+
+      final service = DeviceTokenRegistrationService(getIt());
+      await service.registerMobileToken(newToken);
+    });
+  } catch (e) {
+    debugPrint('[FCM] init failed: $e');
   }
 }

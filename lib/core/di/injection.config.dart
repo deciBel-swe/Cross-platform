@@ -96,14 +96,20 @@ import '../../features/playlists/domain/repositories/i_playlist_repository.dart'
     as _i582;
 import '../../features/settings/data/datasources/blocked_users_remote_datasource.dart'
     as _i688;
+import '../../features/settings/data/datasources/notification_settings_remote_datasource.dart'
+    as _i92;
 import '../../features/settings/data/repositories/app_icon_repository_impl.dart'
     as _i781;
 import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
     as _i292;
+import '../../features/settings/data/repositories/notification_settings_repository_impl.dart'
+    as _i414;
 import '../../features/settings/domain/repositories/app_icon_repository.dart'
     as _i993;
 import '../../features/settings/domain/repositories/blocked_users_repository.dart'
     as _i288;
+import '../../features/settings/domain/repositories/notification_settings_repository.dart'
+    as _i91;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/mock_upload_repository_impl.dart'
@@ -168,6 +174,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i688.BlockedUsersRemoteDatasource>(
       () => _i688.BlockedUsersRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i92.NotificationSettingsRemoteDatasource>(
+      () => _i92.NotificationSettingsRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i690.MockTrackRepository(),
       registerFor: {_mock},
@@ -207,6 +216,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i43.IUploadRepository>(
       () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i91.INotificationSettingsRepository>(
+      () => _i414.NotificationSettingsRepositoryImpl(
+        gh<_i92.NotificationSettingsRemoteDatasource>(),
+      ),
     );
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),
