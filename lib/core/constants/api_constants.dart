@@ -55,6 +55,7 @@ class ApiConstants {
   static const String genresEndpoint = '/genres';
   static const String globalSearchEndpoint = '/search';
   static const String trendingTracksEndpoint = '/explore/trending';
+  static const String resendVerificationEndpoint = '/auth/resend-verification';
 
   /// Station endpoints are relative to the `/api` base URL.
   static const String genreStationEndpoint = '/stations/genre';

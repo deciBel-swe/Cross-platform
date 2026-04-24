@@ -41,4 +41,10 @@ abstract class IAuthRepository {
   /// Returns a failure if the backend logout request fails.
   /// Local authentication data should still be cleared afterwards.
   Future<Either<Failure, Unit>> logout();
+
+  /// Resends the verification code to the provided email.
+  /// Returns the message and the optional cooldown time in seconds.
+  Future<Either<Failure, (String, int?)>> resendVerificationCode({
+    required String email,
+  });
 }

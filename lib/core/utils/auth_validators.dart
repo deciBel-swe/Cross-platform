@@ -8,8 +8,8 @@ class AuthValidators {
     r'^(https?:\/\/)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$',
   );
 
-  static String? validateEmail(String email) {
-    if (email.trim().isEmpty) {
+  static String? validateEmail(String? email) {
+    if (email == null || email.trim().isEmpty) {
       return 'Email is required.';
     }
 
@@ -20,8 +20,8 @@ class AuthValidators {
     return null;
   }
 
-  static String? validatePassword(String password) {
-    if (password.isEmpty) {
+  static String? validatePassword(String? password) {
+    if (password == null || password.isEmpty) {
       return 'Password is required.';
     }
 

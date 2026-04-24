@@ -1,11 +1,15 @@
 /// Sign-in screen with social login and email/password form.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/auth_validators.dart';
+import '../../../../core/router/route_paths.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
 
@@ -123,6 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final resendTimer = ref.watch(resendTimerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -257,6 +262,49 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
 
                 const SizedBox(height: 32),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Didn't receive verification code? ",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: resendTimer > 0
+                              ? null
+                              : () {
+                                  context.push(RoutePaths.resendVerification);
+                                },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            foregroundColor: AppColors.primary,
+                            disabledForegroundColor: AppColors.textMuted,
+                          ),
+                          child: Text(
+                            resendTimer > 0
+                                ? "Resend in ${resendTimer}s"
+                                : "Resend",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
               ],
             ),
           ),

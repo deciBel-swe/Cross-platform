@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
@@ -97,5 +98,43 @@ class MockAuthRepository implements IAuthRepository {
     // Wipe all local session data
     await _secureStorageService.clearAll();
     return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, (String, int?)>> resendVerificationCode({
+    required String email,
+  }) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    // Example responses based on different scenarios
+    final random = Random();
+
+    // Scenario 1: Valid resend (70% chance for easier testing)
+    if (random.nextDouble() < 0.70) {
+      return const Right((
+        'Verification code sent. It will expire in 10 minutes.',
+        60, // 60 seconds cooldown
+      ));
+    }
+
+    // Scenario 2: Already verified (10% chance)
+    if (random.nextDouble() < 0.10) {
+      return const Left(AuthFailure('This account is already verified.'));
+    }
+
+    // Scenario 3: Invalid email (5% chance)
+    if (random.nextDouble() < 0.05) {
+      return const Left(AuthFailure('Invalid email format.'));
+    }
+
+    // Scenario 4: Resend cooldown active (10% chance)
+    if (random.nextDouble() < 0.10) {
+      return const Left(
+        AuthFailure('Resend cooldown active. Please try again later.'),
+      );
+    }
+
+    // Scenario 5: Server error (5% chance)
+    return const Left(ServerFailure('Failed to resend verification code.'));
   }
 }

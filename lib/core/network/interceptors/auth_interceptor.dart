@@ -49,6 +49,7 @@ class AuthInterceptor extends Interceptor {
     '/auth/forgot-password',
     '/auth/reset-password',
     '/auth/refreshtoken',
+    '/auth/resend-verification',
   ];
 
   /// Returns `true` if the request path matches a public endpoint that
