@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../library/presentation/providers/user_playlists_provider.dart';
 import '../../domain/entities/playlist.dart';
 import '../notifiers/playlist_form_notifier.dart';
 
@@ -127,6 +128,7 @@ class CreatePlaylistBottomSheet extends ConsumerWidget {
                               : () async {
                                   final success = await notifier
                                       .submitPlaylist();
+                                  ref.invalidate(userPlaylistsProvider);
                                   if (success && context.mounted) {
                                     context.pop();
                                   }

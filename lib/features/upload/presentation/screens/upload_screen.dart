@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../providers/upload_notifier.dart';
+import '../widgets/access_type_selector.dart';
 import '../widgets/files_selection_header.dart';
 import '../widgets/privacy_settings.dart';
 import '../widgets/submit_section.dart';
@@ -84,7 +85,13 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   padding: const EdgeInsets.all(16),
                   child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [TrackDetailsForm(), PrivacySettings()],
+                    children: [
+                      TrackDetailsForm(),
+                      
+                      PrivacySettings(),
+                      SizedBox(height: 24,),
+                      AccessTypeSelector(),
+                    ],
                   ),
                 ),
               ),

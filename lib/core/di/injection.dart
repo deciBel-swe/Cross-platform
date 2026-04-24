@@ -7,10 +7,11 @@ import '../../features/library_profile/data/repositories/mock_genre_repository_i
 import '../../features/library_profile/data/repositories/mock_profile_repository_impl.dart';
 import '../../features/library_profile/domain/repositories/genre_repository.dart';
 import '../../features/library_profile/domain/repositories/profile_repository.dart';
-import '../../features/playlists/data/repositories/mock_playlist_repository.dart';
-import '../../features/playlists/domain/repositories/i_playlist_repository.dart';
+import '../../features/settings/data/repositories/mock_notification_settings_repository.dart';
 import '../../features/settings/data/repositories/mock_social_settings_repository_impl.dart';
+import '../../features/settings/data/repositories/notification_settings_repository_impl.dart';
 import '../../features/settings/data/repositories/social_settings_repository_impl.dart';
+import '../../features/settings/domain/repositories/notification_settings_repository.dart';
 import '../../features/settings/domain/repositories/social_settings_repository.dart';
 import '../network/dio_client.dart';
 import '../storage/shared_prefs_service.dart';
@@ -39,6 +40,13 @@ void _registerManualDependencies({required bool useMockServices}) {
       () => MockSocialSettingsRepository(getIt<SharedPrefsService>()),
     );
 
+    if (getIt.isRegistered<NotificationSettingsRepository>()) {
+      getIt.unregister<NotificationSettingsRepository>();
+    }
+    getIt.registerLazySingleton<NotificationSettingsRepository>(
+      () => MockNotificationSettingsRepository(),
+    );
+
     if (getIt.isRegistered<ProfileRepository>()) {
       getIt.unregister<ProfileRepository>();
     }
@@ -62,12 +70,12 @@ void _registerManualDependencies({required bool useMockServices}) {
         getIt<SharedPrefsService>(),
       ),
     );
-    if (getIt.isRegistered<IPlaylistRepository>()) {
-      getIt.unregister<IPlaylistRepository>(); // Remove the real API repository
+
+    if (getIt.isRegistered<NotificationSettingsRepository>()) {
+      getIt.unregister<NotificationSettingsRepository>();
     }
-    // Inject the mock repository instead
-    getIt.registerLazySingleton<IPlaylistRepository>(
-      MockPlaylistRepository.new,
+    getIt.registerLazySingleton<NotificationSettingsRepository>(
+      () => NotificationSettingsRepositoryImpl(getIt()),
     );
   }
 }

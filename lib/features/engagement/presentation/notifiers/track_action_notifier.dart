@@ -50,26 +50,23 @@ class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
     final currentData = state.valueOrNull;
     if (currentData == null) return;
 
-    final bool wasActive =
-        actionType == SocialActionType.like
-            ? currentData.isLiked
-            : currentData.isReposted;
-    final int previousCount =
-        actionType == SocialActionType.like
-            ? currentData.likeCount
-            : currentData.repostCount;
+    final bool wasActive = actionType == SocialActionType.like
+        ? currentData.isLiked
+        : currentData.isReposted;
+    final int previousCount = actionType == SocialActionType.like
+        ? currentData.likeCount
+        : currentData.repostCount;
 
     // 1. Optimistic Update
-    final optimisticData =
-        actionType == SocialActionType.like
-            ? currentData.copyWith(
-              isLiked: !wasActive,
-              likeCount: wasActive ? previousCount - 1 : previousCount + 1,
-            )
-            : currentData.copyWith(
-              isReposted: !wasActive,
-              repostCount: wasActive ? previousCount - 1 : previousCount + 1,
-            );
+    final optimisticData = actionType == SocialActionType.like
+        ? currentData.copyWith(
+            isLiked: !wasActive,
+            likeCount: wasActive ? previousCount - 1 : previousCount + 1,
+          )
+        : currentData.copyWith(
+            isReposted: !wasActive,
+            repostCount: wasActive ? previousCount - 1 : previousCount + 1,
+          );
 
     state = AsyncData(optimisticData);
 
@@ -96,10 +93,14 @@ class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
     }
   }
 
-  void _syncCollections(SocialActionType actionType, {required bool wasActive}) {
+  void _syncCollections(
+    SocialActionType actionType, {
+    required bool wasActive,
+  }) {
     final isLikeAction = actionType == SocialActionType.like;
-    final collectionProvider =
-        isLikeAction ? likedTracksProvider : repostedTracksProvider;
+    final collectionProvider = isLikeAction
+        ? likedTracksProvider
+        : repostedTracksProvider;
 
     if (wasActive) {
       if (ref.exists(collectionProvider)) {

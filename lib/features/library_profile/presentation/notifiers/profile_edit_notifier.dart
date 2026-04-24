@@ -103,34 +103,37 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
         coverPic: !isProfile ? file : null,
       );
 
-      result.fold((failure) {
-        final errorStr = failure.message.toString();
-        if (errorStr.contains('SocketException') ||
-            errorStr.contains('connection error') ||
-            errorStr.contains('Network is unreachable')) {
-          state = AsyncError(
-            'No internet. Image kept locally but not uploaded.',
-            StackTrace.current,
-          );
-        } else {
-          state = AsyncError(failure.message, StackTrace.current);
-        }
-      }, (success) {
-        // Evict the old cached image so CachedNetworkImage fetches fresh
-        // from the server on the next rebuild instead of showing stale cache.
-        final currentProfile = ref.read(userProfileProvider).value;
-        if (currentProfile != null) {
-          currentProfile.fold((_) {}, (profile) {
-            final oldUrl = isProfile
-                ? profile.profileDetails.profilePic
-                : profile.profileDetails.coverPic;
-            if (oldUrl != null) {
-              CachedNetworkImage.evictFromCache(oldUrl);
-            }
-          });
-        }
-        ref.invalidate(userProfileProvider);
-      });
+      result.fold(
+        (failure) {
+          final errorStr = failure.message.toString();
+          if (errorStr.contains('SocketException') ||
+              errorStr.contains('connection error') ||
+              errorStr.contains('Network is unreachable')) {
+            state = AsyncError(
+              'No internet. Image kept locally but not uploaded.',
+              StackTrace.current,
+            );
+          } else {
+            state = AsyncError(failure.message, StackTrace.current);
+          }
+        },
+        (success) {
+          // Evict the old cached image so CachedNetworkImage fetches fresh
+          // from the server on the next rebuild instead of showing stale cache.
+          final currentProfile = ref.read(userProfileProvider).value;
+          if (currentProfile != null) {
+            currentProfile.fold((_) {}, (profile) {
+              final oldUrl = isProfile
+                  ? profile.profileDetails.profilePic
+                  : profile.profileDetails.coverPic;
+              if (oldUrl != null) {
+                CachedNetworkImage.evictFromCache(oldUrl);
+              }
+            });
+          }
+          ref.invalidate(userProfileProvider);
+        },
+      );
     } catch (e) {
       state = AsyncError("Failed to process image: $e", StackTrace.current);
     }
@@ -169,7 +172,7 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
           try {
             await ref.read(authStateProvider.notifier).refreshUser();
           } catch (_) {}
-          
+
           state = const AsyncData(null);
           return true;
         },

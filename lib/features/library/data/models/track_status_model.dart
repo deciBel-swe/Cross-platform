@@ -11,6 +11,9 @@ enum TrackStatusModel {
 
   @JsonValue('FINISHED')
   finished,
+
+  @JsonValue('FAILED')
+  failed,
 }
 
 extension TrackStatusModelX on TrackStatusModel {
@@ -20,6 +23,8 @@ extension TrackStatusModelX on TrackStatusModel {
         return TrackStatus.processing;
       case TrackStatusModel.finished:
         return TrackStatus.finished;
+      case TrackStatusModel.failed:
+        return TrackStatus.failed;
     }
   }
 
@@ -29,6 +34,8 @@ extension TrackStatusModelX on TrackStatusModel {
         return TrackStatusModel.processing;
       case TrackStatus.finished:
         return TrackStatusModel.finished;
+      case TrackStatus.failed:
+        return TrackStatusModel.failed;
     }
   }
 }

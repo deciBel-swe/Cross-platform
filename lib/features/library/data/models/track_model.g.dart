@@ -14,7 +14,7 @@ _$TrackModelImpl _$$TrackModelImplFromJson(Map<String, dynamic> json) =>
       trackUrl: json['trackUrl'] as String?,
       coverUrl: json['coverUrl'] as String?,
       waveformUrl: json['waveformUrl'] as String?,
-      genre: json['genre'] as String,
+      genre: json['genre'] as String? ?? '',
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           const <String>[],
@@ -51,4 +51,5 @@ Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
 const _$TrackStatusModelEnumMap = {
   TrackStatusModel.processing: 'PROCESSING',
   TrackStatusModel.finished: 'FINISHED',
+  TrackStatusModel.failed: 'FAILED',
 };

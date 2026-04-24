@@ -16,20 +16,17 @@ class DownloadsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title:  Semantics(
-          header: true,
-          child: const Text('Downloads'),
-        ),
+        title: Semantics(header: true, child: const Text('Downloads')),
         scrolledUnderElevation: 0,
         backgroundColor: AppColors.background,
       ),
       body: state.when(
         data: (tracks) {
           if (tracks.isEmpty) {
-            return  Center(
+            return Center(
               child: Semantics(
                 label: 'No locally downloaded tracks',
-                child:const Text(
+                child: const Text(
                   'No locally downloaded tracks.',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
@@ -49,19 +46,14 @@ class DownloadsScreen extends ConsumerWidget {
                   onTap: () {
                     ref
                         .read(trackAudioProvider.notifier)
-                        .initializeForTrack(
-                          trackId: track.id,
-                          trackUrl: track.trackUrl ?? '',
-                          track: track,
-                          autoPlay: true,
-                        );
+                        .playTrack(track: track, autoPlay: true);
                   },
                 ),
               );
             },
           );
         },
-        loading: () =>  Semantics(
+        loading: () => Semantics(
           label: 'Loading downloads',
           child: const Center(child: CircularProgressIndicator()),
         ),

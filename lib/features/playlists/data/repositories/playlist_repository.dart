@@ -82,6 +82,7 @@ class PlaylistRepository implements IPlaylistRepository {
         title: metadata.title,
         description: metadata.description,
         isPrivate: metadata.isPrivate,
+        type: "PLAYLIST",
       );
 
       final model = await _remoteDataSource.createPlaylist(
@@ -107,6 +108,7 @@ class PlaylistRepository implements IPlaylistRepository {
         title: metadata.title,
         description: metadata.description,
         isPrivate: metadata.isPrivate,
+        type: "PLAYLIST",
       );
 
       final model = await _remoteDataSource.updatePlaylist(

@@ -7,11 +7,11 @@ import '../../../playlists/presentation/providers/user_playlists_provider.dart';
 
 /// Handles the side-effect of adding a track to a playlist.
 final addToPlaylistProvider =
-    AsyncNotifierProvider.autoDispose<AddToPlaylistNotifier, void>(
+    AsyncNotifierProvider<AddToPlaylistNotifier, void>(
       AddToPlaylistNotifier.new,
     );
 
-class AddToPlaylistNotifier extends AutoDisposeAsyncNotifier<void> {
+class AddToPlaylistNotifier extends AsyncNotifier<void> {
   // 1. Manually track if the provider is still alive
   bool _mounted = true;
 

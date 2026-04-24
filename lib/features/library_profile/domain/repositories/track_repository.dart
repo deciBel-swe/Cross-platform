@@ -33,5 +33,7 @@ abstract class TrackRepository {
     required TrackEditRequest request,
   });
 
+  Future<Either<Failure, bool>> deleteTrack(int trackId);
+
   Future<Either<Failure, bool>> deleteTrackCover(int trackId);
 }

@@ -21,34 +21,56 @@ class AddToPlaylistScreen extends ConsumerWidget {
     final playlistsAsync = ref.watch(userPlaylistsProvider);
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
+    return Semantics(
+      label: 'Add track to playlist screen',
+      scopesRoute: true,
+      namesRoute: true,
+
+      explicitChildNodes: true,
+      child: Scaffold(
         backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Add to playlist',
-          style: textTheme.titleLarge?.copyWith(
-            color: AppColors.onPrimary,
-            fontWeight: FontWeight.bold,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          leading: Semantics(
+            button: true,
+            label: 'Go back',
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
+              onPressed: () => context.pop(),
+            ),
+          ),
+          title: Semantics(
+            header: true,
+            child: Text(
+              'Add to playlist',
+              style: textTheme.titleLarge?.copyWith(
+                color: AppColors.onPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
-      ),
-      body: playlistsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text(
-            'Error loading playlists.\n$error',
-            textAlign: TextAlign.center,
-            style: textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+        body: playlistsAsync.when(
+          loading: () => Semantics(
+            label: 'Loading playlists',
+            child: const Center(child: CircularProgressIndicator()),
           ),
+          error: (error, stack) => Semantics(
+            label: 'Error loading playlists',
+            child: Center(
+              child: Text(
+                'Error loading playlists.\n$error',
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.onPrimary,
+                ),
+              ),
+            ),
+          ),
+          data: (playlists) =>
+              _PlaylistListView(playlists: playlists, track: track),
         ),
-        data: (playlists) =>
-            _PlaylistListView(playlists: playlists, track: track),
       ),
     );
   }
@@ -62,19 +84,22 @@ class _PlaylistListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppConstants.spacingMedium),
-      children: [
-        const _CreatePlaylistButton(),
-        const SizedBox(height: AppConstants.spacingMedium),
-        ...playlists.map(
-          (playlist) => _PlaylistItem(
-            key: ValueKey(playlist.id),
-            playlist: playlist,
-            track: track,
+    return Semantics(
+      label: 'Playlists list',
+      child: ListView(
+        padding: const EdgeInsets.all(AppConstants.spacingMedium),
+        children: [
+          const _CreatePlaylistButton(),
+          const SizedBox(height: AppConstants.spacingMedium),
+          ...playlists.map(
+            (playlist) => _PlaylistItem(
+              key: ValueKey(playlist.id),
+              playlist: playlist,
+              track: track,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -86,38 +111,44 @@ class _CreatePlaylistButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return InkWell(
-      onTap: () {
-        CreatePlaylistBottomSheet.show(context);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: AppConstants.spacingSmall,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
+    return Semantics(
+      button: true,
+      label: 'Create a new playlist',
+      child: InkWell(
+        onTap: () {
+          CreatePlaylistBottomSheet.show(context);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppConstants.spacingSmall,
+          ),
+          child: Row(
+            children: [
+              ExcludeSemantics(
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    color: AppColors.onPrimary,
+                    size: 28,
+                  ),
+                ),
               ),
-              child: const Icon(
-                Icons.add,
-                color: AppColors.onPrimary,
-                size: 28,
+              const SizedBox(width: AppConstants.spacingMedium),
+              Text(
+                'Create playlist',
+                style: textTheme.titleMedium?.copyWith(
+                  color: AppColors.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(width: AppConstants.spacingMedium),
-            Text(
-              'Create playlist',
-              style: textTheme.titleMedium?.copyWith(
-                color: AppColors.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -134,82 +165,90 @@ class _PlaylistItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final isAlreadyAdded = playlist.tracks.any((t) => t.id == track.id);
+    final trackCount = playlist.tracks.length;
 
-    return InkWell(
-      onTap: () async {
-        if (isAlreadyAdded) return;
+    return Semantics(
+      button: !isAlreadyAdded,
+      enabled: !isAlreadyAdded,
+      label: isAlreadyAdded
+          ? '${playlist.title}, playlist, $trackCount tracks, track already added'
+          : '${playlist.title}, playlist, $trackCount tracks, tap to add track',
+      child: InkWell(
+        onTap: () async {
+          if (isAlreadyAdded) return;
 
-        final notifier = ref.read(addToPlaylistProvider.notifier);
-        final success = await notifier.addTrack(
-          playlistId: playlist.id,
-          trackId: track.id,
-          track: track,
-        );
-
-        if (!context.mounted) return;
-
-        if (success) {
-          ref.invalidate(userPlaylistsProvider);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Track added to ${playlist.title}'),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              backgroundColor: AppColors.surface,
-            ),
+          final notifier = ref.read(addToPlaylistProvider.notifier);
+          final success = await notifier.addTrack(
+            playlistId: playlist.id,
+            trackId: track.id,
+            track: track,
           );
-          context.pop();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to add track. Please try again.'),
-            ),
-          );
-        }
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: AppConstants.spacingSmall,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
+
+          if (!context.mounted) return;
+
+          if (success) {
+            ref.invalidate(userPlaylistsProvider);
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Track added to ${playlist.title}')),
+            );
+            context.pop();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to add track. Please try again.'),
               ),
-              // TODO(developer): Replace with DecibelCachedImage
-            ),
-            const SizedBox(width: AppConstants.spacingMedium),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    playlist.title,
-                    style: textTheme.titleMedium?.copyWith(
-                      color: AppColors.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+            );
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppConstants.spacingSmall,
+          ),
+          child: Row(
+            children: [
+              ExcludeSemantics(
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Playlist · ${playlist.tracks.length} Track${playlist.tracks.length == 1 ? '' : 's'}',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: AppColors.onPrimary.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-            if (isAlreadyAdded)
-              const Icon(Icons.check_circle, color: AppColors.onPrimary),
-          ],
+              const SizedBox(width: AppConstants.spacingMedium),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      playlist.title,
+                      style: textTheme.titleMedium?.copyWith(
+                        color: AppColors.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Playlist · ${playlist.tracks.length} Track${playlist.tracks.length == 1 ? '' : 's'}',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppColors.onPrimary.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isAlreadyAdded)
+                Semantics(
+                  label: 'Track already added',
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: AppColors.onPrimary,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

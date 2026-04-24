@@ -1,15 +1,7 @@
 import '../../../library/data/models/track_model.dart';
 import '../../domain/entities/playlist.dart';
+import 'owner_model.dart';
 import 'playlist_model.dart';
-
-extension OwnerModelX on OwnerModel {
-  PlaylistOwner toEntity() => PlaylistOwner(
-        id: id,
-        username: username,
-        displayName: displayName,
-        avatarUrl: avatarUrl,
-      );
-}
 
 extension PlaylistModelX on PlaylistModel {
   Playlist toEntity() => Playlist(
@@ -20,7 +12,16 @@ extension PlaylistModelX on PlaylistModel {
     isPrivate: isPrivate,
     isLiked: isLiked,
     coverArt: coverArt,
-    owner: owner?.toEntity() ?? const PlaylistOwner(id: 0, username: 'Unknown User'),
+    owner:
+        owner?.toEntity() ??
+        const PlaylistOwner(id: 0, username: 'Unknown User'),
     tracks: tracks.map((track) => track.toEntity()).toList(),
+    totalDurationSeconds: totalDurationSeconds,
+    trackCount: trackCount,
+    playlistSlug: playlistSlug,
+    firstTrackWaveformUrl: firstTrackWaveformUrl,
+    secretToken: secretToken,
+    access: access,
+    createdAt: createdAt,
   );
 }

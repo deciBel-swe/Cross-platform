@@ -99,7 +99,9 @@ class _TrackEngagersBottomSheetState
                 child: Semantics(
                   identifier: 'track_engagers_loading',
                   label: 'Loading engagers',
-                  child: const CircularProgressIndicator(color: AppColors.primary),
+                  child: const CircularProgressIndicator(
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
               error: (error, _) => _buildErrorState(error.toString()),
@@ -256,8 +258,9 @@ class _EngagerTile extends StatelessWidget {
                 label: user.username,
                 button: true,
                 child: GestureDetector(
-                  onTap: () =>
-                      context.push(RoutePaths.publicProfile(user.id.toString())),
+                  onTap: () => context.push(
+                    RoutePaths.publicProfile(user.id.toString()),
+                  ),
                   behavior: HitTestBehavior.opaque,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

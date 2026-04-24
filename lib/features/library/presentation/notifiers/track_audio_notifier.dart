@@ -139,6 +139,11 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (_isDisposed || _isStopping) return;
     if (state.isPreparing) return;
 
+    final sanitizedQueue = _sanitizeQueue(
+      queue ?? state.queue,
+      currentTrack: track,
+    );
+
     final isSamePreparedTrack =
         state.isPrepared &&
         state.preparedTrackId == trackId &&
@@ -154,7 +159,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     state = state.copyWith(
       isPreparing: true,
       duration: duration,
-      queue: queue ?? state.queue,
+      queue: sanitizedQueue,
     );
 
     try {
@@ -281,13 +286,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (nextIndex >= queue.length) return;
 
     final nextTrack = queue[nextIndex];
-    await initializeForTrack(
-      trackId: nextTrack.id,
-      trackUrl: nextTrack.trackUrl ?? '',
-      track: nextTrack,
-      queue: queue,
-      autoPlay: true,
-    );
+    await playTrack(track: nextTrack, queue: queue, autoPlay: true);
   }
 
   Future<void> skipPrevious() async {
@@ -305,24 +304,19 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (previousIndex < 0) return;
 
     final previousTrack = queue[previousIndex];
-    await initializeForTrack(
-      trackId: previousTrack.id,
-      trackUrl: previousTrack.trackUrl ?? '',
-      track: previousTrack,
-      queue: queue,
-      autoPlay: true,
-    );
+    await playTrack(track: previousTrack, queue: queue, autoPlay: true);
   }
 
   void addToQueue(Track track) {
     if (_isDisposed) return;
+    if (!track.isPlayable) return;
 
     final nextQueue = List<Track>.from(state.queue);
     final alreadyInQueue = nextQueue.any((t) => t.id == track.id);
     if (alreadyInQueue) return;
 
     nextQueue.add(track);
-    state = state.copyWith(queue: nextQueue);
+    state = state.copyWith(queue: _sanitizeQueue(nextQueue));
   }
 
   void removeFromQueue(int trackId) {
@@ -358,12 +352,29 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (index < 0 || index >= queue.length) return;
 
     final selected = queue[index];
+    await playTrack(track: selected, queue: queue, autoPlay: true);
+  }
+
+  Future<void> playTrack({
+    required Track track,
+    List<Track>? queue,
+    Duration duration = Duration.zero,
+    bool autoPlay = true,
+  }) async {
+    if (_isDisposed || _isStopping) return;
+
+    final trackUrl = track.normalizedTrackUrl;
+    if (!track.isPlayable || trackUrl == null) {
+      return;
+    }
+
     await initializeForTrack(
-      trackId: selected.id,
-      trackUrl: selected.trackUrl ?? '',
-      track: selected,
+      trackId: track.id,
+      trackUrl: trackUrl,
+      track: track,
       queue: queue,
-      autoPlay: true,
+      duration: duration,
+      autoPlay: autoPlay,
     );
   }
 
@@ -622,5 +633,25 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     try {
       await _audioPlayer.setVolume(volume);
     } catch (_) {}
+  }
+
+  List<Track> _sanitizeQueue(List<Track> queue, {Track? currentTrack}) {
+    final sanitizedQueue = <Track>[];
+    final seenTrackIds = <int>{};
+
+    for (final track in queue) {
+      if (!track.isPlayable || !seenTrackIds.add(track.id)) {
+        continue;
+      }
+      sanitizedQueue.add(track);
+    }
+
+    if (currentTrack != null &&
+        currentTrack.isPlayable &&
+        seenTrackIds.add(currentTrack.id)) {
+      sanitizedQueue.insert(0, currentTrack);
+    }
+
+    return sanitizedQueue;
   }
 }

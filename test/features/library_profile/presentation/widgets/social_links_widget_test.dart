@@ -27,7 +27,6 @@ Widget buildTestWidget(PublicProfileSocialLinks socialLinks) {
 }
 
 void main() {
-
   group('SocialLinksWidget', () {
     testWidgets('renders nothing when all links are null', (tester) async {
       await tester.pumpWidget(

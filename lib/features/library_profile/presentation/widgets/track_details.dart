@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +17,8 @@ import '../../../library/domain/entities/track.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
 import '../../domain/entities/user_profile.dart';
 import '../providers/track_audio_provider.dart';
+import '../providers/track_preview_provider.dart';
+import '../providers/uploads_provider.dart';
 import '../providers/user_profile_provider.dart';
 
 /// A SoundCloud-style bottom sheet showing quick actions for a [Track].
@@ -91,10 +95,70 @@ class TrackDetails extends ConsumerWidget {
     final isPro =
         userProfile?.tier == UserTier.pro ||
         userProfile?.tier == UserTier.artistPro;
+
+    Future<void> deleteTrack() async {
+      final container = ProviderScope.containerOf(parentContext, listen: false);
+      Navigator.of(context).pop();
+      await Future<void>.delayed(Duration.zero);
+      if (!parentContext.mounted) {
+        return;
+      }
+
+      final confirmed = await _confirmDeleteTrack(parentContext);
+      if (!confirmed || !parentContext.mounted) {
+        return;
+      }
+
+      final messenger = ScaffoldMessenger.of(parentContext);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Deleting "${track.title}"...'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      final deleted = await container
+          .read(uploadsProvider.notifier)
+          .deleteTrack(track.id);
+      if (!parentContext.mounted) {
+        return;
+      }
+
+      messenger.hideCurrentSnackBar();
+      if (deleted) {
+        final audioState = container.read(trackAudioProvider);
+        final audioNotifier = container.read(trackAudioProvider.notifier);
+        if (audioState.preparedTrackId == track.id) {
+          await audioNotifier.stop();
+        }
+        audioNotifier.removeFromQueue(track.id);
+        if (!parentContext.mounted) {
+          return;
+        }
+        container.invalidate(trackPreviewProvider(track.id));
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Deleted "${track.title}"'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Failed to delete track'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.errors,
+        ),
+      );
+    }
+
     // const isPro = true;
     return _SheetContent(
       track: track,
       isPro: isPro,
+      showDeleteAction: isOwnTrack,
       onAddToPlaylist: () {
         // Close the sheet, then push the AddToPlaylist route using the parent
         // context (the one that opened this sheet) so navigation uses an
@@ -165,7 +229,41 @@ class TrackDetails extends ConsumerWidget {
         );
         context.pop();
       },
+      onDeleteTrack: deleteTrack,
     );
+  }
+
+  Future<bool> _confirmDeleteTrack(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              title: const Text(
+                'Delete track?',
+                style: TextStyle(color: AppColors.onPrimary),
+              ),
+              content: Text(
+                'This will permanently delete "${track.title}".',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(color: AppColors.errors),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
   }
 }
 
@@ -175,6 +273,7 @@ class _SheetContent extends StatelessWidget {
   const _SheetContent({
     required this.track,
     required this.isPro,
+    required this.showDeleteAction,
     required this.onAddToPlaylist,
     required this.onAddToQueue,
     required this.onGoToArtist,
@@ -183,10 +282,12 @@ class _SheetContent extends StatelessWidget {
     required this.onCopyLink,
     required this.onReport,
     required this.onDownload,
+    required this.onDeleteTrack,
   });
 
   final Track track;
   final bool isPro;
+  final bool showDeleteAction;
   final VoidCallback onAddToPlaylist;
   final VoidCallback onAddToQueue;
   final VoidCallback onGoToArtist;
@@ -195,6 +296,7 @@ class _SheetContent extends StatelessWidget {
   final VoidCallback onCopyLink;
   final VoidCallback onReport;
   final VoidCallback onDownload;
+  final Future<void> Function() onDeleteTrack;
 
   // ── Formatting helpers ────────────────────────────────────────────────────
 
@@ -329,6 +431,13 @@ class _SheetContent extends StatelessWidget {
             enabled: isPro,
             isDestructive: false,
           ),
+          if (showDeleteAction)
+            _ActionTile(
+              icon: Icons.delete_outline_rounded,
+              label: 'Delete track',
+              onTap: () => unawaited(onDeleteTrack()),
+              isDestructive: true,
+            ),
           // _ActionTile(
           //   icon: Icons.flag_outlined,
           //   label: 'Report',

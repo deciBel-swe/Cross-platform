@@ -67,12 +67,14 @@ class DecibelCachedImage extends StatelessWidget {
     final defaultIconColor =
         iconColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
 
-    final fallbackPlaceholder = placeholder ??
+    final fallbackPlaceholder =
+        placeholder ??
         Center(
           child: Icon(placeholderIcon, size: iconSize, color: defaultIconColor),
         );
 
-    final fallbackError = errorWidget ??
+    final fallbackError =
+        errorWidget ??
         Center(
           child: Icon(errorIcon, size: iconSize, color: defaultIconColor),
         );

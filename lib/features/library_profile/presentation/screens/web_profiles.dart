@@ -335,8 +335,9 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
     final normalizedNewLink = _normalizeUrl(_controller.text);
     final notifier = ref.read(webProfilesProvider.notifier);
 
-    final validationMessage =
-        AuthValidators.validateSocialLink(normalizedNewLink);
+    final validationMessage = AuthValidators.validateSocialLink(
+      normalizedNewLink,
+    );
 
     if (validationMessage != null) {
       _editFormKey.currentState?.validate();
