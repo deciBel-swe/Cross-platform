@@ -8,8 +8,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/feed_track.dart';
-import '../notifiers/feed_notifier.dart';
 import '../notifiers/discover_feed_notifier.dart';
+import '../notifiers/feed_notifier.dart';
 import '../widgets/feed_item.dart';
 
 enum FeedTab { following, discover }
