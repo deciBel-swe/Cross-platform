@@ -5,6 +5,7 @@ import '../../../engagement/presentation/notifiers/liked_tracks_notifier.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../../playlists/presentation/providers/user_playlists_provider.dart';
 import 'message_resource_items.dart';
+import 'message_resource_picker_sheet.dart';
 import 'message_resource_states.dart';
 
 class MessageLikedTracksTab extends ConsumerWidget {
@@ -15,7 +16,7 @@ class MessageLikedTracksTab extends ConsumerWidget {
   });
 
   final bool Function(String type, int id) isSelected;
-  final void Function(String type, int id) onSelect;
+  final void Function(MessageResourceSelection selection) onSelect;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,7 +37,15 @@ class MessageLikedTracksTab extends ConsumerWidget {
             return MessageTrackResourceTile(
               track: track,
               selected: isSelected('TRACK', track.id),
-              onTap: () => onSelect('TRACK', track.id),
+              onTap: () => onSelect(
+                MessageResourceSelection(
+                  resourceType: 'TRACK',
+                  resourceId: track.id,
+                  title: track.title,
+                  subtitle: track.artist.username,
+                  imageUrl: track.coverUrl,
+                ),
+              ),
             );
           },
         );
@@ -56,7 +65,7 @@ class MessageUploadsTab extends ConsumerWidget {
   });
 
   final bool Function(String type, int id) isSelected;
-  final void Function(String type, int id) onSelect;
+  final void Function(MessageResourceSelection selection) onSelect;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -77,7 +86,15 @@ class MessageUploadsTab extends ConsumerWidget {
             return MessageTrackResourceTile(
               track: track,
               selected: isSelected('TRACK', track.id),
-              onTap: () => onSelect('TRACK', track.id),
+              onTap: () => onSelect(
+                MessageResourceSelection(
+                  resourceType: 'TRACK',
+                  resourceId: track.id,
+                  title: track.title,
+                  subtitle: track.artist.username,
+                  imageUrl: track.coverUrl,
+                ),
+              ),
             );
           },
         );
@@ -97,7 +114,7 @@ class MessagePlaylistsTab extends ConsumerWidget {
   });
 
   final bool Function(String type, int id) isSelected;
-  final void Function(String type, int id) onSelect;
+  final void Function(MessageResourceSelection selection) onSelect;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -118,7 +135,15 @@ class MessagePlaylistsTab extends ConsumerWidget {
             return MessagePlaylistResourceTile(
               playlist: playlist,
               selected: isSelected('PLAYLIST', playlist.id),
-              onTap: () => onSelect('PLAYLIST', playlist.id),
+              onTap: () => onSelect(
+                MessageResourceSelection(
+                  resourceType: 'PLAYLIST',
+                  resourceId: playlist.id,
+                  title: playlist.title,
+                  subtitle: playlist.owner?.username ?? 'Playlist',
+                  imageUrl: playlist.coverArt,
+                ),
+              ),
             );
           },
         );

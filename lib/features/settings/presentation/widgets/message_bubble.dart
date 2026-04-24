@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/message.dart';
+import '../../domain/entities/message_resource_preview.dart';
 
 class MessageBubble extends StatelessWidget {
   const MessageBubble({
@@ -27,13 +28,13 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final timeString = _formatTimeAgo(message.createdAt);
-    final parsed = _parseMessageResource(message.content);
+    final parsed = parseMessageResourceContent(message.content);
 
     return Semantics(
       label:
           'Message from ${isMe ? 'You' : 'Them'}, sent $timeString. '
           '${parsed.hasResource ? 'Contains shared ${parsed.resourceType?.toLowerCase()}.' : ''} '
-          'Message reads: ${parsed.cleanText.isEmpty ? 'Shared resource' : parsed.cleanText}',
+          'Message reads: ${parsed.cleanText.isEmpty ? parsed.displayTitle : parsed.cleanText}',
       child: Padding(
         padding: const EdgeInsets.only(bottom: 24.0),
         child: Row(
@@ -95,7 +96,7 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, _ParsedMessageResource parsed) {
+  Widget _buildContent(BuildContext context, MessageResourcePreview parsed) {
     if (parsed.hasResource) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,10 +109,7 @@ class MessageBubble extends StatelessWidget {
             ),
             const SizedBox(height: 10),
           ],
-          _RegexResourceCard(
-            resourceType: parsed.resourceType!,
-            resourceId: parsed.resourceId!,
-          ),
+          _ResourcePreviewCard(resource: parsed),
         ],
       );
     }
@@ -119,25 +117,6 @@ class MessageBubble extends StatelessWidget {
     return Text(
       parsed.cleanText,
       style: const TextStyle(color: Colors.white, fontSize: 15),
-    );
-  }
-
-  _ParsedMessageResource _parseMessageResource(String content) {
-    final regex = RegExp(r'\[\[DECIBEL_RESOURCE:(TRACK|PLAYLIST):(\d+)\]\]');
-    final match = regex.firstMatch(content);
-
-    if (match == null) {
-      return _ParsedMessageResource(cleanText: content);
-    }
-
-    final resourceType = match.group(1);
-    final resourceId = int.tryParse(match.group(2) ?? '');
-    final cleanText = content.replaceFirst(regex, '').trim();
-
-    return _ParsedMessageResource(
-      cleanText: cleanText,
-      resourceType: resourceType,
-      resourceId: resourceId,
     );
   }
 
@@ -163,106 +142,127 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
-class _ParsedMessageResource {
-  const _ParsedMessageResource({
-    required this.cleanText,
-    this.resourceType,
-    this.resourceId,
-  });
+class _ResourcePreviewCard extends StatelessWidget {
+  const _ResourcePreviewCard({required this.resource});
 
-  final String cleanText;
-  final String? resourceType;
-  final int? resourceId;
-
-  bool get hasResource => resourceType != null && resourceId != null;
-}
-
-/// Helper composite to project shared tracks or dynamic network playlists.
-///
-/// Features:
-/// - Provides semantic safety boundaries wrapping layout components.
-class _RegexResourceCard extends StatelessWidget {
-  const _RegexResourceCard({
-    required this.resourceType,
-    required this.resourceId,
-  });
-
-  final String resourceType;
-  final int resourceId;
+  final MessageResourcePreview resource;
 
   @override
   Widget build(BuildContext context) {
-    final isTrack = resourceType == 'TRACK';
+    final isTrack = resource.isTrack;
 
     return Semantics(
       button: true,
       label: isTrack
-          ? 'Open shared track with id $resourceId'
-          : 'Open shared playlist with id $resourceId',
+          ? 'Open track ${resource.displayTitle}'
+          : 'Open playlist ${resource.displayTitle}',
       child: InkWell(
         onTap: () {
           if (isTrack) {
-            context.push(RoutePaths.trackPreview(resourceId));
+            context.push(RoutePaths.trackPreview(resource.resourceId!));
           } else {
             context.push(RoutePaths.playlists);
           }
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 260),
+          constraints: const BoxConstraints(maxWidth: 310),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.black26,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: Colors.white12),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ExcludeSemantics(
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.black45,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    isTrack ? Icons.music_note : Icons.queue_music,
-                    color: Colors.white70,
-                  ),
-                ),
-              ),
+              _ResourceArtwork(imageUrl: resource.imageUrl, isTrack: isTrack),
               const SizedBox(width: 12),
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isTrack ? 'Shared track' : 'Shared playlist',
+                      resource.displayTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: 15,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isTrack ? 'Tap to open track' : 'Tap to open playlists',
+                      resource.displaySubtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
+                        color: Colors.white70,
+                        fontSize: 13,
                       ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          isTrack ? Icons.music_note : Icons.queue_music,
+                          size: 14,
+                          color: Colors.white54,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isTrack ? 'Track' : 'Playlist',
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ResourceArtwork extends StatelessWidget {
+  const _ResourceArtwork({required this.imageUrl, required this.isTrack});
+
+  final String? imageUrl;
+  final bool isTrack;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = imageUrl?.trim();
+
+    return ExcludeSemantics(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 58,
+          height: 58,
+          color: Colors.black45,
+          child: url == null || url.isEmpty
+              ? Icon(
+                  isTrack ? Icons.music_note : Icons.queue_music,
+                  color: Colors.white70,
+                  size: 28,
+                )
+              : Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Icon(
+                    isTrack ? Icons.music_note : Icons.queue_music,
+                    color: Colors.white70,
+                    size: 28,
+                  ),
+                ),
         ),
       ),
     );

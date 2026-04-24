@@ -1,9 +1,20 @@
+/// Notifier responsible for fetching users to message.
+///
+/// Logic:
+/// - If query is empty: Fetches the current user's followers.
+/// - If query has text: Filters the current user's followers locally.
+///
+/// NOTE:
+/// This does not perform global user search because FollowRepository only gives followers.
+/// To search all users, we need a real search-users endpoint/repository.
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../engagement/domain/entities/paginated_engagers.dart';
 import '../../../engagement/domain/repositories/follow_repository.dart';
 import '../../domain/entities/message_user.dart';
 
@@ -13,8 +24,13 @@ final newMessageQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 /// Notifier responsible for fetching users to message.
 ///
 /// Logic:
-/// - If query is empty: Fetches the current user's followers.
-/// - If query has text: Searches globally for users matching the query.
+/// - Loads friends, following, followers, and suggested users.
+/// - Removes duplicates by user id.
+/// - If query is empty: returns the combined list.
+/// - If query has text: filters the combined list locally.
+///
+/// Note:
+/// This is not true global search. True global search needs a backend search-users endpoint.
 final newMessageSearchProvider =
     AutoDisposeAsyncNotifierProvider<
       NewMessageSearchNotifier,
@@ -25,57 +41,46 @@ class NewMessageSearchNotifier
     extends AutoDisposeAsyncNotifier<List<MessageUser>> {
   @override
   FutureOr<List<MessageUser>> build() async {
-    final query = ref.watch(newMessageQueryProvider);
+    final rawQuery = ref.watch(newMessageQueryProvider);
+    final query = rawQuery.trim().toLowerCase();
+
     final authState = ref.watch(authStateProvider).valueOrNull;
+    if (authState is! AuthAuthenticated) return [];
 
-    final currentUserId = authState is AuthAuthenticated
-        ? authState.user.id
-        : 0;
-    if (currentUserId == 0) return [];
-
+    final currentUserId = authState.user.id;
     final followRepo = getIt<FollowRepository>();
 
-    if (query.isEmpty) {
-      // 1. Fetch Followers if search is empty
-      final result = await followRepo.getFollowers(
-        userId: currentUserId,
-        page: 0,
-        size: 50,
-      );
+    final results = await Future.wait([
+      followRepo.getFriends(page: 0, size: 50),
+      followRepo.getFollowing(userId: currentUserId, page: 0, size: 50),
+      followRepo.getFollowers(userId: currentUserId, page: 0, size: 50),
+      followRepo.getSuggestedUsers(page: 0, size: 50),
+    ]);
 
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (paginatedData) => paginatedData.content
-            .map(
-              (engager) =>
-                  MessageUser(id: engager.id, username: engager.username),
-            )
-            .toList(),
-      );
-    } else {
-      // 2. Global User Search if query exists
-      // Assuming your ProfileRepository or SearchRepository has a search endpoint
-      // You can inject the SearchRepository here. For demonstration, we filter followers locally,
-      // but you should replace the right side with: await searchRepo.searchUsers(query);
-      final result = await followRepo.getFollowers(
-        userId: currentUserId,
-        page: 0,
-        size: 50,
-      );
+    final usersById = <int, MessageUser>{};
 
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (paginatedData) => paginatedData.content
-            .where(
-              (user) =>
-                  user.username.toLowerCase().contains(query.toLowerCase()),
-            )
-            .map(
-              (engager) =>
-                  MessageUser(id: engager.id, username: engager.username),
-            )
-            .toList(),
-      );
+    for (final result in results) {
+      result.fold((_) {}, (PaginatedEngagers data) {
+        for (final user in data.content) {
+          if (user.id == currentUserId) continue;
+
+          usersById[user.id] = MessageUser(
+            id: user.id,
+            username: user.username,
+          );
+        }
+      });
     }
+
+    final users = usersById.values.toList()
+      ..sort(
+        (a, b) => a.username.toLowerCase().compareTo(b.username.toLowerCase()),
+      );
+
+    if (query.isEmpty) return users;
+
+    return users.where((user) {
+      return user.username.toLowerCase().contains(query);
+    }).toList();
   }
 }

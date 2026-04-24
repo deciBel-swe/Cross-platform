@@ -6,10 +6,10 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../domain/entities/message_resource_preview.dart';
 import '../providers/messaging_providers.dart';
 
 /// Screen displaying the user's active direct message threads.
-///
 /// Features:
 /// - Infinite scrolling list of historical conversations.
 /// - Fully accessible interface with comprehensive screen reader semantics.
@@ -78,7 +78,13 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         ),
         body: conversationsAsync.when(
           data: (state) {
-            if (state.conversations.isEmpty) {
+            final visibleConversations = state.conversations.where((
+              conversation,
+            ) {
+              return conversation.participants.contains(currentUserId);
+            }).toList();
+
+            if (visibleConversations.isEmpty) {
               return Semantics(
                 label: 'Your inbox is empty',
                 child: const Center(
@@ -92,9 +98,9 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
             return ListView.builder(
               controller: _scrollController,
-              itemCount: state.conversations.length + (state.isLast ? 0 : 1),
+              itemCount: visibleConversations.length + (state.isLast ? 0 : 1),
               itemBuilder: (context, index) {
-                if (index >= state.conversations.length) {
+                if (index >= visibleConversations.length) {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
@@ -103,7 +109,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   );
                 }
 
-                final conversation = state.conversations[index];
+                final conversation = visibleConversations[index];
                 final otherUserId = conversation.participants.firstWhere(
                   (id) => id != currentUserId,
                   orElse: () => currentUserId,
@@ -123,6 +129,10 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
                     final timeString = _formatTimeAgo(
                       conversation.lastTimestamp,
+                    );
+
+                    final parsedLastMessage = parseMessageResourceContent(
+                      conversation.lastMessage,
                     );
 
                     return ListTile(
@@ -148,18 +158,15 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      subtitle: Text(
-                        conversation.lastMessage.isEmpty
-                            ? timeString
-                            : '${conversation.lastMessage} · $timeString',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 13,
-                        ),
+                      subtitle: _InboxLastMessagePreview(
+                        parsedMessage: parsedLastMessage,
+                        timeString: timeString,
                       ),
                       onTap: () {
+                        debugPrint('OPEN CHAT id=${conversation.id}');
+                        debugPrint('currentUserId=$currentUserId');
+                        debugPrint('participants=${conversation.participants}');
+
                         context.push(
                           '${RoutePaths.chat}/${conversation.id}',
                           extra: otherUsername,
@@ -188,47 +195,53 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                       style: TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                   ),
-                  error: (_, _) => ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    leading: CircleAvatar(
-                      radius: 24,
-                      backgroundColor: AppColors.surface,
-                      child: Text(
-                        otherUserId.toString()[0],
+                  error: (_, _) {
+                    final timeString = _formatTimeAgo(
+                      conversation.lastTimestamp,
+                    );
+                    final parsedLastMessage = parseMessageResourceContent(
+                      conversation.lastMessage,
+                    );
+
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: AppColors.surface,
+                        child: Text(
+                          otherUserId.toString()[0],
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        'User $otherUserId',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                    title: Text(
-                      'User $otherUserId',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      subtitle: _InboxLastMessagePreview(
+                        parsedMessage: parsedLastMessage,
+                        timeString: timeString,
                       ),
-                    ),
-                    subtitle: Text(
-                      conversation.lastMessage.isEmpty
-                          ? 'No messages yet'
-                          : conversation.lastMessage,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 13,
-                      ),
-                    ),
-                    onTap: () {
-                      context.push(
-                        '${RoutePaths.chat}/${conversation.id}',
-                        extra: 'User $otherUserId',
-                      );
-                    },
-                  ),
+                      onTap: () {
+                        debugPrint('OPEN CHAT id=${conversation.id}');
+                        debugPrint('currentUserId=$currentUserId');
+                        debugPrint('participants=${conversation.participants}');
+
+                        context.push(
+                          '${RoutePaths.chat}/${conversation.id}',
+                          extra: 'User $otherUserId',
+                        );
+                      },
+                    );
+                  },
                 );
               },
             );
@@ -242,6 +255,60 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _InboxLastMessagePreview extends StatelessWidget {
+  const _InboxLastMessagePreview({
+    required this.parsedMessage,
+    required this.timeString,
+  });
+
+  final MessageResourcePreview parsedMessage;
+  final String timeString;
+
+  @override
+  Widget build(BuildContext context) {
+    if (parsedMessage.hasResource) {
+      final isTrack = parsedMessage.isTrack;
+
+      return Row(
+        children: [
+          Icon(
+            isTrack ? Icons.music_note : Icons.queue_music,
+            size: 15,
+            color: Colors.white54,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            isTrack ? 'Track' : 'Playlist',
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+          const Text(
+            ' · ',
+            style: TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+          Flexible(
+            child: Text(
+              timeString,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white54, fontSize: 13),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final cleanText = parsedMessage.cleanText.trim();
+    final text = cleanText.isEmpty ? timeString : '$cleanText · $timeString';
+
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(color: Colors.white54, fontSize: 13),
     );
   }
 }

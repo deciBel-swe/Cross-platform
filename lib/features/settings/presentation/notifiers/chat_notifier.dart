@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/entities/message_resource_preview.dart';
 import '../../domain/entities/resource_type.dart';
 import '../providers/messaging_providers.dart';
 import '../state/chat_state.dart';
@@ -81,6 +82,16 @@ class ChatNotifier extends FamilyAsyncNotifier<ChatState, String> {
       );
 
       ref.invalidate(conversationsProvider);
+
+      Future.microtask(() {
+        ref.invalidateSelf();
+      });
+
+      state = AsyncData(
+        currentState.copyWith(messages: [newMessage, ...currentState.messages]),
+      );
+
+      ref.invalidate(conversationsProvider);
     } catch (e) {
       throw Exception('Failed to dispatch message.');
     }
@@ -89,8 +100,19 @@ class ChatNotifier extends FamilyAsyncNotifier<ChatState, String> {
   Future<void> sendResourceMessage({
     required String resourceType,
     required int resourceId,
+    required String title,
+    String? subtitle,
+    String? imageUrl,
+    int? recipientId,
   }) async {
-    final marker = '[[DECIBEL_RESOURCE:$resourceType:$resourceId]]';
-    await sendMessage(marker);
+    final content = buildResourceMessageContent(
+      resourceType: resourceType,
+      resourceId: resourceId,
+      title: title,
+      subtitle: subtitle,
+      imageUrl: imageUrl,
+    );
+
+    await sendMessage(content, recipientId: recipientId);
   }
 }

@@ -10,13 +10,14 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/messaging_providers.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/message_bubble.dart';
-import '../widgets/message_resource_picker.dart';
+import '../widgets/message_resource_picker_sheet.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({
@@ -69,9 +70,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  void _handleSendMessage(String text) {
+  int? _resolveOtherUserId(int currentUserId) {
+    try {
+      final participantIds = widget.conversationId
+          .split('_')
+          .map(int.parse)
+          .toList();
+
+      return participantIds.firstWhere(
+        (id) => id != currentUserId,
+        orElse: () => currentUserId,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _handleSendMessage(String text, int? recipientId) {
     if (text.trim().isEmpty) return;
-    ref.read(chatProvider(widget.conversationId).notifier).sendMessage(text);
+
+    ref
+        .read(chatProvider(widget.conversationId).notifier)
+        .sendMessage(text, recipientId: recipientId);
   }
 
   @override
@@ -79,10 +99,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final chatAsync = ref.watch(chatProvider(widget.conversationId));
     final authState = ref.watch(authStateProvider).valueOrNull;
 
-    // Fallback to 1 ensures the isMe logic evaluates properly for the Mock data
     final currentUserId = authState is AuthAuthenticated
         ? authState.user.id
         : 1;
+
+    final otherUserId = _resolveOtherUserId(currentUserId);
 
     return Semantics(
       label: 'Chat conversation with ${widget.otherUserName}',
@@ -147,17 +168,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       }
 
                       final message = state.messages[index];
-                      // Matches the mock sender ID securely allowing proper alignment
                       final isMe = message.senderId == currentUserId;
-
-                      final participantIds = widget.conversationId
-                          .split('_')
-                          .map(int.parse)
-                          .toList();
-
-                      final otherUserId = participantIds.firstWhere(
-                        (id) => id != currentUserId,
-                      );
 
                       return MessageBubble(
                         message: message,
@@ -181,15 +192,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             ChatInputBar(
               onSend: (text) {
+                if (otherUserId == null) return;
+
                 ref
                     .read(chatProvider(widget.conversationId).notifier)
-                    .sendMessage(text);
+                    .sendMessage(text, recipientId: otherUserId);
               },
               onAttach: () async {
+                if (otherUserId == null) return;
+
                 final selection = await MessageResourcePickerSheet.show(
                   context,
                 );
-
                 if (selection == null) return;
 
                 await ref
@@ -197,6 +211,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     .sendResourceMessage(
                       resourceType: selection.resourceType,
                       resourceId: selection.resourceId,
+                      title: selection.title,
+                      subtitle: selection.subtitle,
+                      imageUrl: selection.imageUrl,
+                      recipientId: otherUserId,
                     );
               },
             ),

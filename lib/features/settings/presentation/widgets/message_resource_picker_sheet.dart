@@ -8,10 +8,16 @@ class MessageResourceSelection {
   const MessageResourceSelection({
     required this.resourceType,
     required this.resourceId,
+    required this.title,
+    this.subtitle,
+    this.imageUrl,
   });
 
   final String resourceType;
   final int resourceId;
+  final String title;
+  final String? subtitle;
+  final String? imageUrl;
 }
 
 class MessageResourcePickerSheet extends ConsumerStatefulWidget {
@@ -39,8 +45,7 @@ class _MessageResourcePickerSheetState
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
-  String? _selectedType;
-  int? _selectedId;
+  MessageResourceSelection? _selection;
 
   @override
   void initState() {
@@ -54,31 +59,26 @@ class _MessageResourcePickerSheetState
     super.dispose();
   }
 
-  void _select(String type, int id) {
+  void _select(MessageResourceSelection selection) {
     setState(() {
-      _selectedType = type;
-      _selectedId = id;
+      _selection = selection;
     });
   }
 
   bool _isSelected(String type, int id) {
-    return _selectedType == type && _selectedId == id;
+    return _selection?.resourceType == type && _selection?.resourceId == id;
   }
 
   void _done() {
-    final type = _selectedType;
-    final id = _selectedId;
+    final selection = _selection;
+    if (selection == null) return;
 
-    if (type == null || id == null) return;
-
-    Navigator.of(
-      context,
-    ).pop(MessageResourceSelection(resourceType: type, resourceId: id));
+    Navigator.of(context).pop(selection);
   }
 
   @override
   Widget build(BuildContext context) {
-    final canDone = _selectedType != null && _selectedId != null;
+    final canDone = _selection != null;
 
     return SafeArea(
       child: SizedBox(
@@ -88,6 +88,7 @@ class _MessageResourcePickerSheetState
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 8, 12, 0),
               child: Row(
+                mainAxisSize: MainAxisSize.max,
                 children: [
                   Semantics(
                     button: true,
@@ -97,6 +98,7 @@ class _MessageResourcePickerSheetState
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
                       'Add track or playlist',
@@ -109,6 +111,7 @@ class _MessageResourcePickerSheetState
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Semantics(
                     button: true,
                     enabled: canDone,
