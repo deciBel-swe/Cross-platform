@@ -8,8 +8,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/feed_track.dart';
-import '../notifiers/feed_notifier.dart';
 import '../notifiers/discover_feed_notifier.dart';
+import '../notifiers/feed_notifier.dart';
 import '../widgets/feed_item.dart';
 
 enum FeedTab { following, discover }
@@ -110,7 +110,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               data: (feedState) {
                 final tracks = feedState.tracks.cast<FeedTrack>();
                 if (tracks.isEmpty) {
-                  return _EmptyFeedView(isDesktop: isDesktop, tab: _selectedTab);
+                  return _EmptyFeedView(
+                    isDesktop: isDesktop,
+                    tab: _selectedTab,
+                  );
                 }
 
                 return RefreshIndicator(
@@ -124,9 +127,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   child: ListView.builder(
                     controller: _scrollController,
                     padding: EdgeInsets.fromLTRB(
-                      isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
+                      isDesktop
+                          ? AppDimensions.paddingLg
+                          : AppDimensions.paddingMd,
                       isDesktop ? 0 : AppDimensions.paddingMd,
-                      isDesktop ? AppDimensions.paddingLg : AppDimensions.paddingMd,
+                      isDesktop
+                          ? AppDimensions.paddingLg
+                          : AppDimensions.paddingMd,
                       AppDimensions.paddingLg,
                     ),
                     itemCount: tracks.length + 1,
@@ -394,7 +401,9 @@ class _TabItem extends StatelessWidget {
             label,
             style: AppTextStyles.sectionTitle.copyWith(
               fontSize: 16,
-              color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+              color: isSelected
+                  ? AppColors.textPrimary
+                  : AppColors.textSecondary,
             ),
           ),
         ),
@@ -469,8 +478,9 @@ class _DesktopTabButton extends StatelessWidget {
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        foregroundColor:
-            isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+        foregroundColor: isSelected
+            ? AppColors.textPrimary
+            : AppColors.textSecondary,
         padding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.paddingMd,
           vertical: AppDimensions.paddingSm,

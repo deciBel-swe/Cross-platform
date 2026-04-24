@@ -50,7 +50,9 @@ class FollowConnectionsScreen extends ConsumerWidget {
           identifier: 'follow_connections_title',
           label: primaryTitle[0].toUpperCase() + primaryTitle.substring(1),
           container: true,
-          child: Text(primaryTitle[0].toUpperCase() + primaryTitle.substring(1)),
+          child: Text(
+            primaryTitle[0].toUpperCase() + primaryTitle.substring(1),
+          ),
         ),
       ),
       body: RefreshIndicator(
@@ -113,74 +115,72 @@ class _Section extends StatelessWidget {
           Text(
             heading,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.onPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: AppConstants.spacingSmall),
-        data.when(
-          data: (page) {
-            if (page.content.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppConstants.spacingRegular,
-                ),
-                child: Text(
-                  emptyMessage,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              );
-            }
-
-            return Column(
-              children: page.content
-                  .map(
-                    (user) => _ConnectionTile(
-                      user: user,
-                      isFollowerContext: itemsAreFollowers,
-                      currentUserId: currentUserId,
-                    ),
-                  )
-                  .toList(),
-            );
-          },
-        loading: () => Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: AppConstants.spacingRegular,
-          ),
-          child: Center(
-            child: Semantics(
-              identifier: 'follow_connections_loading',
-              label: 'Loading connections',
-              child: const CircularProgressIndicator(),
+              color: AppColors.onPrimary,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
-        error: (error, _) => Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: AppConstants.spacingRegular,
-          ),
-          child: Semantics(
-            identifier: 'follow_connections_error',
-            label: 'Error: ${error.toString()}',
-            child: Text(
-              error is NotFoundFailure
-                  ? '404 | Not Found'
-                  : error.toString().replaceAll('Exception: ', ''),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(
+          const SizedBox(height: AppConstants.spacingSmall),
+          data.when(
+            data: (page) {
+              if (page.content.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppConstants.spacingRegular,
+                  ),
+                  child: Text(
+                    emptyMessage,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: page.content
+                    .map(
+                      (user) => _ConnectionTile(
+                        user: user,
+                        isFollowerContext: itemsAreFollowers,
+                        currentUserId: currentUserId,
+                      ),
+                    )
+                    .toList(),
+              );
+            },
+            loading: () => Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppConstants.spacingRegular,
+              ),
+              child: Center(
+                child: Semantics(
+                  identifier: 'follow_connections_loading',
+                  label: 'Loading connections',
+                  child: const CircularProgressIndicator(),
+                ),
+              ),
+            ),
+            error: (error, _) => Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppConstants.spacingRegular,
+              ),
+              child: Semantics(
+                identifier: 'follow_connections_error',
+                label: 'Error: ${error.toString()}',
+                child: Text(
+                  error is NotFoundFailure
+                      ? '404 | Not Found'
+                      : error.toString().replaceAll('Exception: ', ''),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.errors,
                     fontWeight: error is NotFoundFailure
                         ? FontWeight.bold
                         : FontWeight.normal,
                   ),
+                ),
+              ),
             ),
           ),
-        ),
-        ),
         ],
       ),
     );
@@ -218,8 +218,9 @@ class _ConnectionTile extends ConsumerWidget {
       label: 'User ${user.username}',
       container: true,
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(vertical: AppConstants.spacingSmall),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppConstants.spacingSmall,
+        ),
         child: Row(
           children: [
             Semantics(
@@ -268,11 +269,11 @@ class _ConnectionTile extends ConsumerWidget {
                           user.username,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: AppColors.onPrimary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: AppColors.onPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                       if (user.tier.toUpperCase() == 'PRO') ...[

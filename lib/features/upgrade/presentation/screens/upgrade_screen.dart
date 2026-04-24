@@ -235,8 +235,9 @@ class _UpgradeScreenState extends ConsumerState<UpgradeScreen>
                 enabled: !isBusy,
                 label: isBusy ? 'Action in progress' : ctaLabel,
                 child: ElevatedButton(
-                  onPressed:
-                      isBusy ? null : () => _onPrimaryActionTap(viewState),
+                  onPressed: isBusy
+                      ? null
+                      : () => _onPrimaryActionTap(viewState),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,

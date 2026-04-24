@@ -17,30 +17,27 @@ class GetProButton extends ConsumerWidget {
 
     return userProfileAsync.maybeWhen(
       data: (result) {
-        return result.fold(
-          (_) => const SizedBox.shrink(),
-          (profile) {
-            if (profile.tier != UserTier.free) {
-              return const SizedBox.shrink();
-            }
-            return Semantics(
-              button: true,
-              label: 'Upgrade to Decibel Pro',
-              onTapHint: 'Go to upgrade screen to see plans',
-              child: TextButton(
-                onPressed: () => context.push(RoutePaths.upgrade),
-                child: const Text(
-                  'GET PRO',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+        return result.fold((_) => const SizedBox.shrink(), (profile) {
+          if (profile.tier != UserTier.free) {
+            return const SizedBox.shrink();
+          }
+          return Semantics(
+            button: true,
+            label: 'Upgrade to Decibel Pro',
+            onTapHint: 'Go to upgrade screen to see plans',
+            child: TextButton(
+              onPressed: () => context.push(RoutePaths.upgrade),
+              child: const Text(
+                'GET PRO',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
                 ),
               ),
-            );
-          },
-        );
+            ),
+          );
+        });
       },
       orElse: () => const SizedBox.shrink(),
     );

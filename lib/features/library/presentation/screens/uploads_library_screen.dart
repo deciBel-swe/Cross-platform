@@ -97,7 +97,9 @@ class UploadsLibraryBody extends ConsumerWidget {
                   key: ValueKey(track.id),
                   track: track,
                   onTap: () {
-                    ref.read(trackAudioProvider.notifier).initializeForTrack(
+                    ref
+                        .read(trackAudioProvider.notifier)
+                        .initializeForTrack(
                           trackId: track.id,
                           trackUrl: track.trackUrl ?? '',
                           track: track,

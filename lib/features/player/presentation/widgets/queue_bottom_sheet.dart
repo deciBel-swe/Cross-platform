@@ -86,7 +86,8 @@ class QueueBottomSheet extends ConsumerWidget {
                     itemCount: queue.length,
                     itemBuilder: (context, index) {
                       final track = queue[index];
-                      final isCurrent = currentId != null && track.id == currentId;
+                      final isCurrent =
+                          currentId != null && track.id == currentId;
 
                       return Dismissible(
                         key: ValueKey('queue_${track.id}'),
@@ -94,7 +95,9 @@ class QueueBottomSheet extends ConsumerWidget {
                         background: Container(
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.only(right: 16),
-                          color: theme.colorScheme.error.withValues(alpha: 0.25),
+                          color: theme.colorScheme.error.withValues(
+                            alpha: 0.25,
+                          ),
                           child: Icon(
                             Icons.delete_outline,
                             color: theme.colorScheme.error,
@@ -109,14 +112,19 @@ class QueueBottomSheet extends ConsumerWidget {
                           ),
                           leading: ReorderableDragStartListener(
                             index: index,
-                            child: const Icon(Icons.drag_handle, color: Colors.white54),
+                            child: const Icon(
+                              Icons.drag_handle,
+                              color: Colors.white54,
+                            ),
                           ),
                           title: Text(
                             track.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isCurrent
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                           subtitle: Text(
@@ -144,4 +152,3 @@ class QueueBottomSheet extends ConsumerWidget {
     );
   }
 }
-

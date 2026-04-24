@@ -420,7 +420,10 @@ class _MosaicCover extends StatelessWidget {
 
     // If we have at least 1, just show the first one taking up the whole space
     if (tracksWithCovers.isNotEmpty) {
-      return DecibelCachedImage(imageUrl: tracksWithCovers.first.coverUrl!, fit: BoxFit.cover);
+      return DecibelCachedImage(
+        imageUrl: tracksWithCovers.first.coverUrl!,
+        fit: BoxFit.cover,
+      );
     }
 
     // fallback if no tracks have covers

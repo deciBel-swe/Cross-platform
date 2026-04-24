@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/feed_repository_provider.dart';
 import 'feed_notifier.dart';
 
@@ -63,6 +63,7 @@ class DiscoverFeedNotifier extends AsyncNotifier<FeedState> {
   }
 }
 
-final discoverFeedProvider = AsyncNotifierProvider<DiscoverFeedNotifier, FeedState>(
-  DiscoverFeedNotifier.new,
-);
+final discoverFeedProvider =
+    AsyncNotifierProvider<DiscoverFeedNotifier, FeedState>(
+      DiscoverFeedNotifier.new,
+    );

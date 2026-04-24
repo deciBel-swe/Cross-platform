@@ -179,13 +179,16 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
           curve: const Interval(0.0, 0.5, curve: Curves.easeInOut),
         ),
         child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(1, 0), // Slide out to the right
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: const Interval(0.5, 1.0, curve: Curves.easeInOut),
-          )),
+          position:
+              Tween<Offset>(
+                begin: const Offset(1, 0), // Slide out to the right
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: animation,
+                  curve: const Interval(0.5, 1.0, curve: Curves.easeInOut),
+                ),
+              ),
           child: TrackTile(track: removedTrack),
         ),
       ),
@@ -264,30 +267,34 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
                   padding: const EdgeInsets.only(
                     bottom: AppDimensions.mobileMiniPlayerReservedSpace,
                   ),
-              itemBuilder: (context, index, animation) {
-                if (index >= _localTracks.length) {
-                  return const SizedBox.shrink();
-                }
-                final track = _localTracks[index];
+                  itemBuilder: (context, index, animation) {
+                    if (index >= _localTracks.length) {
+                      return const SizedBox.shrink();
+                    }
+                    final track = _localTracks[index];
 
-                return FadeTransition(
-                  opacity: animation,
-                  child: TrackTile(
-                    track: track,
-                    onTap: () => ref.read(trackAudioProvider.notifier).initializeForTrack(
-                          trackId: track.id,
-                          trackUrl: track.trackUrl ?? '',
-                          track: track,
-                          queue: _localTracks,
-                        ),
+                    return FadeTransition(
+                      opacity: animation,
+                      child: TrackTile(
+                        track: track,
+                        onTap: () => ref
+                            .read(trackAudioProvider.notifier)
+                            .initializeForTrack(
+                              trackId: track.id,
+                              trackUrl: track.trackUrl ?? '',
+                              track: track,
+                              queue: _localTracks,
+                            ),
                         onLikePressed: () =>
-                        _handleRemoveFromCollection(track, index),
-                    // onMorePressed: () => TrackDetails.show(context, track, ref),
-                  ),
-                );
-              },
+                            _handleRemoveFromCollection(track, index),
+                        // onMorePressed: () => TrackDetails.show(context, track, ref),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-            ]));
+          );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(

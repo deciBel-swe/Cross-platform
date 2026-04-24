@@ -19,7 +19,9 @@ class AppDimensions {
   static const double mobileMiniPlayerVerticalPadding = 8;
   static const double mobileMiniPlayerBottomOffset = 5;
   static const double mobileMiniPlayerReservedSpace =
-      mobileMiniPlayerHeight + (mobileMiniPlayerVerticalPadding * 2) + mobileMiniPlayerBottomOffset;
+      mobileMiniPlayerHeight +
+      (mobileMiniPlayerVerticalPadding * 2) +
+      mobileMiniPlayerBottomOffset;
 
   // ---- Header ----
   static const double headerHeight = 56;
