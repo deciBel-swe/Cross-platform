@@ -25,6 +25,8 @@ class AddToPlaylistScreen extends ConsumerWidget {
       label: 'Add track to playlist screen',
       scopesRoute: true,
       namesRoute: true,
+
+      explicitChildNodes: true,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
