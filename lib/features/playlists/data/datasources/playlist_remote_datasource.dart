@@ -74,7 +74,8 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   Future<PlaylistModel> getPlaylistDetails(int playlistId) async {
     try {
       final response = await _dioClient.get<dynamic>(
-        '${ApiConstants.myPlaylists}/$playlistId',
+        //'${ApiConstants.myPlaylists}/$playlistId',
+        '${ApiConstants.playlists}/$playlistId',
       );
 
       final responseData = response.data as Map<String, dynamic>;
@@ -124,6 +125,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       final response = await _dioClient.post<dynamic>(
         ApiConstants.playlists,
         data: formData,
+        options: Options(contentType: 'multipart/form-data'),
       );
       final responseData = response.data as Map<String, dynamic>;
       return PlaylistModel.fromJson(responseData);
@@ -146,6 +148,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       );
 
       final data = response.data;
+      //debugPrint('RAW PLAYLIST JSON: $data');
 
       if (data == null) {
         return [];
@@ -179,22 +182,15 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     File? coverImage,
   ) async {
     try {
-      final dataMap = request.toJson();
-      final formData = FormData.fromMap(dataMap);
-
-      if (coverImage != null) {
-        final imageName = coverImage.path.split('/').last;
-        formData.files.add(
-          MapEntry(
-            'CoverArt',
-            await MultipartFile.fromFile(coverImage.path, filename: imageName),
-          ),
-        );
-      }
+      // 1. Use your helper method here too!
+      final formData = await _buildPlaylistPayload(request, coverImage);
 
       final response = await _dioClient.patch<dynamic>(
         '${ApiConstants.playlists}/$playListId',
         data: formData,
+        options: Options(
+          contentType: 'multipart/form-data; boundary=${formData.boundary}',
+        ),
       );
       final responseData = response.data as Map<String, dynamic>;
       return PlaylistModel.fromJson(responseData);
@@ -220,7 +216,6 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     }
   }
 
-  @override
   @override
   Future<void> addTrackToPlaylist(int playlistId, int trackId) async {
     try {
@@ -256,5 +251,25 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     } catch (error) {
       throw ServerException('Failed to execute remove track request: $error');
     }
+  }
+
+  Future<FormData> _buildPlaylistPayload(
+    CreatePlaylistRequest request,
+    File? coverImage,
+  ) async {
+    final dataMap = request.toJson();
+    final formData = FormData.fromMap(dataMap);
+
+    if (coverImage != null) {
+      final imageName = coverImage.path.split('/').last;
+      formData.files.add(
+        MapEntry(
+          'CoverArt',
+          await MultipartFile.fromFile(coverImage.path, filename: imageName),
+        ),
+      );
+    }
+
+    return formData;
   }
 }

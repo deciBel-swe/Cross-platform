@@ -64,5 +64,25 @@ class PlaylistModel with _$PlaylistModel {
   }) = _PlaylistModel;
 
   factory PlaylistModel.fromJson(Map<String, dynamic> json) =>
-      _$PlaylistModelFromJson(json);
+      _$PlaylistModelFromJson(_normalizePlaylistJson(json));
+
+  static Map<String, dynamic> _normalizePlaylistJson(
+    Map<String, dynamic> json,
+  ) {
+    final map = Map<String, dynamic>.from(json);
+
+    if (map['trackSummaryDto'] == null) {
+      final paginatedTracks = map['paginatedTrackResponse'];
+      if (map['trackSummary'] != null) {
+        map['trackSummaryDto'] = map['trackSummary'];
+      } else if (paginatedTracks is Map<Object?, Object?>) {
+        final content = paginatedTracks['content'];
+        if (content != null) {
+          map['trackSummaryDto'] = content;
+        }
+      }
+    }
+
+    return map;
+  }
 }

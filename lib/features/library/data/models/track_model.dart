@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/entities/track.dart';
@@ -49,6 +48,15 @@ class TrackModel with _$TrackModel {
     if (!map.containsKey('createdAt') && map.containsKey('uploadDate')) {
       map['createdAt'] = map['uploadDate'];
     }
+
+    final fallbackDate = DateTime.fromMillisecondsSinceEpoch(
+      0,
+    ).toIso8601String();
+
+    map['releaseDate'] ??=
+        map['createdAt'] ?? map['uploadDate'] ?? fallbackDate;
+    map['createdAt'] ??=
+        map['releaseDate'] ?? map['uploadDate'] ?? fallbackDate;
 
     // Waveform fallback
     if (!map.containsKey('waveformUrl') || map['waveformUrl'] == null) {

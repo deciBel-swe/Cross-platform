@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:injectable/injectable.dart';
+
 import '../../../../core/errors/failures.dart';
 import '../../../library/domain/entities/artist.dart';
 import '../../../library/domain/entities/track.dart';
@@ -111,8 +111,8 @@ final List<Playlist> _mockPlaylists = [
   ),
 ];
 
-@Environment('mock')
-@LazySingleton(as: IPlaylistRepository)
+// @Environment('mock')
+// @LazySingleton(as: IPlaylistRepository)
 class MockPlaylistRepository implements IPlaylistRepository {
   @override
   Future<Either<Failure, List<Playlist>>> getUserPlaylists({

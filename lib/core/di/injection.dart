@@ -7,8 +7,6 @@ import '../../features/library_profile/data/repositories/mock_genre_repository_i
 import '../../features/library_profile/data/repositories/mock_profile_repository_impl.dart';
 import '../../features/library_profile/domain/repositories/genre_repository.dart';
 import '../../features/library_profile/domain/repositories/profile_repository.dart';
-import '../../features/playlists/data/repositories/mock_playlist_repository.dart';
-import '../../features/playlists/domain/repositories/i_playlist_repository.dart';
 import '../../features/settings/data/repositories/mock_notification_settings_repository.dart';
 import '../../features/settings/data/repositories/mock_social_settings_repository_impl.dart';
 import '../../features/settings/data/repositories/notification_settings_repository_impl.dart';
@@ -78,13 +76,6 @@ void _registerManualDependencies({required bool useMockServices}) {
     }
     getIt.registerLazySingleton<NotificationSettingsRepository>(
       () => NotificationSettingsRepositoryImpl(getIt()),
-    );
-    if (getIt.isRegistered<IPlaylistRepository>()) {
-      getIt.unregister<IPlaylistRepository>(); // Remove the real API repository
-    }
-    // Inject the mock repository instead
-    getIt.registerLazySingleton<IPlaylistRepository>(
-      MockPlaylistRepository.new,
     );
   }
 }
