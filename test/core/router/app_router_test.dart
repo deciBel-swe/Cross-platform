@@ -52,6 +52,11 @@ class MockAuthNotifier extends AsyncNotifier<AuthState>
   Future<void> logout() async {}
 
   @override
+  Future<(String, int?)> resendVerificationCode({required String email}) async {
+    return ('Code sent', null);
+  }
+
+  @override
   Future<void> refreshUser() async {}
 }
 
@@ -81,6 +86,11 @@ class FakeTrackRepository implements TrackRepository {
 
   @override
   Future<Either<Failure, bool>> deleteTrackCover(int trackId) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, bool>> deleteTrack(int trackId) {
     throw UnimplementedError();
   }
 

@@ -49,6 +49,7 @@ class AuthInterceptor extends Interceptor {
     '/auth/forgot-password',
     '/auth/reset-password',
     '/auth/refreshtoken',
+    '/auth/resend-verification',
   ];
 
   /// Returns `true` if the request path matches a public endpoint that
@@ -161,20 +162,21 @@ class AuthInterceptor extends Interceptor {
       }
 
       final oldAccessToken = await _secureStorage.getAccessToken() ?? '';
-      final cookieHeader = 'refreshToken=$refreshToken; accessToken=$oldAccessToken';
+      final cookieHeader =
+          'refreshToken=$refreshToken; accessToken=$oldAccessToken';
 
       debugPrint('[AuthInterceptor] Refreshing Token: POST /auth/refreshtoken');
       debugPrint('[AuthInterceptor] Request Headers: {Cookie: $cookieHeader}');
-      debugPrint('[AuthInterceptor] Request Body: {refreshToken: $refreshToken}');
+      debugPrint(
+        '[AuthInterceptor] Request Body: {refreshToken: $refreshToken}',
+      );
 
       final response = await _refreshDio.post<Map<String, dynamic>>(
         '/auth/refreshtoken',
-        data: {'refreshToken': refreshToken}, // Keep payload for backward compatibility
-        options: Options(
-          headers: {
-            'Cookie': cookieHeader,
-          },
-        ),
+        data: {
+          'refreshToken': refreshToken,
+        }, // Keep payload for backward compatibility
+        options: Options(headers: {'Cookie': cookieHeader}),
       );
 
       debugPrint('[AuthInterceptor] Response Status: ${response.statusCode}');
@@ -189,7 +191,7 @@ class AuthInterceptor extends Interceptor {
       final expiresIn = dataPayload?['expiresIn'] as int? ?? 3600;
 
       String? newRefreshToken = dataPayload?['refreshToken'] as String?;
-      
+
       final cookies = response.headers.map['set-cookie'] ?? <String>[];
       for (final cookie in cookies) {
         final parts = cookie.split(';');

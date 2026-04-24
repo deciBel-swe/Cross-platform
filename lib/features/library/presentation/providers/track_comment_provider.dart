@@ -26,8 +26,8 @@ final currentActiveCommentsProvider = Provider.family<List<Comment>, int>((
   trackId,
 ) {
   final audioState = ref.watch(trackAudioProvider);
-  final currentSecond =
-      (audioState.duration.inSeconds * audioState.progress).round();
+  final currentSecond = (audioState.duration.inSeconds * audioState.progress)
+      .round();
 
   final commentsState = ref.watch(trackCommentsProvider(trackId));
 

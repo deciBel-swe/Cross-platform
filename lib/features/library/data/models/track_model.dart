@@ -39,61 +39,32 @@ class TrackModel with _$TrackModel {
 
   static Map<String, dynamic> _normalizeTrackJson(Map<String, dynamic> json) {
     final map = Map<String, dynamic>.from(json);
-    final nowIso = DateTime.now().toIso8601String();
+    final normalizedTrackUrl = (map['trackUrl'] as String?)?.trim();
+    final rawState = (map['state'] ?? map['status'])
+        ?.toString()
+        .trim()
+        .toUpperCase();
 
-    if (!map.containsKey('createdAt') ||
-        map['createdAt'] == null ||
-        (map['createdAt'] is String &&
-            (map['createdAt'] as String).trim().isEmpty)) {
-      if (map.containsKey('uploadDate') && map['uploadDate'] != null) {
-        map['createdAt'] = map['uploadDate'];
-      } else {
-        map['createdAt'] = nowIso;
-      }
+    // Key mappings
+    if (!map.containsKey('createdAt') && map.containsKey('uploadDate')) {
+      map['createdAt'] = map['uploadDate'];
     }
 
-    if (!map.containsKey('releaseDate') ||
-        map['releaseDate'] == null ||
-        (map['releaseDate'] is String &&
-            (map['releaseDate'] as String).trim().isEmpty)) {
-      map['releaseDate'] = map['createdAt'] ?? nowIso;
-    }
-
-    if (!map.containsKey('state') || map['state'] == null) {
-      map['state'] = 'FINISHED';
-    }
-
-    if (!map.containsKey('genre') || map['genre'] == null) {
-      map['genre'] = '';
-    }
-
-    if (!map.containsKey('tags') || map['tags'] == null) {
-      map['tags'] = <String>[];
-    }
-
-    if (!map.containsKey('playCount') || map['playCount'] == null) {
-      map['playCount'] = 0;
-    }
-
-    if (!map.containsKey('likeCount') || map['likeCount'] == null) {
-      map['likeCount'] = 0;
-    }
-
-    if (!map.containsKey('repostCount') || map['repostCount'] == null) {
-      map['repostCount'] = 0;
-    }
-
-    if (!map.containsKey('isLiked') || map['isLiked'] == null) {
-      map['isLiked'] = false;
-    }
-
-    if (!map.containsKey('isReposted') || map['isReposted'] == null) {
-      map['isReposted'] = false;
-    }
-
+    // Waveform fallback
     if (!map.containsKey('waveformUrl') || map['waveformUrl'] == null) {
       map['waveformUrl'] = map['trackPreviewUrl'];
     }
+
+    // state handling
+    map['state'] = switch (rawState) {
+      'UPLOADING' || 'PROCESSING' => 'PROCESSING',
+      'FAILED' => 'FAILED',
+      'FINISHED' => 'FINISHED',
+      _ =>
+        (normalizedTrackUrl == null || normalizedTrackUrl.isEmpty)
+            ? 'PROCESSING'
+            : 'FINISHED',
+    };
 
     return map;
   }

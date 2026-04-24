@@ -12,7 +12,9 @@ extension PlaylistModelX on PlaylistModel {
     isPrivate: isPrivate,
     isLiked: isLiked,
     coverArt: coverArt,
-    owner: owner?.toEntity(),
+    owner:
+        owner?.toEntity() ??
+        const PlaylistOwner(id: 0, username: 'Unknown User'),
     tracks: tracks.map((track) => track.toEntity()).toList(),
     totalDurationSeconds: totalDurationSeconds,
     trackCount: trackCount,

@@ -219,6 +219,10 @@ class LibraryRemoteDatasource {
     await _dioClient.delete<dynamic>('/tracks/$trackId/cover');
   }
 
+  Future<void> deleteTrack(int trackId) async {
+    await _dioClient.delete<dynamic>('${ApiConstants.tracks}/$trackId');
+  }
+
   Future<String> fetchTrackStatusById(int id) async {
     // Backend-driven processing state source used by uploads polling.
     final response = await _dioClient.get<Object?>('/tracks/$id/status');
@@ -501,16 +505,19 @@ class LibraryRemoteDatasource {
   }) {
     // Normalize payload differences so strict model parsing stays stable.
     final nowIso = DateTime.now().toIso8601String();
+    final normalizedTrackUrl = (trackJson['trackUrl'] as String?)?.trim();
     final rawState = (trackJson['state'] ?? trackJson['status'])
         ?.toString()
         .toUpperCase();
-    final waveformUrl = trackJson['waveformUrl'] as String?;
-    final hasWaveformUrl = waveformUrl != null && waveformUrl.trim().isNotEmpty;
 
     final normalizedState = switch (rawState) {
+      'FAILED' => 'FAILED',
       'FINISHED' => 'FINISHED',
       'PROCESSING' || 'UPLOADING' => 'PROCESSING',
-      _ => hasWaveformUrl ? 'FINISHED' : 'PROCESSING',
+      _ =>
+        (normalizedTrackUrl == null || normalizedTrackUrl.isEmpty)
+            ? 'PROCESSING'
+            : 'FINISHED',
     };
 
     final normalized = <String, dynamic>{

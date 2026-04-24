@@ -18,6 +18,8 @@ class TrackCard extends StatefulWidget {
     required this.artist,
     this.imageUrl,
     this.gradientColors,
+    this.tagLabel,
+    this.supportingText,
     this.onTap,
   });
 
@@ -29,6 +31,8 @@ class TrackCard extends StatefulWidget {
 
   /// Optional custom gradient for the artwork placeholder.
   final List<Color>? gradientColors;
+  final String? tagLabel;
+  final String? supportingText;
   final VoidCallback? onTap;
 
   @override
@@ -60,6 +64,7 @@ class _TrackCardState extends State<TrackCard> {
                 isHovered: _isHovered,
                 gradientColors: colors,
                 imageUrl: widget.imageUrl,
+                tagLabel: widget.tagLabel,
               ),
               const SizedBox(height: AppDimensions.paddingSm),
               // ---- Title ----
@@ -77,6 +82,18 @@ class _TrackCardState extends State<TrackCard> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (widget.supportingText != null &&
+                  widget.supportingText!.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  widget.supportingText!,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textHint,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ],
           ),
         ),
@@ -91,11 +108,13 @@ class _Artwork extends StatelessWidget {
     required this.isHovered,
     required this.gradientColors,
     this.imageUrl,
+    this.tagLabel,
   });
 
   final bool isHovered;
   final List<Color> gradientColors;
   final String? imageUrl;
+  final String? tagLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +156,34 @@ class _Artwork extends StatelessWidget {
                 ),
               ),
             ),
+            if (tagLabel != null && tagLabel!.trim().isNotEmpty)
+              Positioned(
+                left: AppDimensions.paddingSm,
+                top: AppDimensions.paddingSm,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.background.withValues(alpha: 0.82),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: AppColors.borderLight,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    child: Text(
+                      tagLabel!,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

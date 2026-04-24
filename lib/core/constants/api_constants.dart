@@ -53,6 +53,13 @@ class ApiConstants {
   static const String logoutEndpoint = '/auth/logout';
   static const String refreshTokenEndpoint = '/auth/refreshtoken';
   static const String genresEndpoint = '/genres';
+  static const String globalSearchEndpoint = '/search';
+  static const String trendingTracksEndpoint = '/explore/trending';
+  static const String resendVerificationEndpoint = '/auth/resend-verification';
+
+  /// Station endpoints are relative to the `/api` base URL.
+  static const String genreStationEndpoint = '/stations/genre';
+  static const String likesStationEndpoint = '/stations/likes';
 
   static const String subscriptionCancelEndpoint = '/subscription/cancel';
   static const String subscriptionCheckoutEndpoint = '/subscription/checkout';
@@ -62,6 +69,14 @@ class ApiConstants {
   static const String userProfileEndpoint = '/users/me';
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
+
+  /// Base endpoint for upload operations
+  static const String uploads = '/uploads';
+
+  /// Upload-specific socket endpoint
+  static const String uploadProgress = '$uploads/progress';
+  static const String trackUploadV2 = '/tracks/upload/v2';
+  static const Duration trackUploadRequestTimeout = Duration(minutes: 5);
 
   /// Fetches a public user profile by identifier.
   ///
@@ -75,6 +90,20 @@ class ApiConstants {
     }
     return publicProfileByUsername(normalized);
   }
+
+  /// WebSocket Base URL (Converts http -> ws, and https -> wss)
+  static String get wsBaseUrl {
+    if (baseUrl.startsWith('https')) {
+      return baseUrl.replaceFirst('https', 'wss');
+    } else if (baseUrl.startsWith('http')) {
+      return baseUrl.replaceFirst('http', 'ws');
+    }
+    return baseUrl;
+  }
+
+  /// Upload Progress WebSocket Topic
+  static String trackUploadStatusTopic(String uploadId) =>
+      '/topic/track-status/$uploadId';
 
   /// Fetches a public user profile by username: GET /users/username/{username}
   static String publicProfileByUsername(String username) =>
@@ -115,6 +144,14 @@ class ApiConstants {
   static const String tracks = '/tracks';
   static const String comments = '/comments';
   static const String replies = '/replies';
+
+  // --- Notifications ---
+  static const String notifications = '/notifications';
+  static const String unreadNotificationCount = '/notifications/unread-count';
+  static const String markAllNotificationsRead = '/notifications/mark-all-read';
+  static const String deviceTokens = '/notifications/device-tokens';
+
+  static const String notificationSettingsEndpoint = '/notifications/settings';
 
   // Google OAuth specific constants
   static const String googleAuthUrl =

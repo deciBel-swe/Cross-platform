@@ -29,6 +29,7 @@ mixin _$TrackMetadataModel {
   String? get description => throw _privateConstructorUsedError;
   List<String>? get tags => throw _privateConstructorUsedError;
   String get uploadId => throw _privateConstructorUsedError;
+  String get access => throw _privateConstructorUsedError;
 
   /// Serializes this TrackMetadataModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -56,6 +57,7 @@ abstract class $TrackMetadataModelCopyWith<$Res> {
     String? description,
     List<String>? tags,
     String uploadId,
+    String access,
   });
 }
 
@@ -82,6 +84,7 @@ class _$TrackMetadataModelCopyWithImpl<$Res, $Val extends TrackMetadataModel>
     Object? description = freezed,
     Object? tags = freezed,
     Object? uploadId = null,
+    Object? access = null,
   }) {
     return _then(
       _value.copyWith(
@@ -117,6 +120,10 @@ class _$TrackMetadataModelCopyWithImpl<$Res, $Val extends TrackMetadataModel>
                 ? _value.uploadId
                 : uploadId // ignore: cast_nullable_to_non_nullable
                       as String,
+            access: null == access
+                ? _value.access
+                : access // ignore: cast_nullable_to_non_nullable
+                      as String,
           )
           as $Val,
     );
@@ -141,6 +148,7 @@ abstract class _$$TrackMetadataModelImplCopyWith<$Res>
     String? description,
     List<String>? tags,
     String uploadId,
+    String access,
   });
 }
 
@@ -166,6 +174,7 @@ class __$$TrackMetadataModelImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? tags = freezed,
     Object? uploadId = null,
+    Object? access = null,
   }) {
     return _then(
       _$TrackMetadataModelImpl(
@@ -201,6 +210,10 @@ class __$$TrackMetadataModelImplCopyWithImpl<$Res>
             ? _value.uploadId
             : uploadId // ignore: cast_nullable_to_non_nullable
                   as String,
+        access: null == access
+            ? _value.access
+            : access // ignore: cast_nullable_to_non_nullable
+                  as String,
       ),
     );
   }
@@ -220,6 +233,7 @@ class _$TrackMetadataModelImpl
     this.description,
     final List<String>? tags,
     this.uploadId = '',
+    this.access = 'PLAYABLE',
   }) : _waveFormData = waveFormData,
        _tags = tags;
 
@@ -257,10 +271,13 @@ class _$TrackMetadataModelImpl
   @override
   @JsonKey()
   final String uploadId;
+  @override
+  @JsonKey()
+  final String access;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'TrackMetadataModel(title: $title, genre: $genre, isPrivate: $isPrivate, releaseDate: $releaseDate, waveFormData: $waveFormData, description: $description, tags: $tags, uploadId: $uploadId)';
+    return 'TrackMetadataModel(title: $title, genre: $genre, isPrivate: $isPrivate, releaseDate: $releaseDate, waveFormData: $waveFormData, description: $description, tags: $tags, uploadId: $uploadId, access: $access)';
   }
 
   @override
@@ -275,7 +292,8 @@ class _$TrackMetadataModelImpl
       ..add(DiagnosticsProperty('waveFormData', waveFormData))
       ..add(DiagnosticsProperty('description', description))
       ..add(DiagnosticsProperty('tags', tags))
-      ..add(DiagnosticsProperty('uploadId', uploadId));
+      ..add(DiagnosticsProperty('uploadId', uploadId))
+      ..add(DiagnosticsProperty('access', access));
   }
 
   @override
@@ -297,7 +315,8 @@ class _$TrackMetadataModelImpl
                 other.description == description) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
             (identical(other.uploadId, uploadId) ||
-                other.uploadId == uploadId));
+                other.uploadId == uploadId) &&
+            (identical(other.access, access) || other.access == access));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -312,6 +331,7 @@ class _$TrackMetadataModelImpl
     description,
     const DeepCollectionEquality().hash(_tags),
     uploadId,
+    access,
   );
 
   /// Create a copy of TrackMetadataModel
@@ -341,6 +361,7 @@ abstract class _TrackMetadataModel implements TrackMetadataModel {
     final String? description,
     final List<String>? tags,
     final String uploadId,
+    final String access,
   }) = _$TrackMetadataModelImpl;
 
   factory _TrackMetadataModel.fromJson(Map<String, dynamic> json) =
@@ -362,6 +383,8 @@ abstract class _TrackMetadataModel implements TrackMetadataModel {
   List<String>? get tags;
   @override
   String get uploadId;
+  @override
+  String get access;
 
   /// Create a copy of TrackMetadataModel
   /// with the given fields replaced by the non-null parameter values.

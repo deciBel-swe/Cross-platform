@@ -56,12 +56,9 @@ class TopTracksSection extends ConsumerWidget {
                 return TrackTile(
                   track: track,
                   onTap: () {
-                    ref.read(trackAudioProvider.notifier).initializeForTrack(
-                          trackId: track.id,
-                          trackUrl: track.trackUrl ?? '',
-                          track: track,
-                          queue: topTracks,
-                        );
+                    ref
+                        .read(trackAudioProvider.notifier)
+                        .playTrack(track: track, queue: topTracks);
                   },
                   onMorePressed: () {
                     debugPrint('Options for: ${track.title}');

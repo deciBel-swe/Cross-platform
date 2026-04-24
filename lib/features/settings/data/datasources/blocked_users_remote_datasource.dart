@@ -15,10 +15,7 @@ class BlockedUsersRemoteDatasource {
   }) async {
     final response = await _dioClient.get<Map<String, dynamic>>(
       '/users/me/blocked',
-      queryParams: <String, Object?>{
-        'page': page,
-        'size': size,
-      },
+      queryParams: <String, Object?>{'page': page, 'size': size},
     );
 
     final data = response.data;
@@ -29,11 +26,7 @@ class BlockedUsersRemoteDatasource {
     return PaginatedBlockedUsersModel.fromJson(data);
   }
 
-  Future<void> unblockUser({
-    required int userId,
-  }) async {
-    await _dioClient.delete<void>(
-      '/users/$userId/block',
-    );
+  Future<void> unblockUser({required int userId}) async {
+    await _dioClient.delete<void>('/users/$userId/block');
   }
 }
