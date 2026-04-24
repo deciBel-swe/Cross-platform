@@ -81,7 +81,7 @@ class _PlaylistDetails extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          playlist.owner.username.toUpperCase(),
+          playlist.owner!.username.toUpperCase(),
           style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

@@ -31,8 +31,7 @@ abstract class IPlaylistRemoteDataSource {
   );
   Future<void> deletePlayList(int playListId);
 
-  Future<PlaylistModel> addTrackToPlaylist(int playlistId, int trackId);
-
+  Future<void> addTrackToPlaylist(int playlistId, int trackId);
   Future<void> removeTrackFromPlaylist(int playlistId, int trackId);
 }
 
@@ -222,25 +221,17 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   }
 
   @override
-  Future<PlaylistModel> addTrackToPlaylist(int playlistId, int trackId) async {
+  @override
+  Future<void> addTrackToPlaylist(int playlistId, int trackId) async {
     try {
-      final response = await _dioClient.post<Map<String, dynamic>>(
-        '${ApiConstants.playlists}/$playlistId/tracks',
-        data: <String, dynamic>{'trackId': trackId},
+      await _dioClient.post<Map<String, dynamic>>(
+        '${ApiConstants.playlists}/$playlistId/tracks?trackId=$trackId',
         options: Options(
-          contentType: Headers.jsonContentType,
           headers: <String, dynamic>{
             Headers.acceptHeader: Headers.jsonContentType,
           },
         ),
       );
-
-      final data = response.data;
-      if (data == null) {
-        throw const ServerException('Empty response from server');
-      }
-
-      return PlaylistModel.fromJson(data);
     } on DioException catch (error) {
       throw ServerException(
         error.response?.data?.toString() ??

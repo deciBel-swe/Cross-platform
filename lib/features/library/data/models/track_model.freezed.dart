@@ -335,7 +335,7 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
     this.trackUrl,
     this.coverUrl,
     this.waveformUrl,
-    required this.genre,
+    this.genre = '',
     final List<String> tags = const <String>[],
     required this.state,
     required this.releaseDate,
@@ -363,6 +363,7 @@ class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
   @override
   final String? waveformUrl;
   @override
+  @JsonKey()
   final String genre;
   final List<String> _tags;
   @override
@@ -499,7 +500,7 @@ abstract class _TrackModel implements TrackModel {
     final String? trackUrl,
     final String? coverUrl,
     final String? waveformUrl,
-    required final String genre,
+    final String genre,
     final List<String> tags,
     required final TrackStatusModel state,
     required final DateTime releaseDate,
