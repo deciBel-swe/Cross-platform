@@ -19,6 +19,7 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/recently_played_screen.dart';
 import '../../features/library/domain/entities/track.dart';
 import '../../features/library/presentation/screens/add_to_playlist_screen.dart';
+import '../../features/library/presentation/screens/downloads_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/track_edit_screen.dart';
 import '../../features/library/presentation/screens/track_preview_screen.dart';
@@ -211,6 +212,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'uploads',
                     builder: (context, state) => const UploadsLibraryScreen(),
+                  ),
+                  GoRoute(
+                    path: 'downloads',
+                    builder: (context, state) => const DownloadsScreen(),
                   ),
                   GoRoute(
                     path: 'likes',

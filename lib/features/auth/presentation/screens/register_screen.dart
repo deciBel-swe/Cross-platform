@@ -13,6 +13,7 @@ import '../../../../core/utils/auth_validators.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
 import 'login_screen.dart' show AuthLoadingType;
+import 'package:csc_picker_plus/csc_picker_plus.dart';
 
 /// Register screen: OAuth buttons, divider, email + date of birth + gender
 /// fields, and a white Continue button.
@@ -70,7 +71,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final email = _emailController.text.trim();
     final displayName = _displayNameController.text.trim();
     final password = _passwordController.text;
-    final city = _cityController.text.trim();
+    final city = _cityController.text
+        .replaceAll(RegExp(r'\s*Governorate\s*', caseSensitive: false), '')
+        .trim();
     final country = _countryController.text.trim();
 
     if (displayName.isEmpty) {
@@ -374,26 +377,48 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 const SizedBox(height: 16),
 
-                TextField(
-                  controller: _cityController,
-                  style: const TextStyle(
+                CSCPickerPlus(
+                  layout: Layout.vertical,
+                  flagState: CountryFlag.SHOW_IN_DROP_DOWN_ONLY,
+                  showStates: true,
+                  showCities: false,
+                  countryStateLanguage: CountryStateLanguage.englishOrNative,
+                  countrySearchPlaceholder: "Country",
+                  stateSearchPlaceholder: "State",
+                  countryDropdownLabel: "Country (optional)",
+                  stateDropdownLabel: "State (optional)",
+                  dropdownDecoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.outline),
+                  ),
+                  disabledDropdownDecoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.outline),
+                  ),
+                  selectedItemStyle: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                   ),
-                  decoration: _inputDecoration('City (optional)'),
-                ),
-
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: _countryController,
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _isAnyLoading ? null : _handleRegister(),
-                  style: const TextStyle(
+                  dropdownHeadingStyle: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  dropdownItemStyle: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 14,
                   ),
-                  decoration: _inputDecoration('Country (optional)'),
+                  dropdownDialogRadius: 12.0,
+                  searchBarRadius: 12.0,
+                  onCountryChanged: (value) {
+                    _countryController.text = value?.toString() ?? '';
+                    _cityController.clear();
+                  },
+                  onStateChanged: (value) {
+                    _cityController.text = value?.toString() ?? '';
+                  },
                 ),
 
                 const SizedBox(height: 16),

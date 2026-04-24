@@ -7,11 +7,15 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../auth/domain/entities/auth_state.dart';
+// import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../offline/presentation/providers/track_download_provider.dart';
+import '../../domain/entities/user_profile.dart';
 import '../providers/track_audio_provider.dart';
+import '../providers/user_profile_provider.dart';
 
 /// A SoundCloud-style bottom sheet showing quick actions for a [Track].
 ///
@@ -67,6 +71,7 @@ class TrackDetails extends ConsumerWidget {
         ? authState.user.id
         : null;
 
+    final profileAsync = ref.watch(userProfileProvider);
     final isOwnTrack =
         currentUserId != null && currentUserId == track.artist.id;
 
@@ -79,8 +84,17 @@ class TrackDetails extends ConsumerWidget {
       }
     }
 
+    final userProfile = profileAsync.valueOrNull?.fold(
+      (_) => null,
+      (profile) => profile,
+    );
+    final isPro =
+        userProfile?.tier == UserTier.pro ||
+        userProfile?.tier == UserTier.artistPro;
+    // const isPro = true;
     return _SheetContent(
       track: track,
+      isPro: isPro,
       onAddToPlaylist: () {
         // Close the sheet, then push the AddToPlaylist route using the parent
         // context (the one that opened this sheet) so navigation uses an
@@ -109,6 +123,48 @@ class TrackDetails extends ConsumerWidget {
       onReport: () {
         /* dummy */
       },
+      onDownload: () {
+        if (!isPro) {
+          ScaffoldMessenger.of(parentContext).showSnackBar(
+            const SnackBar(
+              content: Text('This feature is for Pro users only.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
+
+        ref.read(trackDownloadProvider.notifier).downloadTrack(track).then((_) {
+          if (!parentContext.mounted) return;
+          final state = ProviderScope.containerOf(
+            parentContext,
+          ).read(trackDownloadProvider);
+          if (state.hasError) {
+            ScaffoldMessenger.of(parentContext).showSnackBar(
+              SnackBar(
+                content: Text('Download failed: ${state.error}'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: AppColors.errors,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(parentContext).showSnackBar(
+              SnackBar(
+                content: Text('Downloaded "${track.title}"'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        });
+
+        ScaffoldMessenger.of(parentContext).showSnackBar(
+          SnackBar(
+            content: Text('Downloading "${track.title}"...'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.pop();
+      },
     );
   }
 }
@@ -118,6 +174,7 @@ class TrackDetails extends ConsumerWidget {
 class _SheetContent extends StatelessWidget {
   const _SheetContent({
     required this.track,
+    required this.isPro,
     required this.onAddToPlaylist,
     required this.onAddToQueue,
     required this.onGoToArtist,
@@ -125,9 +182,11 @@ class _SheetContent extends StatelessWidget {
     required this.onShare,
     required this.onCopyLink,
     required this.onReport,
+    required this.onDownload,
   });
 
   final Track track;
+  final bool isPro;
   final VoidCallback onAddToPlaylist;
   final VoidCallback onAddToQueue;
   final VoidCallback onGoToArtist;
@@ -135,6 +194,7 @@ class _SheetContent extends StatelessWidget {
   final VoidCallback onShare;
   final VoidCallback onCopyLink;
   final VoidCallback onReport;
+  final VoidCallback onDownload;
 
   // ── Formatting helpers ────────────────────────────────────────────────────
 
@@ -263,11 +323,18 @@ class _SheetContent extends StatelessWidget {
             onTap: onCopyLink,
           ),
           _ActionTile(
-            icon: Icons.flag_outlined,
-            label: 'Report',
-            onTap: onReport,
-            isDestructive: true,
+            icon: Icons.download_rounded,
+            label: 'Download',
+            onTap: onDownload,
+            enabled: isPro,
+            isDestructive: false,
           ),
+          // _ActionTile(
+          //   icon: Icons.flag_outlined,
+          //   label: 'Report',
+          //   onTap: onReport,
+          //   isDestructive: true,
+          // ),
 
           // Safe-area bottom padding
           SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
@@ -459,16 +526,22 @@ class _ActionTile extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.isDestructive = false,
+    this.enabled = true,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final bool isDestructive;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    final color = isDestructive ? AppColors.errors : AppColors.textSecondary;
+    final color = !enabled
+        ? AppColors.textHint
+        : isDestructive
+        ? AppColors.errors
+        : AppColors.textSecondary;
 
     return InkWell(
       onTap: onTap,
@@ -481,13 +554,17 @@ class _ActionTile extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: AppConstants.iconSizeMedium + 2),
             const SizedBox(width: AppConstants.spacingMedium),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w500,
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
+            if (!enabled)
+              Icon(Icons.lock_outline_rounded, color: color, size: 16),
           ],
         ),
       ),

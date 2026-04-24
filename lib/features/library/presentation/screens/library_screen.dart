@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../library_profile/domain/entities/user_profile.dart';
+import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../upgrade/presentation/widgets/get_pro_button.dart';
 
 class LibraryScreen extends ConsumerWidget {
@@ -28,20 +30,29 @@ class LibraryScreen extends ConsumerWidget {
           : AppBar(
               backgroundColor: AppColors.background,
               scrolledUnderElevation: 0,
-              title: const Text(
-                'Library',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              title:  Semantics(
+                header: true,
+                child: const Text(
+                  'Library',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
               actions: [
                 const GetProButton(),
-                IconButton(onPressed: () {}, icon: const Icon(Icons.cast)),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.cast),
+                  tooltip: 'Cast to device',
+                ),
                 IconButton(
                   onPressed: goToSettings,
                   icon: const Icon(Icons.settings_outlined),
+                  tooltip: 'Settings',
                 ),
                 IconButton(
                   onPressed: goToProfile,
                   icon: const Icon(Icons.account_circle),
+                  tooltip: 'Profile',
                 ),
               ],
             ),
@@ -58,11 +69,21 @@ bool _isDesktopLayout(BuildContext context) {
   return mediaQuery.size.width >= 801;
 }
 
-class _LibraryTab extends StatelessWidget {
+class _LibraryTab extends ConsumerWidget {
   const _LibraryTab();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(userProfileProvider);
+    final userProfile = profileAsync.valueOrNull?.fold(
+      (_) => null,
+      (profile) => profile,
+    );
+    final isPro =
+        userProfile?.tier == UserTier.pro ||
+        userProfile?.tier == UserTier.artistPro;
+
+    // final isPro=true;
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       children: [
@@ -79,6 +100,11 @@ class _LibraryTab extends StatelessWidget {
         _NavigationRow(
           title: 'Your uploads',
           onTap: () => context.go(RoutePaths.uploadLibrary),
+        ),
+        _NavigationRow(
+          title: 'Downloads',
+          onTap: () => context.go(RoutePaths.libraryDownloads),
+          enabled: isPro,
         ),
         _NavigationRow(
           title: 'Your likes',
@@ -98,39 +124,68 @@ class _LibraryTab extends StatelessWidget {
 }
 
 class _NavigationRow extends StatelessWidget {
-  const _NavigationRow({required this.title, required this.onTap});
+  const _NavigationRow({
+    required this.title,
+    required this.onTap,
+    this.enabled = true,
+  });
 
   final String title;
   final VoidCallback onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final color = enabled ? AppColors.textPrimary : AppColors.textHint;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w400,
-                    fontSize: 16,
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: title,
+      hint: enabled ? 'Navigate to $title' : 'Pro feature only, unavailable.',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          excludeFromSemantics: true,
+          onTap: enabled
+              ? onTap
+              : () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('This feature is for Pro users only.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-              ),
-              const Icon(
-                Icons.chevron_right,
-                color: AppColors.textSecondary,
-                size: 28,
-              ),
-            ],
+                if (!enabled)
+                  const Icon(
+                    Icons.lock_outline_rounded,
+                    color: AppColors.textHint,
+                    size: 20,
+                  )
+                else
+                  const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textSecondary,
+                    size: 28,
+                  ),
+              ],
+            ),
           ),
         ),
       ),

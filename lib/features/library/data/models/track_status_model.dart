@@ -22,4 +22,13 @@ extension TrackStatusModelX on TrackStatusModel {
         return TrackStatus.finished;
     }
   }
+
+  static TrackStatusModel fromEntity(TrackStatus status) {
+    switch (status) {
+      case TrackStatus.processing:
+        return TrackStatusModel.processing;
+      case TrackStatus.finished:
+        return TrackStatusModel.finished;
+    }
+  }
 }
