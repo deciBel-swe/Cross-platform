@@ -17,6 +17,7 @@ class LikeButton extends ConsumerWidget {
     required this.likeCount,
     this.iconSize,
     this.fontSize,
+    this.isVertical = false,
   });
 
   final int trackId;
@@ -24,6 +25,7 @@ class LikeButton extends ConsumerWidget {
   final int likeCount;
   final double? iconSize;
   final double? fontSize;
+  final bool isVertical;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,19 +46,18 @@ class LikeButton extends ConsumerWidget {
       activeIcon: Icons.favorite,
       inactiveIcon: Icons.favorite_border,
       activeColor: AppColors.primary,
-      onToggle:
-          () => ref
-              .read(trackSocialProvider(trackId).notifier)
-              .toggleAction(SocialActionType.like),
+      onToggle: () => ref
+          .read(trackSocialProvider(trackId).notifier)
+          .toggleAction(SocialActionType.like),
       identifier: 'like_button',
-      onCountTap:
-          () => showTrackEngagersSheet(
-            context,
-            trackId: trackId,
-            type: EngagerType.likers,
-          ),
+      onCountTap: () => showTrackEngagersSheet(
+        context,
+        trackId: trackId,
+        type: EngagerType.likers,
+      ),
       iconSize: iconSize ?? AppConstants.iconSizeMedium,
       fontSize: fontSize ?? AppConstants.fontSizeRegular,
+      isVertical: isVertical,
     );
   }
 }

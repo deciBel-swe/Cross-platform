@@ -28,24 +28,4 @@ class NotificationSettings {
       notifyOnDM: notifyOnDM ?? this.notifyOnDM,
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'notifyOnFollow': notifyOnFollow,
-      'notifyOnLike': notifyOnLike,
-      'notifyOnRepost': notifyOnRepost,
-      'notifyOnComment': notifyOnComment,
-      'notifyOnDM': notifyOnDM,
-    };
-  }
-
-  factory NotificationSettings.fromJson(Map<String, dynamic> json) {
-    return NotificationSettings(
-      notifyOnFollow: json['notifyOnFollow'] as bool? ?? true,
-      notifyOnLike: json['notifyOnLike'] as bool? ?? true,
-      notifyOnRepost: json['notifyOnRepost'] as bool? ?? true,
-      notifyOnComment: json['notifyOnComment'] as bool? ?? true,
-      notifyOnDM: json['notifyOnDM'] as bool? ?? true,
-    );
-  }
 }

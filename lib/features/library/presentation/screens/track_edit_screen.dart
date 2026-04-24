@@ -33,12 +33,17 @@ class _TrackEditScreenState extends ConsumerState<TrackEditScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
           onPressed: () => context.pop(),
         ),
         title: const Text('Edit track'),
       ),
-      body: editAsync.when(
+      body: Semantics(
+        container: true,
+        explicitChildNodes: true,
+        label: 'Edit track screen',
+        child: editAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Text(
@@ -161,38 +166,49 @@ class _TrackEditScreenState extends ConsumerState<TrackEditScreen> {
                           ),
                         ),
                         const Divider(color: AppColors.borderLight, height: 32),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text(
-                            'Tags',
-                            style: TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 12,
+                        Semantics(
+                          button: true,
+                          enabled: !state.isSubmitting,
+                          label: state.tags.isEmpty
+                              ? 'Add tags'
+                              : 'Edit tags, ${state.tags.join(', ')}',
+                          hint: 'Opens tag editor',
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text(
+                              'Tags',
+                              style: TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 12,
+                              ),
                             ),
+                            subtitle: Text(
+                              state.tags.isEmpty
+                                  ? 'Add tags to describe track for reachability'
+                                  : state.tags.join(', '),
+                              style: const TextStyle(
+                                color: AppColors.onPrimary,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios,
+                              color: AppColors.textMuted,
+                              size: 16,
+                            ),
+                            onTap: state.isSubmitting
+                                ? null
+                                : () {
+                                    showModalBottomSheet<void>(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (context) =>
+                                          _EditTagsBottomSheet(
+                                            trackId: widget.trackId,
+                                          ),
+                                    );
+                                  },
                           ),
-                          subtitle: Text(
-                            state.tags.isEmpty
-                                ? 'Add tags to describe track for reachability'
-                                : state.tags.join(', '),
-                            style: const TextStyle(color: AppColors.onPrimary),
-                          ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            color: AppColors.textMuted,
-                            size: 16,
-                          ),
-                          onTap: state.isSubmitting
-                              ? null
-                              : () {
-                                  showModalBottomSheet<void>(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (context) => _EditTagsBottomSheet(
-                                      trackId: widget.trackId,
-                                    ),
-                                  );
-                                },
                         ),
                         const Divider(color: AppColors.borderLight),
                         const SizedBox(height: 16),
@@ -354,19 +370,28 @@ class _TrackEditScreenState extends ConsumerState<TrackEditScreen> {
                               );
                               context.pop(true);
                             },
-                      child: state.isSubmitting
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text(
-                              'Save',
-                              style: TextStyle(
-                                color: AppColors.onPrimary,
-                                fontWeight: FontWeight.bold,
+                      child: Semantics(
+                        button: true,
+                        enabled: !state.isSubmitting,
+                        label: state.isSubmitting
+                            ? 'Saving track changes'
+                            : 'Save track changes',
+                        child: state.isSubmitting
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Save',
+                                style: TextStyle(
+                                  color: AppColors.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -375,6 +400,7 @@ class _TrackEditScreenState extends ConsumerState<TrackEditScreen> {
             ),
           );
         },
+        ),
       ),
     );
   }
@@ -387,28 +413,34 @@ Widget _buildGenreChip(
   required bool isSelected,
   VoidCallback? onTap,
 }) {
-  return Container(
-    margin: const EdgeInsets.only(right: 8),
-    child: ActionChip(
-      backgroundColor: isSelected ? AppColors.onPrimary : Colors.transparent,
-      side: BorderSide(
-        color: isSelected ? AppColors.onPrimary : AppColors.borderLight,
-      ),
-      avatar: icon != null
-          ? Icon(
-              icon,
-              size: 16,
-              color: isSelected ? AppColors.background : AppColors.onPrimary,
-            )
-          : null,
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? AppColors.background : AppColors.onPrimary,
-          fontSize: 12,
+  return Semantics(
+    button: true,
+    selected: isSelected,
+    enabled: onTap != null,
+    label: isSelected ? '$label genre selected' : 'Choose $label genre',
+    child: Container(
+      margin: const EdgeInsets.only(right: 8),
+      child: ActionChip(
+        backgroundColor: isSelected ? AppColors.onPrimary : Colors.transparent,
+        side: BorderSide(
+          color: isSelected ? AppColors.onPrimary : AppColors.borderLight,
         ),
+        avatar: icon != null
+            ? Icon(
+                icon,
+                size: 16,
+                color: isSelected ? AppColors.background : AppColors.onPrimary,
+              )
+            : null,
+        label: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? AppColors.background : AppColors.onPrimary,
+            fontSize: 12,
+          ),
+        ),
+        onPressed: onTap,
       ),
-      onPressed: onTap,
     ),
   );
 }
@@ -691,8 +723,14 @@ class _EditFileSelectionHeader extends StatelessWidget {
 
     return Row(
       children: [
-        GestureDetector(
-          onTap: state.isSubmitting ? null : onPickCover,
+        Semantics(
+          button: true,
+          image: image != null,
+          enabled: !state.isSubmitting,
+          label: image == null ? 'Add cover image' : 'Change cover image',
+          hint: 'Opens image picker',
+          child: GestureDetector(
+            onTap: state.isSubmitting ? null : onPickCover,
           child: Container(
             width: 100,
             height: 100,
@@ -703,12 +741,15 @@ class _EditFileSelectionHeader extends StatelessWidget {
               image: image,
             ),
             child: image == null
-                ? const Icon(
-                    Icons.camera_alt_outlined,
-                    color: AppColors.textSecondary,
-                    size: 30,
+                ? const ExcludeSemantics(
+                    child: Icon(
+                      Icons.camera_alt_outlined,
+                      color: AppColors.textSecondary,
+                      size: 30,
+                    ),
                   )
                 : null,
+          ),
           ),
         ),
         const SizedBox(width: 16),
@@ -735,27 +776,37 @@ class _EditFileSelectionHeader extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  OutlinedButton(
-                    onPressed: state.isSubmitting ? null : onPickCover,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.onPrimary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                  Semantics(
+                    button: true,
+                    enabled: !state.isSubmitting,
+                    label: 'Replace cover image',
+                    child: OutlinedButton(
+                      onPressed: state.isSubmitting ? null : onPickCover,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.onPrimary),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        foregroundColor: AppColors.onPrimary,
                       ),
-                      foregroundColor: AppColors.onPrimary,
+                      child: const Text('Replace cover'),
                     ),
-                    child: const Text('Replace cover'),
                   ),
-                  OutlinedButton(
-                    onPressed: state.isSubmitting ? null : onRemoveCover,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.borderLight),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                  Semantics(
+                    button: true,
+                    enabled: !state.isSubmitting,
+                    label: 'Remove cover image',
+                    child: OutlinedButton(
+                      onPressed: state.isSubmitting ? null : onRemoveCover,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.borderLight),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        foregroundColor: AppColors.textMuted,
                       ),
-                      foregroundColor: AppColors.textMuted,
+                      child: const Text('Remove cover'),
                     ),
-                    child: const Text('Remove cover'),
                   ),
                 ],
               ),

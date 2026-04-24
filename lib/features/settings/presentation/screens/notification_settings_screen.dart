@@ -34,10 +34,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
           error: (err, _) => Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Text(
-                'Error: $err',
-                textAlign: TextAlign.center,
-              ),
+              child: Text('Error: $err', textAlign: TextAlign.center),
             ),
           ),
           data: (settings) => ListView(
@@ -75,8 +72,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _NotificationToggleTile(
                 semanticLabel: 'Comments notification toggle',
-                title: 'Comments',
-                subtitle: 'Get notified when someone comments on your track.',
+                title: 'Comments and Replies',
+                subtitle:
+                    'Get notified when someone comments on your track or replies to your comment.',
                 value: settings.notifyOnComment,
                 onChanged: (val) => ref
                     .read(notificationSettingsProvider.notifier)
@@ -119,7 +117,9 @@ class _NotificationToggleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: semanticLabel,
-      hint: value ? 'Currently enabled, tap to disable' : 'Currently disabled, tap to enable',
+      hint: value
+          ? 'Currently enabled, tap to disable'
+          : 'Currently disabled, tap to enable',
       toggled: value,
       child: SwitchListTile.adaptive(
         contentPadding: EdgeInsets.zero,

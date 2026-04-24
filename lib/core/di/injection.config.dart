@@ -22,6 +22,14 @@ import '../../features/auth/data/repositories/mock_auth_repository.dart'
     as _i703;
 import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
+import '../../features/discovery/data/datasources/discovery_remote_datasource.dart'
+    as _i1005;
+import '../../features/discovery/data/repositories/discovery_repository_impl.dart'
+    as _i366;
+import '../../features/discovery/data/repositories/mock_discovery_repository.dart'
+    as _i614;
+import '../../features/discovery/domain/repositories/discovery_repository.dart'
+    as _i949;
 import '../../features/engagement/data/datasources/follow_remote_data_source.dart'
     as _i485;
 import '../../features/engagement/data/datasources/track_social_remote_datasource.dart'
@@ -36,6 +44,12 @@ import '../../features/engagement/domain/repositories/follow_repository.dart'
     as _i557;
 import '../../features/engagement/domain/repositories/track_social_repository.dart'
     as _i590;
+import '../../features/feed/data/datasources/feed_data_datasource.dart'
+    as _i684;
+import '../../features/feed/data/repositories/feed_repository_impl.dart'
+    as _i452;
+import '../../features/feed/domain/repositories/i_feed_repository.dart'
+    as _i695;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
 import '../../features/library/data/datasources/track_comments_remote_data_source.dart'
@@ -78,6 +92,10 @@ import '../../features/library_profile/domain/repositories/track_repository.dart
     as _i127;
 import '../../features/library_profile/domain/repositories/update_image.dart'
     as _i728;
+import '../../features/notifications/data/datasources/notification_remote_datasource.dart'
+    as _i923;
+import '../../features/notifications/domain/repositories/notification_repository.dart'
+    as _i367;
 import '../../features/offline/data/datasources/offline_local_data_source.dart'
     as _i776;
 import '../../features/offline/data/repositories/offline_repository_impl.dart'
@@ -106,14 +124,20 @@ import '../../features/settings/data/repositories/app_icon_repository_impl.dart'
     as _i781;
 import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
     as _i292;
+<<<<<<< HEAD
 import '../../features/settings/data/repositories/messaging_repository_implementation.dart'
     as _i343;
+=======
+>>>>>>> 8fc3cbbf6c0f521c9da4edbfbafda511f23d642a
 import '../../features/settings/domain/repositories/app_icon_repository.dart'
     as _i993;
 import '../../features/settings/domain/repositories/blocked_users_repository.dart'
     as _i288;
+<<<<<<< HEAD
 import '../../features/settings/domain/repositories/i_messaging_repository.dart'
     as _i23;
+=======
+>>>>>>> 8fc3cbbf6c0f521c9da4edbfbafda511f23d642a
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/mock_upload_repository_impl.dart'
@@ -123,6 +147,7 @@ import '../../features/upload/data/repository/upload_repository_impl.dart'
 import '../../features/upload/domain/repositories/i_upload_repository.dart'
     as _i43;
 import '../network/dio_client.dart' as _i667;
+import '../network/firebase_messaging_service.dart.dart' as _i565;
 import '../network/interceptors/auth_interceptor.dart' as _i745;
 import '../storage/secure_storage_service.dart' as _i666;
 import '../storage/shared_prefs_service.dart' as _i573;
@@ -144,8 +169,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i183.ImagePicker>(() => registerModule.imagePicker);
+    gh.lazySingleton<_i565.FirebaseMessagingService>(
+      () => _i565.FirebaseMessagingService(),
+    );
     gh.lazySingleton<_i573.SharedPrefsService>(
       () => _i573.SharedPrefsService(),
+    );
+    gh.lazySingleton<_i949.DiscoveryRepository>(
+      () => const _i614.MockDiscoveryRepository(),
+      registerFor: {_mock},
     );
     gh.lazySingleton<_i667.DioClient>(
       () => _i667.DioClient(
@@ -153,12 +185,20 @@ extension GetItInjectableX on _i174.GetIt {
         authInterceptor: gh<_i745.AuthInterceptor>(),
       ),
     );
+    gh.lazySingleton<_i923.INotificationRemoteDataSource>(
+      () => _i923.NotificationRemoteDataSource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
     );
+<<<<<<< HEAD
     gh.lazySingleton<_i582.IPlaylistRepository>(
       () => _i874.MockPlaylistRepository(),
       registerFor: {_mock},
+=======
+    gh.lazySingleton<_i684.IFeedRemoteDatasource>(
+      () => _i684.FeedRemoteDatasource(gh<_i667.DioClient>()),
+>>>>>>> 8fc3cbbf6c0f521c9da4edbfbafda511f23d642a
     );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i238.TrackCommentsMockRepository(),
@@ -228,6 +268,22 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
       registerFor: {_prod},
     );
+<<<<<<< HEAD
+=======
+    gh.lazySingleton<_i695.IFeedRepository>(
+      () => _i452.FeedRepositoryImpl(gh<_i684.IFeedRemoteDatasource>()),
+      registerFor: {_prod},
+    );
+    gh.factory<_i367.INotificationRepository>(
+      () => _i367.NotificationRepository(
+        gh<_i923.INotificationRemoteDataSource>(),
+      ),
+    );
+    gh.lazySingleton<_i1005.DiscoveryRemoteDataSource>(
+      () => _i1005.DiscoveryRemoteDataSourceImpl(gh<_i667.DioClient>()),
+      registerFor: {_prod},
+    );
+>>>>>>> 8fc3cbbf6c0f521c9da4edbfbafda511f23d642a
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),
     );
@@ -248,9 +304,16 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       registerFor: {_prod},
     );
+<<<<<<< HEAD
     gh.lazySingleton<_i23.IMessagingRepository>(
       () =>
           _i343.MessagingRepositoryImpl(gh<_i123.IMessagingRemoteDataSource>()),
+=======
+    gh.lazySingleton<_i949.DiscoveryRepository>(
+      () =>
+          _i366.DiscoveryRepositoryImpl(gh<_i1005.DiscoveryRemoteDataSource>()),
+      registerFor: {_prod},
+>>>>>>> 8fc3cbbf6c0f521c9da4edbfbafda511f23d642a
     );
     gh.lazySingleton<_i272.DownloadTrackUseCase>(
       () => _i272.DownloadTrackUseCase(gh<_i753.IOfflineRepository>()),

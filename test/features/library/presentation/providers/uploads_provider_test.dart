@@ -280,6 +280,69 @@ void main() {
       expect(state.first.state, TrackStatus.processing);
     });
 
+    test('deleteTrack removes track from loaded uploads', () async {
+      final firstTrack = Track(
+        id: 1,
+        title: 'First Track',
+        artist: const Artist(id: 1, username: 'User'),
+        genre: 'Pop',
+        tags: [],
+        state: TrackStatus.finished,
+        releaseDate: DateTime.now(),
+        playCount: 0,
+        likeCount: 0,
+        repostCount: 0,
+        isLiked: false,
+        isReposted: false,
+        createdAt: DateTime.now(),
+      );
+      final secondTrack = Track(
+        id: 2,
+        title: 'Second Track',
+        artist: const Artist(id: 1, username: 'User'),
+        genre: 'Pop',
+        tags: [],
+        state: TrackStatus.finished,
+        releaseDate: DateTime.now(),
+        playCount: 0,
+        likeCount: 0,
+        repostCount: 0,
+        isLiked: false,
+        isReposted: false,
+        createdAt: DateTime.now(),
+      );
+
+      when(() => mockRepo.fetchMyTracks(page: 0, size: 20)).thenAnswer(
+        (_) async => Right(
+          PaginatedTracks(
+            content: [firstTrack, secondTrack],
+            pageNumber: 0,
+            pageSize: 20,
+            totalElements: 2,
+            totalPages: 1,
+            isLast: true,
+          ),
+        ),
+      );
+      when(
+        () => mockRepo.deleteTrack(firstTrack.id),
+      ).thenAnswer((_) async => const Right(true));
+
+      final container = createContainer(authState: authState);
+      container.listen(uploadsProvider, (_, _) {});
+      await container.read(uploadsProvider.future);
+
+      final deleted = await container
+          .read(uploadsProvider.notifier)
+          .deleteTrack(firstTrack.id);
+
+      final state = container.read(uploadsProvider).value;
+      expect(deleted, isTrue);
+      expect(state, hasLength(1));
+      expect(state!.first.id, secondTrack.id);
+      verify(() => mockRepo.deleteTrack(firstTrack.id)).called(1);
+    });
+
     test('invalidateCache just clears memory cache', () async {
       when(() => mockRepo.fetchMyTracks(page: 0, size: 20)).thenAnswer(
         (_) async => const Right(

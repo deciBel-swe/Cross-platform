@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../domain/entities/notification_settings.dart';
 import '../models/notification_settings_model.dart';
 
 @lazySingleton
@@ -10,34 +12,56 @@ class NotificationSettingsRemoteDatasource {
 
   final DioClient _dioClient;
 
-  static const String _endpoint = '/notifications/settings';
-
   /// GET /notifications/settings
   Future<NotificationSettingsModel> getNotificationSettings() async {
-    final response = await _dioClient.get<Map<String, dynamic>>(_endpoint);
+    try {
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        ApiConstants.notificationSettingsEndpoint,
+      );
 
-    final data = response.data;
-    if (data == null) {
-      throw Exception('Empty notification settings response');
+      final data = response.data;
+      if (data == null) {
+        throw const ServerException('Empty notification settings response');
+      }
+
+      return NotificationSettingsModel.fromJson(data);
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 401) {
+        throw const AuthException('Unauthorized');
+      }
+
+      throw ServerException(
+        error.message ?? 'Failed to fetch notification settings',
+      );
     }
-
-    return NotificationSettingsModel.fromJson(data);
   }
 
   /// PATCH /notifications/settings
   Future<NotificationSettingsModel> updateNotificationSettings(
-    NotificationSettings settings,
+    NotificationSettingsModel settings,
   ) async {
-    final response = await _dioClient.patch<Map<String, dynamic>>(
-      _endpoint,
-      data: settings.toModel().toJson(),
-    );
+    try {
+      final response = await _dioClient.patch<Map<String, dynamic>>(
+        ApiConstants.notificationSettingsEndpoint,
+        data: settings.toJson(),
+      );
 
-    final data = response.data;
-    if (data == null) {
-      throw Exception('Empty update notification settings response');
+      final data = response.data;
+      if (data == null) {
+        throw const ServerException(
+          'Empty update notification settings response',
+        );
+      }
+
+      return NotificationSettingsModel.fromJson(data);
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 401) {
+        throw const AuthException('Unauthorized');
+      }
+
+      throw ServerException(
+        error.message ?? 'Failed to update notification settings',
+      );
     }
-
-    return NotificationSettingsModel.fromJson(data);
   }
 }

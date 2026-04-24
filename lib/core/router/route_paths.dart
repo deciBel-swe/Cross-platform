@@ -15,6 +15,7 @@ class RoutePaths {
     'profile',
     'user',
     'profile-image',
+    'resend-verification',
   };
   // ==========================================
   // MESSAGING ROUTES
@@ -28,6 +29,7 @@ class RoutePaths {
   static const String start = '/start';
   static const String login = '/login';
   static const String register = '/register';
+  static const String resendVerification = '/resend-verification';
   static const String home = '/home';
   static const String feed = '/feed';
   static const String discover = '/discover';
@@ -62,6 +64,7 @@ class RoutePaths {
   static const String editPlaylist = '/library/playlists/edit';
   static const String playlistTracks = '/library/playlists/playlist-tracks';
   static const String addToPlaylist = '/library/add-to-playlist';
+  static const String notifications = '/notifications';
 
   static String trackPreview(int trackId) => '$trackPreviewBase/$trackId';
   static String trackEdit(int trackId) => '$trackEditBase/$trackId';

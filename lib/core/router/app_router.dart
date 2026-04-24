@@ -9,6 +9,7 @@ import '../../features/auth/domain/entities/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/resend_verification_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/start_screen.dart';
 import '../../features/engagement/presentation/providers/follow_connections_provider.dart';
@@ -29,6 +30,7 @@ import '../../features/library_profile/presentation/screens/fullscreen_image_scr
 import '../../features/library_profile/presentation/screens/profile_screen.dart';
 import '../../features/library_profile/presentation/screens/public_profile_screen.dart';
 import '../../features/library_profile/presentation/screens/web_profiles.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/playlists/domain/entities/playlist.dart';
 import '../../features/playlists/presentation/screens/edit_playlist_screen.dart';
 import '../../features/playlists/presentation/screens/playlist_details_screen.dart';
@@ -70,6 +72,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute =
           state.matchedLocation == RoutePaths.login ||
           state.matchedLocation == RoutePaths.register ||
+          state.matchedLocation == RoutePaths.resendVerification ||
           state.matchedLocation == RoutePaths.start ||
           state.matchedLocation == RoutePaths.splash;
 
@@ -141,6 +144,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.resendVerification,
+        builder: (context, state) => const ResendVerificationScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -438,6 +445,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: RoutePaths
+            .notifications, // Ensure this is defined in route_paths.dart as '/notifications'
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/profile-image',
