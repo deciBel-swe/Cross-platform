@@ -11,6 +11,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/auth_validators.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_primary_button.dart';
 import '../widgets/social_login_button.dart';
 
 enum AuthLoadingType { none, email, google, facebook, apple }
@@ -131,7 +132,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title:  Semantics(
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+              return;
+            }
+            context.go(RoutePaths.start);
+          },
+        ),
+        title: Semantics(
           header: true,
           label: 'Sign in screen',
           child: const Text('Sign in'),
@@ -275,32 +287,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 32),
 
                 // ---- Continue button (white) ----
-                Semantics(
-                  button: true,
-                  label: 'Continue to sign in',
-                  child: ElevatedButton(
-                    onPressed: _isAnyLoading ? null : _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.onPrimary,
-                      foregroundColor: AppColors.onBackground,
-                    ),
-                    child: _loadingType == AuthLoadingType.email
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Continue'),
-                  ),
+                AuthPrimaryButton(
+                  label: 'Continue',
+                  semanticsLabel: 'Continue to sign in',
+                  isLoading: _loadingType == AuthLoadingType.email,
+                  onPressed: _isAnyLoading ? null : _handleLogin,
                 ),
 
                 const SizedBox(height: 32),
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
                           "Didn't receive verification code? ",
@@ -314,20 +314,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           label: resendTimer > 0
                               ? 'Resend verification code in $resendTimer seconds'
                               : 'Resend verification code',
-                          child: TextButton(
+                          child: TextButton.icon(
                             onPressed: resendTimer > 0
                                 ? null
                                 : () {
                                     context.push(RoutePaths.resendVerification);
                                   },
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               foregroundColor: AppColors.primary,
                               disabledForegroundColor: AppColors.textMuted,
                             ),
-                            child: Text(
+                            icon: resendTimer > 0
+                                ? const Icon(Icons.timer_outlined, size: 14)
+                                : null,
+                            label: Text(
                               resendTimer > 0
                                   ? "Resend in ${resendTimer}s"
                                   : "Resend",
