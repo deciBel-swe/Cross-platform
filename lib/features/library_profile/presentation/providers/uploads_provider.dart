@@ -21,12 +21,10 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     ({List<Track> tracks, int currentPage, bool isLastPage})
   >
   _memoryCacheByUser = {};
-  static final Map<int, Set<int>> _hiddenFailedTrackIdsByUser = {};
 
   @visibleForTesting
   static void clearMemoryCache() {
     _memoryCacheByUser.clear();
-    _hiddenFailedTrackIdsByUser.clear();
   }
 
   int? _activeUserId;
@@ -37,7 +35,6 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   bool _isRefreshingProcessing = false;
   // Tracks that reached terminal statuses so we stop polling them.
   final Set<int> _terminalStatusTrackIds = <int>{};
-  final Set<int> _hiddenFailedTrackIdsWithoutUser = <int>{};
 
   static const int _pageSize = 20;
 
@@ -120,16 +117,15 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     _currentPage = paginated.pageNumber;
     _isLastPage = paginated.isLast;
     _terminalStatusTrackIds.clear();
-    final visibleTracks = _filterVisibleTracks(paginated.content);
     _memoryCacheByUser[userId] = (
-      tracks: visibleTracks,
+      tracks: paginated.content,
       currentPage: paginated.pageNumber,
       isLastPage: paginated.isLast,
     );
 
-    _syncProcessingPolling(visibleTracks);
+    _syncProcessingPolling(paginated.content);
 
-    return visibleTracks;
+    return paginated.content;
   }
 
   Future<void> refreshAll() async {
@@ -180,10 +176,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       _currentPage = paginated.pageNumber;
       _isLastPage = paginated.isLast;
 
-      final updated = _filterVisibleTracks([
-        ...currentTracks,
-        ...paginated.content,
-      ]);
+      final updated = [...currentTracks, ...paginated.content];
       _memoryCacheByUser[userId] = (
         tracks: updated,
         currentPage: paginated.pageNumber,
@@ -219,12 +212,6 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
           .firstWhere((item) => item != null, orElse: () => null);
 
       if (track == null) {
-        return;
-      }
-
-      if (_shouldHideTrack(track)) {
-        removeFailedTrack(track.id);
-        didUpdate = true;
         return;
       }
 
@@ -312,35 +299,6 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     _syncProcessingPolling(state.valueOrNull ?? const <Track>[]);
   }
 
-  void removeFailedTrack(int trackId) {
-    if (_isDisposed) return;
-
-    _hiddenFailedTrackIds.add(trackId);
-    _terminalStatusTrackIds.add(trackId);
-
-    final currentTracks = state.valueOrNull;
-    if (currentTracks != null) {
-      final updated = currentTracks
-          .where((track) => track.id != trackId)
-          .toList(growable: false);
-
-      if (updated.length != currentTracks.length) {
-        state = AsyncData(updated);
-      }
-    }
-
-    final userId = _ensureActiveUserId();
-    if (userId != null) {
-      _removeTrackFromCache(userId: userId, trackId: trackId);
-    } else {
-      for (final cachedUserId in _memoryCacheByUser.keys.toList()) {
-        _removeTrackFromCache(userId: cachedUserId, trackId: trackId);
-      }
-    }
-
-    _syncProcessingPolling(state.valueOrNull ?? const <Track>[]);
-  }
-
   static void _removeTrackFromCache({
     required int userId,
     required int trackId,
@@ -366,11 +324,6 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
   void setTrackState(int trackId, TrackStatus stateValue) {
     if (_isDisposed) return;
-
-    if (stateValue == TrackStatus.failed) {
-      removeFailedTrack(trackId);
-      return;
-    }
 
     final currentTracks = state.valueOrNull ?? const <Track>[];
     if (currentTracks.isEmpty) return;
@@ -414,11 +367,6 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   void upsertTrack(Track track) {
     if (_isDisposed) return;
 
-    if (_shouldHideTrack(track)) {
-      removeFailedTrack(track.id);
-      return;
-    }
-
     final currentTracks = state.valueOrNull ?? const <Track>[];
     final existingIndex = currentTracks.indexWhere(
       (item) => item.id == track.id,
@@ -454,10 +402,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   void _syncProcessingPolling(List<Track> tracks) {
     // Poll only tracks still processing and not already marked terminal.
     final hasProcessing = tracks.any(
-      (t) =>
-          t.isProcessing &&
-          !_terminalStatusTrackIds.contains(t.id) &&
-          !_hiddenFailedTrackIds.contains(t.id),
+      (t) => t.isProcessing && !_terminalStatusTrackIds.contains(t.id),
     );
     if (!hasProcessing) {
       _processingRefreshTimer?.cancel();
@@ -490,12 +435,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     }
 
     final processingIds = tracks
-        .where(
-          (t) =>
-              t.isProcessing &&
-              !_terminalStatusTrackIds.contains(t.id) &&
-              !_hiddenFailedTrackIds.contains(t.id),
-        )
+        .where((t) => t.isProcessing && !_terminalStatusTrackIds.contains(t.id))
         .map((t) => t.id)
         .toList();
 
@@ -532,7 +472,8 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
                 }
                 break;
               case 'FAILED':
-                removeFailedTrack(id);
+                _terminalStatusTrackIds.add(id);
+                setTrackState(id, TrackStatus.failed);
                 break;
               default:
                 await refreshTrack(id);
@@ -549,11 +490,6 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
   void addTrack(Track track) {
     if (_isDisposed) return;
-
-    if (_shouldHideTrack(track)) {
-      removeFailedTrack(track.id);
-      return;
-    }
 
     final currentTracks = state.valueOrNull ?? [];
 
@@ -588,24 +524,5 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     if (userId != null) {
       _memoryCacheByUser.remove(userId);
     }
-  }
-
-  List<Track> _filterVisibleTracks(List<Track> tracks) {
-    return tracks.where((track) => !_shouldHideTrack(track)).toList(
-      growable: false,
-    );
-  }
-
-  bool _shouldHideTrack(Track track) {
-    return track.isFailed || _hiddenFailedTrackIds.contains(track.id);
-  }
-
-  Set<int> get _hiddenFailedTrackIds {
-    final userId = _activeUserId;
-    if (userId == null) {
-      return _hiddenFailedTrackIdsWithoutUser;
-    }
-
-    return _hiddenFailedTrackIdsByUser.putIfAbsent(userId, () => <int>{});
   }
 }

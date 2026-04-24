@@ -22,7 +22,7 @@ class WebSocketClient {
   final Map<String, StreamController<Map<String, dynamic>>> _controllers = {};
 
   // Stores the unsubscribe callbacks provided by the STOMP client
-  final Map<String, Function> _unsubscribeFunctions = {};
+  final Map<String, StompUnsubscribe> _unsubscribeFunctions = {};
 
   /// Returns a stream for a specific STOMP topic, connecting to the hub if needed.
   Stream<Map<String, dynamic>> watch(String topicEndpoint) {

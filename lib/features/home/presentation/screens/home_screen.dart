@@ -12,6 +12,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../discovery/domain/entities/paginated_discovery_tracks.dart';
 import '../../../discovery/presentation/discovery_genres.dart';
 import '../../../discovery/presentation/providers/discovery_provider.dart';
+import '../../../notifications/presentation/widgets/notification_bell_badge.dart';
 import '../../../upgrade/presentation/widgets/get_pro_button.dart';
 import '../widgets/liked_tracks_shortcut.dart';
 import '../widgets/section_header.dart';
@@ -35,10 +36,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       popularTracksProvider((genre: null, limit: isDesktop ? 8 : 6)),
     );
     final genreStationAsync = ref.watch(
-      genreStationProvider(
-        (genre: _selectedGenre, page: 0, size: isDesktop ? 8 : 6),
-      ),
+      genreStationProvider((
+        genre: _selectedGenre,
+        page: 0,
+        size: isDesktop ? 8 : 6,
+      )),
     );
+    final horizontalPadding = isDesktop
+        ? AppDimensions.paddingXl
+        : AppDimensions.paddingMd;
+    final topPadding = isDesktop
+        ? AppDimensions.paddingXl
+        : AppDimensions.paddingSm;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -57,71 +66,87 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: const Icon(Icons.cloud_upload),
                   onPressed: () => context.push(RoutePaths.upload),
                 ),
+                const NotificationBellBadge(),
+                const SizedBox(width: 8),
               ],
             ),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          isDesktop ? AppDimensions.paddingXl : AppDimensions.paddingMd,
-          isDesktop ? AppDimensions.paddingXl : AppDimensions.paddingMd,
-          isDesktop ? AppDimensions.paddingXl : AppDimensions.paddingMd,
-          AppDimensions.paddingXl,
-        ),
+        padding: EdgeInsets.fromLTRB(0, topPadding, 0, AppDimensions.paddingXl),
         children: <Widget>[
-          if (isDesktop) ...<Widget>[
-            const Text('Home', style: AppTextStyles.sectionTitle),
-            const SizedBox(height: AppDimensions.paddingSm),
-            Text(
-              'Popular tracks and discovery stations.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+          if (isDesktop)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text('Home', style: AppTextStyles.sectionTitle),
+                  const SizedBox(height: AppDimensions.paddingSm),
+                  Text(
+                    'Popular tracks and discovery stations.',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.paddingLg),
+                ],
               ),
             ),
-            const SizedBox(height: AppDimensions.paddingLg),
-          ],
           const LikedTracksShortcut(),
-          const SizedBox(height: AppDimensions.paddingXl),
-          SectionHeader(
-            title: 'Based on your likes',
-            onSeeAll: () => context.push(RoutePaths.libraryLikes),
-          ),
-          const SizedBox(height: AppDimensions.paddingMd),
-          _TrackRailSection(
-            asyncTracks: likesStationAsync,
-            emptyMessage: 'Like a few tracks to kick-start your station.',
-          ),
-          const SizedBox(height: AppDimensions.paddingXl),
-          SectionHeader(
-            title: 'Popular tracks',
-            onSeeAll: () => context.go(RoutePaths.search),
-          ),
-          const SizedBox(height: AppDimensions.paddingMd),
-          _TrackRailSection(
-            asyncTracks: popularTracksAsync,
-            emptyMessage: 'Popular tracks will show up here once discovery loads.',
-          ),
-          const SizedBox(height: AppDimensions.paddingXl),
-          SectionHeader(
-            title: 'Genre station',
-            onSeeAll: () => context.go(
-              Uri(
-                path: RoutePaths.search,
-                queryParameters: <String, String>{'genre': _selectedGenre},
-              ).toString(),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const SizedBox(height: AppDimensions.paddingXl),
+                SectionHeader(
+                  title: 'Based on your likes',
+                  onSeeAll: () => context.push(RoutePaths.libraryLikes),
+                ),
+                const SizedBox(height: AppDimensions.paddingMd),
+                _TrackRailSection(
+                  asyncTracks: likesStationAsync,
+                  emptyMessage: 'Like a few tracks to kick-start your station.',
+                ),
+                const SizedBox(height: AppDimensions.paddingXl),
+                SectionHeader(
+                  title: 'Popular tracks',
+                  onSeeAll: () => context.go(RoutePaths.search),
+                ),
+                const SizedBox(height: AppDimensions.paddingMd),
+                _TrackRailSection(
+                  asyncTracks: popularTracksAsync,
+                  emptyMessage:
+                      'Popular tracks will show up here once discovery loads.',
+                ),
+                const SizedBox(height: AppDimensions.paddingXl),
+                SectionHeader(
+                  title: 'Genre station',
+                  onSeeAll: () => context.go(
+                    Uri(
+                      path: RoutePaths.search,
+                      queryParameters: <String, String>{
+                        'genre': _selectedGenre,
+                      },
+                    ).toString(),
+                  ),
+                ),
+                const SizedBox(height: AppDimensions.paddingMd),
+                _GenreSelector(
+                  selectedGenre: _selectedGenre,
+                  onGenreSelected: (String genre) {
+                    setState(() {
+                      _selectedGenre = genre;
+                    });
+                  },
+                ),
+                const SizedBox(height: AppDimensions.paddingMd),
+                _TrackRailSection(
+                  asyncTracks: genreStationAsync,
+                  emptyMessage:
+                      'No station tracks are available for $_selectedGenre yet.',
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: AppDimensions.paddingMd),
-          _GenreSelector(
-            selectedGenre: _selectedGenre,
-            onGenreSelected: (String genre) {
-              setState(() {
-                _selectedGenre = genre;
-              });
-            },
-          ),
-          const SizedBox(height: AppDimensions.paddingMd),
-          _TrackRailSection(
-            asyncTracks: genreStationAsync,
-            emptyMessage: 'No station tracks are available for $_selectedGenre yet.',
           ),
         ],
       ),
@@ -277,10 +302,7 @@ class _TrackCardPlaceholder extends StatelessWidget {
 }
 
 class _SectionMessageCard extends StatelessWidget {
-  const _SectionMessageCard({
-    required this.message,
-    this.isError = false,
-  });
+  const _SectionMessageCard({required this.message, this.isError = false});
 
   final String message;
   final bool isError;
@@ -304,9 +326,7 @@ class _SectionMessageCard extends StatelessWidget {
             color: isError ? AppColors.errors : AppColors.primary,
           ),
           const SizedBox(width: AppDimensions.paddingMd),
-          Expanded(
-            child: Text(message, style: AppTextStyles.bodyMedium),
-          ),
+          Expanded(child: Text(message, style: AppTextStyles.bodyMedium)),
         ],
       ),
     );
@@ -338,8 +358,9 @@ String _formatCount(int value) {
     return '${(value / 1000000).toStringAsFixed(1)}M';
   }
   if (value >= 1000) {
-    final formattedValue =
-        (value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1);
+    final formattedValue = (value / 1000).toStringAsFixed(
+      value % 1000 == 0 ? 0 : 1,
+    );
     return '${formattedValue}K';
   }
   return value.toString();

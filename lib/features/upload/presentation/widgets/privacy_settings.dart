@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../auth/domain/entities/auth_user.dart';
+import '../../../library_profile/domain/entities/user_profile.dart'
+    as profile_entities;
 import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../providers/upload_notifier.dart';
 
@@ -30,11 +31,10 @@ class PrivacySettings extends ConsumerWidget {
     bool isArtistPro = userProfileAsync.maybeWhen(
       data: (result) => result.fold(
         (_) => false,
-        // ignore: unrelated_type_equality_checks
-        (profile) => profile.tier != UserTier.free,
+        (profile) => profile.tier != profile_entities.UserTier.free,
       ),
-        orElse: () => false,
-      );
+      orElse: () => false,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

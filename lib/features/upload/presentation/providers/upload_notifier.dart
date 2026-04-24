@@ -90,6 +90,8 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
   void updateDescription(String desc) =>
       _updateState((state) => state.copyWith(description: desc));
+  void updateAccess(String access) =>
+      _updateState((state) => state.copyWith(access: access));
   void togglePrivacy(bool isPrivate) async {
     // 1. Update the UI state instantly
     final currentState = state.value;

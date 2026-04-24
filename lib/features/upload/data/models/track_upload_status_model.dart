@@ -11,13 +11,6 @@ class TrackUploadStatusModel {
     this.trackResponse,
   });
 
-  final TrackUploadState state;
-  final int? trackId;
-  final int progressPercentage;
-  final String? stepName;
-  final String? errorMessage;
-  final TrackModel? trackResponse;
-
   factory TrackUploadStatusModel.fromJson(Map<String, dynamic> json) {
     final state = _parseState(json['trackState']);
     if (state == null) {
@@ -38,6 +31,13 @@ class TrackUploadStatusModel {
           : null,
     );
   }
+
+  final TrackUploadState state;
+  final int? trackId;
+  final int progressPercentage;
+  final String? stepName;
+  final String? errorMessage;
+  final TrackModel? trackResponse;
 
   TrackUploadStatus toEntity() {
     return TrackUploadStatus(

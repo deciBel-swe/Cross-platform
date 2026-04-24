@@ -74,18 +74,21 @@ final uploadSessionByTrackIdProvider = Provider.family<UploadSession?, int>((
 class UploadSessionsNotifier extends Notifier<Map<String, UploadSession>> {
   final Map<String, StreamSubscription<TrackUploadStatus>> _subscriptions =
       <String, StreamSubscription<TrackUploadStatus>>{};
+  final Map<String, void Function()> _cancelUploadStatusSubscriptions =
+      <String, void Function()>{};
 
   @override
   Map<String, UploadSession> build() {
     ref.onDispose(() {
-      final repository = ref.read(uploadRepositoryProvider);
-      for (final uploadId in _subscriptions.keys) {
-        repository.cancelUploadStatusSubscription(uploadId);
+      for (final cancelUploadStatus
+          in _cancelUploadStatusSubscriptions.values) {
+        cancelUploadStatus();
       }
       for (final subscription in _subscriptions.values) {
         subscription.cancel();
       }
       _subscriptions.clear();
+      _cancelUploadStatusSubscriptions.clear();
     });
 
     return <String, UploadSession>{};
@@ -108,6 +111,9 @@ class UploadSessionsNotifier extends Notifier<Map<String, UploadSession>> {
 
     final repository = ref.read(uploadRepositoryProvider);
     try {
+      _cancelUploadStatusSubscriptions[uploadId] = () {
+        repository.cancelUploadStatusSubscription(uploadId);
+      };
       _subscriptions[uploadId] = repository
           .watchUploadStatus(uploadId)
           .listen(
@@ -161,7 +167,7 @@ class UploadSessionsNotifier extends Notifier<Map<String, UploadSession>> {
         _removeCompletedSession(uploadId);
         break;
       case TrackUploadState.failed:
-        uploadsNotifier.removeFailedTrack(nextTrack.id);
+        uploadsNotifier.upsertTrack(nextTrack);
         _removeCompletedSession(uploadId);
         break;
     }
@@ -206,6 +212,6 @@ class UploadSessionsNotifier extends Notifier<Map<String, UploadSession>> {
 
   void _cancelSubscription(String uploadId) {
     _subscriptions.remove(uploadId)?.cancel();
-    ref.read(uploadRepositoryProvider).cancelUploadStatusSubscription(uploadId);
+    _cancelUploadStatusSubscriptions.remove(uploadId)?.call();
   }
 }

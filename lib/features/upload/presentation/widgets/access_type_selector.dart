@@ -11,7 +11,9 @@ class AccessTypeSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Listen to the current state to get the selected access type
     final access = ref.watch(
-      uploadNotifierProvider.select((state) => state.valueOrNull?.access ?? 'PLAYABLE'),
+      uploadNotifierProvider.select(
+        (state) => state.valueOrNull?.access ?? 'PLAYABLE',
+      ),
     );
 
     return Column(
@@ -32,34 +34,34 @@ class AccessTypeSelector extends ConsumerWidget {
             segments: const [
               ButtonSegment(
                 value: 'PLAYABLE',
-                label: Text('Playable', style: TextStyle(fontSize: 13),),
+                label: Text('Playable', style: TextStyle(fontSize: 13)),
                 icon: Icon(Icons.play_arrow),
               ),
               ButtonSegment(
                 value: 'PREVIEW',
-                label: Text('Preview', style: TextStyle(fontSize: 13),),
+                label: Text('Preview', style: TextStyle(fontSize: 13)),
                 icon: Icon(Icons.timer),
               ),
               ButtonSegment(
                 value: 'BLOCKED',
-                label: Text('Blocked', style: TextStyle(fontSize: 13),),
+                label: Text('Blocked', style: TextStyle(fontSize: 13)),
                 icon: Icon(Icons.block),
               ),
             ],
             selected: {access},
             onSelectionChanged: (Set<String> newSelection) {
-              // Update the state in the notifier
-              final currentState = ref.read(uploadNotifierProvider).value;
-              if (currentState != null) {
-                ref.read(uploadNotifierProvider.notifier).state = AsyncData(
-                  currentState.copyWith(access: newSelection.first),
-                );
+              if (newSelection.isEmpty) {
+                return;
               }
+
+              ref
+                  .read(uploadNotifierProvider.notifier)
+                  .updateAccess(newSelection.first);
             },
             style: SegmentedButton.styleFrom(
               backgroundColor: AppColors.surface,
               foregroundColor: Colors.white70,
-              selectedBackgroundColor: AppColors.primary.withOpacity(0.2),
+              selectedBackgroundColor: AppColors.primary.withValues(alpha: 0.2),
               selectedForegroundColor: AppColors.primary,
             ),
           ),
