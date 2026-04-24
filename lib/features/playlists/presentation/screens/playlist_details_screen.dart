@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,8 +10,10 @@ import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
 import '../providers/playlist_details_provider.dart';
 import '../widgets/playlist_options_bottom_sheet.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import '../../../library_profile/presentation/widgets/track_tile.dart';
+import '../../../library_profile/presentation/widgets/track_details.dart';
 
-/// The main playlist details screen
 class PlaylistDetailsScreen extends ConsumerWidget {
   const PlaylistDetailsScreen({super.key, required this.playlistSummary});
 
@@ -51,7 +52,6 @@ class PlaylistDetailsScreen extends ConsumerWidget {
       ),
       body: CustomScrollView(
         slivers: [
-          // 1. Static Header & Actions
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -67,8 +67,6 @@ class PlaylistDetailsScreen extends ConsumerWidget {
               ),
             ),
           ),
-
-          // 2. The Tracks List
           playlistAsync.when(
             loading: () => const SliverFillRemaining(
               child: Center(
@@ -101,17 +99,27 @@ class PlaylistDetailsScreen extends ConsumerWidget {
               return SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final track = fullPlaylist.tracks[index];
-                  return _TrackTile(
+
+                  return TrackTile(
                     key: ValueKey(track.id),
                     track: track,
-                    playlist: fullPlaylist,
+                    onTap: () {
+                      ref
+                          .read(trackAudioProvider.notifier)
+                          .playTrack(
+                            track: track,
+                            queue: fullPlaylist.tracks,
+                            autoPlay: true,
+                          );
+                    },
+                    onMorePressed: () {
+                      TrackDetails.show(context, track, ref);
+                    },
                   );
                 }, childCount: fullPlaylist.tracks.length),
               );
             },
           ),
-
-          // 3. Suggested For You Section "Will be deleted or be a feature I don't know"
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(16, 32, 16, 16),
@@ -125,7 +133,6 @@ class PlaylistDetailsScreen extends ConsumerWidget {
               ),
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -140,14 +147,12 @@ class _PlaylistHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine track count string
     final trackCount = playlist.tracks.length;
     final trackString = trackCount == 1 ? 'One Track' : '$trackCount Tracks';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Cover Art
         Container(
           width: 120,
           height: 120,
@@ -155,7 +160,6 @@ class _PlaylistHeader extends StatelessWidget {
             color: AppColors.surfaceVariant,
             borderRadius: BorderRadius.circular(4),
           ),
-          // Ensures the mosaic grid stays inside the rounded corners
           clipBehavior: Clip.hardEdge,
           child:
               (playlist.coverArt != null &&
@@ -163,7 +167,6 @@ class _PlaylistHeader extends StatelessWidget {
               ? Image.file(
                   File(playlist.coverArt!),
                   fit: BoxFit.cover,
-                  // error builder so if the cover image file is deleted or corrupted the app shows an icon instead of the giant red error box
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.broken_image,
                     color: AppColors.textMuted,
@@ -172,8 +175,6 @@ class _PlaylistHeader extends StatelessWidget {
               : _MosaicCover(tracks: playlist.tracks),
         ),
         const SizedBox(width: 16),
-
-        // Metadata
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,8 +190,6 @@ class _PlaylistHeader extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-
-              // Metadata Row
               Row(
                 children: [
                   Expanded(
@@ -213,16 +212,13 @@ class _PlaylistHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-
-              // Owner Row
               Row(
                 children: [
                   Container(
                     width: 24,
                     height: 24,
                     decoration: const BoxDecoration(
-                      color: AppColors
-                          .primary, // TODO: It may be the user profile image
+                      color: AppColors.primary,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -234,7 +230,7 @@ class _PlaylistHeader extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'By ${playlist.owner.username}',
+                      'By ${playlist.owner?.username}',
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 14,
@@ -276,15 +272,11 @@ class _PlaylistActions extends StatelessWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.shuffle, color: AppColors.textSecondary),
-              onPressed: () {
-                // TODO: Shuffle play logic
-              },
+              onPressed: () {},
             ),
             const SizedBox(width: 8),
             GestureDetector(
-              onTap: () {
-                // TODO: Play playlist logic
-              },
+              onTap: () {},
               child: Container(
                 width: 56,
                 height: 56,
@@ -306,88 +298,6 @@ class _PlaylistActions extends StatelessWidget {
   }
 }
 
-class _TrackTile extends StatelessWidget {
-  const _TrackTile({super.key, required this.track, required this.playlist});
-
-  final Track track;
-  final Playlist playlist;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16.0,
-        vertical: 4.0,
-      ),
-      leading: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(4),
-          image: track.coverUrl != null
-              ? DecorationImage(
-                  image: CachedNetworkImageProvider(track.coverUrl!),
-                  fit: BoxFit.cover,
-                )
-              : null,
-        ),
-        child: track.coverUrl == null
-            ? const Icon(Icons.music_note, color: AppColors.textMuted)
-            : null,
-      ),
-      title: Text(
-        track.title,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w500,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 4),
-          Text(
-            track.artist.username,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(
-                Icons.pause_circle_filled,
-                color: AppColors.textMuted,
-                size: 14,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                track.state.name,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      trailing: IconButton(
-        icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-        onPressed: () {
-          // TODO: Open the track options bottom sheet
-        },
-      ),
-    );
-  }
-}
-
 class _MosaicCover extends StatelessWidget {
   const _MosaicCover({required this.tracks});
 
@@ -395,12 +305,10 @@ class _MosaicCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Filter tracks that actually have a cover URL
     final tracksWithCovers = tracks
         .where((t) => t.coverUrl != null && t.coverUrl!.trim().isNotEmpty)
         .toList();
 
-    // If we have 4 or more, build a 2x2 grid
     if (tracksWithCovers.length >= 4) {
       return GridView.builder(
         padding: EdgeInsets.zero,
@@ -418,7 +326,6 @@ class _MosaicCover extends StatelessWidget {
       );
     }
 
-    // If we have at least 1, just show the first one taking up the whole space
     if (tracksWithCovers.isNotEmpty) {
       return DecibelCachedImage(
         imageUrl: tracksWithCovers.first.coverUrl!,
@@ -426,7 +333,6 @@ class _MosaicCover extends StatelessWidget {
       );
     }
 
-    // fallback if no tracks have covers
     return const Icon(Icons.music_note, color: AppColors.textMuted, size: 48);
   }
 }

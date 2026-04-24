@@ -854,5 +854,9 @@ Playlist _toPlaylistEntity(DiscoveryPlaylist playlist) {
       avatarUrl: playlist.owner.avatarUrl,
     ),
     tracks: const <Track>[],
+    totalDurationSeconds: playlist.totalDurationSeconds,
+    trackCount: playlist.trackCount,
+    playlistSlug: playlist.playlistSlug,
+    createdAt: playlist.createdAt,
   );
 }

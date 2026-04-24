@@ -232,7 +232,7 @@ class _Header extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  playlist.owner.username,
+                  playlist.owner!.username,
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14,

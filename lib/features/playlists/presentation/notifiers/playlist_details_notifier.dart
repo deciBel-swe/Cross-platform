@@ -77,6 +77,13 @@ class PlaylistDetailsNotifier
           coverArt: p.coverArt,
           owner: p.owner,
           tracks: newTracks,
+          totalDurationSeconds: p.totalDurationSeconds,
+          trackCount: p.trackCount,
+          playlistSlug: p.playlistSlug,
+          firstTrackWaveformUrl: p.firstTrackWaveformUrl,
+          secretToken: p.secretToken,
+          access: p.access,
+          createdAt: p.createdAt,
         ),
       );
     }

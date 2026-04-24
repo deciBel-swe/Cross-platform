@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/entities/track.dart';
@@ -19,7 +18,7 @@ class TrackModel with _$TrackModel {
     String? trackUrl,
     String? coverUrl,
     String? waveformUrl,
-    required String genre,
+    @Default('') String genre,
     @Default(<String>[]) List<String> tags,
     required TrackStatusModel state,
     required DateTime releaseDate,
@@ -45,9 +44,26 @@ class TrackModel with _$TrackModel {
         .trim()
         .toUpperCase();
 
+    // Key mappings
     if (!map.containsKey('createdAt') && map.containsKey('uploadDate')) {
       map['createdAt'] = map['uploadDate'];
     }
+
+    final fallbackDate = DateTime.fromMillisecondsSinceEpoch(
+      0,
+    ).toIso8601String();
+
+    map['releaseDate'] ??=
+        map['createdAt'] ?? map['uploadDate'] ?? fallbackDate;
+    map['createdAt'] ??=
+        map['releaseDate'] ?? map['uploadDate'] ?? fallbackDate;
+
+    // Waveform fallback
+    if (!map.containsKey('waveformUrl') || map['waveformUrl'] == null) {
+      map['waveformUrl'] = map['trackPreviewUrl'];
+    }
+
+    // state handling
     map['state'] = switch (rawState) {
       'UPLOADING' || 'PROCESSING' => 'PROCESSING',
       'FAILED' => 'FAILED',

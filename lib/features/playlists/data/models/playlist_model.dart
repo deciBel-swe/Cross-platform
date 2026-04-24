@@ -1,22 +1,10 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../library/data/models/track_model.dart';
+import 'owner_model.dart';
 
 part 'playlist_model.freezed.dart';
 part 'playlist_model.g.dart';
-
-@freezed
-class OwnerModel with _$OwnerModel {
-  const factory OwnerModel({
-    @JsonKey(name: 'userId') required int id,
-    required String username,
-    String? displayName,
-    String? avatarUrl,
-  }) = _OwnerModel;
-
-  factory OwnerModel.fromJson(Map<String, dynamic> json) =>
-      _$OwnerModelFromJson(json);
-}
 
 class PlaylistTracksConverter
     implements JsonConverter<List<TrackModel>, dynamic> {
@@ -30,6 +18,10 @@ class PlaylistTracksConverter
     if (json is Map) {
       if (json.containsKey('content')) {
         list = json['content'] as List<dynamic>? ?? [];
+      } else if (json.containsKey('trackSummary')) {
+        list = json['trackSummary'] as List<dynamic>? ?? [];
+      } else if (json.containsKey('trackSummaryDto')) {
+        list = json['trackSummaryDto'] as List<dynamic>? ?? [];
       }
     } else if (json is List) {
       list = json;
@@ -57,11 +49,40 @@ class PlaylistModel with _$PlaylistModel {
     @Default(false) bool isLiked,
     @JsonKey(name: 'coverArtUrl') String? coverArt,
     OwnerModel? owner,
-    @PlaylistTracksConverter() @Default([]) List<TrackModel> tracks,
+    @JsonKey(name: 'trackSummaryDto')
+    @PlaylistTracksConverter()
+    @Default([])
+    List<TrackModel> tracks,
     @Default(0) int totalDurationSeconds,
     @Default(0) int trackCount,
+    String? playlistSlug,
+    String? firstTrackWaveformUrl,
+    String? secretToken,
+    String? access,
+    List<String>? genres,
+    DateTime? createdAt,
   }) = _PlaylistModel;
 
   factory PlaylistModel.fromJson(Map<String, dynamic> json) =>
-      _$PlaylistModelFromJson(json);
+      _$PlaylistModelFromJson(_normalizePlaylistJson(json));
+
+  static Map<String, dynamic> _normalizePlaylistJson(
+    Map<String, dynamic> json,
+  ) {
+    final map = Map<String, dynamic>.from(json);
+
+    if (map['trackSummaryDto'] == null) {
+      final paginatedTracks = map['paginatedTrackResponse'];
+      if (map['trackSummary'] != null) {
+        map['trackSummaryDto'] = map['trackSummary'];
+      } else if (paginatedTracks is Map<Object?, Object?>) {
+        final content = paginatedTracks['content'];
+        if (content != null) {
+          map['trackSummaryDto'] = content;
+        }
+      }
+    }
+
+    return map;
+  }
 }
