@@ -96,16 +96,22 @@ import '../../features/playlists/domain/repositories/i_playlist_repository.dart'
     as _i582;
 import '../../features/settings/data/datasources/blocked_users_remote_datasource.dart'
     as _i688;
+import '../../features/settings/data/datasources/messaging_remote_datasource.dart'
+    as _i123;
 import '../../features/settings/data/datasources/notification_settings_remote_datasource.dart'
     as _i92;
 import '../../features/settings/data/repositories/app_icon_repository_impl.dart'
     as _i781;
 import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
     as _i292;
+import '../../features/settings/data/repositories/messaging_repository_implementation.dart'
+    as _i343;
 import '../../features/settings/domain/repositories/app_icon_repository.dart'
     as _i993;
 import '../../features/settings/domain/repositories/blocked_users_repository.dart'
     as _i288;
+import '../../features/settings/domain/repositories/i_messaging_repository.dart'
+    as _i23;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/mock_upload_repository_impl.dart'
@@ -197,6 +203,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i364.IProfileRemoteDataSource>(
       () => _i364.ProfileRemoteDataSource(gh<_i667.DioClient>()),
     );
+    gh.factory<_i123.IMessagingRemoteDataSource>(
+      () => _i123.MessagingRemoteDataSource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i107.IAuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSource(gh<_i667.DioClient>()),
     );
@@ -232,6 +241,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i459.TrackSocialRemoteDatasource>(),
       ),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i23.IMessagingRepository>(
+      () =>
+          _i343.MessagingRepositoryImpl(gh<_i123.IMessagingRemoteDataSource>()),
     );
     gh.lazySingleton<_i272.DownloadTrackUseCase>(
       () => _i272.DownloadTrackUseCase(gh<_i753.IOfflineRepository>()),

@@ -13,6 +13,7 @@ import '../../features/settings/data/repositories/mock_notification_settings_rep
 import '../../features/settings/data/repositories/mock_social_settings_repository_impl.dart';
 import '../../features/settings/data/repositories/notification_settings_repository_impl.dart';
 import '../../features/settings/data/repositories/social_settings_repository_impl.dart';
+import '../../features/settings/domain/repositories/i_messaging_repository.dart';
 import '../../features/settings/domain/repositories/notification_settings_repository.dart';
 import '../../features/settings/domain/repositories/social_settings_repository.dart';
 import '../network/dio_client.dart';
@@ -65,6 +66,10 @@ void _registerManualDependencies({required bool useMockServices}) {
       getIt.unregister<FollowRepository>();
     }
     getIt.registerLazySingleton<FollowRepository>(MockFollowRepository.new);
+
+    if (getIt.isRegistered<IMessagingRepository>()) {
+      getIt.unregister<IMessagingRepository>();
+    }
   } else {
     getIt.registerLazySingleton<SocialSettingsRepository>(
       () => SocialSettingsRepositoryImpl(

@@ -16,6 +16,13 @@ class RoutePaths {
     'user',
     'profile-image',
   };
+  // ==========================================
+  // MESSAGING ROUTES
+  // ==========================================
+
+  static const String chat = '/chat';
+  static const String messages = '/messages';
+  static const String newMessage = '/messages/new';
 
   static const String splash = '/';
   static const String start = '/start';
