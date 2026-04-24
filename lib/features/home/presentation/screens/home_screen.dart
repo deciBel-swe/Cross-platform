@@ -24,6 +24,12 @@ class HomeScreen extends StatelessWidget {
               actions: [
                 const GetProButton(),
                 IconButton(
+                  icon: const Icon(Icons.inbox),
+                  onPressed: () {
+                    context.push(RoutePaths.messages);
+                  },
+                ),
+                IconButton(
                   icon: const Icon(Icons.cloud_upload),
                   onPressed: () {
                     context.push(RoutePaths.upload);

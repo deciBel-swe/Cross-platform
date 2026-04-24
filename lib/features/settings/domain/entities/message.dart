@@ -13,8 +13,8 @@ class Message {
     required this.isRead,
   });
 
-  final int id;
-  final int conversationId;
+  final String id;
+  final String? conversationId;
   final int senderId;
   final String content;
   final ResourceType? resourceType;

@@ -21,13 +21,15 @@ MessageModel _$MessageModelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$MessageModel {
-  int get id => throw _privateConstructorUsedError;
-  int get conversationId => throw _privateConstructorUsedError;
+  String get id => throw _privateConstructorUsedError;
+  String? get conversationId => throw _privateConstructorUsedError;
   int get senderId => throw _privateConstructorUsedError;
+  int? get recipientId => throw _privateConstructorUsedError;
   String get content => throw _privateConstructorUsedError;
   @JsonEnum(alwaysCreate: true)
   ResourceType? get resourceType => throw _privateConstructorUsedError;
   int? get resourceId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'timestamp', fromJson: _parseCreatedAt)
   DateTime get createdAt => throw _privateConstructorUsedError;
   bool get isRead => throw _privateConstructorUsedError;
 
@@ -49,13 +51,14 @@ abstract class $MessageModelCopyWith<$Res> {
   ) = _$MessageModelCopyWithImpl<$Res, MessageModel>;
   @useResult
   $Res call({
-    int id,
-    int conversationId,
+    String id,
+    String? conversationId,
     int senderId,
+    int? recipientId,
     String content,
     @JsonEnum(alwaysCreate: true) ResourceType? resourceType,
     int? resourceId,
-    DateTime createdAt,
+    @JsonKey(name: 'timestamp', fromJson: _parseCreatedAt) DateTime createdAt,
     bool isRead,
   });
 }
@@ -76,8 +79,9 @@ class _$MessageModelCopyWithImpl<$Res, $Val extends MessageModel>
   @override
   $Res call({
     Object? id = null,
-    Object? conversationId = null,
+    Object? conversationId = freezed,
     Object? senderId = null,
+    Object? recipientId = freezed,
     Object? content = null,
     Object? resourceType = freezed,
     Object? resourceId = freezed,
@@ -89,15 +93,19 @@ class _$MessageModelCopyWithImpl<$Res, $Val extends MessageModel>
             id: null == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
-                      as int,
-            conversationId: null == conversationId
+                      as String,
+            conversationId: freezed == conversationId
                 ? _value.conversationId
                 : conversationId // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String?,
             senderId: null == senderId
                 ? _value.senderId
                 : senderId // ignore: cast_nullable_to_non_nullable
                       as int,
+            recipientId: freezed == recipientId
+                ? _value.recipientId
+                : recipientId // ignore: cast_nullable_to_non_nullable
+                      as int?,
             content: null == content
                 ? _value.content
                 : content // ignore: cast_nullable_to_non_nullable
@@ -134,13 +142,14 @@ abstract class _$$MessageModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int id,
-    int conversationId,
+    String id,
+    String? conversationId,
     int senderId,
+    int? recipientId,
     String content,
     @JsonEnum(alwaysCreate: true) ResourceType? resourceType,
     int? resourceId,
-    DateTime createdAt,
+    @JsonKey(name: 'timestamp', fromJson: _parseCreatedAt) DateTime createdAt,
     bool isRead,
   });
 }
@@ -160,8 +169,9 @@ class __$$MessageModelImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? conversationId = null,
+    Object? conversationId = freezed,
     Object? senderId = null,
+    Object? recipientId = freezed,
     Object? content = null,
     Object? resourceType = freezed,
     Object? resourceId = freezed,
@@ -173,15 +183,19 @@ class __$$MessageModelImplCopyWithImpl<$Res>
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
-                  as int,
-        conversationId: null == conversationId
+                  as String,
+        conversationId: freezed == conversationId
             ? _value.conversationId
             : conversationId // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String?,
         senderId: null == senderId
             ? _value.senderId
             : senderId // ignore: cast_nullable_to_non_nullable
                   as int,
+        recipientId: freezed == recipientId
+            ? _value.recipientId
+            : recipientId // ignore: cast_nullable_to_non_nullable
+                  as int?,
         content: null == content
             ? _value.content
             : content // ignore: cast_nullable_to_non_nullable
@@ -212,11 +226,13 @@ class __$$MessageModelImplCopyWithImpl<$Res>
 class _$MessageModelImpl implements _MessageModel {
   const _$MessageModelImpl({
     required this.id,
-    required this.conversationId,
+    this.conversationId,
     required this.senderId,
+    this.recipientId,
     required this.content,
     @JsonEnum(alwaysCreate: true) this.resourceType,
     this.resourceId,
+    @JsonKey(name: 'timestamp', fromJson: _parseCreatedAt)
     required this.createdAt,
     this.isRead = false,
   });
@@ -225,11 +241,13 @@ class _$MessageModelImpl implements _MessageModel {
       _$$MessageModelImplFromJson(json);
 
   @override
-  final int id;
+  final String id;
   @override
-  final int conversationId;
+  final String? conversationId;
   @override
   final int senderId;
+  @override
+  final int? recipientId;
   @override
   final String content;
   @override
@@ -238,6 +256,7 @@ class _$MessageModelImpl implements _MessageModel {
   @override
   final int? resourceId;
   @override
+  @JsonKey(name: 'timestamp', fromJson: _parseCreatedAt)
   final DateTime createdAt;
   @override
   @JsonKey()
@@ -245,7 +264,7 @@ class _$MessageModelImpl implements _MessageModel {
 
   @override
   String toString() {
-    return 'MessageModel(id: $id, conversationId: $conversationId, senderId: $senderId, content: $content, resourceType: $resourceType, resourceId: $resourceId, createdAt: $createdAt, isRead: $isRead)';
+    return 'MessageModel(id: $id, conversationId: $conversationId, senderId: $senderId, recipientId: $recipientId, content: $content, resourceType: $resourceType, resourceId: $resourceId, createdAt: $createdAt, isRead: $isRead)';
   }
 
   @override
@@ -258,6 +277,8 @@ class _$MessageModelImpl implements _MessageModel {
                 other.conversationId == conversationId) &&
             (identical(other.senderId, senderId) ||
                 other.senderId == senderId) &&
+            (identical(other.recipientId, recipientId) ||
+                other.recipientId == recipientId) &&
             (identical(other.content, content) || other.content == content) &&
             (identical(other.resourceType, resourceType) ||
                 other.resourceType == resourceType) &&
@@ -275,6 +296,7 @@ class _$MessageModelImpl implements _MessageModel {
     id,
     conversationId,
     senderId,
+    recipientId,
     content,
     resourceType,
     resourceId,
@@ -298,12 +320,14 @@ class _$MessageModelImpl implements _MessageModel {
 
 abstract class _MessageModel implements MessageModel {
   const factory _MessageModel({
-    required final int id,
-    required final int conversationId,
+    required final String id,
+    final String? conversationId,
     required final int senderId,
+    final int? recipientId,
     required final String content,
     @JsonEnum(alwaysCreate: true) final ResourceType? resourceType,
     final int? resourceId,
+    @JsonKey(name: 'timestamp', fromJson: _parseCreatedAt)
     required final DateTime createdAt,
     final bool isRead,
   }) = _$MessageModelImpl;
@@ -312,11 +336,13 @@ abstract class _MessageModel implements MessageModel {
       _$MessageModelImpl.fromJson;
 
   @override
-  int get id;
+  String get id;
   @override
-  int get conversationId;
+  String? get conversationId;
   @override
   int get senderId;
+  @override
+  int? get recipientId;
   @override
   String get content;
   @override
@@ -325,6 +351,7 @@ abstract class _MessageModel implements MessageModel {
   @override
   int? get resourceId;
   @override
+  @JsonKey(name: 'timestamp', fromJson: _parseCreatedAt)
   DateTime get createdAt;
   @override
   bool get isRead;

@@ -1,18 +1,14 @@
-import 'message_user.dart';
-
 /// Represents a direct messaging thread between two users.
 class Conversation {
   const Conversation({
     required this.id,
-    required this.user1,
-    required this.user2,
-    required this.unreadCount,
-    required this.lastMessageAt,
+    required this.participants,
+    required this.lastMessage,
+    required this.lastTimestamp,
   });
 
-  final int id;
-  final MessageUser user1;
-  final MessageUser user2;
-  final int unreadCount;
-  final DateTime lastMessageAt;
+  final String id;
+  final List<int> participants;
+  final String lastMessage;
+  final DateTime lastTimestamp;
 }

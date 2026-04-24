@@ -21,11 +21,11 @@ ConversationModel _$ConversationModelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$ConversationModel {
-  int get id => throw _privateConstructorUsedError;
-  MessageUserModel get user1 => throw _privateConstructorUsedError;
-  MessageUserModel get user2 => throw _privateConstructorUsedError;
-  int get unreadCount => throw _privateConstructorUsedError;
-  DateTime get lastMessageAt => throw _privateConstructorUsedError;
+  String get id => throw _privateConstructorUsedError;
+  List<int> get participants => throw _privateConstructorUsedError;
+  String get lastMessage => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _parseUtcDateTime)
+  DateTime get lastTimestamp => throw _privateConstructorUsedError;
 
   /// Serializes this ConversationModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -45,15 +45,11 @@ abstract class $ConversationModelCopyWith<$Res> {
   ) = _$ConversationModelCopyWithImpl<$Res, ConversationModel>;
   @useResult
   $Res call({
-    int id,
-    MessageUserModel user1,
-    MessageUserModel user2,
-    int unreadCount,
-    DateTime lastMessageAt,
+    String id,
+    List<int> participants,
+    String lastMessage,
+    @JsonKey(fromJson: _parseUtcDateTime) DateTime lastTimestamp,
   });
-
-  $MessageUserModelCopyWith<$Res> get user1;
-  $MessageUserModelCopyWith<$Res> get user2;
 }
 
 /// @nodoc
@@ -72,56 +68,31 @@ class _$ConversationModelCopyWithImpl<$Res, $Val extends ConversationModel>
   @override
   $Res call({
     Object? id = null,
-    Object? user1 = null,
-    Object? user2 = null,
-    Object? unreadCount = null,
-    Object? lastMessageAt = null,
+    Object? participants = null,
+    Object? lastMessage = null,
+    Object? lastTimestamp = null,
   }) {
     return _then(
       _value.copyWith(
             id: null == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
-                      as int,
-            user1: null == user1
-                ? _value.user1
-                : user1 // ignore: cast_nullable_to_non_nullable
-                      as MessageUserModel,
-            user2: null == user2
-                ? _value.user2
-                : user2 // ignore: cast_nullable_to_non_nullable
-                      as MessageUserModel,
-            unreadCount: null == unreadCount
-                ? _value.unreadCount
-                : unreadCount // ignore: cast_nullable_to_non_nullable
-                      as int,
-            lastMessageAt: null == lastMessageAt
-                ? _value.lastMessageAt
-                : lastMessageAt // ignore: cast_nullable_to_non_nullable
+                      as String,
+            participants: null == participants
+                ? _value.participants
+                : participants // ignore: cast_nullable_to_non_nullable
+                      as List<int>,
+            lastMessage: null == lastMessage
+                ? _value.lastMessage
+                : lastMessage // ignore: cast_nullable_to_non_nullable
+                      as String,
+            lastTimestamp: null == lastTimestamp
+                ? _value.lastTimestamp
+                : lastTimestamp // ignore: cast_nullable_to_non_nullable
                       as DateTime,
           )
           as $Val,
     );
-  }
-
-  /// Create a copy of ConversationModel
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $MessageUserModelCopyWith<$Res> get user1 {
-    return $MessageUserModelCopyWith<$Res>(_value.user1, (value) {
-      return _then(_value.copyWith(user1: value) as $Val);
-    });
-  }
-
-  /// Create a copy of ConversationModel
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $MessageUserModelCopyWith<$Res> get user2 {
-    return $MessageUserModelCopyWith<$Res>(_value.user2, (value) {
-      return _then(_value.copyWith(user2: value) as $Val);
-    });
   }
 }
 
@@ -135,17 +106,11 @@ abstract class _$$ConversationModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int id,
-    MessageUserModel user1,
-    MessageUserModel user2,
-    int unreadCount,
-    DateTime lastMessageAt,
+    String id,
+    List<int> participants,
+    String lastMessage,
+    @JsonKey(fromJson: _parseUtcDateTime) DateTime lastTimestamp,
   });
-
-  @override
-  $MessageUserModelCopyWith<$Res> get user1;
-  @override
-  $MessageUserModelCopyWith<$Res> get user2;
 }
 
 /// @nodoc
@@ -163,32 +128,27 @@ class __$$ConversationModelImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? user1 = null,
-    Object? user2 = null,
-    Object? unreadCount = null,
-    Object? lastMessageAt = null,
+    Object? participants = null,
+    Object? lastMessage = null,
+    Object? lastTimestamp = null,
   }) {
     return _then(
       _$ConversationModelImpl(
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
-                  as int,
-        user1: null == user1
-            ? _value.user1
-            : user1 // ignore: cast_nullable_to_non_nullable
-                  as MessageUserModel,
-        user2: null == user2
-            ? _value.user2
-            : user2 // ignore: cast_nullable_to_non_nullable
-                  as MessageUserModel,
-        unreadCount: null == unreadCount
-            ? _value.unreadCount
-            : unreadCount // ignore: cast_nullable_to_non_nullable
-                  as int,
-        lastMessageAt: null == lastMessageAt
-            ? _value.lastMessageAt
-            : lastMessageAt // ignore: cast_nullable_to_non_nullable
+                  as String,
+        participants: null == participants
+            ? _value._participants
+            : participants // ignore: cast_nullable_to_non_nullable
+                  as List<int>,
+        lastMessage: null == lastMessage
+            ? _value.lastMessage
+            : lastMessage // ignore: cast_nullable_to_non_nullable
+                  as String,
+        lastTimestamp: null == lastTimestamp
+            ? _value.lastTimestamp
+            : lastTimestamp // ignore: cast_nullable_to_non_nullable
                   as DateTime,
       ),
     );
@@ -200,30 +160,34 @@ class __$$ConversationModelImplCopyWithImpl<$Res>
 class _$ConversationModelImpl implements _ConversationModel {
   const _$ConversationModelImpl({
     required this.id,
-    required this.user1,
-    required this.user2,
-    this.unreadCount = 0,
-    required this.lastMessageAt,
-  });
+    required final List<int> participants,
+    this.lastMessage = '',
+    @JsonKey(fromJson: _parseUtcDateTime) required this.lastTimestamp,
+  }) : _participants = participants;
 
   factory _$ConversationModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$ConversationModelImplFromJson(json);
 
   @override
-  final int id;
+  final String id;
+  final List<int> _participants;
   @override
-  final MessageUserModel user1;
-  @override
-  final MessageUserModel user2;
+  List<int> get participants {
+    if (_participants is EqualUnmodifiableListView) return _participants;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_participants);
+  }
+
   @override
   @JsonKey()
-  final int unreadCount;
+  final String lastMessage;
   @override
-  final DateTime lastMessageAt;
+  @JsonKey(fromJson: _parseUtcDateTime)
+  final DateTime lastTimestamp;
 
   @override
   String toString() {
-    return 'ConversationModel(id: $id, user1: $user1, user2: $user2, unreadCount: $unreadCount, lastMessageAt: $lastMessageAt)';
+    return 'ConversationModel(id: $id, participants: $participants, lastMessage: $lastMessage, lastTimestamp: $lastTimestamp)';
   }
 
   @override
@@ -232,18 +196,25 @@ class _$ConversationModelImpl implements _ConversationModel {
         (other.runtimeType == runtimeType &&
             other is _$ConversationModelImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.user1, user1) || other.user1 == user1) &&
-            (identical(other.user2, user2) || other.user2 == user2) &&
-            (identical(other.unreadCount, unreadCount) ||
-                other.unreadCount == unreadCount) &&
-            (identical(other.lastMessageAt, lastMessageAt) ||
-                other.lastMessageAt == lastMessageAt));
+            const DeepCollectionEquality().equals(
+              other._participants,
+              _participants,
+            ) &&
+            (identical(other.lastMessage, lastMessage) ||
+                other.lastMessage == lastMessage) &&
+            (identical(other.lastTimestamp, lastTimestamp) ||
+                other.lastTimestamp == lastTimestamp));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, user1, user2, unreadCount, lastMessageAt);
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    const DeepCollectionEquality().hash(_participants),
+    lastMessage,
+    lastTimestamp,
+  );
 
   /// Create a copy of ConversationModel
   /// with the given fields replaced by the non-null parameter values.
@@ -264,26 +235,24 @@ class _$ConversationModelImpl implements _ConversationModel {
 
 abstract class _ConversationModel implements ConversationModel {
   const factory _ConversationModel({
-    required final int id,
-    required final MessageUserModel user1,
-    required final MessageUserModel user2,
-    final int unreadCount,
-    required final DateTime lastMessageAt,
+    required final String id,
+    required final List<int> participants,
+    final String lastMessage,
+    @JsonKey(fromJson: _parseUtcDateTime) required final DateTime lastTimestamp,
   }) = _$ConversationModelImpl;
 
   factory _ConversationModel.fromJson(Map<String, dynamic> json) =
       _$ConversationModelImpl.fromJson;
 
   @override
-  int get id;
+  String get id;
   @override
-  MessageUserModel get user1;
+  List<int> get participants;
   @override
-  MessageUserModel get user2;
+  String get lastMessage;
   @override
-  int get unreadCount;
-  @override
-  DateTime get lastMessageAt;
+  @JsonKey(fromJson: _parseUtcDateTime)
+  DateTime get lastTimestamp;
 
   /// Create a copy of ConversationModel
   /// with the given fields replaced by the non-null parameter values.
