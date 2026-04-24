@@ -27,4 +27,13 @@ extension ArtistModelX on ArtistModel {
       avatarUrl: avatarUrl,
     );
   }
+
+  static ArtistModel fromEntity(Artist artist) {
+    return ArtistModel(
+      id: artist.id,
+      username: artist.username,
+      displayName: artist.displayName,
+      avatarUrl: artist.avatarUrl,
+    );
+  }
 }

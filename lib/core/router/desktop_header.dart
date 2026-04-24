@@ -62,20 +62,86 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return const _DesktopSearchField();
+  }
+}
+
+class _DesktopSearchField extends StatefulWidget {
+  const _DesktopSearchField();
+
+  @override
+  State<_DesktopSearchField> createState() => _DesktopSearchFieldState();
+}
+
+class _DesktopSearchFieldState extends State<_DesktopSearchField> {
+  late final TextEditingController _controller;
+  String? _lastSyncedQuery;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final routeQuery = GoRouterState.of(context).uri.queryParameters['q']?.trim();
+    if (_lastSyncedQuery == routeQuery) {
+      return;
+    }
+
+    _lastSyncedQuery = routeQuery;
+    final text = routeQuery ?? '';
+    if (_controller.text != text) {
+      _controller.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 480),
       child: SizedBox(
         height: 36,
         child: TextField(
+          controller: _controller,
+          onSubmitted: _submitSearch,
+          onTap: () {
+            if (GoRouterState.of(context).uri.path != RoutePaths.search) {
+              _submitSearch(_controller.text);
+            }
+          },
           style: const TextStyle(fontSize: 13, color: Colors.white),
           decoration: InputDecoration(
-            hintText: 'Search for artists, tracks, albums...',
+            hintText: 'Search for artists, tracks, playlists...',
             hintStyle: const TextStyle(fontSize: 13, color: Colors.white38),
             prefixIcon: const Icon(
               Icons.search,
               size: 20,
               color: Colors.white38,
             ),
+            suffixIcon: _controller.text.trim().isNotEmpty
+                ? IconButton(
+                    onPressed: () {
+                      _controller.clear();
+                      _submitSearch('');
+                      setState(() {});
+                    },
+                    icon: const Icon(Icons.close, size: 18),
+                    color: Colors.white38,
+                  )
+                : null,
             filled: true,
             fillColor: AppColors.surfaceLight,
             contentPadding: EdgeInsets.zero,
@@ -84,9 +150,20 @@ class _SearchField extends StatelessWidget {
               borderSide: BorderSide.none,
             ),
           ),
+          onChanged: (_) => setState(() {}),
         ),
       ),
     );
+  }
+
+  void _submitSearch(String value) {
+    final query = value.trim();
+    final route = Uri(
+      path: RoutePaths.search,
+      queryParameters: query.isEmpty ? null : <String, String>{'q': query},
+    ).toString();
+
+    context.go(route);
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:mime/mime.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
@@ -13,7 +14,6 @@ import '../../../library/data/datasources/library_mock_fixtures.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../domain/entities/track_upload_metadata.dart';
 import '../../domain/repositories/i_upload_repository.dart';
-import 'package:uuid/uuid.dart';
 
 // 1. Bridge GitIt (Dependency Injection) to Riverpod (State Management)
 final uploadRepositoryProvider = Provider<IUploadRepository>((ref) {
@@ -277,7 +277,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
-    final uploadId = Uuid().v4();
+    final uploadId = const Uuid().v4();
 
     final repository = ref.read(uploadRepositoryProvider);
     final result = await repository.uploadTrack(
