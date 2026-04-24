@@ -66,7 +66,11 @@ class _ResendVerificationScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Resend Verification'),
+        title:  Semantics(
+          header: true,
+          label: 'Resend verification screen',
+          child: const Text('Resend Verification'),
+        ),
         backgroundColor: AppColors.transparent,
         elevation: 0,
       ),
@@ -93,54 +97,62 @@ class _ResendVerificationScreenState
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 32),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email Address',
-                      hintText: 'name@example.com',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      filled: true,
-                      fillColor: AppColors.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.outline),
+                  Semantics(
+                    textField: true,
+                    label: 'Email address for verification code',
+                    child: TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email Address',
+                        hintText: 'name@example.com',
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.outline),
+                        ),
                       ),
+                      validator: AuthValidators.validateEmail,
+                      keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.email],
+                      textInputAction: TextInputAction.send,
+                      onFieldSubmitted: (_) => _handleResend(),
                     ),
-                    validator: AuthValidators.validateEmail,
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.email],
-                    textInputAction: TextInputAction.send,
-                    onFieldSubmitted: (_) => _handleResend(),
                   ),
                   const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _handleResend,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: AppColors.onPrimary,
-                      foregroundColor: AppColors.onBackground,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  Semantics(
+                    button: true,
+                    label: 'Send new verification code',
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _handleResend,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: AppColors.onPrimary,
+                        foregroundColor: AppColors.onBackground,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.primary,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.primary,
+                                ),
+                              ),
+                            )
+                          : const Text(
+                              'Send Code',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          )
-                        : const Text(
-                            'Send Code',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                    ),
                   ),
                 ],
               ),
