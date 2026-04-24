@@ -30,6 +30,15 @@ class AppColors {
   /// Used for nested elevated items like input chips
   static const Color surfaceVariant = Color(0xFF2A2A2A);
 
+  /// Backward-compatible darker brand tone for gradients.
+  static const Color primaryDark = Color(0xFFE64A00);
+
+  /// Backward-compatible lighter surface token.
+  static const Color surfaceLight = surfaceVariant;
+
+  /// Backward-compatible container surface token.
+  static const Color surfaceContainer = Color(0xFF242424);
+
   // ============ Typography & Icons ============
 
   /// Standard text and active icons
@@ -57,6 +66,7 @@ class AppColors {
   /// Used for form validation errors and maximum limits
   static const Color errors = Colors.redAccent;
   static const Color transparent = Colors.transparent;
+  static const Color success = Colors.green;
 
   // ---- Text hierarchy ----
   static const Color textPrimary = Colors.white;
@@ -71,4 +81,5 @@ class AppColors {
   static const Color google = Color(0xFF4285F4);
   static const Color facebook = Color(0xFF1877F2);
   static const Color apple = Colors.white;
+  static const Color instagram = Colors.pink;
 }

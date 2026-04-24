@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/auth_validators.dart';
 import '../providers/forgot_password_provider.dart';
 
+/// Screen for requesting a password recovery email.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -49,11 +51,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Colors.red, width: 1),
+        borderSide: const BorderSide(color: AppColors.errors, width: 1),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Colors.red, width: 1),
+        borderSide: const BorderSide(color: AppColors.errors, width: 1),
       ),
     );
   }
@@ -65,7 +67,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       _autoValidate = true;
     });
 
-    if (!_formKey.currentState!.validate()) {
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
@@ -74,11 +76,26 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         .submit(_emailController.text.trim());
   }
 
+  void _returnToLogin() {
+    context.go(RoutePaths.login);
+  }
+
+  void _handleBack() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go(RoutePaths.login);
+  }
+
   @override
   Widget build(BuildContext context) {
     final ForgotPasswordState state = ref.watch(forgotPasswordProvider);
     final bool isLoading = state is ForgotPasswordLoading;
     final bool isSuccess = state is ForgotPasswordSuccess;
+    final String successMessage = state is ForgotPasswordSuccess
+        ? state.message
+        : "Check your inbox. We've sent a reset link.";
     final String? errorMessage = state is ForgotPasswordError
         ? state.message
         : null;
@@ -90,7 +107,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: _handleBack,
           icon: const Icon(
             Icons.arrow_back_ios_new,
             color: AppColors.textPrimary,
@@ -113,9 +130,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 12),
-                  const Text(
-                    "Check your inbox — we've sent a reset link.",
-                    style: TextStyle(
+                  Text(
+                    successMessage,
+                    style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 15,
                       height: 1.5,
@@ -125,7 +142,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () => context.pop(),
+                      onPressed: _returnToLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.onPrimary,
                         foregroundColor: AppColors.onBackground,
@@ -161,7 +178,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         color: AppColors.textPrimary,
                         fontSize: 14,
                       ),
-                      validator: Validators.validateEmail,
+                      validator: AuthValidators.validateEmail,
                       onChanged: (_) {
                         ref.read(forgotPasswordProvider.notifier).clearError();
                       },
@@ -195,7 +212,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       Text(
                         errorMessage,
                         style: const TextStyle(
-                          color: Colors.red,
+                          color: AppColors.errors,
                           fontSize: 13,
                           height: 1.4,
                         ),

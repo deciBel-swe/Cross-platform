@@ -3,18 +3,21 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../library/data/models/track_model.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/track_upload_metadata.dart';
+import '../../domain/entities/track_upload_status.dart';
 import '../../domain/repositories/i_upload_repository.dart';
 import '../datasources/upload_remote_datasource.dart';
 import '../models/track_metadata_model.dart';
 
-@LazySingleton(as: IUploadRepository)
+@LazySingleton(as: IUploadRepository, env: [Environment.prod])
 class UploadRepository implements IUploadRepository {
   const UploadRepository(this._remoteDatasource);
   final UploadRemoteDatasource _remoteDatasource;
 
   @override
-  Future<Either<Failure, Unit>> uploadTrack(
+  Future<Either<Failure, Track>> uploadTrack(
     TrackUploadMetadata metadata,
   ) async {
     try {
@@ -24,13 +27,13 @@ class UploadRepository implements IUploadRepository {
 
       final model = metadata.toModel();
 
-      await _remoteDatasource.uploadTrack(
+      final trackModel = await _remoteDatasource.uploadTrack(
         metadata.audioFile!,
         metadata.coverImage,
         model,
       );
 
-      return const Right(unit);
+      return Right(trackModel.toEntity());
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
     } catch (error) {
@@ -38,5 +41,15 @@ class UploadRepository implements IUploadRepository {
         ServerFailure('An unexpected error occurred during file upload'),
       );
     }
+  }
+
+  @override
+  Stream<TrackUploadStatus> watchUploadStatus(String uploadId) {
+    return _remoteDatasource.watchUploadStatus(uploadId);
+  }
+
+  @override
+  void cancelUploadStatusSubscription(String uploadId) {
+    _remoteDatasource.cancelUploadStatusSubscription(uploadId);
   }
 }

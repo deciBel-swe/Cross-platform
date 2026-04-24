@@ -1,8 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failures.dart';
-import '../../domain/repositories/i_auth_repository.dart';
+import 'auth_provider.dart';
 
 sealed class ForgotPasswordState {
   const ForgotPasswordState();
@@ -17,7 +16,9 @@ class ForgotPasswordLoading extends ForgotPasswordState {
 }
 
 class ForgotPasswordSuccess extends ForgotPasswordState {
-  const ForgotPasswordSuccess();
+  const ForgotPasswordSuccess(this.message);
+
+  final String message;
 }
 
 class ForgotPasswordError extends ForgotPasswordState {
@@ -27,22 +28,20 @@ class ForgotPasswordError extends ForgotPasswordState {
 }
 
 class ForgotPasswordNotifier extends Notifier<ForgotPasswordState> {
-  late final IAuthRepository _authRepository;
-
   @override
   ForgotPasswordState build() {
-    _authRepository = getIt<IAuthRepository>();
     return const ForgotPasswordInitial();
   }
 
   Future<void> submit(String email) async {
     state = const ForgotPasswordLoading();
 
-    final result = await _authRepository.forgotPassword(email);
+    final authRepository = ref.read(authRepositoryProvider);
+    final result = await authRepository.forgotPassword(email);
 
     result.fold(
       (Failure failure) => state = ForgotPasswordError(failure.message),
-      (_) => state = const ForgotPasswordSuccess(),
+      (String message) => state = ForgotPasswordSuccess(message),
     );
   }
 

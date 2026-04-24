@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/auth_validators.dart';
 import '../providers/reset_password_provider.dart';
 
+/// Screen for completing password recovery with a reset token.
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key, required this.token});
 
@@ -33,11 +35,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     super.dispose();
   }
 
-  InputDecoration _inputDecoration(
-    String hintText,
-    bool obscure,
-    VoidCallback onToggle,
-  ) {
+  InputDecoration _inputDecoration({
+    required String hintText,
+    required bool obscureText,
+    required VoidCallback onToggleVisibility,
+  }) {
     return InputDecoration(
       hintText: hintText,
       hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
@@ -45,9 +47,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       fillColor: AppColors.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       suffixIcon: IconButton(
-        onPressed: onToggle,
+        tooltip: obscureText ? 'Show password' : 'Hide password',
+        onPressed: onToggleVisibility,
         icon: Icon(
-          obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          obscureText
+              ? Icons.visibility_off_outlined
+              : Icons.visibility_outlined,
           color: AppColors.textSecondary,
           size: 20,
         ),
@@ -62,53 +67,23 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Colors.red, width: 1),
+        borderSide: const BorderSide(color: AppColors.errors, width: 1),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Colors.red, width: 1),
+        borderSide: const BorderSide(color: AppColors.errors, width: 1),
       ),
     );
   }
 
-  String? _validatePassword(String? value) {
-    final password = value?.trim() ?? '';
-
-    if (password.isEmpty) {
-      return 'Password is required';
-    }
-
-    if (password.length < 8 || password.length > 100) {
-      return 'Password must be between 8 and 100 characters';
-    }
-
-    if (!RegExp(r'[A-Z]').hasMatch(password)) {
-      return 'Password must contain at least one uppercase letter';
-    }
-
-    if (!RegExp(r'[a-z]').hasMatch(password)) {
-      return 'Password must contain at least one lowercase letter';
-    }
-
-    if (!RegExp(r'\d').hasMatch(password)) {
-      return 'Password must contain at least one number';
-    }
-
-    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>_\-+=/\\[\];`~]').hasMatch(password)) {
-      return 'Password must contain at least one special character';
-    }
-
-    return null;
-  }
-
   String? _validateConfirmPassword(String? value) {
-    final confirmPassword = value?.trim() ?? '';
+    final confirmPassword = value ?? '';
 
     if (confirmPassword.isEmpty) {
       return 'Please confirm your password';
     }
 
-    if (confirmPassword != _passwordController.text.trim()) {
+    if (confirmPassword != _passwordController.text) {
       return 'Passwords do not match';
     }
 
@@ -123,27 +98,30 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     });
 
     if (widget.token.trim().isEmpty) {
-      ref.read(resetPasswordProvider.notifier).clearError();
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invalid or missing reset token.')),
       );
       return;
     }
 
-    if (!_formKey.currentState!.validate()) {
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
     await ref
         .read(resetPasswordProvider.notifier)
-        .submit(widget.token.trim(), _passwordController.text.trim());
+        .submit(widget.token.trim(), _passwordController.text);
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(resetPasswordProvider);
+    final ResetPasswordState state = ref.watch(resetPasswordProvider);
     final bool isLoading = state is ResetPasswordLoading;
     final bool isSuccess = state is ResetPasswordSuccess;
+    final String successMessage = state is ResetPasswordSuccess
+        ? state.message
+        : 'Your password has been reset successfully.';
     final String? errorMessage = state is ResetPasswordError
         ? state.message
         : null;
@@ -178,9 +156,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 12),
-                  const Text(
-                    'Your password has been reset successfully.',
-                    style: TextStyle(
+                  Text(
+                    successMessage,
+                    style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 15,
                       height: 1.5,
@@ -222,18 +200,22 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       enabled: !isLoading,
+                      enableSuggestions: false,
+                      autocorrect: false,
+                      autofillHints: const [AutofillHints.newPassword],
+                      textInputAction: TextInputAction.next,
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
                       ),
-                      validator: _validatePassword,
+                      validator: AuthValidators.validatePassword,
                       onChanged: (_) {
                         ref.read(resetPasswordProvider.notifier).clearError();
                       },
                       decoration: _inputDecoration(
-                        'New password',
-                        _obscurePassword,
-                        () {
+                        hintText: 'New password',
+                        obscureText: _obscurePassword,
+                        onToggleVisibility: () {
                           setState(() {
                             _obscurePassword = !_obscurePassword;
                           });
@@ -245,6 +227,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
                       enabled: !isLoading,
+                      enableSuggestions: false,
+                      autocorrect: false,
+                      autofillHints: const [AutofillHints.newPassword],
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _submit(),
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
@@ -254,9 +241,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         ref.read(resetPasswordProvider.notifier).clearError();
                       },
                       decoration: _inputDecoration(
-                        'Confirm new password',
-                        _obscureConfirmPassword,
-                        () {
+                        hintText: 'Confirm new password',
+                        obscureText: _obscureConfirmPassword,
+                        onToggleVisibility: () {
                           setState(() {
                             _obscureConfirmPassword = !_obscureConfirmPassword;
                           });
@@ -265,7 +252,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'Password must be 8–100 characters and include uppercase, lowercase, number, and special character.',
+                      'Password must be at least 8 characters and include letters and numbers.',
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,
@@ -277,7 +264,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       Text(
                         errorMessage,
                         style: const TextStyle(
-                          color: Colors.red,
+                          color: AppColors.errors,
                           fontSize: 13,
                           height: 1.4,
                         ),

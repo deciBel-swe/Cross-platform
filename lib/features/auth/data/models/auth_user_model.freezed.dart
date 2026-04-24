@@ -23,6 +23,7 @@ AuthUserModel _$AuthUserModelFromJson(Map<String, dynamic> json) {
 mixin _$AuthUserModel {
   int get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
+  String? get displayName => throw _privateConstructorUsedError;
   String get tier => throw _privateConstructorUsedError;
   String? get profileUrl => throw _privateConstructorUsedError;
   String? get avatarUrl => throw _privateConstructorUsedError;
@@ -47,6 +48,7 @@ abstract class $AuthUserModelCopyWith<$Res> {
   $Res call({
     int id,
     String username,
+    String? displayName,
     String tier,
     String? profileUrl,
     String? avatarUrl,
@@ -70,6 +72,7 @@ class _$AuthUserModelCopyWithImpl<$Res, $Val extends AuthUserModel>
   $Res call({
     Object? id = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? tier = null,
     Object? profileUrl = freezed,
     Object? avatarUrl = freezed,
@@ -84,6 +87,10 @@ class _$AuthUserModelCopyWithImpl<$Res, $Val extends AuthUserModel>
                 ? _value.username
                 : username // ignore: cast_nullable_to_non_nullable
                       as String,
+            displayName: freezed == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
+                      as String?,
             tier: null == tier
                 ? _value.tier
                 : tier // ignore: cast_nullable_to_non_nullable
@@ -114,6 +121,7 @@ abstract class _$$AuthUserModelImplCopyWith<$Res>
   $Res call({
     int id,
     String username,
+    String? displayName,
     String tier,
     String? profileUrl,
     String? avatarUrl,
@@ -136,6 +144,7 @@ class __$$AuthUserModelImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? tier = null,
     Object? profileUrl = freezed,
     Object? avatarUrl = freezed,
@@ -150,6 +159,10 @@ class __$$AuthUserModelImplCopyWithImpl<$Res>
             ? _value.username
             : username // ignore: cast_nullable_to_non_nullable
                   as String,
+        displayName: freezed == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
+                  as String?,
         tier: null == tier
             ? _value.tier
             : tier // ignore: cast_nullable_to_non_nullable
@@ -173,6 +186,7 @@ class _$AuthUserModelImpl extends _AuthUserModel {
   const _$AuthUserModelImpl({
     required this.id,
     required this.username,
+    this.displayName,
     required this.tier,
     this.profileUrl,
     this.avatarUrl,
@@ -186,6 +200,8 @@ class _$AuthUserModelImpl extends _AuthUserModel {
   @override
   final String username;
   @override
+  final String? displayName;
+  @override
   final String tier;
   @override
   final String? profileUrl;
@@ -194,7 +210,7 @@ class _$AuthUserModelImpl extends _AuthUserModel {
 
   @override
   String toString() {
-    return 'AuthUserModel(id: $id, username: $username, tier: $tier, profileUrl: $profileUrl, avatarUrl: $avatarUrl)';
+    return 'AuthUserModel(id: $id, username: $username, displayName: $displayName, tier: $tier, profileUrl: $profileUrl, avatarUrl: $avatarUrl)';
   }
 
   @override
@@ -205,6 +221,8 @@ class _$AuthUserModelImpl extends _AuthUserModel {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.username, username) ||
                 other.username == username) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
             (identical(other.tier, tier) || other.tier == tier) &&
             (identical(other.profileUrl, profileUrl) ||
                 other.profileUrl == profileUrl) &&
@@ -214,8 +232,15 @@ class _$AuthUserModelImpl extends _AuthUserModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, username, tier, profileUrl, avatarUrl);
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    username,
+    displayName,
+    tier,
+    profileUrl,
+    avatarUrl,
+  );
 
   /// Create a copy of AuthUserModel
   /// with the given fields replaced by the non-null parameter values.
@@ -235,6 +260,7 @@ abstract class _AuthUserModel extends AuthUserModel {
   const factory _AuthUserModel({
     required final int id,
     required final String username,
+    final String? displayName,
     required final String tier,
     final String? profileUrl,
     final String? avatarUrl,
@@ -248,6 +274,8 @@ abstract class _AuthUserModel extends AuthUserModel {
   int get id;
   @override
   String get username;
+  @override
+  String? get displayName;
   @override
   String get tier;
   @override

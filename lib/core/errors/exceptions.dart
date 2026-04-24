@@ -22,3 +22,7 @@ class NetworkException extends AppException {
 class AuthException extends AppException {
   const AuthException([super.message = 'Authentication failed']);
 }
+
+class NotFoundException extends AppException {
+  const NotFoundException([super.message = 'Requested resource not found']);
+}

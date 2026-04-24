@@ -1,8 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failures.dart';
-import '../../domain/repositories/i_auth_repository.dart';
+import 'auth_provider.dart';
 
 sealed class ResetPasswordState {
   const ResetPasswordState();
@@ -17,7 +16,9 @@ class ResetPasswordLoading extends ResetPasswordState {
 }
 
 class ResetPasswordSuccess extends ResetPasswordState {
-  const ResetPasswordSuccess();
+  const ResetPasswordSuccess(this.message);
+
+  final String message;
 }
 
 class ResetPasswordError extends ResetPasswordState {
@@ -27,22 +28,20 @@ class ResetPasswordError extends ResetPasswordState {
 }
 
 class ResetPasswordNotifier extends Notifier<ResetPasswordState> {
-  late final IAuthRepository _authRepository;
-
   @override
   ResetPasswordState build() {
-    _authRepository = getIt<IAuthRepository>();
     return const ResetPasswordInitial();
   }
 
   Future<void> submit(String token, String newPassword) async {
     state = const ResetPasswordLoading();
 
-    final result = await _authRepository.resetPassword(token, newPassword);
+    final authRepository = ref.read(authRepositoryProvider);
+    final result = await authRepository.resetPassword(token, newPassword);
 
     result.fold(
       (Failure failure) => state = ResetPasswordError(failure.message),
-      (_) => state = const ResetPasswordSuccess(),
+      (String message) => state = ResetPasswordSuccess(message),
     );
   }
 

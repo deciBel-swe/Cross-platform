@@ -10,14 +10,16 @@ _$LoginResponseModelImpl _$$LoginResponseModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$LoginResponseModelImpl(
   accessToken: json['accessToken'] as String,
-  refreshToken: json['refreshToken'] as String,
+  expiresIn: (json['expiresIn'] as num).toInt(),
   user: AuthUserModel.fromJson(json['user'] as Map<String, dynamic>),
+  refreshToken: json['refreshToken'] as String?,
 );
 
 Map<String, dynamic> _$$LoginResponseModelImplToJson(
   _$LoginResponseModelImpl instance,
 ) => <String, dynamic>{
   'accessToken': instance.accessToken,
-  'refreshToken': instance.refreshToken,
+  'expiresIn': instance.expiresIn,
   'user': instance.user,
+  'refreshToken': instance.refreshToken,
 };

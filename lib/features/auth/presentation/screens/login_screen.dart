@@ -7,9 +7,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/auth_state.dart';
+import '../../../../core/utils/auth_validators.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_primary_button.dart';
 import '../widgets/social_login_button.dart';
+
+enum AuthLoadingType { none, email, google, facebook, apple }
 
 /// Sign-in screen: OAuth buttons, divider, email + password fields,
 /// and a white Continue button.
@@ -21,8 +24,75 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
+  AuthLoadingType _loadingType = AuthLoadingType.none;
+
+  bool get _isAnyLoading => _loadingType != AuthLoadingType.none;
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    final emailValidation = AuthValidators.validateEmail(email);
+    if (emailValidation != null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(emailValidation)));
+      return;
+    }
+
+    final passwordValidation = AuthValidators.validatePassword(password);
+    if (passwordValidation != null) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(passwordValidation)));
+      return;
+    }
+
+    setState(() => _loadingType = AuthLoadingType.email);
+    try {
+      await ref
+          .read(authStateProvider.notifier)
+          .loginWithEmailPassword(email: email, password: password);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _loadingType = AuthLoadingType.none);
+      }
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _loadingType = AuthLoadingType.google);
+    try {
+      await ref.read(authStateProvider.notifier).loginWithGoogle();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _loadingType = AuthLoadingType.none);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -55,25 +125,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
-    final authState = ref.watch(authStateProvider);
-    final bool isLoading = authState.isLoading;
-
-    ref.listen<AsyncValue<AuthState>>(authStateProvider, (previous, next) {
-      if (!next.isLoading && next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error.toString().replaceAll('Exception: ', '')),
-            backgroundColor: theme.colorScheme.error,
-          ),
-        );
-      }
-    });
+    final theme = Theme.of(context);
+    final resendTimer = ref.watch(resendTimerProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign in'),
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+              return;
+            }
+            context.go(RoutePaths.start);
+          },
+        ),
+        title: Semantics(
+          header: true,
+          label: 'Sign in screen',
+          child: const Text('Sign in'),
+        ),
         backgroundColor: AppColors.transparent,
         elevation: 0,
       ),
@@ -87,37 +159,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const SizedBox(height: 24),
 
-                SocialLoginButton(
+                // ---- Social login buttons ----
+                Semantics(
+                  button: true,
                   label: 'Continue with Google',
-                  icon: const Icon(
-                    Icons.g_mobiledata,
-                    color: AppColors.google,
-                    size: 24,
+                  child: SocialLoginButton(
+                    label: 'Continue with Google',
+                    icon: const Icon(
+                      Icons.g_mobiledata,
+                      color: AppColors.google,
+                      size: 24,
+                    ),
+                    isLoading: _loadingType == AuthLoadingType.google,
+                    onPressed: _isAnyLoading ? null : _handleGoogleLogin,
                   ),
-                  isLoading: isLoading,
-                  onPressed: () {
-                    ref.read(authStateProvider.notifier).loginWithGoogle();
-                  },
                 ),
                 const SizedBox(height: 12),
-                SocialLoginButton(
+                Semantics(
+                  button: true,
                   label: 'Continue with Facebook',
-                  icon: const Icon(
-                    Icons.facebook,
-                    color: AppColors.facebook,
-                    size: 24,
+                  child: SocialLoginButton(
+                    label: 'Continue with Facebook',
+                    icon: const Icon(
+                      Icons.facebook,
+                      color: AppColors.facebook,
+                      size: 24,
+                    ),
+                    onPressed: () {
+                      // TODO(auth): implement Facebook sign-in
+                    },
                   ),
-                  onPressed: () {},
                 ),
                 const SizedBox(height: 12),
-                SocialLoginButton(
+                Semantics(
+                  button: true,
                   label: 'Continue with Apple',
-                  icon: const Icon(
-                    Icons.apple,
-                    color: AppColors.apple,
-                    size: 24,
+                  child: SocialLoginButton(
+                    label: 'Continue with Apple',
+                    icon: const Icon(
+                      Icons.apple,
+                      color: AppColors.apple,
+                      size: 24,
+                    ),
+                    onPressed: () {
+                      // TODO(auth): implement Apple sign-in
+                    },
                   ),
-                  onPressed: () {},
                 ),
 
                 const SizedBox(height: 28),
@@ -135,30 +222,75 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: 28),
 
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
+                // ---- Email field ----
+                Semantics(
+                  textField: true,
+                  label: 'Email address input field',
+                  child: TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [
+                      AutofillHints.username,
+                      AutofillHints.email,
+                    ],
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                    decoration: _inputDecoration('Email'),
                   ),
-                  decoration: _inputDecoration('Email'),
                 ),
 
                 const SizedBox(height: 16),
 
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
+                // ---- Password field ----
+                Semantics(
+                  textField: true,
+                  label: 'Password input field',
+                  child: TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    enableSuggestions: false,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.password],
+                    onSubmitted: (_) => _handleLogin(),
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                    decoration: _inputDecoration('Password').copyWith(
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() => _obscurePassword = !_obscurePassword);
+                        },
+                        icon: Semantics(
+                          label: _obscurePassword
+                              ? 'Show password'
+                              : 'Hide password',
+                          child: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  decoration: _inputDecoration('Password'),
                 ),
 
                 const SizedBox(height: 12),
 
+                // ---- Continue button (white) ----
+                AuthPrimaryButton(
+                  label: 'Continue',
+                  semanticsLabel: 'Continue to sign in',
+                  isLoading: _loadingType == AuthLoadingType.email,
+                  onPressed: _isAnyLoading ? null : _handleLogin,
+                ),
+                const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -169,20 +301,61 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
-
-                ElevatedButton(
-                  onPressed: () {
-                    context.go(RoutePaths.home);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.onPrimary,
-                    foregroundColor: AppColors.onBackground,
+                const SizedBox(height: 10),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          "Didn't receive verification code? ",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Semantics(
+                          button: true,
+                          label: resendTimer > 0
+                              ? 'Resend verification code in $resendTimer seconds'
+                              : 'Resend verification code',
+                          child: TextButton.icon(
+                            onPressed: resendTimer > 0
+                                ? null
+                                : () {
+                                    context.push(RoutePaths.resendVerification);
+                                  },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              foregroundColor: AppColors.primary,
+                              disabledForegroundColor: AppColors.textMuted,
+                            ),
+                            icon: resendTimer > 0
+                                ? const Icon(Icons.timer_outlined, size: 14)
+                                : null,
+                            label: Text(
+                              resendTimer > 0
+                                  ? "Resend in ${resendTimer}s"
+                                  : "Resend",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: const Text('Continue'),
                 ),
-
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
               ],
             ),
           ),

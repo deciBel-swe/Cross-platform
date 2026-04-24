@@ -1,27 +1,68 @@
 import 'dart:io';
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/network/websocket_client.dart';
+import '../../../library/data/models/track_model.dart';
+import '../../domain/entities/track_upload_status.dart';
 import '../models/track_metadata_model.dart';
+import '../models/track_upload_status_model.dart';
 
 @injectable
 class UploadRemoteDatasource {
-  const UploadRemoteDatasource(this._dioClient);
+  const UploadRemoteDatasource(this._dioClient, this._wsClient);
   final DioClient _dioClient;
 
-  Future<void> uploadTrack(
+  final WebSocketClient _wsClient;
+
+  Future<TrackModel> uploadTrack(
     File audioFile,
     File? coverImage,
     TrackMetadataModel model,
   ) async {
     try {
-      // 1. prepare json text
+      // Build multipart payload from metadata and normalize keys to backend contract.
       final Map<String, dynamic> dataMap = model.toJson();
 
-      // Clean nulls so to prevent Dio typing "null" string
+      final waveformRaw = dataMap.remove('waveFormData');
+      final tagsRaw = dataMap['tags'];
+
+      if (waveformRaw is List) {
+        if (waveformRaw.isEmpty) {
+          throw const ServerException(
+            'Waveform data is empty. Please pick the audio file again.',
+          );
+        }
+        // Backend expects `waveformData` as a stringified numeric array.
+        final waveformValues = waveformRaw
+            .map((value) => (value as num).toDouble().toStringAsFixed(4))
+            .join(',');
+        dataMap['waveformData'] = '[$waveformValues]';
+        debugPrint(
+          'WaveformDebug upload payload (count=${waveformRaw.length}): ${dataMap['waveformData']}',
+        );
+      }
+
+      if (tagsRaw is List) {
+        // Backend expects tags in JSON-array string form in multipart fields.
+        final tagsValues = tagsRaw
+            .map((value) => '"${value.toString()}"')
+            .join(',');
+        dataMap['tags'] = '[$tagsValues]';
+      }
+
+      if (dataMap['isPrivate'] is bool) {
+        // Keep privacy value parser-friendly for multipart processing on backend.
+        dataMap['isPrivate'] = (dataMap['isPrivate'] as bool).toString();
+      }
+
+      dataMap['uploadId'] = model.uploadId;
+
       dataMap.removeWhere((key, value) => value == null);
       final formData = FormData.fromMap(dataMap);
 
@@ -45,10 +86,75 @@ class UploadRemoteDatasource {
         );
       }
 
-      // 4. Send the single creation request
-      await _dioClient.post<dynamic>('/api/tracks', data: formData);
+      // Single upload call; waveform processing continues on backend after this.
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.trackUploadV2,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          sendTimeout: ApiConstants.trackUploadRequestTimeout,
+          receiveTimeout: ApiConstants.trackUploadRequestTimeout,
+        ),
+      );
+
+      final responseData = response.data as Map<String, dynamic>;
+      return _mapUploadResponseToTrackModel(responseData, model);
     } on DioException catch (error) {
-      throw ServerException(error.message ?? 'Failed to upload track');
+      final responseData = error.response?.data;
+      String? backendMessage;
+      if (responseData is Map<String, dynamic>) {
+        backendMessage = responseData['message'] as String?;
+        final errors = responseData['errors'];
+        if (errors is List && errors.isNotEmpty) {
+          final details = errors.map((e) => e.toString()).join(', ');
+          backendMessage = backendMessage == null
+              ? details
+              : '$backendMessage: $details';
+        }
+      }
+      throw ServerException(
+        backendMessage ?? error.message ?? 'Failed to upload track',
+      );
+    } catch (error) {
+      throw ServerException('Failed to parse upload response: $error');
     }
+  }
+
+  TrackModel _mapUploadResponseToTrackModel(
+    Map<String, dynamic> responseData,
+    TrackMetadataModel metadata,
+  ) {
+    // Normalize minimal upload response into full track shape used by app models.
+    final nowIso = DateTime.now().toIso8601String();
+    final releaseDateIso =
+        DateTime.tryParse(metadata.releaseDate)?.toIso8601String() ?? nowIso;
+
+    final normalized = <String, dynamic>{
+      ...responseData,
+      'artist': responseData['artist'] ?? {'id': 0, 'username': 'You'},
+      'genre': responseData['genre'] ?? metadata.genre,
+      'tags': responseData['tags'] ?? metadata.tags,
+      'state': responseData['state'] ?? 'PROCESSING',
+      'releaseDate': responseData['releaseDate'] ?? releaseDateIso,
+      'createdAt': responseData['createdAt'] ?? nowIso,
+      'playCount': responseData['playCount'] ?? 0,
+      'likeCount': responseData['likeCount'] ?? 0,
+      'repostCount': responseData['repostCount'] ?? 0,
+    };
+
+    return TrackModel.fromJson(normalized);
+  }
+
+  Stream<TrackUploadStatus> watchUploadStatus(String uploadId) {
+    final topicEndpoint = ApiConstants.trackUploadStatusTopic(uploadId);
+
+    return _wsClient.watch(topicEndpoint).map((data) {
+      return TrackUploadStatusModel.fromJson(data).toEntity();
+    });
+  }
+
+  void cancelUploadStatusSubscription(String uploadId) {
+    final topicEndpoint = ApiConstants.trackUploadStatusTopic(uploadId);
+    _wsClient.disconnect(topicEndpoint);
   }
 }

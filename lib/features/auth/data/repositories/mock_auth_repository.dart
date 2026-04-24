@@ -1,139 +1,146 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:math';
 
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
 import 'package:injectable/injectable.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/storage/secure_storage_service.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../datasources/auth_mock_fixtures.dart';
 import '../models/login_response_model.dart';
-import '../utils/auth_success_page.dart';
 
-/// Mock implementation of [IAuthRepository] for testing and development.
 @Environment('mock')
 @LazySingleton(as: IAuthRepository)
+/// Mock implementation of [IAuthRepository] for testing and development.
+/// This version is specialized for testing the 400-second token expiration.
 class MockAuthRepository implements IAuthRepository {
+  MockAuthRepository(this._secureStorageService);
+  final SecureStorageService _secureStorageService;
+
   @override
-  Future<Either<Failure, AuthUser>> loginWithGoogle() async {
-    final bool isMobile =
-        !kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.android ||
-            defaultTargetPlatform == TargetPlatform.iOS);
-
-    if (isMobile) {
-      const String clientId = ApiConstants.googleMobileClientId;
-
-      await g_sign_in.GoogleSignIn.instance.initialize(
-        clientId: clientId,
-        serverClientId: ApiConstants.googleDesktopClientId,
-      );
-
-      await g_sign_in.GoogleSignIn.instance.signOut();
-
-      final account = await g_sign_in.GoogleSignIn.instance.authenticate(
-        scopeHint: ['email', 'profile'],
-      );
-
-      if (kDebugMode) {
-        debugPrint('=== GOOGLE LOGIN SUCCESS ===');
-        debugPrint('Email: ${account.email}');
-        debugPrint('Display Name: ${account.displayName}');
-        debugPrint('Photo URL: ${account.photoUrl}');
-        debugPrint('Google ID: ${account.id}');
-        debugPrint('============================');
-      }
-
-      await Future<void>.delayed(AuthMockFixtures.delay);
-      const mockResponse = AuthMockFixtures.mockLoginResponse;
-      final LoginResponseModel model = LoginResponseModel.fromJson(
-        mockResponse,
-      );
-
-      return Right(model.user.toDomain());
-    } else {
-      const String clientId = ApiConstants.googleDesktopClientId;
-      const String redirectUri = ApiConstants.googleDesktopRedirectUri;
-
-      final Uri authUrl = Uri.parse(
-        '${ApiConstants.googleAuthUrl}'
-        '?client_id=$clientId'
-        '&redirect_uri=$redirectUri'
-        '&response_type=code'
-        '&scope=email%20profile',
-      );
-
-      final Completer<Either<Failure, AuthUser>> completer =
-          Completer<Either<Failure, AuthUser>>();
-
-      void completeSuccess() {
-        Future<void>.delayed(AuthMockFixtures.delay, () {
-          const mockResponse = AuthMockFixtures.mockLoginResponse;
-          final LoginResponseModel model = LoginResponseModel.fromJson(
-            mockResponse,
-          );
-
-          if (!completer.isCompleted) {
-            completer.complete(Right(model.user.toDomain()));
-          }
-        });
-      }
-
-      HttpServer? localServer;
-      try {
-        localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 3000);
-        localServer.listen((HttpRequest request) async {
-          final Uri uri = request.uri;
-          if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
-            final String? authCode = uri.queryParameters['code'];
-
-            if (authCode != null) {
-              debugPrint('=== DESKTOP GOOGLE LOGIN SUCCESS ===');
-              debugPrint('Authorization Code Received: $authCode');
-              debugPrint('====================================');
-            }
-          }
-
-          final String html = await buildAuthSuccessHtml();
-
-          request.response
-            ..statusCode = 200
-            ..headers.contentType = ContentType.html
-            ..write(html);
-
-          await request.response.close();
-          await localServer?.close(force: true);
-          completeSuccess();
-        });
-      } catch (_) {
-        // Ignore port binding errors if testing rapidly.
-      }
-
-      try {
-        await launchUrl(authUrl, mode: LaunchMode.externalApplication);
-      } catch (_) {
-        await localServer?.close(force: true);
-      }
-
-      return completer.future;
-    }
+  Future<Either<Failure, AuthUser>> loginWithEmailPassword({
+    required String email,
+    required String password,
+  }) {
+    return loginWithGoogle();
   }
 
   @override
-  Future<Either<Failure, AuthUser?>> getCurrentUser() async {
-    const mockResponse = AuthMockFixtures.mockLoginResponse;
-    final LoginResponseModel model = LoginResponseModel.fromJson(mockResponse);
+  Future<Either<Failure, Unit>> registerWithEmailPassword({
+    required String email,
+    required String displayName,
+    required String password,
+    required DateTime dateOfBirth,
+    required String gender,
+    String? city,
+    String? country,
+    required String captchaToken,
+  }) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, AuthUser>> loginWithGoogle() async {
+    // Standard async delay for realistic UI loading states
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    // Load mock data; 'expiresIn' should be set to 400 in fixtures for testing
+    final model = LoginResponseModel.fromJson(
+      AuthMockFixtures.mockLoginResponse,
+    );
+
+    // Save tokens and calculate exact expiration timestamp
+    await _secureStorageService.saveTokenPair(model);
 
     return Right(model.user.toDomain());
   }
 
   @override
-  Future<Either<Failure, Unit>> forgotPassword(String email) async {
+  Future<Either<Failure, AuthUser?>> getCurrentUser() async {
+    // Check storage for token expiry; returns true if 400s has passed
+    final isExpired = await _secureStorageService.isAccessTokenExpired();
+    final hasRefreshToken =
+        (await _secureStorageService.getRefreshToken()) != null;
+
+    if (isExpired && hasRefreshToken) {
+      final refreshResult = await refreshToken();
+      return refreshResult.fold(
+        (failure) => const Right(null),
+        (user) => Right(user),
+      );
+    }
+
+    if (isExpired) {
+      // Returning null triggers the app's 'Unauthenticated' state/redirect
+      return const Right(null);
+    }
+
+    final user = await _secureStorageService.getUser();
+    return Right(user?.toDomain());
+  }
+
+  @override
+  Future<Either<Failure, AuthUser>> refreshToken() async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    final model = LoginResponseModel.fromJson(
+      AuthMockFixtures.mockRefreshedTokenResponse,
+    );
+
+    await _secureStorageService.saveTokenPair(model);
+    return Right(model.user.toDomain());
+  }
+
+  @override
+  Future<Either<Failure, Unit>> logout() async {
+    // Wipe all local session data
+    await _secureStorageService.clearAll();
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, (String, int?)>> resendVerificationCode({
+    required String email,
+  }) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    // Example responses based on different scenarios
+    final random = Random();
+
+    // Scenario 1: Valid resend (70% chance for easier testing)
+    if (random.nextDouble() < 0.70) {
+      return const Right((
+        'Verification code sent. It will expire in 10 minutes.',
+        60, // 60 seconds cooldown
+      ));
+    }
+
+    // Scenario 2: Already verified (10% chance)
+    if (random.nextDouble() < 0.10) {
+      return const Left(AuthFailure('This account is already verified.'));
+    }
+
+    // Scenario 3: Invalid email (5% chance)
+    if (random.nextDouble() < 0.05) {
+      return const Left(AuthFailure('Invalid email format.'));
+    }
+
+    // Scenario 4: Resend cooldown active (10% chance)
+    if (random.nextDouble() < 0.10) {
+      return const Left(
+        AuthFailure('Resend cooldown active. Please try again later.'),
+      );
+    }
+
+    // Scenario 5: Server error (5% chance)
+    return const Left(ServerFailure('Failed to resend verification code.'));
+  }
+
+  @override
+  Future<Either<Failure, String>> forgotPassword(String email) async {
     await Future<void>.delayed(AuthMockFixtures.delay);
 
     if (email.toLowerCase().contains('error')) {
@@ -142,10 +149,11 @@ class MockAuthRepository implements IAuthRepository {
       );
     }
 
-    return const Right(unit);
+    return const Right('Password recovery started.');
   }
-    @override
-  Future<Either<Failure, Unit>> resetPassword(
+
+  @override
+  Future<Either<Failure, String>> resetPassword(
     String token,
     String newPassword,
   ) async {
@@ -155,21 +163,6 @@ class MockAuthRepository implements IAuthRepository {
       return const Left(AuthFailure('Reset failed'));
     }
 
-    return const Right(unit);
-  }
-
-  @override
-  Future<Either<Failure, Unit>> resendVerification(String email) async {
-    await Future<void>.delayed(AuthMockFixtures.delay);
-
-    if (email.toLowerCase().contains('error')) {
-      return const Left(
-        AuthFailure(
-          'Unable to resend verification email right now. Please try again.',
-        ),
-      );
-    }
-
-    return const Right(unit);
+    return const Right('Password reset completed.');
   }
 }

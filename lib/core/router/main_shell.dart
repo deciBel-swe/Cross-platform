@@ -1,20 +1,137 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/library_profile/presentation/providers/track_audio_provider.dart';
+import '../../features/notifications/presentation/providers/device_token_provider.dart';
+import '../../features/player/presentation/widgets/desktop_player_bar.dart';
+import '../../features/player/presentation/widgets/mobile_mini_player.dart';
 import '../theme/app_colors.dart';
+import 'desktop_header.dart';
+import 'desktop_sidebar.dart';
+import 'route_paths.dart';
 
-/// SoundCloud-style bottom navigation shell.
+/// SoundCloud-style shell that wraps tabbed content.
 ///
-/// Wraps [StatefulNavigationShell] so each tab keeps its own navigation stack.
-class MainShell extends StatelessWidget {
+/// - **Desktop (≥ 801 px):** sidebar + header + content + player bar.
+/// - **Mobile (< 801 px):** content + bottom navigation bar.
+class MainShell extends ConsumerWidget {
   const MainShell({required this.navigationShell, super.key});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDesktop = _isDesktopLayout(context);
+
+    ref.watch(syncDeviceTokenProvider);
+
+    if (isDesktop) {
+      return _DesktopShell(navigationShell: navigationShell);
+    }
+
+    return _MobileShell(navigationShell: navigationShell);
+  }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Desktop layout
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DesktopShell extends StatelessWidget {
+  const _DesktopShell({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      body: Row(
+        children: [
+          // ---- Sidebar ----
+          DesktopSidebar(
+            currentIndex: navigationShell.currentIndex,
+            onTap: (index) => navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            ),
+          ),
+
+          // ---- Vertical divider ----
+          const VerticalDivider(
+            width: 1,
+            thickness: 0.5,
+            color: AppColors.divider,
+          ),
+
+          // ---- Content area ----
+          Expanded(
+            child: Column(
+              children: [
+                const DesktopHeader(),
+                Expanded(child: navigationShell),
+                const DesktopPlayerBar(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mobile layout
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MobileShell extends ConsumerWidget {
+  const _MobileShell({required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final location = GoRouterState.of(context).uri.toString();
+    final hideMiniPlayer =
+        location == RoutePaths.editProfile ||
+        location.startsWith(RoutePaths.settings) ||
+        // Hide only when on the upload flow (add track/details), not in
+        // the user's uploads list.
+        location.startsWith(RoutePaths.upload);
+
+    final miniPlayerVisible = ref.watch(miniPlayerVisibleProvider);
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          navigationShell,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 5,
+            child: AnimatedSlide(
+              // Slide out when either a sheet requests hiding (`miniPlayerVisible`
+              // == false) or when we explicitly want to hide for a route
+              // (e.g. upload flow). This reuses the same animation used by
+              // `TrackDetails.show` which toggles `miniPlayerVisibleProvider`.
+              offset: (miniPlayerVisible && !hideMiniPlayer)
+                  ? Offset.zero
+                  : const Offset(0, 1.5), // slide below the screen
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              child: const MobileMiniPlayer(),
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: _BottomNavBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) => navigationShell.goBranch(

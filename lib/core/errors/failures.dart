@@ -27,3 +27,7 @@ class CacheFailure extends Failure {
 class AuthFailure extends Failure {
   const AuthFailure([super.message = 'Authentication failure']);
 }
+
+class NotFoundFailure extends Failure {
+  const NotFoundFailure([super.message = 'Requested resource not found']);
+}
