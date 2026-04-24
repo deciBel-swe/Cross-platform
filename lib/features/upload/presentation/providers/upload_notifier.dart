@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:mime/mime.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
@@ -276,9 +277,11 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
+    final uploadId = const Uuid().v4();
+
     final repository = ref.read(uploadRepositoryProvider);
     final result = await repository.uploadTrack(
-      currentState.copyWith(waveFormData: waveFormData),
+      currentState.copyWith(waveFormData: waveFormData, uploadId: uploadId),
     );
 
     return result.fold(

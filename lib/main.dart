@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -6,13 +7,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:just_audio_background/just_audio_background.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
 import 'core/constants/stripe_constants.dart';
 import 'core/di/app_reset_provider.dart';
 import 'core/di/injection.dart';
+import 'core/services/inactivity_reminder_service.dart';
 import 'features/settings/domain/repositories/app_icon_repository.dart';
 
 void main() async {
@@ -48,21 +49,18 @@ void main() async {
   // Many injectable setups return Future<GetIt>. If yours does, you MUST await it.
   configureDependencies(useMockServices: useMockServices);
 
+  final inactivityReminderService = InactivityReminderService();
+  final inactivityRemindersEnabled = Platform.isAndroid || Platform.isIOS;
+
   if (Platform.isAndroid || Platform.isIOS) {
     await _initializeStripeSafely();
+    await inactivityReminderService.initialize();
 
     await JustAudioBackground.init(
       androidNotificationChannelId: 'com.decibel.decibel.audio',
       androidNotificationChannelName: 'Decibel Playback',
       androidNotificationOngoing: true,
     );
-
-    if (Platform.isAndroid) {
-      final status = await Permission.notification.status;
-      if (!status.isGranted) {
-        await Permission.notification.request();
-      }
-    }
   }
 
   // 5. Post-DI Logic
@@ -87,7 +85,14 @@ void main() async {
               .setEnvironment(useMockServices: useMockServices);
 
           final resetKey = ref.watch(appResetProvider);
-          return ProviderScope(key: resetKey, child: const DecibelApp());
+          return ProviderScope(
+            key: resetKey,
+            child: InactivityReminderLifecycle(
+              enabled: inactivityRemindersEnabled,
+              service: inactivityReminderService,
+              child: const DecibelApp(),
+            ),
+          );
         },
       ),
     ),
@@ -101,4 +106,65 @@ Future<void> _initializeStripeSafely() async {
   } catch (error) {
     debugPrint('[Stripe] Initialization skipped: $error');
   }
+}
+
+class InactivityReminderLifecycle extends StatefulWidget {
+  const InactivityReminderLifecycle({
+    super.key,
+    required this.child,
+    required this.enabled,
+    required this.service,
+  });
+
+  final Widget child;
+  final bool enabled;
+  final InactivityReminderService service;
+
+  @override
+  State<InactivityReminderLifecycle> createState() =>
+      _InactivityReminderLifecycleState();
+}
+
+class _InactivityReminderLifecycleState
+    extends State<InactivityReminderLifecycle>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.enabled) {
+      return;
+    }
+
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(widget.service.cancelReminder());
+  }
+
+  @override
+  void dispose() {
+    if (widget.enabled) {
+      WidgetsBinding.instance.removeObserver(this);
+    }
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!widget.enabled) {
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed) {
+      unawaited(widget.service.cancelReminder());
+      return;
+    }
+
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(widget.service.scheduleReminder());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

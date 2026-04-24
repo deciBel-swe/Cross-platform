@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../library/domain/entities/track.dart';
@@ -11,6 +12,7 @@ import '../../../library/presentation/widgets/bottom_bar_widget.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/track_preview_derived_providers.dart';
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
+import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../../library_profile/presentation/widgets/track_preview_background.dart';
 import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
@@ -157,11 +159,116 @@ class TrackPreviewContent extends ConsumerWidget {
             if (action == _TrackOptionsAction.edit) {
               if (!context.mounted) return;
               await context.push(RoutePaths.trackEdit(trackId));
+              return;
+            }
+
+            if (action == _TrackOptionsAction.delete) {
+              if (!context.mounted) return;
+              await _deleteTrack(context: context, ref: ref, track: track);
             }
           },
         ),
       ],
     );
+  }
+
+  Future<void> _deleteTrack({
+    required BuildContext context,
+    required WidgetRef ref,
+    required Track track,
+  }) async {
+    final confirmed = await _confirmDeleteTrack(context: context, track: track);
+    if (!confirmed || !context.mounted) {
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Deleting "${track.title}"...'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    final deleted = await ref
+        .read(uploadsProvider.notifier)
+        .deleteTrack(track.id);
+    if (!context.mounted) {
+      return;
+    }
+
+    messenger.hideCurrentSnackBar();
+    if (!deleted) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Failed to delete track'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.errors,
+        ),
+      );
+      return;
+    }
+
+    final audioState = ref.read(trackAudioProvider);
+    final audioNotifier = ref.read(trackAudioProvider.notifier);
+    if (audioState.preparedTrackId == track.id) {
+      await audioNotifier.stop();
+    }
+    audioNotifier.removeFromQueue(track.id);
+    ref.invalidate(trackPreviewProvider(track.id));
+
+    if (!context.mounted) {
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Deleted "${track.title}"'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    if (context.canPop()) {
+      context.pop(true);
+    } else {
+      context.go(RoutePaths.uploadLibrary);
+    }
+  }
+
+  Future<bool> _confirmDeleteTrack({
+    required BuildContext context,
+    required Track track,
+  }) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              title: const Text(
+                'Delete track?',
+                style: TextStyle(color: AppColors.onPrimary),
+              ),
+              content: Text(
+                'This will permanently delete "${track.title}".',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(color: AppColors.errors),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
   }
 
   Future<_TrackOptionsAction?> _showTrackOptionsBottomSheet({
@@ -196,6 +303,20 @@ class TrackPreviewContent extends ConsumerWidget {
                   onTap: () =>
                       Navigator.of(sheetContext).pop(_TrackOptionsAction.edit),
                 ),
+              if (isOwner)
+                ListTile(
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.errors,
+                  ),
+                  title: const Text(
+                    'Delete track',
+                    style: TextStyle(color: AppColors.errors),
+                  ),
+                  onTap: () => Navigator.of(
+                    sheetContext,
+                  ).pop(_TrackOptionsAction.delete),
+                ),
               ListTile(
                 leading: const Icon(Icons.playlist_add, color: Colors.white),
                 title: const Text(
@@ -227,4 +348,4 @@ class TrackPreviewContent extends ConsumerWidget {
   }
 }
 
-enum _TrackOptionsAction { queue, edit, cancel }
+enum _TrackOptionsAction { queue, edit, delete, cancel }

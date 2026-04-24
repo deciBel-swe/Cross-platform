@@ -17,6 +17,7 @@ class LikeButton extends ConsumerWidget {
     required this.likeCount,
     this.iconSize,
     this.fontSize,
+    this.isVertical = false,
   });
 
   final int trackId;
@@ -24,6 +25,7 @@ class LikeButton extends ConsumerWidget {
   final int likeCount;
   final double? iconSize;
   final double? fontSize;
+  final bool isVertical;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,6 +57,7 @@ class LikeButton extends ConsumerWidget {
       ),
       iconSize: iconSize ?? AppConstants.iconSizeMedium,
       fontSize: fontSize ?? AppConstants.fontSizeRegular,
+      isVertical: isVertical,
     );
   }
 }

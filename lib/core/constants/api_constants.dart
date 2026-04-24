@@ -53,6 +53,12 @@ class ApiConstants {
   static const String logoutEndpoint = '/auth/logout';
   static const String refreshTokenEndpoint = '/auth/refreshtoken';
   static const String genresEndpoint = '/genres';
+  static const String globalSearchEndpoint = '/search';
+  static const String trendingTracksEndpoint = '/explore/trending';
+
+  /// Station endpoints are relative to the `/api` base URL.
+  static const String genreStationEndpoint = '/stations/genre';
+  static const String likesStationEndpoint = '/stations/likes';
 
   static const String subscriptionCancelEndpoint = '/subscription/cancel';
   static const String subscriptionCheckoutEndpoint = '/subscription/checkout';
@@ -121,6 +127,8 @@ class ApiConstants {
   static const String unreadNotificationCount = '/notifications/unread-count';
   static const String markAllNotificationsRead = '/notifications/mark-all-read';
   static const String deviceTokens = '/notifications/device-tokens';
+
+  static const String notificationSettingsEndpoint = '/notifications/settings';
 
   // Google OAuth specific constants
   static const String googleAuthUrl =

@@ -18,6 +18,7 @@ class RepostButton extends ConsumerWidget {
     required this.repostCount,
     this.iconSize,
     this.fontSize,
+    this.isVertical = false,
   });
 
   final int trackId;
@@ -25,6 +26,7 @@ class RepostButton extends ConsumerWidget {
   final int repostCount;
   final double? iconSize;
   final double? fontSize;
+  final bool isVertical;
 
   void _handleTap(
     BuildContext context,
@@ -106,6 +108,7 @@ class RepostButton extends ConsumerWidget {
       ),
       iconSize: iconSize ?? AppConstants.iconSizeMedium,
       fontSize: fontSize ?? AppConstants.fontSizeRegular,
+      isVertical: isVertical,
     );
   }
 }

@@ -3,8 +3,8 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/datasources/notification_remote_datasource.dart';
-import '../entities/activity_notification.dart';
 import '../../data/models/activity_notification_model.dart';
+import '../entities/activity_notification.dart';
 
 abstract class INotificationRepository {
   Future<(Failure?, List<ActivityNotification>?)> getNotifications(

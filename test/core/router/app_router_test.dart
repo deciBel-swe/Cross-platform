@@ -85,6 +85,11 @@ class FakeTrackRepository implements TrackRepository {
   }
 
   @override
+  Future<Either<Failure, bool>> deleteTrack(int trackId) {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<Either<Failure, Track>> fetchTrackById(int id) {
     throw UnimplementedError();
   }

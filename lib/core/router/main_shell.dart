@@ -103,28 +103,33 @@ class _MobileShell extends ConsumerWidget {
     final hideMiniPlayer =
         location == RoutePaths.editProfile ||
         location.startsWith(RoutePaths.settings) ||
-        location == RoutePaths.upload ||
-        location.startsWith(RoutePaths.uploadLibrary);
+        // Hide only when on the upload flow (add track/details), not in
+        // the user's uploads list.
+        location.startsWith(RoutePaths.upload);
+
     final miniPlayerVisible = ref.watch(miniPlayerVisibleProvider);
 
     return Scaffold(
       body: Stack(
         children: [
           navigationShell,
-          if (!hideMiniPlayer)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 5,
-              child: AnimatedSlide(
-                offset: miniPlayerVisible
-                    ? Offset.zero
-                    : const Offset(0, 1.5), // slide below the screen
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                child: const MobileMiniPlayer(),
-              ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 5,
+            child: AnimatedSlide(
+              // Slide out when either a sheet requests hiding (`miniPlayerVisible`
+              // == false) or when we explicitly want to hide for a route
+              // (e.g. upload flow). This reuses the same animation used by
+              // `TrackDetails.show` which toggles `miniPlayerVisibleProvider`.
+              offset: (miniPlayerVisible && !hideMiniPlayer)
+                  ? Offset.zero
+                  : const Offset(0, 1.5), // slide below the screen
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              child: const MobileMiniPlayer(),
             ),
+          ),
         ],
       ),
       bottomNavigationBar: _BottomNavBar(

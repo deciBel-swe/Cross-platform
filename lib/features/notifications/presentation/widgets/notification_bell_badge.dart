@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../notifiers/unread_count_notifier.dart';
 
@@ -18,7 +19,7 @@ class NotificationBellBadge extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
           onPressed: () {
-            context.push('/notifications');
+            context.push(RoutePaths.notifications);
           },
         ),
         unreadCountAsync.when(
@@ -45,7 +46,7 @@ class NotificationBellBadge extends ConsumerWidget {
             );
           },
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         ),
       ],
     );

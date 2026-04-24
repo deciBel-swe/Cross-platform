@@ -35,4 +35,7 @@ class FirebaseMessagingService {
 
   /// Stream of incoming messages while the app is in the foreground.
   Stream<RemoteMessage> get onForegroundMessage => FirebaseMessaging.onMessage;
+
+  /// Stream of refreshed registration tokens emitted by Firebase.
+  Stream<String> get onTokenRefresh => _messaging.onTokenRefresh;
 }

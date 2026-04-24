@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -19,66 +20,98 @@ class NotificationCard extends StatelessWidget {
 
     // Determine the action text based on the enum
     final String actionText = _getActionText(notification.type);
+    final userLabel =
+        notification.user.displayName ?? notification.user.username;
+    final avatarImageProvider = _avatarImageProvider(
+      notification.user.avatarUrl,
+    );
+    final timeLabel = _formatTime(notification.createdAt);
+    final readStateLabel = notification.isRead ? 'Read' : 'Unread';
+    final hasDestination = _hasDestination(notification.resource.resourceType);
 
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          // Subtle highlight for unread notifications
-          color: notification.isRead
-              ? Colors.transparent
-              : AppColors.surface.withOpacity(0.5),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Actor Avatar placeholder
-            CircleAvatar(
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
-              child: const Icon(Icons.person, color: AppColors.primary),
+    return Semantics(
+      container: true,
+      button: true,
+      enabled: hasDestination,
+      label: '$readStateLabel notification. $userLabel $actionText. $timeLabel',
+      hint: _navigationHint(notification.resource.resourceType),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: hasDestination ? onTap : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              // Subtle highlight for unread notifications
+              color: notification.isRead
+                  ? Colors.transparent
+                  : AppColors.surface.withValues(alpha: 0.5),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: notification.user.displayName,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(text: ' $actionText'),
-                      ],
-                    ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: theme.colorScheme.primary.withValues(
+                    alpha: 0.2,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatTime(notification.createdAt),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (!notification.isRead)
-              const Padding(
-                padding: EdgeInsets.only(top: 8.0),
-                child: CircleAvatar(
-                  radius: 4,
-                  backgroundColor: AppColors.primary,
+                  backgroundImage: avatarImageProvider,
+                  child: avatarImageProvider == null
+                      ? const Icon(Icons.person, color: AppColors.primary)
+                      : null,
                 ),
-              ),
-          ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: userLabel,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(text: ' $actionText'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        timeLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!notification.isRead)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8.0),
+                    child: CircleAvatar(
+                      radius: 4,
+                      backgroundColor: AppColors.primary,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
+  }
+
+  ImageProvider? _avatarImageProvider(String? avatarUrl) {
+    final normalizedAvatarUrl = avatarUrl?.trim();
+    if (normalizedAvatarUrl == null || normalizedAvatarUrl.isEmpty) {
+      return null;
+    }
+
+    return CachedNetworkImageProvider(normalizedAvatarUrl);
   }
 
   String _getActionText(NotificationType type) {
@@ -95,6 +128,30 @@ class NotificationCard extends StatelessWidget {
         return 'replied to your comment';
       case NotificationType.unknown:
         return 'interacted with your content';
+    }
+  }
+
+  String _navigationHint(ResourceType type) {
+    switch (type) {
+      case ResourceType.user:
+        return 'Opens the user profile';
+      case ResourceType.track:
+        return 'Opens the track';
+      case ResourceType.playlist:
+        return 'Playlist details are not available yet';
+      case ResourceType.unknown:
+        return 'No destination available';
+    }
+  }
+
+  bool _hasDestination(ResourceType type) {
+    switch (type) {
+      case ResourceType.user:
+      case ResourceType.track:
+        return true;
+      case ResourceType.playlist:
+      case ResourceType.unknown:
+        return false;
     }
   }
 

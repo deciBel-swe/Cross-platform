@@ -116,6 +116,16 @@ class TrackRepositoryImpl implements TrackRepository {
   }
 
   @override
+  Future<Either<Failure, bool>> deleteTrack(int trackId) async {
+    try {
+      await _remote.deleteTrack(trackId);
+      return const Right(true);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, bool>> deleteTrackCover(int trackId) async {
     try {
       await _remote.deleteTrackCover(trackId);

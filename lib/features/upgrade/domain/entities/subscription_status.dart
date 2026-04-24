@@ -1,23 +1,29 @@
+// lib/features/upgrade/domain/entities/subscription_status.dart
+
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../../../core/utils/subscription_tier_helper.dart';
 
-class SubscriptionStatus {
-  const SubscriptionStatus({
-    required this.status,
-    required this.plan,
-    required this.currentPeriodEnd,
-    required this.cancelAtPeriodEnd,
-  });
+part 'subscription_status.freezed.dart';
 
-  final String status;
-  final String plan;
-  final DateTime? currentPeriodEnd;
-  final bool cancelAtPeriodEnd;
+/// Domain entity representing the user's subscription state.
+@freezed
+class SubscriptionStatus with _$SubscriptionStatus {
+
+  const factory SubscriptionStatus({
+    required String status,
+    required String plan,
+    required DateTime? currentPeriodEnd,
+    required bool cancelAtPeriodEnd,
+  }) = _SubscriptionStatus;
+
+  const SubscriptionStatus._();
+  // Derived helpers
 
   String get normalizedStatus => status.trim().toUpperCase();
 
-  bool get isActive {
-    return normalizedStatus == 'ACTIVE' || normalizedStatus == 'TRIALING';
-  }
+  bool get isActive =>
+      normalizedStatus == 'ACTIVE' || normalizedStatus == 'TRIALING';
 
   bool get isPro => SubscriptionTierHelper.isPremium(plan);
 }
