@@ -9,9 +9,10 @@ import '../../../../core/theme/app_colors.dart';
 /// - Controls active state propagation regarding character validation prior to dispatch.
 /// - Bubbles submission events upward to coordinate parent scope notifiers seamlessly.
 class ChatInputBar extends StatefulWidget {
-  const ChatInputBar({super.key, required this.onSend});
+  const ChatInputBar({super.key, required this.onSend, required this.onAttach});
 
   final ValueChanged<String> onSend;
+  final VoidCallback onAttach;
 
   @override
   State<ChatInputBar> createState() => _ChatInputBarState();
@@ -52,7 +53,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
         child: Row(
           children: [
             Semantics(
-              label: 'Attach media object',
+              label: 'Attach track or playlist',
               button: true,
               child: Container(
                 decoration: BoxDecoration(
@@ -60,7 +61,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   border: Border.all(color: Colors.white54, width: 1.5),
                 ),
                 child: InkWell(
-                  onTap: () {},
+                  onTap: widget.onAttach,
                   customBorder: const CircleBorder(),
                   child: const Padding(
                     padding: EdgeInsets.all(8.0),

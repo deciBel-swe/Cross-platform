@@ -85,4 +85,12 @@ class ChatNotifier extends FamilyAsyncNotifier<ChatState, String> {
       throw Exception('Failed to dispatch message.');
     }
   }
+
+  Future<void> sendResourceMessage({
+    required String resourceType,
+    required int resourceId,
+  }) async {
+    final marker = '[[DECIBEL_RESOURCE:$resourceType:$resourceId]]';
+    await sendMessage(marker);
+  }
 }

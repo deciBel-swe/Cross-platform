@@ -16,6 +16,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/messaging_providers.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/message_bubble.dart';
+import '../widgets/message_resource_picker.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({
@@ -178,7 +179,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ),
             ),
-            ChatInputBar(onSend: _handleSendMessage),
+            ChatInputBar(
+              onSend: (text) {
+                ref
+                    .read(chatProvider(widget.conversationId).notifier)
+                    .sendMessage(text);
+              },
+              onAttach: () async {
+                final selection = await MessageResourcePickerSheet.show(
+                  context,
+                );
+
+                if (selection == null) return;
+
+                await ref
+                    .read(chatProvider(widget.conversationId).notifier)
+                    .sendResourceMessage(
+                      resourceType: selection.resourceType,
+                      resourceId: selection.resourceId,
+                    );
+              },
+            ),
           ],
         ),
       ),

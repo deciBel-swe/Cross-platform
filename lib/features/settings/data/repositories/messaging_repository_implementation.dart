@@ -105,17 +105,18 @@ class MessagingRepositoryImpl implements IMessagingRepository {
     int? recipientId,
   }) async {
     try {
-      final recipientId = int.parse(conversationId.split('_').last);
+      final targetRecipientId =
+          recipientId ?? int.parse(conversationId.split('_').last);
+
+      final finalContent = resourceType != null && resourceId != null
+          ? '${content.trim()} [[DECIBEL_RESOURCE:${resourceType.value}:$resourceId]]'
+                .trim()
+          : content;
 
       final payload = <String, dynamic>{
-        'content': content,
-        'recipientId': recipientId,
+        'content': finalContent,
+        'recipientId': targetRecipientId,
       };
-
-      if (resourceType != null && resourceId != null) {
-        payload['resourceType'] = resourceType.value;
-        payload['resourceId'] = resourceId;
-      }
 
       final messageModel = await _remoteDataSource.sendMessage(
         conversationId,
