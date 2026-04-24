@@ -90,6 +90,8 @@ import '../../features/offline/domain/usecases/get_offline_tracks_usecase.dart'
     as _i212;
 import '../../features/playlists/data/datasources/playlist_remote_datasource.dart'
     as _i108;
+import '../../features/playlists/data/repositories/mock_playlist_repository.dart'
+    as _i874;
 import '../../features/playlists/data/repositories/playlist_repository.dart'
     as _i757;
 import '../../features/playlists/domain/repositories/i_playlist_repository.dart'
@@ -145,6 +147,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i582.IPlaylistRepository>(
+      () => _i874.MockPlaylistRepository(),
+      registerFor: {_mock},
     );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i238.TrackCommentsMockRepository(),

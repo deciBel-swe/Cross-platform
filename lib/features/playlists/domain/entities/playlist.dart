@@ -25,8 +25,15 @@ class Playlist {
     required this.isPrivate,
     required this.isLiked,
     this.coverArt,
-    required this.owner,
+    this.owner,
     required this.tracks,
+    required this.totalDurationSeconds,
+    required this.trackCount,
+    this.playlistSlug,
+    this.firstTrackWaveformUrl,
+    this.secretToken,
+    this.access,
+    this.createdAt,
   });
 
   final int id;
@@ -36,6 +43,13 @@ class Playlist {
   final bool isPrivate;
   final bool isLiked;
   final String? coverArt;
-  final PlaylistOwner owner;
+  final PlaylistOwner? owner;
   final List<Track> tracks;
+  final int totalDurationSeconds;
+  final int trackCount;
+  final String? playlistSlug;
+  final String? firstTrackWaveformUrl;
+  final String? secretToken;
+  final String? access;
+  final DateTime? createdAt;
 }

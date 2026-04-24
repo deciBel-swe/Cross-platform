@@ -58,6 +58,13 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
           coverArt: p.coverArt,
           owner: p.owner,
           tracks: newTracks,
+          totalDurationSeconds: p.totalDurationSeconds,
+          trackCount: p.trackCount,
+          playlistSlug: p.playlistSlug,
+          firstTrackWaveformUrl: p.firstTrackWaveformUrl,
+          secretToken: p.secretToken,
+          access: p.access,
+          createdAt: p.createdAt,
         );
       }
       return p;
@@ -128,6 +135,13 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
             coverArt: p.coverArt,
             owner: p.owner,
             tracks: newTracks,
+            totalDurationSeconds: p.totalDurationSeconds,
+            trackCount: p.trackCount,
+            playlistSlug: p.playlistSlug,
+            firstTrackWaveformUrl: p.firstTrackWaveformUrl,
+            secretToken: p.secretToken,
+            access: p.access,
+            createdAt: p.createdAt,
           );
         }
         return p;
@@ -152,6 +166,13 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
             coverArt: p.coverArt,
             owner: p.owner,
             tracks: newTracks,
+            totalDurationSeconds: p.totalDurationSeconds,
+            trackCount: p.trackCount,
+            playlistSlug: p.playlistSlug,
+            firstTrackWaveformUrl: p.firstTrackWaveformUrl,
+            secretToken: p.secretToken,
+            access: p.access,
+            createdAt: p.createdAt,
           );
         }
         return p;
@@ -175,6 +196,13 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
             coverArt: updatedPlaylist.coverArt,
             owner: updatedPlaylist.owner,
             tracks: p.tracks,
+            totalDurationSeconds: updatedPlaylist.totalDurationSeconds,
+            trackCount: updatedPlaylist.trackCount,
+            playlistSlug: updatedPlaylist.playlistSlug,
+            firstTrackWaveformUrl: updatedPlaylist.firstTrackWaveformUrl,
+            secretToken: updatedPlaylist.secretToken,
+            access: updatedPlaylist.access,
+            createdAt: updatedPlaylist.createdAt,
           );
         }
         return p;
