@@ -81,4 +81,7 @@ class RoutePaths {
   static bool isReservedDeepLinkSegment(String value) {
     return reservedDeepLinkSegments.contains(value.toLowerCase());
   }
+
+  static const String forgotPassword = '/login-create-account/forgot-password';
+  static const String resetPassword = '/reset-password';
 }

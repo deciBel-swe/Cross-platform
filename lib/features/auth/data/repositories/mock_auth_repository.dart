@@ -138,4 +138,31 @@ class MockAuthRepository implements IAuthRepository {
     // Scenario 5: Server error (5% chance)
     return const Left(ServerFailure('Failed to resend verification code.'));
   }
+
+  @override
+  Future<Either<Failure, String>> forgotPassword(String email) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    if (email.toLowerCase().contains('error')) {
+      return const Left(
+        AuthFailure('Unable to send reset link right now. Please try again.'),
+      );
+    }
+
+    return const Right('Password recovery started.');
+  }
+
+  @override
+  Future<Either<Failure, String>> resetPassword(
+    String token,
+    String newPassword,
+  ) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    if (newPassword.contains('error')) {
+      return const Left(AuthFailure('Reset failed'));
+    }
+
+    return const Right('Password reset completed.');
+  }
 }

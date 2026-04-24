@@ -31,6 +31,9 @@ abstract class IAuthRemoteDataSource {
   });
   Future<ResendVerificationResponseModel> resendVerification(String email);
   Future<void> logout();
+
+  Future<String> forgotPassword(String email);
+  Future<String> resetPassword(String token, String newPassword);
 }
 
 @LazySingleton(as: IAuthRemoteDataSource)
@@ -62,7 +65,11 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       return _parseLoginResponse(response);
     } on DioException catch (e) {
       throw ServerException(
-        _extractDioErrorMessage(e, fallback: 'Login failed'),
+        _extractDioErrorMessage(
+          e,
+          fallback: 'Login failed',
+          useLoginUnauthorizedMessage: true,
+        ),
       );
     } on AppException {
       rethrow;
@@ -116,7 +123,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
           scopeHint: ['email', 'profile'],
         );
 
-        // Request Authorization (the server auth code for the backend)
+        // The critical Server Auth Code needed for the Spring Boot backend
         final authz = await account.authorizationClient.authorizeServer([
           'email',
           'profile',
@@ -142,7 +149,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       final clientId = ApiConstants.googleDesktopClientId;
       const redirectUri = ApiConstants.googleDesktopRedirectUri;
 
-      final authUrl = Uri.parse(
+      final Uri authUrl = Uri.parse(
         '${ApiConstants.googleAuthUrl}'
         '?client_id=$clientId'
         '&redirect_uri=$redirectUri'
@@ -172,28 +179,25 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       try {
         localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 8081);
 
-        // Listen to single incoming request on the localhost server
         localServer.listen((HttpRequest request) async {
-          final uri = request.uri;
+          final Uri uri = request.uri;
 
-          // Check if it's the OAuth redirect path
           if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
             final authCode =
                 uri.queryParameters['token'] ?? uri.queryParameters['code'];
             final error = uri.queryParameters['error'];
 
             if (authCode != null) {
-              // Serve a branded success page and close
-              final html = await buildAuthSuccessHtml();
+              final String html = await buildAuthSuccessHtml();
 
               request.response
                 ..statusCode = 200
                 ..headers.contentType = ContentType.html
                 ..write(html);
+
               await request.response.close();
               await localServer?.close(force: true);
 
-              // Exchange the code with our backend
               try {
                 final model = await exchangeCodeWithBackend(
                   authCode,
@@ -213,6 +217,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
                 ..write('Error: $error');
               await request.response.close();
               await localServer?.close(force: true);
+
               if (!completer.isCompleted) {
                 completer.completeError(
                   AuthException('Google Auth Error: $error'),
@@ -224,6 +229,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
                 ..write('Missing auth code');
               await request.response.close();
               await localServer?.close(force: true);
+
               if (!completer.isCompleted) {
                 completer.completeError(
                   const AuthException('No code returned from redirect'),
@@ -242,7 +248,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       }
 
       try {
-        final launched = await launchUrl(
+        final bool launched = await launchUrl(
           authUrl,
           mode: LaunchMode.externalApplication,
         );
@@ -342,6 +348,80 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
   }
 
   @override
+  Future<String> forgotPassword(String email) async {
+    try {
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.forgotPasswordEndpoint,
+        data: {'email': email},
+      );
+
+      if (!_isSuccessfulResponse(response.statusCode)) {
+        throw AuthException(
+          _parseManualError(
+            response.data,
+            fallback: 'Password recovery could not be started.',
+          ),
+        );
+      }
+
+      return _parseMessageResponse(
+        response.data,
+        fallback: 'Password recovery started.',
+      );
+    } on DioException catch (e) {
+      throw ServerException(
+        _extractDioErrorMessage(
+          e,
+          fallback: 'Password recovery could not be started.',
+        ),
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during password recovery: $e',
+      );
+    }
+  }
+
+  @override
+  Future<String> resetPassword(String token, String newPassword) async {
+    try {
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.resetPasswordEndpoint,
+        data: {'token': token, 'newPassword': newPassword},
+      );
+
+      if (!_isSuccessfulResponse(response.statusCode)) {
+        throw AuthException(
+          _parseManualError(
+            response.data,
+            fallback: 'Password reset could not be completed.',
+          ),
+        );
+      }
+
+      return _parseMessageResponse(
+        response.data,
+        fallback: 'Password reset completed.',
+      );
+    } on DioException catch (e) {
+      throw ServerException(
+        _extractDioErrorMessage(
+          e,
+          fallback: 'Password reset could not be completed.',
+        ),
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during password reset: $e',
+      );
+    }
+  }
+
+  @override
   Future<void> logout() async {
     try {
       final response = await _dioClient.post<dynamic>(
@@ -371,7 +451,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     DeviceInfoModel deviceInfo,
   ) async {
     try {
-      final dto = OauthExchangeRequestDto(
+      final OauthExchangeRequestDto dto = OauthExchangeRequestDto(
         code: authCode,
         deviceInfo: deviceInfo,
       );
@@ -510,17 +590,36 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     return fallback;
   }
 
-  String _extractDioErrorMessage(DioException e, {required String fallback}) {
+  bool _isSuccessfulResponse(int? statusCode) {
+    return statusCode != null && statusCode >= 200 && statusCode < 300;
+  }
+
+  String _parseMessageResponse(Object? data, {required String fallback}) {
+    if (data is Map<String, dynamic>) {
+      final message = _parseMessageFromMap(data);
+      if (message != null) {
+        return message;
+      }
+    }
+
+    return fallback;
+  }
+
+  String _extractDioErrorMessage(
+    DioException e, {
+    required String fallback,
+    bool useLoginUnauthorizedMessage = false,
+  }) {
     final data = e.response?.data;
     final statusCode = e.response?.statusCode;
-
-    if (statusCode == 401) {
-      return 'Incorrect email or password.';
-    }
 
     if (data is Map<String, dynamic>) {
       final parsed = _parseErrorMap(data);
       if (parsed != null) return parsed;
+    }
+
+    if (useLoginUnauthorizedMessage && statusCode == 401) {
+      return 'Incorrect email or password.';
     }
 
     final fallbackMessage = e.message?.trim();
@@ -549,6 +648,10 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       }
     }
 
+    return _parseMessageFromMap(data);
+  }
+
+  String? _parseMessageFromMap(Map<String, dynamic> data) {
     final messageData = data['message'];
     if (messageData is List && messageData.isNotEmpty) {
       return messageData.join('\n');
@@ -560,9 +663,9 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
     final nestedData = data['data'];
     if (nestedData is Map<String, dynamic>) {
-      final nestedMessage = nestedData['message'];
-      if (nestedMessage is String && nestedMessage.trim().isNotEmpty) {
-        return nestedMessage.trim();
+      final nestedMessage = _parseMessageFromMap(nestedData);
+      if (nestedMessage != null) {
+        return nestedMessage;
       }
     }
 

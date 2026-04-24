@@ -87,9 +87,9 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TrackDetailsForm(),
-                      
+
                       PrivacySettings(),
-                      SizedBox(height: 24,),
+                      SizedBox(height: 24),
                       AccessTypeSelector(),
                     ],
                   ),

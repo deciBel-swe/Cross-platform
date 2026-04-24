@@ -42,6 +42,19 @@ abstract class IAuthRepository {
   /// Local authentication data should still be cleared afterwards.
   Future<Either<Failure, Unit>> logout();
 
+  /// Starts the forgot password flow by requesting a reset email.
+  ///
+  /// Returns the server confirmation message.
+  Future<Either<Failure, String>> forgotPassword(String email);
+
+  /// Resets a user's password using the recovery token from their email.
+  ///
+  /// Returns the server confirmation message.
+  Future<Either<Failure, String>> resetPassword(
+    String token,
+    String newPassword,
+  );
+
   /// Resends the verification code to the provided email.
   /// Returns the message and the optional cooldown time in seconds.
   Future<Either<Failure, (String, int?)>> resendVerificationCode({

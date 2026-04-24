@@ -7,9 +7,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/entities/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/resend_verification_screen.dart';
+import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/start_screen.dart';
 import '../../features/engagement/presentation/providers/follow_connections_provider.dart';
@@ -66,11 +68,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       );
       debugPrint('[AppRouter] authStateAsync: $authStateAsync');
 
-      final isAuthRoute =
+      final bool isAuthRoute =
           state.matchedLocation == RoutePaths.login ||
           state.matchedLocation == RoutePaths.register ||
           state.matchedLocation == RoutePaths.resendVerification ||
           state.matchedLocation == RoutePaths.start ||
+          state.matchedLocation == RoutePaths.forgotPassword ||
+          state.matchedLocation == RoutePaths.resetPassword ||
           state.matchedLocation == RoutePaths.splash;
 
       final authState = authStateAsync.valueOrNull;
@@ -119,6 +123,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.resetPassword,
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return ResetPasswordScreen(token: token);
+        },
       ),
       GoRoute(
         path: RoutePaths.resendVerification,

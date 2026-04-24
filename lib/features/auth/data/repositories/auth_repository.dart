@@ -286,4 +286,35 @@ class AuthRepository implements IAuthRepository {
       return const Left(AuthFailure('An unexpected error occurred.'));
     }
   }
+
+  @override
+  Future<Either<Failure, String>> forgotPassword(String email) async {
+    try {
+      final message = await _remoteDataSource.forgotPassword(email);
+      return Right(message);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (_) {
+      return const Left(AuthFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> resetPassword(
+    String token,
+    String newPassword,
+  ) async {
+    try {
+      final message = await _remoteDataSource.resetPassword(token, newPassword);
+      return Right(message);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (_) {
+      return const Left(AuthFailure('An unexpected error occurred.'));
+    }
+  }
 }

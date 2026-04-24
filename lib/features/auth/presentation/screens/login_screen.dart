@@ -1,8 +1,6 @@
 /// Sign-in screen with social login and email/password form.
 library;
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -211,7 +209,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: 28),
 
-                // ---- Divider ----
                 Row(
                   children: [
                     const Expanded(child: Divider()),
@@ -284,7 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
 
                 // ---- Continue button (white) ----
                 AuthPrimaryButton(
@@ -293,8 +290,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   isLoading: _loadingType == AuthLoadingType.email,
                   onPressed: _isAnyLoading ? null : _handleLogin,
                 ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      context.push(RoutePaths.forgotPassword);
+                    },
+                    child: const Text('Forgot Password?'),
+                  ),
+                ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 10),
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),

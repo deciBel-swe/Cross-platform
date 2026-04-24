@@ -7,12 +7,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import '../../../library_profile/presentation/widgets/track_details.dart';
+import '../../../library_profile/presentation/widgets/track_tile.dart';
 import '../../domain/entities/playlist.dart';
 import '../providers/playlist_details_provider.dart';
 import '../widgets/playlist_options_bottom_sheet.dart';
-import '../../../library_profile/presentation/providers/track_audio_provider.dart';
-import '../../../library_profile/presentation/widgets/track_tile.dart';
-import '../../../library_profile/presentation/widgets/track_details.dart';
 
 class PlaylistDetailsScreen extends ConsumerWidget {
   const PlaylistDetailsScreen({super.key, required this.playlistSummary});
