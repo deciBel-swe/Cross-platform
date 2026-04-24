@@ -16,6 +16,7 @@ class SocialActionButton extends StatefulWidget {
     this.onCountTap,
     this.iconSize = AppConstants.iconSizeMedium,
     this.fontSize = AppConstants.fontSizeRegular,
+    this.isVertical = false,
   });
   final bool isActive;
   final int count;
@@ -28,6 +29,7 @@ class SocialActionButton extends StatefulWidget {
   final String identifier;
   final double iconSize;
   final double fontSize;
+  final bool isVertical;
 
   @override
   State<SocialActionButton> createState() => _SocialActionButtonState();
@@ -65,56 +67,59 @@ class _SocialActionButtonState extends State<SocialActionButton>
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Semantics(
-          identifier: '${widget.identifier}_icon',
-          label: widget.isActive ? 'Active' : 'Inactive',
-          button: true,
-          child: GestureDetector(
-            onTap: widget.isLoading ? null : _handleTap,
-            behavior: HitTestBehavior.opaque,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                transitionBuilder: (child, animation) =>
-                    FadeTransition(opacity: animation, child: child),
-                child: Icon(
-                  widget.isActive ? widget.activeIcon : widget.inactiveIcon,
-                  key: ValueKey<bool>(widget.isActive),
-                  color: widget.isActive
-                      ? widget.activeColor
-                      : AppColors.onPrimary,
-                  size: widget.iconSize,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: AppConstants.spacingSmall),
-        Semantics(
-          identifier: '${widget.identifier}_count',
-          label: '${widget.count}',
-          button: widget.onCountTap != null,
-          child: GestureDetector(
-            onTap: widget.onCountTap,
-            behavior: HitTestBehavior.opaque,
+    final children = [
+      Semantics(
+        identifier: '${widget.identifier}_icon',
+        label: widget.isActive ? 'Active' : 'Inactive',
+        button: true,
+        child: GestureDetector(
+          onTap: widget.isLoading ? null : _handleTap,
+          behavior: HitTestBehavior.opaque,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-              child: Text(
-                '${widget.count}',
-                key: ValueKey<int>(widget.count),
-                style: TextStyle(
-                  color: AppColors.onPrimary,
-                  fontSize: widget.fontSize,
-                ),
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              child: Icon(
+                widget.isActive ? widget.activeIcon : widget.inactiveIcon,
+                key: ValueKey<bool>(widget.isActive),
+                color: widget.isActive
+                    ? widget.activeColor
+                    : AppColors.onPrimary,
+                size: widget.iconSize,
               ),
             ),
           ),
         ),
-      ],
-    );
+      ),
+      widget.isVertical
+          ? const SizedBox(height: 4)
+          : const SizedBox(width: AppConstants.spacingSmall),
+      Semantics(
+        identifier: '${widget.identifier}_count',
+        label: '${widget.count}',
+        button: widget.onCountTap != null,
+        child: GestureDetector(
+          onTap: widget.onCountTap,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Text(
+              '${widget.count}',
+              key: ValueKey<int>(widget.count),
+              style: TextStyle(
+                color: AppColors.onPrimary,
+                fontSize: widget.fontSize,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
+
+    return widget.isVertical
+        ? Column(mainAxisSize: MainAxisSize.min, children: children)
+        : Row(mainAxisSize: MainAxisSize.min, children: children);
   }
 }

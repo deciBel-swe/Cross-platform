@@ -44,6 +44,12 @@ import '../../features/engagement/domain/repositories/follow_repository.dart'
     as _i557;
 import '../../features/engagement/domain/repositories/track_social_repository.dart'
     as _i590;
+import '../../features/feed/data/datasources/feed_data_datasource.dart'
+    as _i684;
+import '../../features/feed/data/repositories/feed_repository_impl.dart'
+    as _i452;
+import '../../features/feed/domain/repositories/i_feed_repository.dart'
+    as _i695;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
 import '../../features/library/data/datasources/track_comments_remote_data_source.dart'
@@ -158,6 +164,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i684.IFeedRemoteDatasource>(
+      () => _i684.FeedRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i238.TrackCommentsMockRepository(),
       registerFor: {_mock},
@@ -218,6 +227,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i43.IUploadRepository>(
       () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
+      registerFor: {_prod},
+    );
+    gh.lazySingleton<_i695.IFeedRepository>(
+      () => _i452.FeedRepositoryImpl(gh<_i684.IFeedRemoteDatasource>()),
       registerFor: {_prod},
     );
     gh.lazySingleton<_i1005.DiscoveryRemoteDataSource>(
