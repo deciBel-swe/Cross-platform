@@ -70,7 +70,7 @@ class AuthRepository implements IAuthRepository {
           fingerPrint = linuxInfo.machineId ?? 'unknown';
         }
       } catch (_) {
-        // Keep fallback defaults if device info gathering fails.
+        // fallback
       }
 
       final DeviceInfoModel deviceInfo = DeviceInfoModel(
@@ -97,6 +97,23 @@ class AuthRepository implements IAuthRepository {
   Future<Either<Failure, Unit>> forgotPassword(String email) async {
     try {
       await _remoteDataSource.forgotPassword(email);
+      return const Right(unit);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (_) {
+      return const Left(AuthFailure('An unexpected error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> resetPassword(
+    String token,
+    String newPassword,
+  ) async {
+    try {
+      await _remoteDataSource.resetPassword(token, newPassword);
       return const Right(unit);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

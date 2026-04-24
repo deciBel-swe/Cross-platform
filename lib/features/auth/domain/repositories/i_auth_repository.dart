@@ -18,6 +18,8 @@ abstract class IAuthRepository {
   /// Starts the forgot password flow by requesting a reset email.
   Future<Either<Failure, Unit>> forgotPassword(String email);
 
+  Future<Either<Failure, Unit>> resetPassword(String token,String newPassword,);
+
   /// Resends the verification email for the given address.
   Future<Either<Failure, Unit>> resendVerification(String email);
 }

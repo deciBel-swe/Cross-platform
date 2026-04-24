@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:dio/dio.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_sign_in;
@@ -19,7 +20,7 @@ abstract class IAuthRemoteDataSource {
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
 
   Future<void> forgotPassword(String email);
-
+  Future<void> resetPassword(String token, String newPassword);
   Future<void> resendVerification(String email);
 }
 
@@ -190,20 +191,33 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         return;
       }
 
-      throw const AuthException('Failed to send reset link. Please try again.');
-    } catch (e) {
-      if (e.toString().contains('DioException')) {
-        throw const ServerException(
-          'A network error occurred while sending the reset link.',
+      throw const AuthException('Failed to send reset link.');
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final data = e.response?.data;
+
+        if (data is Map<String, dynamic>) {
+          final message = data['message'] as String?;
+          throw AuthException(
+            message ?? 'Failed to send reset link. Please try again.',
+          );
+        }
+
+        throw const AuthException(
+          'Failed to send reset link. Please try again.',
         );
       }
 
+      throw const ServerException(
+        'A network error occurred while sending the reset link.',
+      );
+    } catch (e) {
       if (e is AppException) {
         rethrow;
       }
 
-      throw AuthException(
-        'An unexpected error occurred while sending the reset link: $e',
+      throw const AuthException(
+        'Failed to send reset link. Please try again later.',
       );
     }
   }
@@ -285,6 +299,32 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       throw AuthException(
         'An unexpected error occurred during Google Sign In verify: $e',
       );
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String token, String newPassword) async {
+    try {
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.resetPasswordEndpoint,
+        data: {'token': token, 'newPassword': newPassword},
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return;
+      }
+
+      throw const AuthException('Failed to reset password.');
+    } catch (e) {
+      if (e.toString().contains('DioException')) {
+        throw const ServerException('Network error while resetting password.');
+      }
+
+      if (e is AppException) rethrow;
+
+      throw AuthException('Unexpected error: $e');
     }
   }
 }

@@ -1,8 +1,8 @@
 class ApiConstants {
   ApiConstants._();
 
-  //static const String baseUrl = 'http://192.168.1.4:3000/api';
-  static const String baseUrl = 'http://192.168.1.4.nip.io:3000/api';
+  //static const String baseUrl = 'https://decibel.foo/api';
+  static const String baseUrl = 'https://decibel.foo/api';
 
   /// Step 1: Triggers Google login in browser
   static const String googleAuthEndpoint = '/oauth2/authorization/google';
@@ -24,7 +24,8 @@ class ApiConstants {
       '767709617177-l61vbedk9lanvrgirt6e0840a4kijs6u.apps.googleusercontent.com';
   static const String googleDesktopClientId =
       '767709617177-ljng08734ds2qv9m7qcrpccpe6igu9if.apps.googleusercontent.com';
-  static const String forgotPasswordEndpoint = '/api/auth/forgot-password';
+  static const String forgotPasswordEndpoint = '/auth/forgot-password';
+  static const String resetPasswordEndpoint = '/auth/reset-password';
   static const String resendVerificationEndpoint =
-      '/api/auth/resend-verification';
+      '/auth/resend-verification';
 }

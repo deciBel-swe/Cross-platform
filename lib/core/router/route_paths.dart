@@ -17,4 +17,5 @@ class RoutePaths {
   static const String uploadLibrary = '/library/uploads';
   static const String editWebLink = '/profile/edit-web-link';
   static const String forgotPassword = '/login-create-account/forgot-password';
+  static const String resetPassword = '/reset-password';
 }

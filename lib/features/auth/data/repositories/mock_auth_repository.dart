@@ -144,6 +144,19 @@ class MockAuthRepository implements IAuthRepository {
 
     return const Right(unit);
   }
+    @override
+  Future<Either<Failure, Unit>> resetPassword(
+    String token,
+    String newPassword,
+  ) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    if (newPassword.contains('error')) {
+      return const Left(AuthFailure('Reset failed'));
+    }
+
+    return const Right(unit);
+  }
 
   @override
   Future<Either<Failure, Unit>> resendVerification(String email) async {
