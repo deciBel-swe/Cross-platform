@@ -1,14 +1,15 @@
-/// Desktop Home screen — SoundCloud-style with horizontal carousels.
+/// Home screen with SoundCloud-inspired discovery rails and stations.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../notifications/presentation/widgets/notification_bell_badge.dart';
 import '../../../upgrade/presentation/widgets/get_pro_button.dart';
 import '../widgets/liked_tracks_shortcut.dart';
 
-/// Empty Home page – placeholder.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -17,11 +18,17 @@ class HomeScreen extends StatelessWidget {
     final isDesktop = _isDesktopLayout(context);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: isDesktop
           ? null
           : AppBar(
+              backgroundColor: AppColors.background,
               title: const Text('Home'),
-              actions: [
+              actions: <Widget>[
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () => context.go(RoutePaths.search),
+                ),
                 const GetProButton(),
                 IconButton(
                   icon: const Icon(Icons.cloud_upload),
@@ -29,6 +36,10 @@ class HomeScreen extends StatelessWidget {
                     context.push(RoutePaths.upload);
                   },
                 ),
+
+                const NotificationBellBadge(),
+
+                const SizedBox(width: 8),
               ],
             ),
       body: const Column(

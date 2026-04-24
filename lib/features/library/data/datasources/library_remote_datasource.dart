@@ -219,6 +219,10 @@ class LibraryRemoteDatasource {
     await _dioClient.delete<dynamic>('/tracks/$trackId/cover');
   }
 
+  Future<void> deleteTrack(int trackId) async {
+    await _dioClient.delete<dynamic>('${ApiConstants.tracks}/$trackId');
+  }
+
   Future<String> fetchTrackStatusById(int id) async {
     // Backend-driven processing state source used by uploads polling.
     final response = await _dioClient.get<Object?>('/tracks/$id/status');

@@ -264,4 +264,26 @@ class AuthRepository implements IAuthRepository {
       await _sharedPrefsService.clearAll();
     }
   }
+
+  @override
+  Future<Either<Failure, (String, int?)>> resendVerificationCode({
+    required String email,
+  }) async {
+    try {
+      final response = await _remoteDataSource.resendVerification(email);
+      return Right((response.message, response.coolDown));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AuthRepository] Unexpected error in resendVerificationCode: $e',
+        );
+        debugPrint('[AuthRepository] StackTrace: $st');
+      }
+      return const Left(AuthFailure('An unexpected error occurred.'));
+    }
+  }
 }

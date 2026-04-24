@@ -283,11 +283,13 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
+    final uploadId = const Uuid().v4();
+
     final repository = ref.read(uploadRepositoryProvider);
-    
+
     // We do NOT generate a new Uuid here. We use the one already in currentState
     final result = await repository.uploadTrack(
-      currentState.copyWith(waveFormData: waveFormData), 
+      currentState.copyWith(waveFormData: waveFormData),
     );
 
     return result.fold(
@@ -301,12 +303,12 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       (track) {
         // 1. Extract the uploadId from the state
         final uploadId = currentState.uploadId;
-        
+
         // 2. Save the mapping in memory (track.id -> uploadId)
         if (uploadId != null) {
-          ref.read(activeUploadsMapProvider.notifier).update(
-            (mapState) => {...mapState, track.id: uploadId},
-          );
+          ref
+              .read(activeUploadsMapProvider.notifier)
+              .update((mapState) => {...mapState, track.id: uploadId});
         }
 
         // 3. Optimistically update the list to show "Processing" instantly

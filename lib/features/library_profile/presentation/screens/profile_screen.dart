@@ -260,9 +260,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   Text(
                     'Oops! Something went wrong.',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.onPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: AppColors.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: AppConstants.spacingSmall),
                 ],
@@ -270,19 +270,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   error is NotFoundFailure
                       ? '404 | Not Found'
                       : error.toString().replaceAll(
-                            AppConstants.errorExceptionPrefix,
-                            '',
-                          ),
+                          AppConstants.errorExceptionPrefix,
+                          '',
+                        ),
                   textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onPrimary,
-                        fontSize: error is NotFoundFailure ? 18 : null,
-                        fontWeight: error is NotFoundFailure
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onPrimary,
+                    fontSize: error is NotFoundFailure ? 18 : null,
+                    fontWeight: error is NotFoundFailure
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
                 ),
                 const SizedBox(height: AppConstants.spacingExtraLarge),
                 ElevatedButton.icon(
@@ -338,9 +336,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               ? '404 | Not Found'
                               : 'Could not load profile: ${failure.message}',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: AppColors.onPrimary,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: AppColors.onPrimary),
                         ),
                       ),
                     ],

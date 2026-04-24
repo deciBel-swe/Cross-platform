@@ -1,12 +1,17 @@
 /// Sign-in screen with social login and email/password form.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/auth_validators.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_primary_button.dart';
 import '../widgets/social_login_button.dart';
 
 enum AuthLoadingType { none, email, google, facebook, apple }
@@ -123,10 +128,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final resendTimer = ref.watch(resendTimerProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign in'),
+        leading: IconButton(
+          tooltip: 'Back',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+              return;
+            }
+            context.go(RoutePaths.start);
+          },
+        ),
+        title: Semantics(
+          header: true,
+          label: 'Sign in screen',
+          child: const Text('Sign in'),
+        ),
         backgroundColor: AppColors.transparent,
         elevation: 0,
       ),
@@ -141,39 +162,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 24),
 
                 // ---- Social login buttons ----
-                SocialLoginButton(
+                Semantics(
+                  button: true,
                   label: 'Continue with Google',
-                  icon: const Icon(
-                    Icons.g_mobiledata,
-                    color: AppColors.google,
-                    size: 24,
+                  child: SocialLoginButton(
+                    label: 'Continue with Google',
+                    icon: const Icon(
+                      Icons.g_mobiledata,
+                      color: AppColors.google,
+                      size: 24,
+                    ),
+                    isLoading: _loadingType == AuthLoadingType.google,
+                    onPressed: _isAnyLoading ? null : _handleGoogleLogin,
                   ),
-                  isLoading: _loadingType == AuthLoadingType.google,
-                  onPressed: _isAnyLoading ? null : _handleGoogleLogin,
                 ),
                 const SizedBox(height: 12),
-                SocialLoginButton(
+                Semantics(
+                  button: true,
                   label: 'Continue with Facebook',
-                  icon: const Icon(
-                    Icons.facebook,
-                    color: AppColors.facebook,
-                    size: 24,
+                  child: SocialLoginButton(
+                    label: 'Continue with Facebook',
+                    icon: const Icon(
+                      Icons.facebook,
+                      color: AppColors.facebook,
+                      size: 24,
+                    ),
+                    onPressed: () {
+                      // TODO(auth): implement Facebook sign-in
+                    },
                   ),
-                  onPressed: () {
-                    // TODO(auth): implement Facebook sign-in
-                  },
                 ),
                 const SizedBox(height: 12),
-                SocialLoginButton(
+                Semantics(
+                  button: true,
                   label: 'Continue with Apple',
-                  icon: const Icon(
-                    Icons.apple,
-                    color: AppColors.apple,
-                    size: 24,
+                  child: SocialLoginButton(
+                    label: 'Continue with Apple',
+                    icon: const Icon(
+                      Icons.apple,
+                      color: AppColors.apple,
+                      size: 24,
+                    ),
+                    onPressed: () {
+                      // TODO(auth): implement Apple sign-in
+                    },
                   ),
-                  onPressed: () {
-                    // TODO(auth): implement Apple sign-in
-                  },
                 ),
 
                 const SizedBox(height: 28),
@@ -193,46 +226,59 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 28),
 
                 // ---- Email field ----
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  autofillHints: const [
-                    AutofillHints.username,
-                    AutofillHints.email,
-                  ],
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
+                Semantics(
+                  textField: true,
+                  label: 'Email address input field',
+                  child: TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [
+                      AutofillHints.username,
+                      AutofillHints.email,
+                    ],
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                    decoration: _inputDecoration('Email'),
                   ),
-                  decoration: _inputDecoration('Email'),
                 ),
 
                 const SizedBox(height: 16),
 
                 // ---- Password field ----
-                TextField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  enableSuggestions: false,
-                  autocorrect: false,
-                  textInputAction: TextInputAction.done,
-                  autofillHints: const [AutofillHints.password],
-                  onSubmitted: (_) => _handleLogin(),
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                  ),
-                  decoration: _inputDecoration('Password').copyWith(
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        color: AppColors.textSecondary,
+                Semantics(
+                  textField: true,
+                  label: 'Password input field',
+                  child: TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    enableSuggestions: false,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.password],
+                    onSubmitted: (_) => _handleLogin(),
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                    decoration: _inputDecoration('Password').copyWith(
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() => _obscurePassword = !_obscurePassword);
+                        },
+                        icon: Semantics(
+                          label: _obscurePassword
+                              ? 'Show password'
+                              : 'Hide password',
+                          child: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -241,22 +287,68 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 32),
 
                 // ---- Continue button (white) ----
-                ElevatedButton(
+                AuthPrimaryButton(
+                  label: 'Continue',
+                  semanticsLabel: 'Continue to sign in',
+                  isLoading: _loadingType == AuthLoadingType.email,
                   onPressed: _isAnyLoading ? null : _handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.onPrimary,
-                    foregroundColor: AppColors.onBackground,
-                  ),
-                  child: _loadingType == AuthLoadingType.email
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Continue'),
                 ),
 
                 const SizedBox(height: 32),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          "Didn't receive verification code? ",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Semantics(
+                          button: true,
+                          label: resendTimer > 0
+                              ? 'Resend verification code in $resendTimer seconds'
+                              : 'Resend verification code',
+                          child: TextButton.icon(
+                            onPressed: resendTimer > 0
+                                ? null
+                                : () {
+                                    context.push(RoutePaths.resendVerification);
+                                  },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              foregroundColor: AppColors.primary,
+                              disabledForegroundColor: AppColors.textMuted,
+                            ),
+                            icon: resendTimer > 0
+                                ? const Icon(Icons.timer_outlined, size: 14)
+                                : null,
+                            label: Text(
+                              resendTimer > 0
+                                  ? "Resend in ${resendTimer}s"
+                                  : "Resend",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
               ],
             ),
           ),

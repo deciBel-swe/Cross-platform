@@ -122,11 +122,11 @@ class PlaylistDetailsTab extends ConsumerWidget {
             if (value == null || value.isEmpty) {
               return 'Playlist title cannot be empty';
             }
-            
+
             if (value.trim().isEmpty) {
               return 'Playlist title cannot be only spaces.';
             }
-            
+
             if (value.trim().length > 100) {
               return 'Title must be 100 characters or less.';
             }

@@ -4,11 +4,11 @@ import 'playlist_model.dart';
 
 extension OwnerModelX on OwnerModel {
   PlaylistOwner toEntity() => PlaylistOwner(
-        id: id,
-        username: username,
-        displayName: displayName,
-        avatarUrl: avatarUrl,
-      );
+    id: id,
+    username: username,
+    displayName: displayName,
+    avatarUrl: avatarUrl,
+  );
 }
 
 extension PlaylistModelX on PlaylistModel {
@@ -20,7 +20,9 @@ extension PlaylistModelX on PlaylistModel {
     isPrivate: isPrivate,
     isLiked: isLiked,
     coverArt: coverArt,
-    owner: owner?.toEntity() ?? const PlaylistOwner(id: 0, username: 'Unknown User'),
+    owner:
+        owner?.toEntity() ??
+        const PlaylistOwner(id: 0, username: 'Unknown User'),
     tracks: tracks.map((track) => track.toEntity()).toList(),
   );
 }

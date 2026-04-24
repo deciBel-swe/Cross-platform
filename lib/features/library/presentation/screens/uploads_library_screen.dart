@@ -105,11 +105,13 @@ class UploadsLibraryBody extends ConsumerWidget {
                       key: ValueKey(track.id),
                       track: track,
                       // Disable tapping if it is still uploading
-                      onTap: track.state.toString() == 'PROCESSING' ? null : () {
-                        context.push(RoutePaths.trackPreview(track.id));
-                      },
+                      onTap: track.state.toString() == 'PROCESSING'
+                          ? null
+                          : () {
+                              context.push(RoutePaths.trackPreview(track.id));
+                            },
                     ),
-                    
+
                     // Show the progress bar ONLY if the track is processing
                     if (track.state.toString() == 'PROCESSING') ...[
                       const SizedBox(height: 8),
@@ -118,10 +120,13 @@ class UploadsLibraryBody extends ConsumerWidget {
                         child: Consumer(
                           builder: (context, ref, child) {
                             // Read the memory map we made in the notifier
-                            final uploadMap = ref.watch(activeUploadsMapProvider);
-                            
+                            final uploadMap = ref.watch(
+                              activeUploadsMapProvider,
+                            );
+
                             // Get the UUID, fallback to ID string just to be safe
-                            final websocketId = uploadMap[track.id] ?? track.id.toString();
+                            final websocketId =
+                                uploadMap[track.id] ?? track.id.toString();
 
                             return UploadProgressIndicator(
                               correlationId: websocketId,

@@ -243,6 +243,77 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     return didUpdate;
   }
 
+  Future<bool> deleteTrack(int trackId) async {
+    if (_isDisposed) return false;
+
+    final repo = ref.read(trackRepositoryProvider);
+    try {
+      final result = await repo
+          .deleteTrack(trackId)
+          .timeout(const Duration(seconds: 12));
+
+      if (_isDisposed) return false;
+
+      return result.fold((_) => false, (_) {
+        _removeTrackLocally(trackId);
+        return true;
+      });
+    } on TimeoutException {
+      return false;
+    }
+  }
+
+  void _removeTrackLocally(int trackId) {
+    if (_isDisposed) return;
+
+    _terminalStatusTrackIds.remove(trackId);
+
+    final currentTracks = state.valueOrNull;
+    if (currentTracks != null) {
+      final updated = currentTracks
+          .where((track) => track.id != trackId)
+          .toList(growable: false);
+
+      if (updated.length != currentTracks.length) {
+        state = AsyncData(updated);
+      }
+    }
+
+    final userId = _activeUserId;
+    if (userId != null) {
+      _removeTrackFromCache(userId: userId, trackId: trackId);
+    } else {
+      for (final cachedUserId in _memoryCacheByUser.keys.toList()) {
+        _removeTrackFromCache(userId: cachedUserId, trackId: trackId);
+      }
+    }
+
+    _syncProcessingPolling(state.valueOrNull ?? const <Track>[]);
+  }
+
+  static void _removeTrackFromCache({
+    required int userId,
+    required int trackId,
+  }) {
+    final cached = _memoryCacheByUser[userId];
+    if (cached == null) {
+      return;
+    }
+
+    final updated = cached.tracks
+        .where((track) => track.id != trackId)
+        .toList(growable: false);
+    if (updated.length == cached.tracks.length) {
+      return;
+    }
+
+    _memoryCacheByUser[userId] = (
+      tracks: updated,
+      currentPage: cached.currentPage,
+      isLastPage: cached.isLastPage,
+    );
+  }
+
   void _setLocalTrackState(int trackId, TrackStatus stateValue) {
     if (_isDisposed) return;
 
