@@ -110,14 +110,20 @@ import '../../features/playlists/domain/repositories/i_playlist_repository.dart'
     as _i582;
 import '../../features/settings/data/datasources/blocked_users_remote_datasource.dart'
     as _i688;
+import '../../features/settings/data/datasources/change_email_remote_datasource.dart'
+    as _i707;
 import '../../features/settings/data/repositories/app_icon_repository_impl.dart'
     as _i781;
 import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
     as _i292;
+import '../../features/settings/data/repositories/change_email_repository_impl.dart'
+    as _i225;
 import '../../features/settings/domain/repositories/app_icon_repository.dart'
     as _i993;
 import '../../features/settings/domain/repositories/blocked_users_repository.dart'
     as _i288;
+import '../../features/settings/domain/repositories/change_email_repository.dart'
+    as _i346;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/mock_upload_repository_impl.dart'
@@ -189,6 +195,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i688.BlockedUsersRemoteDatasource>(
       () => _i688.BlockedUsersRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i707.ChangeEmailRemoteDatasource>(
+      () => _i707.ChangeEmailRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i690.MockTrackRepository(),
       registerFor: {_mock},
@@ -250,6 +259,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i573.SharedPrefsService>(),
       ),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i346.ChangeEmailRepository>(
+      () => _i225.ChangeEmailRepositoryImpl(
+        gh<_i707.ChangeEmailRemoteDatasource>(),
+      ),
     );
     gh.lazySingleton<_i590.ITrackSocialRepository>(
       () => _i529.TrackSocialRepositoryImpl(

@@ -34,6 +34,7 @@ import '../../features/playlists/presentation/screens/edit_playlist_screen.dart'
 import '../../features/playlists/presentation/screens/playlist_details_screen.dart';
 import '../../features/playlists/presentation/screens/playlists_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
+import '../../features/settings/presentation/screens/account_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
 import '../../features/settings/presentation/screens/blocked_users_screen.dart';
 import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
@@ -264,6 +265,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'settings',
                     builder: (context, state) => const SettingsScreen(),
                     routes: [
+                      GoRoute(
+                        path: 'account',
+                        builder: (context, state) => const AccountScreen(),
+                      ),
                       GoRoute(
                         path: 'social-settings',
                         builder: (context, state) =>
