@@ -6,6 +6,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../library/data/models/track_model.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/track_upload_metadata.dart';
+import '../../domain/entities/track_upload_status.dart';
 import '../../domain/repositories/i_upload_repository.dart';
 import '../datasources/upload_remote_datasource.dart';
 import '../models/track_metadata_model.dart';
@@ -43,12 +44,12 @@ class UploadRepository implements IUploadRepository {
   }
 
   @override
-  Stream<double> watchUploadProgress(String correlationId) {
-    return _remoteDatasource.watchUploadProgress(correlationId);
+  Stream<TrackUploadStatus> watchUploadStatus(String uploadId) {
+    return _remoteDatasource.watchUploadStatus(uploadId);
   }
 
   @override
-  void cancelProgressSubscription(String uploadId) {
-    _remoteDatasource.disconnectWebSocket(uploadId);
+  void cancelUploadStatusSubscription(String uploadId) {
+    _remoteDatasource.cancelUploadStatusSubscription(uploadId);
   }
 }

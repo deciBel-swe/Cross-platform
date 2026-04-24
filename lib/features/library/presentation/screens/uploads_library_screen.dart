@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
-import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_scroll_controller_provider.dart';
 import '../../../library_profile/presentation/widgets/track_tile.dart';
-import '../../../upload/presentation/providers/upload_notifier.dart';
+import '../../../upload/presentation/providers/upload_sessions_provider.dart';
 import '../../../upload/presentation/widgets/upload_progress_indecator.dart';
 
 class UploadsLibraryScreen extends ConsumerWidget {
@@ -37,12 +37,18 @@ class UploadsLibraryBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final uploadsAsync = ref.watch(uploadsProvider);
     final scrollController = ref.watch(uploadsScrollControllerProvider);
+    final uploadSessions = ref.watch(uploadSessionsProvider);
 
     return uploadsAsync.when(
       // UX fix: keeps list visible during refresh/loading.
       skipLoadingOnRefresh: true,
       data: (tracks) {
-        if (tracks.isEmpty) {
+        final displayTracks = _mergeTracks(
+          tracks: tracks,
+          sessions: uploadSessions.values,
+        );
+
+        if (displayTracks.isEmpty) {
           return LayoutBuilder(
             builder: (context, constraints) {
               return RefreshIndicator(
@@ -92,46 +98,47 @@ class UploadsLibraryBody extends ConsumerWidget {
               16,
               16 + AppDimensions.mobileMiniPlayerReservedSpace,
             ),
-            itemCount: tracks.length,
+            itemCount: displayTracks.length,
             itemBuilder: (context, index) {
-              final track = tracks[index];
+              final track = displayTracks[index];
+              final session = ref.watch(
+                uploadSessionByTrackIdProvider(track.id),
+              );
+              final showUploadStatus =
+                  session != null || track.isProcessing || track.isFailed;
+              final isUnavailable = showUploadStatus || !track.isPlayable;
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TrackTile(
-                      key: ValueKey(track.id),
-                      track: track,
-                      // Disable tapping if it is still uploading
-                      onTap: track.state.toString() == 'PROCESSING'
-                          ? null
-                          : () {
-                              context.push(RoutePaths.trackPreview(track.id));
-                            },
+                    AbsorbPointer(
+                      absorbing: isUnavailable,
+                      child: Opacity(
+                        opacity: showUploadStatus ? 0.55 : 1.0,
+                        child: TrackTile(
+                          key: ValueKey(track.id),
+                          track: track,
+                          onTap: track.isPlayable
+                              ? () {
+                                  context.push(
+                                    RoutePaths.trackPreview(track.id),
+                                  );
+                                }
+                              : null,
+                        ),
+                      ),
                     ),
 
-                    // Show the progress bar ONLY if the track is processing
-                    if (track.state.toString() == 'PROCESSING') ...[
+                    if (showUploadStatus) ...[
                       const SizedBox(height: 8),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Consumer(
-                          builder: (context, ref, child) {
-                            // Read the memory map we made in the notifier
-                            final uploadMap = ref.watch(
-                              activeUploadsMapProvider,
-                            );
-
-                            // Get the UUID, fallback to ID string just to be safe
-                            final websocketId =
-                                uploadMap[track.id] ?? track.id.toString();
-
-                            return UploadProgressIndicator(
-                              correlationId: websocketId,
-                            );
-                          },
+                        child: UploadProgressIndicator(
+                          trackId: track.id,
+                          isFailed: session?.isFailed == true || track.isFailed,
                         ),
                       ),
                     ],
@@ -158,4 +165,26 @@ class UploadsLibraryBody extends ConsumerWidget {
       ),
     );
   }
+}
+
+List<Track> _mergeTracks({
+  required List<Track> tracks,
+  required Iterable<UploadSession> sessions,
+}) {
+  final mergedTracks = <Track>[];
+  final seenTrackIds = <int>{};
+
+  for (final session in sessions) {
+    if (seenTrackIds.add(session.trackId)) {
+      mergedTracks.add(session.track);
+    }
+  }
+
+  for (final track in tracks) {
+    if (seenTrackIds.add(track.id)) {
+      mergedTracks.add(track);
+    }
+  }
+
+  return mergedTracks;
 }

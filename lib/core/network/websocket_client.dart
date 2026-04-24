@@ -16,10 +16,11 @@ class WebSocketClient {
 
   StompClient? _stompClient;
   bool _isConnected = false;
+  bool _isConnecting = false;
 
   // Keep track of streams using the topic endpoint as the key
   final Map<String, StreamController<Map<String, dynamic>>> _controllers = {};
-  
+
   // Stores the unsubscribe callbacks provided by the STOMP client
   final Map<String, Function> _unsubscribeFunctions = {};
 
@@ -27,22 +28,34 @@ class WebSocketClient {
   Stream<Map<String, dynamic>> watch(String topicEndpoint) {
     if (!_controllers.containsKey(topicEndpoint)) {
       // 1. Create a stream controller for this specific track's UI to listen to
-      _controllers[topicEndpoint] = StreamController<Map<String, dynamic>>.broadcast();
-
-      // 2. If already connected to the STOMP hub, subscribe instantly
-      if (_isConnected && _stompClient != null) {
-        _subscribeToTopic(topicEndpoint);
-      } 
-      // 3. Otherwise, boot up the main connection first
-      else if (_stompClient == null) {
-        _connect();
-      }
+      _controllers[topicEndpoint] =
+          StreamController<Map<String, dynamic>>.broadcast();
     }
+
+    // 2. If already connected to the STOMP hub, subscribe instantly.
+    if (_isConnected && _stompClient?.connected == true) {
+      if (!_unsubscribeFunctions.containsKey(topicEndpoint)) {
+        _subscribeToTopic(topicEndpoint);
+      }
+    } else {
+      // 3. Otherwise, boot up or restore the main connection first.
+      _connect();
+    }
+
     return _controllers[topicEndpoint]!.stream;
   }
 
   Future<void> _connect() async {
-    if (_stompClient != null) return;
+    if (_isConnecting) return;
+    if (_stompClient?.connected == true && _isConnected) return;
+
+    if (_stompClient != null && _stompClient!.connected == false) {
+      _stompClient!.deactivate();
+      _stompClient = null;
+      _unsubscribeFunctions.clear();
+    }
+
+    _isConnecting = true;
 
     try {
       final token = await _secureStorage.getAccessToken();
@@ -56,10 +69,13 @@ class WebSocketClient {
           onConnect: _onConnect,
           beforeConnect: () async {
             if (kDebugMode) {
-              debugPrint('STOMP: Booting up main connection to $stompHubUrl...');
+              debugPrint(
+                'STOMP: Booting up main connection to $stompHubUrl...',
+              );
             }
           },
           onWebSocketError: (error) {
+            _isConnecting = false;
             debugPrint('STOMP WebSocket Error: $error');
             _broadcastError(error as Object);
           },
@@ -70,15 +86,19 @@ class WebSocketClient {
           onDisconnect: (StompFrame frame) {
             debugPrint('STOMP: Main Hub Disconnected');
             _isConnected = false;
+            _isConnecting = false;
+            _unsubscribeFunctions.clear();
           },
           // Spring Boot often expects the token in the CONNECT frame headers as well
           stompConnectHeaders: {'Authorization': 'Bearer $token'},
           webSocketConnectHeaders: {'Authorization': 'Bearer $token'},
+          reconnectDelay: const Duration(seconds: 5),
         ),
       );
 
       _stompClient!.activate();
     } catch (e) {
+      _isConnecting = false;
       debugPrint('STOMP setup failed: $e');
     }
   }
@@ -86,6 +106,7 @@ class WebSocketClient {
   void _onConnect(StompFrame frame) {
     debugPrint('STOMP: Connected to Main Hub Successfully!');
     _isConnected = true;
+    _isConnecting = false;
 
     // Use a tiny delay to let the socket settle, but verify it's still alive afterward!
     Future.delayed(const Duration(milliseconds: 150), () {
@@ -104,7 +125,9 @@ class WebSocketClient {
   void _subscribeToTopic(String topicEndpoint) {
     // strict !_stompClient!.connected safety check!
     if (_stompClient == null || !_isConnected || !_stompClient!.connected) {
-      debugPrint('STOMP: Aborting subscription to $topicEndpoint. Socket is dead.');
+      debugPrint(
+        'STOMP: Aborting subscription to $topicEndpoint. Socket is dead.',
+      );
       return;
     }
 
@@ -144,12 +167,21 @@ class WebSocketClient {
     // 2. Close the Riverpod stream for this track
     _controllers[topicEndpoint]?.close();
     _controllers.remove(topicEndpoint);
+
+    if (_controllers.isEmpty) {
+      _stompClient?.deactivate();
+      _stompClient = null;
+      _isConnected = false;
+      _isConnecting = false;
+      _unsubscribeFunctions.clear();
+    }
   }
 
   void dispose() {
     _stompClient?.deactivate();
     _stompClient = null;
     _isConnected = false;
+    _isConnecting = false;
 
     for (final controller in _controllers.values) {
       controller.close();

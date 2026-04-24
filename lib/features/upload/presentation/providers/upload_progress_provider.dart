@@ -1,13 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'upload_notifier.dart';
+import 'upload_sessions_provider.dart';
 
-final uploadProgressProvider = StreamProvider.family<double, String>((ref, uploadId) {
-  final repository = ref.watch(uploadRepositoryProvider);
-  
-  // Clean up the WebSocket when this provider is disposed
-  ref.onDispose(() {
-    repository.cancelProgressSubscription(uploadId);
-  });
-
-  return repository.watchUploadProgress(uploadId);
+final uploadProgressProvider = Provider.family<UploadSession?, int>((
+  ref,
+  int trackId,
+) {
+  return ref.watch(uploadSessionByTrackIdProvider(trackId));
 });

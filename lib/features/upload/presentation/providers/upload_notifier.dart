@@ -2,23 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
-import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
 import '../../../../core/utils/genre_constants.dart';
-import '../../../library/data/datasources/library_mock_fixtures.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../domain/entities/track_upload_metadata.dart';
-import '../../domain/repositories/i_upload_repository.dart';
+import 'upload_repository_provider.dart';
+import 'upload_sessions_provider.dart';
 
-// 1. Bridge GitIt (Dependency Injection) to Riverpod (State Management)
-final uploadRepositoryProvider = Provider<IUploadRepository>((ref) {
-  return getIt<IUploadRepository>();
-});
+export 'upload_repository_provider.dart' show uploadRepositoryProvider;
 
 // 2. Provide the notifier to the UI
 final uploadNotifierProvider =
@@ -32,10 +27,6 @@ final genreListProvider = StateProvider<List<String>>((ref) {
 });
 
 // Maps an integer track ID to its String WebSocket UUID
-final activeUploadsMapProvider = StateProvider<Map<int, String>>((ref) {
-  return {};
-});
-
 // 3. The Notifier which containing the form logic "Upload Form Controller"
 class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
   // Keep Track of 3 genre suggestions.
@@ -283,8 +274,6 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
-    final uploadId = const Uuid().v4();
-
     final repository = ref.read(uploadRepositoryProvider);
 
     // We do NOT generate a new Uuid here. We use the one already in currentState
@@ -301,26 +290,11 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         return false;
       },
       (track) {
-        // 1. Extract the uploadId from the state
-        final uploadId = currentState.uploadId;
+        ref
+            .read(uploadSessionsProvider.notifier)
+            .trackUpload(uploadId: currentState.uploadId, track: track);
+        ref.read(uploadsProvider.notifier).addTrack(track);
 
-        // 2. Save the mapping in memory (track.id -> uploadId)
-        if (uploadId != null) {
-          ref
-              .read(activeUploadsMapProvider.notifier)
-              .update((mapState) => {...mapState, track.id: uploadId});
-        }
-
-        // 3. Optimistically update the list to show "Processing" instantly
-        final notifier = ref.read(uploadsProvider.notifier);
-        notifier.addTrack(track);
-        notifier.invalidateCache();
-
-        // 4. Start background waveform extraction for the new track
-        final filePath = currentState.audioFile!.path;
-        unawaited(_runBackgroundExtraction(track.id, filePath));
-
-        // 5. Reset the form properly for the NEXT upload
         state = AsyncData(
           TrackUploadMetadata(
             audioFile: null,
@@ -338,42 +312,6 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         return true;
       },
     );
-  }
-
-  Future<void> _runBackgroundExtraction(int trackId, String path) async {
-    List<double> peaks = [];
-    try {
-      final waveformService = ref.read(waveformExtractionServiceProvider);
-
-      peaks = await waveformService.extractWaveform(path);
-    } catch (e, stack) {
-      debugPrint('UploadNotifier Extraction Error: $e');
-      debugPrintStack(stackTrace: stack);
-    }
-
-    final bool isFlat = peaks.isNotEmpty && peaks.every((p) => p == 0.0);
-
-    if (peaks.isEmpty || isFlat) {
-      peaks = [];
-    } else {
-      debugPrint(
-        'Waveform Extraction Verified: REAL data available (${peaks.length} samples).',
-      );
-    }
-
-    List<double> finalPeaks = peaks;
-    if (peaks.isNotEmpty) {
-      final max = peaks.reduce((curr, next) => curr > next ? curr : next);
-      if (max <= 1.0) {
-        finalPeaks = peaks.map((e) => (e * 100).roundToDouble()).toList();
-      } else {
-        finalPeaks = peaks.map((e) => e.roundToDouble()).toList();
-      }
-    }
-
-    LibraryMockFixtures.updateMockTrackWaveform(trackId, finalPeaks);
-
-    ref.read(uploadsProvider.notifier).refreshTrack(trackId);
   }
 
   void _updateState(TrackUploadMetadata Function(TrackUploadMetadata) update) {

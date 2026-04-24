@@ -10,6 +10,7 @@ import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/domain/entities/track_edit_request.dart';
 import '../../../library/domain/entities/track_peaks.dart';
+import '../../../library/domain/entities/track_status.dart';
 import '../../domain/repositories/track_repository.dart';
 
 @Environment('mock')
@@ -54,8 +55,11 @@ class MockTrackRepository implements TrackRepository {
     final trackResult = await fetchTrackById(id);
     return trackResult.fold(
       (failure) => Left(failure),
-      (track) =>
-          Right(track.state.name == 'finished' ? 'FINISHED' : 'PROCESSING'),
+      (track) => Right(switch (track.state) {
+        TrackStatus.finished => 'FINISHED',
+        TrackStatus.failed => 'FAILED',
+        TrackStatus.processing => 'PROCESSING',
+      }),
     );
   }
 

@@ -21,10 +21,12 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     ({List<Track> tracks, int currentPage, bool isLastPage})
   >
   _memoryCacheByUser = {};
+  static final Map<int, Set<int>> _hiddenFailedTrackIdsByUser = {};
 
   @visibleForTesting
   static void clearMemoryCache() {
     _memoryCacheByUser.clear();
+    _hiddenFailedTrackIdsByUser.clear();
   }
 
   int? _activeUserId;
@@ -35,6 +37,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   bool _isRefreshingProcessing = false;
   // Tracks that reached terminal statuses so we stop polling them.
   final Set<int> _terminalStatusTrackIds = <int>{};
+  final Set<int> _hiddenFailedTrackIdsWithoutUser = <int>{};
 
   static const int _pageSize = 20;
 
@@ -50,7 +53,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       _processingRefreshTimer = null;
     });
 
-    final userId = _resolveCurrentUserId();
+    final userId = _resolveCurrentUserId(watch: true);
     _activeUserId = userId;
 
     if (userId == null) {
@@ -76,8 +79,10 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     return _fetchFirstPage();
   }
 
-  int? _resolveCurrentUserId() {
-    final authAsync = ref.watch(authStateProvider);
+  int? _resolveCurrentUserId({bool watch = false}) {
+    final authAsync = watch
+        ? ref.watch(authStateProvider)
+        : ref.read(authStateProvider);
 
     return authAsync.maybeWhen(
       data: (state) {
@@ -90,8 +95,14 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     );
   }
 
+  int? _ensureActiveUserId() {
+    final userId = _activeUserId ?? _resolveCurrentUserId();
+    _activeUserId = userId;
+    return userId;
+  }
+
   Future<List<Track>> _fetchFirstPage() async {
-    final userId = _activeUserId;
+    final userId = _ensureActiveUserId();
     if (userId == null) {
       _currentPage = 0;
       _isLastPage = true;
@@ -109,15 +120,16 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     _currentPage = paginated.pageNumber;
     _isLastPage = paginated.isLast;
     _terminalStatusTrackIds.clear();
+    final visibleTracks = _filterVisibleTracks(paginated.content);
     _memoryCacheByUser[userId] = (
-      tracks: paginated.content,
+      tracks: visibleTracks,
       currentPage: paginated.pageNumber,
       isLastPage: paginated.isLast,
     );
 
-    _syncProcessingPolling(paginated.content);
+    _syncProcessingPolling(visibleTracks);
 
-    return paginated.content;
+    return visibleTracks;
   }
 
   Future<void> refreshAll() async {
@@ -139,7 +151,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       return;
     }
 
-    final userId = _activeUserId;
+    final userId = _ensureActiveUserId();
     if (userId == null) {
       return;
     }
@@ -168,7 +180,10 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       _currentPage = paginated.pageNumber;
       _isLastPage = paginated.isLast;
 
-      final updated = <Track>[...currentTracks, ...paginated.content];
+      final updated = _filterVisibleTracks([
+        ...currentTracks,
+        ...paginated.content,
+      ]);
       _memoryCacheByUser[userId] = (
         tracks: updated,
         currentPage: paginated.pageNumber,
@@ -188,7 +203,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   Future<bool> refreshTrack(int trackId) async {
     if (_isDisposed) return false;
     final repo = ref.read(trackRepositoryProvider);
-    final userId = _activeUserId;
+    final userId = _ensureActiveUserId();
     if (userId == null) {
       return false;
     }
@@ -207,11 +222,17 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
         return;
       }
 
+      if (_shouldHideTrack(track)) {
+        removeFailedTrack(track.id);
+        didUpdate = true;
+        return;
+      }
+
       if (_isDisposed) return;
       final currentTracks = state.valueOrNull ?? [];
       if (currentTracks.isEmpty) return; // Don't update if list not loaded
 
-      if (track.state == TrackStatus.processing) {
+      if (track.isProcessing) {
         // Track became non-terminal again, so it should be polled.
         _terminalStatusTrackIds.remove(track.id);
       } else {
@@ -279,7 +300,36 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
       }
     }
 
-    final userId = _activeUserId;
+    final userId = _ensureActiveUserId();
+    if (userId != null) {
+      _removeTrackFromCache(userId: userId, trackId: trackId);
+    } else {
+      for (final cachedUserId in _memoryCacheByUser.keys.toList()) {
+        _removeTrackFromCache(userId: cachedUserId, trackId: trackId);
+      }
+    }
+
+    _syncProcessingPolling(state.valueOrNull ?? const <Track>[]);
+  }
+
+  void removeFailedTrack(int trackId) {
+    if (_isDisposed) return;
+
+    _hiddenFailedTrackIds.add(trackId);
+    _terminalStatusTrackIds.add(trackId);
+
+    final currentTracks = state.valueOrNull;
+    if (currentTracks != null) {
+      final updated = currentTracks
+          .where((track) => track.id != trackId)
+          .toList(growable: false);
+
+      if (updated.length != currentTracks.length) {
+        state = AsyncData(updated);
+      }
+    }
+
+    final userId = _ensureActiveUserId();
     if (userId != null) {
       _removeTrackFromCache(userId: userId, trackId: trackId);
     } else {
@@ -314,8 +364,13 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     );
   }
 
-  void _setLocalTrackState(int trackId, TrackStatus stateValue) {
+  void setTrackState(int trackId, TrackStatus stateValue) {
     if (_isDisposed) return;
+
+    if (stateValue == TrackStatus.failed) {
+      removeFailedTrack(trackId);
+      return;
+    }
 
     final currentTracks = state.valueOrNull ?? const <Track>[];
     if (currentTracks.isEmpty) return;
@@ -327,24 +382,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
           if (track.state == stateValue)
             track
           else
-            Track(
-              id: track.id,
-              title: track.title,
-              artist: track.artist,
-              trackUrl: track.trackUrl,
-              coverUrl: track.coverUrl,
-              waveformUrl: track.waveformUrl,
-              genre: track.genre,
-              tags: track.tags,
-              state: stateValue,
-              releaseDate: track.releaseDate,
-              playCount: track.playCount,
-              likeCount: track.likeCount,
-              repostCount: track.repostCount,
-              isLiked: track.isLiked,
-              isReposted: track.isReposted,
-              createdAt: track.createdAt,
-            )
+            track.copyWith(state: stateValue)
         else
           track,
     ];
@@ -360,7 +398,7 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
     state = AsyncData(updated);
 
-    final userId = _activeUserId;
+    final userId = _ensureActiveUserId();
     if (userId != null) {
       final cached = _memoryCacheByUser[userId];
       _memoryCacheByUser[userId] = (
@@ -373,12 +411,53 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     _syncProcessingPolling(updated);
   }
 
+  void upsertTrack(Track track) {
+    if (_isDisposed) return;
+
+    if (_shouldHideTrack(track)) {
+      removeFailedTrack(track.id);
+      return;
+    }
+
+    final currentTracks = state.valueOrNull ?? const <Track>[];
+    final existingIndex = currentTracks.indexWhere(
+      (item) => item.id == track.id,
+    );
+    final updatedTracks = existingIndex == -1
+        ? <Track>[track, ...currentTracks]
+        : <Track>[
+            for (var index = 0; index < currentTracks.length; index++)
+              if (index == existingIndex) track else currentTracks[index],
+          ];
+
+    if (track.isProcessing) {
+      _terminalStatusTrackIds.remove(track.id);
+    } else {
+      _terminalStatusTrackIds.add(track.id);
+    }
+
+    state = AsyncData(updatedTracks);
+
+    final userId = _ensureActiveUserId();
+    if (userId != null) {
+      final cached = _memoryCacheByUser[userId];
+      _memoryCacheByUser[userId] = (
+        tracks: updatedTracks,
+        currentPage: cached?.currentPage ?? _currentPage,
+        isLastPage: cached?.isLastPage ?? _isLastPage,
+      );
+    }
+
+    _syncProcessingPolling(updatedTracks);
+  }
+
   void _syncProcessingPolling(List<Track> tracks) {
     // Poll only tracks still processing and not already marked terminal.
     final hasProcessing = tracks.any(
       (t) =>
-          t.state == TrackStatus.processing &&
-          !_terminalStatusTrackIds.contains(t.id),
+          t.isProcessing &&
+          !_terminalStatusTrackIds.contains(t.id) &&
+          !_hiddenFailedTrackIds.contains(t.id),
     );
     if (!hasProcessing) {
       _processingRefreshTimer?.cancel();
@@ -413,8 +492,9 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     final processingIds = tracks
         .where(
           (t) =>
-              t.state == TrackStatus.processing &&
-              !_terminalStatusTrackIds.contains(t.id),
+              t.isProcessing &&
+              !_terminalStatusTrackIds.contains(t.id) &&
+              !_hiddenFailedTrackIds.contains(t.id),
         )
         .map((t) => t.id)
         .toList();
@@ -448,13 +528,11 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
                 _terminalStatusTrackIds.add(id);
                 final refreshed = await refreshTrack(id);
                 if (!refreshed) {
-                  _setLocalTrackState(id, TrackStatus.finished);
+                  setTrackState(id, TrackStatus.finished);
                 }
                 break;
               case 'FAILED':
-                // Terminal failed status should stop repeated polling.
-                _terminalStatusTrackIds.add(id);
-                await refreshTrack(id);
+                removeFailedTrack(id);
                 break;
               default:
                 await refreshTrack(id);
@@ -471,20 +549,28 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
   void addTrack(Track track) {
     if (_isDisposed) return;
+
+    if (_shouldHideTrack(track)) {
+      removeFailedTrack(track.id);
+      return;
+    }
+
     final currentTracks = state.valueOrNull ?? [];
 
     // Prepend the new track
     final updated = [track, ...currentTracks];
 
-    if (track.state == TrackStatus.processing) {
+    if (track.isProcessing) {
       _terminalStatusTrackIds.remove(track.id);
+    } else {
+      _terminalStatusTrackIds.add(track.id);
     }
 
     // Update state
     state = AsyncData(updated);
 
     // Update cache
-    final userId = _activeUserId;
+    final userId = _ensureActiveUserId();
     if (userId != null) {
       final cached = _memoryCacheByUser[userId];
       _memoryCacheByUser[userId] = (
@@ -498,9 +584,28 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
   }
 
   void invalidateCache() {
-    final userId = _activeUserId;
+    final userId = _ensureActiveUserId();
     if (userId != null) {
       _memoryCacheByUser.remove(userId);
     }
+  }
+
+  List<Track> _filterVisibleTracks(List<Track> tracks) {
+    return tracks.where((track) => !_shouldHideTrack(track)).toList(
+      growable: false,
+    );
+  }
+
+  bool _shouldHideTrack(Track track) {
+    return track.isFailed || _hiddenFailedTrackIds.contains(track.id);
+  }
+
+  Set<int> get _hiddenFailedTrackIds {
+    final userId = _activeUserId;
+    if (userId == null) {
+      return _hiddenFailedTrackIdsWithoutUser;
+    }
+
+    return _hiddenFailedTrackIdsByUser.putIfAbsent(userId, () => <int>{});
   }
 }

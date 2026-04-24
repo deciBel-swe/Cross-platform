@@ -7,44 +7,75 @@ import '../providers/upload_progress_provider.dart';
 class UploadProgressIndicator extends ConsumerWidget {
   const UploadProgressIndicator({
     super.key,
-    required this.correlationId,
+    required this.trackId,
+    this.isFailed = false,
   });
 
-  final String correlationId;
+  final int trackId;
+  final bool isFailed;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final progressAsync = ref.watch(uploadProgressProvider(correlationId));
+    final theme = Theme.of(context);
+    final session = ref.watch(uploadProgressProvider(trackId));
+    final progress = session?.progressPercentage ?? 0;
+    final normalizedProgress = progress.clamp(0, 100) / 100.0;
+    final stepName = session?.stepName;
+    final errorMessage = session?.errorMessage;
+    final showFailure = isFailed || session?.isFailed == true;
+    final isDeterminate = session != null && progress > 0;
 
-    return progressAsync.when(
-      data: (progress) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          LinearProgressIndicator(
-            value: progress / 100,
-            backgroundColor: AppColors.surface,
-            color: AppColors.primary,
-            minHeight: 8,
-            borderRadius: BorderRadius.circular(4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        LinearProgressIndicator(
+          value: showFailure
+              ? 1.0
+              : isDeterminate
+              ? normalizedProgress
+              : null,
+          backgroundColor: AppColors.surface,
+          color: showFailure ? AppColors.errors : AppColors.primary,
+          minHeight: 8,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _buildLabel(
+            progress: progress,
+            stepName: stepName,
+            errorMessage: errorMessage,
+            showFailure: showFailure,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Processing... ${progress.toStringAsFixed(1)}%',
-            style: const TextStyle(
-              color: AppColors.onPrimary,
-              fontSize: 12,
-            ),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: showFailure ? AppColors.errors : AppColors.onPrimary,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
-      loading: () => const LinearProgressIndicator(
-        backgroundColor: AppColors.surface,
-        color: AppColors.primary,
-      ),
-      error: (error, stack) => Text(
-        'Progress error: $error',
-        style: const TextStyle(color: AppColors.errors, fontSize: 12),
-      ),
+        ),
+      ],
     );
+  }
+
+  String _buildLabel({
+    required int progress,
+    required String? stepName,
+    required String? errorMessage,
+    required bool showFailure,
+  }) {
+    if (showFailure) {
+      return errorMessage ?? 'Upload failed';
+    }
+
+    final normalizedStepName = stepName?.trim();
+    if (normalizedStepName != null && normalizedStepName.isNotEmpty) {
+      return '$normalizedStepName - $progress%';
+    }
+
+    if (progress > 0) {
+      return 'Processing... $progress%';
+    }
+
+    return 'Processing...';
   }
 }

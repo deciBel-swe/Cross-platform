@@ -75,6 +75,8 @@ class ApiConstants {
 
   /// Upload-specific socket endpoint
   static const String uploadProgress = '$uploads/progress';
+  static const String trackUploadV2 = '/tracks/upload/v2';
+  static const Duration trackUploadRequestTimeout = Duration(minutes: 5);
 
   /// Fetches a public user profile by identifier.
   ///
@@ -96,11 +98,12 @@ class ApiConstants {
     } else if (baseUrl.startsWith('http')) {
       return baseUrl.replaceFirst('http', 'ws');
     }
-    return baseUrl; 
+    return baseUrl;
   }
 
   /// Upload Progress WebSocket Topic
-  static String trackUploadStatusTopic(String uploadId) => '/topic/track-status/$uploadId';
+  static String trackUploadStatusTopic(String uploadId) =>
+      '/topic/track-status/$uploadId';
 
   /// Fetches a public user profile by username: GET /users/username/{username}
   static String publicProfileByUsername(String username) =>

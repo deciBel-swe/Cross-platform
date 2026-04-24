@@ -39,13 +39,24 @@ class TrackModel with _$TrackModel {
 
   static Map<String, dynamic> _normalizeTrackJson(Map<String, dynamic> json) {
     final map = Map<String, dynamic>.from(json);
+    final normalizedTrackUrl = (map['trackUrl'] as String?)?.trim();
+    final rawState = (map['state'] ?? map['status'])
+        ?.toString()
+        .trim()
+        .toUpperCase();
 
     if (!map.containsKey('createdAt') && map.containsKey('uploadDate')) {
       map['createdAt'] = map['uploadDate'];
     }
-    if (!map.containsKey('state')) {
-      map['state'] = 'FINISHED';
-    }
+    map['state'] = switch (rawState) {
+      'UPLOADING' || 'PROCESSING' => 'PROCESSING',
+      'FAILED' => 'FAILED',
+      'FINISHED' => 'FINISHED',
+      _ =>
+        (normalizedTrackUrl == null || normalizedTrackUrl.isEmpty)
+            ? 'PROCESSING'
+            : 'FINISHED',
+    };
 
     return map;
   }
