@@ -22,6 +22,14 @@ import '../../features/auth/data/repositories/mock_auth_repository.dart'
     as _i703;
 import '../../features/auth/domain/repositories/i_auth_repository.dart'
     as _i589;
+import '../../features/discovery/data/datasources/discovery_remote_datasource.dart'
+    as _i1005;
+import '../../features/discovery/data/repositories/discovery_repository_impl.dart'
+    as _i366;
+import '../../features/discovery/data/repositories/mock_discovery_repository.dart'
+    as _i614;
+import '../../features/discovery/domain/repositories/discovery_repository.dart'
+    as _i949;
 import '../../features/engagement/data/datasources/follow_remote_data_source.dart'
     as _i485;
 import '../../features/engagement/data/datasources/track_social_remote_datasource.dart'
@@ -143,6 +151,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i573.SharedPrefsService>(
       () => _i573.SharedPrefsService(),
     );
+    gh.lazySingleton<_i949.DiscoveryRepository>(
+      () => const _i614.MockDiscoveryRepository(),
+      registerFor: {_mock},
+    );
     gh.lazySingleton<_i667.DioClient>(
       () => _i667.DioClient(
         gh<_i361.Dio>(),
@@ -221,6 +233,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i452.FeedRepositoryImpl(gh<_i684.IFeedRemoteDatasource>()),
       registerFor: {_prod},
     );
+    gh.lazySingleton<_i1005.DiscoveryRemoteDataSource>(
+      () => _i1005.DiscoveryRemoteDataSourceImpl(gh<_i667.DioClient>()),
+      registerFor: {_prod},
+    );
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),
     );
@@ -239,6 +255,11 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i529.TrackSocialRepositoryImpl(
         gh<_i459.TrackSocialRemoteDatasource>(),
       ),
+      registerFor: {_prod},
+    );
+    gh.lazySingleton<_i949.DiscoveryRepository>(
+      () =>
+          _i366.DiscoveryRepositoryImpl(gh<_i1005.DiscoveryRemoteDataSource>()),
       registerFor: {_prod},
     );
     gh.lazySingleton<_i272.DownloadTrackUseCase>(
