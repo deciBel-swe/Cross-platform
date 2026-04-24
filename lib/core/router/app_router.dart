@@ -42,6 +42,9 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/social_settings_screen.dart';
 import '../../features/upgrade/presentation/screens/upgrade_screen.dart';
 import '../../features/upload/presentation/screens/upload_screen.dart';
+import '../../features/settings/presentation/screens/chat_screen.dart';
+import '../../features/settings/presentation/screens/inbox_screen.dart';
+import '../../features/settings/presentation/screens/new_message_screen.dart';
 import '../theme/app_colors.dart';
 import 'go_router_refresh_stream.dart';
 import 'main_shell.dart';
@@ -114,6 +117,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
+        path: RoutePaths.messages,
+        builder: (context, state) => const InboxScreen(),
+        routes: [
+          GoRoute(
+            path: 'new',
+            builder: (context, state) => const NewMessageScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '${RoutePaths.chat}/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final conversationId = state.pathParameters['id']!;
+          final otherUserName = state.extra as String? ?? 'Chat';
+          return ChatScreen(
+            conversationId: conversationId,
+            otherUserName: otherUserName,
+          );
+        },
+      ),
+      GoRoute(
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
       ),
@@ -133,7 +158,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const UploadScreen(),
               ),
               GoRoute(
-                path: 'your-likes',
+                path: RoutePaths.homeLikes,
                 builder: (context, state) => const LikedTracksScreen(),
               ),
             ],

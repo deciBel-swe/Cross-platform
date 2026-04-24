@@ -120,6 +120,19 @@ class ApiConstants {
   static const String notificationDeviceTokensEndpoint =
       '/notifications/device-tokens';
 
+  // ==========================================
+  // MESSAGING ENDPOINTS
+  // ==========================================
+
+  /// Base endpoint for direct messages conversations
+  static const String conversations = '/conversations';
+
+  /// Endpoint to get messages for a specific conversation
+  static String conversationMessages(String id) =>
+      '/conversations/$id/messages';
+
+  /// Endpoint to start a new conversation with a user
+  static String startConversation(int id) => '/conversations/$id/start';
   // Google OAuth specific constants
   static const String googleAuthUrl =
       'https://accounts.google.com/o/oauth2/v2/auth';
