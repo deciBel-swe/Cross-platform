@@ -9,6 +9,7 @@ import '../../features/auth/domain/entities/auth_state.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/resend_verification_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/start_screen.dart';
 import '../../features/engagement/presentation/providers/follow_connections_provider.dart';
@@ -68,6 +69,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute =
           state.matchedLocation == RoutePaths.login ||
           state.matchedLocation == RoutePaths.register ||
+          state.matchedLocation == RoutePaths.resendVerification ||
           state.matchedLocation == RoutePaths.start ||
           state.matchedLocation == RoutePaths.splash;
 
@@ -117,6 +119,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.resendVerification,
+        builder: (context, state) => const ResendVerificationScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

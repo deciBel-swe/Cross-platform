@@ -196,4 +196,14 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     // Forces a total destruction and recreation of the ProviderScope.
     await ref.read(appResetProvider.notifier).reset();
   }
+
+  Future<(String, int?)> resendVerificationCode({required String email}) async {
+    final repo = ref.read(authRepositoryProvider);
+    final result = await repo.resendVerificationCode(email: email);
+
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (response) => response,
+    );
+  }
 }

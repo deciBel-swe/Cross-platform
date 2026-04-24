@@ -18,6 +18,7 @@ import '../models/login_response_model.dart';
 import '../models/oauth_exchange_request_dto.dart';
 import '../models/refresh_token_response_model.dart';
 import '../models/register_local_request_model.dart';
+import '../models/resend_verification_response_model.dart';
 import '../utils/auth_success_page.dart';
 
 abstract class IAuthRemoteDataSource {
@@ -28,6 +29,7 @@ abstract class IAuthRemoteDataSource {
     required String refreshToken,
     required String accessToken,
   });
+  Future<ResendVerificationResponseModel> resendVerification(String email);
   Future<void> logout();
 }
 
@@ -297,6 +299,44 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     } catch (e) {
       throw AuthException(
         'An unexpected error occurred during token refresh: $e',
+      );
+    }
+  }
+
+  @override
+  Future<ResendVerificationResponseModel> resendVerification(
+    String email,
+  ) async {
+    try {
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.resendVerificationEndpoint,
+        data: {'email': email},
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw AuthException(
+          _parseManualError(
+            response.data,
+            fallback: 'Resend verification failed',
+          ),
+        );
+      }
+
+      final body = response.data;
+      if (body is Map<String, dynamic>) {
+        return ResendVerificationResponseModel.fromJson(body);
+      } else {
+        throw const AuthException('Invalid response format from server.');
+      }
+    } on DioException catch (e) {
+      throw ServerException(
+        _extractDioErrorMessage(e, fallback: 'Resend verification failed'),
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during resending verification: $e',
       );
     }
   }

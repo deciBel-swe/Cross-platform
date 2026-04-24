@@ -52,6 +52,11 @@ class MockAuthNotifier extends AsyncNotifier<AuthState>
   Future<void> logout() async {}
 
   @override
+  Future<(String, int?)> resendVerificationCode({required String email}) async {
+    return ('Code sent', null);
+  }
+
+  @override
   Future<void> refreshUser() async {}
 }
 

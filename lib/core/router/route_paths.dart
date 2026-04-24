@@ -15,12 +15,14 @@ class RoutePaths {
     'profile',
     'user',
     'profile-image',
+    'resend-verification',
   };
 
   static const String splash = '/';
   static const String start = '/start';
   static const String login = '/login';
   static const String register = '/register';
+  static const String resendVerification = '/resend-verification';
   static const String home = '/home';
   static const String feed = '/feed';
   static const String discover = '/discover';
