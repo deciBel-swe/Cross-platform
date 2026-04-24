@@ -867,12 +867,7 @@ class _PublicTrackCollectionSection extends ConsumerWidget {
               track: track,
               onTap: () => ref
                   .read(trackAudioProvider.notifier)
-                  .initializeForTrack(
-                    trackId: track.id,
-                    trackUrl: track.trackUrl ?? '',
-                    track: track,
-                    queue: tracks,
-                  ),
+                  .playTrack(track: track, queue: tracks),
             );
           },
         );

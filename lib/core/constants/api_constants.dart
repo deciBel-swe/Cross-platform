@@ -70,6 +70,14 @@ class ApiConstants {
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
 
+  /// Base endpoint for upload operations
+  static const String uploads = '/uploads';
+
+  /// Upload-specific socket endpoint
+  static const String uploadProgress = '$uploads/progress';
+  static const String trackUploadV2 = '/tracks/upload/v2';
+  static const Duration trackUploadRequestTimeout = Duration(minutes: 5);
+
   /// Fetches a public user profile by identifier.
   ///
   /// - Numeric value => GET /users/{id}
@@ -82,6 +90,20 @@ class ApiConstants {
     }
     return publicProfileByUsername(normalized);
   }
+
+  /// WebSocket Base URL (Converts http -> ws, and https -> wss)
+  static String get wsBaseUrl {
+    if (baseUrl.startsWith('https')) {
+      return baseUrl.replaceFirst('https', 'wss');
+    } else if (baseUrl.startsWith('http')) {
+      return baseUrl.replaceFirst('http', 'ws');
+    }
+    return baseUrl;
+  }
+
+  /// Upload Progress WebSocket Topic
+  static String trackUploadStatusTopic(String uploadId) =>
+      '/topic/track-status/$uploadId';
 
   /// Fetches a public user profile by username: GET /users/username/{username}
   static String publicProfileByUsername(String username) =>

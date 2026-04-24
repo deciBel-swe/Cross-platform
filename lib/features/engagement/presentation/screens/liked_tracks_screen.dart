@@ -279,12 +279,7 @@ class _TrackCollectionScreenState extends ConsumerState<TrackCollectionScreen> {
                         track: track,
                         onTap: () => ref
                             .read(trackAudioProvider.notifier)
-                            .initializeForTrack(
-                              trackId: track.id,
-                              trackUrl: track.trackUrl ?? '',
-                              track: track,
-                              queue: _localTracks,
-                            ),
+                            .playTrack(track: track, queue: _localTracks),
                         onLikePressed: () =>
                             _handleRemoveFromCollection(track, index),
                         // onMorePressed: () => TrackDetails.show(context, track, ref),

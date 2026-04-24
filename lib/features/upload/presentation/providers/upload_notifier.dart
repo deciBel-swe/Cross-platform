@@ -2,23 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
-import '../../../../core/di/injection.dart';
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
 import '../../../../core/utils/genre_constants.dart';
-import '../../../library/data/datasources/library_mock_fixtures.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../domain/entities/track_upload_metadata.dart';
-import '../../domain/repositories/i_upload_repository.dart';
+import 'upload_repository_provider.dart';
+import 'upload_sessions_provider.dart';
 
-// 1. Bridge GitIt (Dependency Injection) to Riverpod (State Management)
-final uploadRepositoryProvider = Provider<IUploadRepository>((ref) {
-  return getIt<IUploadRepository>();
-});
+export 'upload_repository_provider.dart' show uploadRepositoryProvider;
 
 // 2. Provide the notifier to the UI
 final uploadNotifierProvider =
@@ -31,6 +26,7 @@ final genreListProvider = StateProvider<List<String>>((ref) {
   return GenreConstants.genres;
 });
 
+// Maps an integer track ID to its String WebSocket UUID
 // 3. The Notifier which containing the form logic "Upload Form Controller"
 class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
   // Keep Track of 3 genre suggestions.
@@ -56,6 +52,8 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       description: '',
       tags: [],
       releaseDate: null,
+      uploadId: const Uuid().v4(),
+      access: 'PLAYABLE',
     );
   }
 
@@ -92,6 +90,8 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
   void updateDescription(String desc) =>
       _updateState((state) => state.copyWith(description: desc));
+  void updateAccess(String access) =>
+      _updateState((state) => state.copyWith(access: access));
   void togglePrivacy(bool isPrivate) async {
     // 1. Update the UI state instantly
     final currentState = state.value;
@@ -119,6 +119,8 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
           description: currentState.description,
           tags: currentState.tags,
           isPrivate: currentState.isPrivate,
+          uploadId: currentState.uploadId,
+          access: currentState.access,
           releaseDate: null,
         ),
       );
@@ -252,7 +254,6 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     final currentState = state.value;
     if (currentState == null || currentState.audioFile == null) return false;
 
-    // ignore: unused_local_variable
     List<double> waveFormData = [];
     try {
       final waveformService = ref.read(waveformExtractionServiceProvider);
@@ -260,16 +261,14 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         currentState.audioFile!.path,
         noOfSamples: 100,
       );
-      debugPrint(
-        'WaveformDebug extracted (count=${waveFormData.length}): $waveFormData',
-      );
+      debugPrint('WaveformDebug extracted: $waveFormData');
     } catch (e) {
       waveFormData = [];
     }
 
     if (waveFormData.isEmpty) {
       state = AsyncValue<TrackUploadMetadata>.error(
-        'Could not extract waveform data from this audio file. Please try another file.',
+        'Could not extract waveform data from this audio file.',
         StackTrace.current,
       ).copyWithPrevious(state);
       return false;
@@ -277,11 +276,11 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
-    final uploadId = const Uuid().v4();
-
     final repository = ref.read(uploadRepositoryProvider);
+
+    // We do NOT generate a new Uuid here. We use the one already in currentState
     final result = await repository.uploadTrack(
-      currentState.copyWith(waveFormData: waveFormData, uploadId: uploadId),
+      currentState.copyWith(waveFormData: waveFormData),
     );
 
     return result.fold(
@@ -293,55 +292,28 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         return false;
       },
       (track) {
-        // Optimistically update the list to show "Processing" instantly
-        final notifier = ref.read(uploadsProvider.notifier);
-        notifier.addTrack(track);
-        notifier.invalidateCache();
+        ref
+            .read(uploadSessionsProvider.notifier)
+            .trackUpload(uploadId: currentState.uploadId, track: track);
+        ref.read(uploadsProvider.notifier).addTrack(track);
 
-        // Start background waveform extraction for the new track
-        final filePath = currentState.audioFile!.path;
-        unawaited(_runBackgroundExtraction(track.id, filePath));
-
-        state = const AsyncData(TrackUploadMetadata());
+        state = AsyncData(
+          TrackUploadMetadata(
+            audioFile: null,
+            coverImage: null,
+            title: '',
+            genre: '',
+            description: '',
+            tags: [],
+            isPrivate: currentState.isPrivate,
+            releaseDate: null,
+            uploadId: const Uuid().v4(),
+            access: 'PLAYABLE',
+          ),
+        );
         return true;
       },
     );
-  }
-
-  Future<void> _runBackgroundExtraction(int trackId, String path) async {
-    List<double> peaks = [];
-    try {
-      final waveformService = ref.read(waveformExtractionServiceProvider);
-
-      peaks = await waveformService.extractWaveform(path);
-    } catch (e, stack) {
-      debugPrint('UploadNotifier Extraction Error: $e');
-      debugPrintStack(stackTrace: stack);
-    }
-
-    final bool isFlat = peaks.isNotEmpty && peaks.every((p) => p == 0.0);
-
-    if (peaks.isEmpty || isFlat) {
-      peaks = [];
-    } else {
-      debugPrint(
-        'Waveform Extraction Verified: REAL data available (${peaks.length} samples).',
-      );
-    }
-
-    List<double> finalPeaks = peaks;
-    if (peaks.isNotEmpty) {
-      final max = peaks.reduce((curr, next) => curr > next ? curr : next);
-      if (max <= 1.0) {
-        finalPeaks = peaks.map((e) => (e * 100).roundToDouble()).toList();
-      } else {
-        finalPeaks = peaks.map((e) => e.roundToDouble()).toList();
-      }
-    }
-
-    LibraryMockFixtures.updateMockTrackWaveform(trackId, finalPeaks);
-
-    ref.read(uploadsProvider.notifier).refreshTrack(trackId);
   }
 
   void _updateState(TrackUploadMetadata Function(TrackUploadMetadata) update) {

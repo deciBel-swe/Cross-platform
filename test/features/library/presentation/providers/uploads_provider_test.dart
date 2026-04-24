@@ -110,6 +110,46 @@ void main() {
       );
     });
 
+    test('initial build keeps failed uploads visible', () async {
+      final failedTrack = Track(
+        id: 7,
+        title: 'Failed Track',
+        artist: const Artist(id: 1, username: 'User'),
+        genre: 'Pop',
+        tags: [],
+        state: TrackStatus.failed,
+        releaseDate: DateTime.now(),
+        playCount: 0,
+        likeCount: 0,
+        repostCount: 0,
+        isLiked: false,
+        isReposted: false,
+        createdAt: DateTime.now(),
+      );
+
+      when(() => mockRepo.fetchMyTracks(page: 0, size: 20)).thenAnswer(
+        (_) async => Right(
+          PaginatedTracks(
+            content: [failedTrack],
+            pageNumber: 0,
+            pageSize: 20,
+            totalElements: 1,
+            totalPages: 1,
+            isLast: true,
+          ),
+        ),
+      );
+
+      final container = createContainer(authState: authState);
+      container.listen(uploadsProvider, (_, _) {});
+
+      final state = await container.read(uploadsProvider.future);
+
+      expect(state, hasLength(1));
+      expect(state.first.id, failedTrack.id);
+      expect(state.first.state, TrackStatus.failed);
+    });
+
     test('refreshAll re-fetches data', () async {
       // Setup mock before container creation due to sync build
       when(() => mockRepo.fetchMyTracks(page: 0, size: 20)).thenAnswer(

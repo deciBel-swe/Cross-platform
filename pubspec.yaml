@@ -27,7 +27,8 @@ dependencies:
 
   # ---------- Networking ----------
   dio: ^5.7.0
-  web_socket_channel: ^3.0.2
+  #web_socket_channel: ^3.0.2
+  stomp_dart_client: ^3.0.1
 
   # ---------- Firebase Service ----------
   firebase_core: ^4.7.0
