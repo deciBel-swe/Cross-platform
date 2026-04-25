@@ -46,10 +46,22 @@ class FeedTrackModel with _$FeedTrackModel {
       _$FeedTrackModelFromJson(_normalize(json));
 
   static Map<String, dynamic> _normalize(Map<String, dynamic> json) {
-    // If the object is an envelope (contains "track"), flatten it out.
-    final trackData = json['track'] is Map<String, dynamic>
-        ? json['track'] as Map<String, dynamic>
-        : json;
+    // Feed responses wrap tracks in resource.track; station responses may use
+    // either track or a raw track object.
+    final resource = json['resource'];
+    final resourceTrack = resource is Map<String, dynamic>
+        ? resource['track']
+        : null;
+    final directTrack = json['track'];
+
+    final Map<String, dynamic> trackData;
+    if (resourceTrack is Map<String, dynamic>) {
+      trackData = resourceTrack;
+    } else if (directTrack is Map<String, dynamic>) {
+      trackData = directTrack;
+    } else {
+      trackData = json;
+    }
 
     final flatMap = Map<String, dynamic>.from(trackData);
 

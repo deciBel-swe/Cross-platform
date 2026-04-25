@@ -3,10 +3,16 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../library/domain/entities/artist.dart';
+import '../../../library/domain/entities/track.dart' as library_track;
+import '../../../library/domain/entities/track_status.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../domain/entities/feed_track.dart';
 import '../notifiers/discover_feed_notifier.dart';
 import '../notifiers/feed_notifier.dart';
@@ -109,6 +115,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ),
               data: (feedState) {
                 final tracks = feedState.tracks.cast<FeedTrack>();
+                final playableQueue = tracks.map(_toLibraryTrack).toList();
                 if (tracks.isEmpty) {
                   return _EmptyFeedView(
                     isDesktop: isDesktop,
@@ -154,6 +161,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       }
 
                       final track = tracks[trackIndex];
+                      final playableTrack = playableQueue[trackIndex];
                       return Padding(
                         padding: const EdgeInsets.only(
                           bottom: AppDimensions.paddingSm,
@@ -161,9 +169,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                         child: FeedItem(
                           trackId: track.id,
                           userName: track.feedActorName,
+                          userAvatarUrl: track.isARepost
+                              ? track.repostedByAvatarUrl ??
+                                    track.artistAvatarUrl
+                              : track.artistAvatarUrl,
                           action: track.feedAction,
                           trackTitle: track.title,
                           trackArtist: track.displayArtistName,
+                          coverUrl: track.coverUrl,
                           timeAgo: _timeAgo(track.feedTimestamp),
                           genre: track.genre,
                           likeCount: track.likeCount,
@@ -175,6 +188,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                           duration: _formatDuration(track.duration),
                           waveformPeaks: _buildPeaks(seed: track.id),
                           gradientColors: _colorsForTrack(track.id),
+                          onPlay: () => ref
+                              .read(trackAudioProvider.notifier)
+                              .playTrack(
+                                track: playableTrack,
+                                queue: playableQueue,
+                              ),
+                          onAddToPlaylist: () {
+                            // The add-to-playlist route expects the shared
+                            // library Track entity, so keep conversion here.
+                            context.push(
+                              RoutePaths.addToPlaylist,
+                              extra: playableTrack,
+                            );
+                          },
                         ),
                       );
                     },
@@ -187,6 +214,32 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       ),
     );
   }
+}
+
+library_track.Track _toLibraryTrack(FeedTrack track) {
+  return library_track.Track(
+    id: track.id,
+    title: track.title,
+    artist: Artist(
+      id: track.artistId,
+      username: track.artistUsername,
+      displayName: track.artistDisplayName,
+      avatarUrl: track.artistAvatarUrl,
+    ),
+    trackUrl: track.trackUrl ?? track.trackPreviewUrl,
+    coverUrl: track.coverUrl,
+    waveformUrl: track.waveformUrl,
+    genre: track.genre,
+    tags: track.tags,
+    state: TrackStatus.finished,
+    releaseDate: track.releaseDate,
+    playCount: track.playCount,
+    likeCount: track.likeCount,
+    repostCount: track.repostCount,
+    isLiked: track.isLiked,
+    isReposted: track.isReposted,
+    createdAt: track.uploadDate,
+  );
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

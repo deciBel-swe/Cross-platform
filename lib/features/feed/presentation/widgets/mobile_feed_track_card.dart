@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
@@ -18,6 +19,9 @@ class MobileFeedTrackCard extends StatelessWidget {
     required this.trackId,
     required this.title,
     required this.artist,
+    this.coverUrl,
+    this.onPlay,
+    this.onAddToPlaylist,
     required this.duration,
     required this.likeCount,
     required this.repostCount,
@@ -30,6 +34,9 @@ class MobileFeedTrackCard extends StatelessWidget {
   final int trackId;
   final String title;
   final String artist;
+  final String? coverUrl;
+  final VoidCallback? onPlay;
+  final VoidCallback? onAddToPlaylist;
   final String duration;
   final int likeCount;
   final int repostCount;
@@ -49,25 +56,11 @@ class MobileFeedTrackCard extends StatelessWidget {
           child: Stack(
             children: [
               Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: gradientColors,
-                    ),
-                  ),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: AppColors.background.withValues(alpha: 0.45),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.music_note,
-                        size: 96,
-                        color: AppColors.textPrimary.withValues(alpha: 0.2),
-                      ),
-                    ),
+                child: GestureDetector(
+                  onTap: onPlay,
+                  child: _MobileCoverBackground(
+                    coverUrl: coverUrl,
+                    gradientColors: gradientColors,
                   ),
                 ),
               ),
@@ -81,54 +74,61 @@ class MobileFeedTrackCard extends StatelessWidget {
                   initialIsLiked: isLiked,
                   initialIsReposted: isReposted,
                   commentCount: commentCount,
+                  onAddToPlaylist: onAddToPlaylist,
                 ),
               ),
               Positioned(
-                left: AppDimensions.paddingMd,
-                right: AppDimensions.paddingMd,
+                left: AppDimensions.paddingSm,
+                right:
+                    AppDimensions.paddingMd +
+                    48, // Account for right actions width
                 bottom: AppDimensions.paddingMd,
-                child: Container(
-                  padding: const EdgeInsets.all(AppDimensions.paddingMd),
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      const _CardPlayButton(),
-                      const SizedBox(width: AppDimensions.paddingSm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.sectionTitle.copyWith(
-                                fontSize: 18,
+                child: GestureDetector(
+                  onTap: onPlay,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.all(AppDimensions.paddingMd),
+                    decoration: BoxDecoration(
+                      color: AppColors.background.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        _CardPlayButton(onPressed: onPlay),
+                        const SizedBox(width: AppDimensions.paddingSm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.sectionTitle.copyWith(
+                                  fontSize: 18,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              artist,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.titleMedium.copyWith(
-                                color: AppColors.textSecondary,
+                              const SizedBox(height: 2),
+                              Text(
+                                artist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.titleMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      Text(
-                        duration,
-                        style: AppTextStyles.cardTitle.copyWith(
-                          color: AppColors.textPrimary,
+                        Text(
+                          duration,
+                          style: AppTextStyles.cardTitle.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -140,8 +140,72 @@ class MobileFeedTrackCard extends StatelessWidget {
   }
 }
 
+class _MobileCoverBackground extends StatelessWidget {
+  const _MobileCoverBackground({required this.gradientColors, this.coverUrl});
+
+  final List<Color> gradientColors;
+  final String? coverUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedCoverUrl = coverUrl?.trim();
+    if (normalizedCoverUrl != null && normalizedCoverUrl.isNotEmpty) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          DecibelCachedImage(
+            imageUrl: normalizedCoverUrl,
+            placeholder: _GradientCoverFallback(gradientColors: gradientColors),
+            errorWidget: _GradientCoverFallback(gradientColors: gradientColors),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.background.withValues(alpha: 0.22),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _GradientCoverFallback(gradientColors: gradientColors);
+  }
+}
+
+class _GradientCoverFallback extends StatelessWidget {
+  const _GradientCoverFallback({required this.gradientColors});
+
+  final List<Color> gradientColors;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: gradientColors,
+        ),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.background.withValues(alpha: 0.45),
+        ),
+        child: Center(
+          child: Icon(
+            Icons.music_note,
+            size: 96,
+            color: AppColors.textPrimary.withValues(alpha: 0.2),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CardPlayButton extends StatefulWidget {
-  const _CardPlayButton();
+  const _CardPlayButton({this.onPressed});
+
+  final VoidCallback? onPressed;
 
   @override
   State<_CardPlayButton> createState() => _CardPlayButtonState();
@@ -159,27 +223,30 @@ class _CardPlayButtonState extends State<_CardPlayButton> {
       child: Semantics(
         button: true,
         label: 'Play track',
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: _isHovered ? AppColors.primary : AppColors.surface,
-            boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    )
-                  ]
-                : [],
-          ),
-          child: Icon(
-            Icons.play_arrow,
-            color: _isHovered ? Colors.white : AppColors.textPrimary,
-            size: 30,
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _isHovered ? AppColors.primary : AppColors.surface,
+              boxShadow: _isHovered
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Icon(
+              Icons.play_arrow,
+              color: _isHovered ? Colors.white : AppColors.textPrimary,
+              size: 30,
+            ),
           ),
         ),
       ),
@@ -195,6 +262,7 @@ class _MobileRightActions extends ConsumerStatefulWidget {
     required this.initialIsLiked,
     required this.initialIsReposted,
     required this.commentCount,
+    this.onAddToPlaylist,
   });
 
   final int trackId;
@@ -203,6 +271,7 @@ class _MobileRightActions extends ConsumerStatefulWidget {
   final bool initialIsLiked;
   final bool initialIsReposted;
   final int commentCount;
+  final VoidCallback? onAddToPlaylist;
 
   @override
   ConsumerState<_MobileRightActions> createState() =>
@@ -290,14 +359,18 @@ class _MobileRightActionsState extends ConsumerState<_MobileRightActions> {
                 children: [
                   Icon(
                     Icons.mode_comment_outlined,
-                    color: _isCommentHovered ? AppColors.primary : AppColors.textPrimary,
+                    color: _isCommentHovered
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
                     size: 28,
                   ),
                   const SizedBox(height: AppDimensions.paddingXs),
                   Text(
                     _formatCount(_currentCommentCount),
                     style: AppTextStyles.cardTitle.copyWith(
-                      color: _isCommentHovered ? AppColors.primary : AppColors.textPrimary,
+                      color: _isCommentHovered
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
                       fontSize: 12,
                     ),
                   ),
@@ -311,26 +384,33 @@ class _MobileRightActionsState extends ConsumerState<_MobileRightActions> {
         Semantics(
           button: true,
           label: 'Add to playlist or library',
-          child: MouseRegion(
-            onEnter: (_) => setState(() => _isAddHovered = true),
-            onExit: (_) => setState(() => _isAddHovered = false),
-            cursor: SystemMouseCursors.click,
-            child: Column(
-              children: [
-                Icon(
-                  Icons.add_box_outlined,
-                  color: _isAddHovered ? AppColors.primary : AppColors.textPrimary,
-                  size: 28,
-                ),
-                const SizedBox(height: AppDimensions.paddingXs),
-                Text(
-                  'Add',
-                  style: AppTextStyles.cardTitle.copyWith(
-                    color: _isAddHovered ? AppColors.primary : AppColors.textPrimary,
-                    fontSize: 12,
+          child: GestureDetector(
+            onTap: widget.onAddToPlaylist,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isAddHovered = true),
+              onExit: (_) => setState(() => _isAddHovered = false),
+              cursor: SystemMouseCursors.click,
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.add_box_outlined,
+                    color: _isAddHovered
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
+                    size: 28,
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppDimensions.paddingXs),
+                  Text(
+                    'Add',
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: _isAddHovered
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

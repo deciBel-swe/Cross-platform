@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
@@ -33,6 +34,10 @@ class FeedItem extends StatelessWidget {
     required this.commentCount,
     required this.duration,
     required this.waveformPeaks,
+    this.onPlay,
+    this.onAddToPlaylist,
+    this.userAvatarUrl,
+    this.coverUrl,
     this.gradientColors,
   });
 
@@ -51,6 +56,10 @@ class FeedItem extends StatelessWidget {
   final int commentCount;
   final String duration;
   final List<double> waveformPeaks;
+  final VoidCallback? onPlay;
+  final VoidCallback? onAddToPlaylist;
+  final String? userAvatarUrl;
+  final String? coverUrl;
   final List<Color>? gradientColors;
 
   @override
@@ -64,6 +73,7 @@ class FeedItem extends StatelessWidget {
       return _MobileFeedItem(
         trackId: trackId,
         userName: userName,
+        userAvatarUrl: userAvatarUrl,
         action: action,
         trackTitle: trackTitle,
         trackArtist: trackArtist,
@@ -74,6 +84,9 @@ class FeedItem extends StatelessWidget {
         isReposted: isReposted,
         commentCount: commentCount,
         duration: duration,
+        onPlay: onPlay,
+        onAddToPlaylist: onAddToPlaylist,
+        coverUrl: coverUrl,
         gradientColors: colors,
       );
     }
@@ -87,7 +100,11 @@ class FeedItem extends StatelessWidget {
           children: [
             Row(
               children: [
-                _Avatar(colors: colors, userName: userName),
+                _Avatar(
+                  colors: colors,
+                  userName: userName,
+                  imageUrl: userAvatarUrl,
+                ),
                 const SizedBox(width: AppDimensions.paddingSm),
                 Expanded(
                   child: RichText(
@@ -110,7 +127,12 @@ class FeedItem extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ArtworkTile(colors: colors, title: trackTitle),
+                _ArtworkTile(
+                  colors: colors,
+                  title: trackTitle,
+                  imageUrl: coverUrl,
+                  onTap: onPlay,
+                ),
                 const SizedBox(width: AppDimensions.paddingMd),
                 Expanded(
                   child: Column(
@@ -118,27 +140,31 @@ class FeedItem extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const _PlayButton(),
+                          _PlayButton(onPressed: onPlay),
                           const SizedBox(width: AppDimensions.paddingMd),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  trackArtist,
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary,
+                            child: GestureDetector(
+                              onTap: onPlay,
+                              behavior: HitTestBehavior.opaque,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    trackArtist,
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  trackTitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.sectionTitle.copyWith(
-                                    fontSize: 33,
+                                  Text(
+                                    trackTitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.sectionTitle.copyWith(
+                                      fontSize: 33,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                           _GenreChip(genre: genre),
@@ -180,6 +206,7 @@ class _MobileFeedItem extends StatelessWidget {
   const _MobileFeedItem({
     required this.trackId,
     required this.userName,
+    this.userAvatarUrl,
     required this.action,
     required this.trackTitle,
     required this.trackArtist,
@@ -190,11 +217,15 @@ class _MobileFeedItem extends StatelessWidget {
     required this.isReposted,
     required this.commentCount,
     required this.duration,
+    this.onPlay,
+    this.onAddToPlaylist,
+    this.coverUrl,
     required this.gradientColors,
   });
 
   final int trackId;
   final String userName;
+  final String? userAvatarUrl;
   final String action;
   final String trackTitle;
   final String trackArtist;
@@ -205,6 +236,9 @@ class _MobileFeedItem extends StatelessWidget {
   final bool isReposted;
   final int commentCount;
   final String duration;
+  final VoidCallback? onPlay;
+  final VoidCallback? onAddToPlaylist;
+  final String? coverUrl;
   final List<Color> gradientColors;
 
   @override
@@ -218,14 +252,10 @@ class _MobileFeedItem extends StatelessWidget {
           children: [
             Row(
               children: [
-                const CircleAvatar(
-                  radius: 12,
-                  backgroundColor: AppColors.surfaceLight,
-                  child: Icon(
-                    Icons.person,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
+                _MobileAvatar(
+                  imageUrl: userAvatarUrl,
+                  userName: userName,
+                  colors: gradientColors,
                 ),
                 const SizedBox(width: AppDimensions.paddingSm),
                 Expanded(
@@ -248,6 +278,9 @@ class _MobileFeedItem extends StatelessWidget {
               trackId: trackId,
               title: trackTitle,
               artist: trackArtist,
+              coverUrl: coverUrl,
+              onPlay: onPlay,
+              onAddToPlaylist: onAddToPlaylist,
               duration: duration,
               likeCount: likeCount,
               repostCount: repostCount,
@@ -264,28 +297,119 @@ class _MobileFeedItem extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.colors, required this.userName});
+  const _Avatar({
+    required this.colors,
+    required this.userName,
+    this.imageUrl,
+  });
 
   final List<Color> colors;
   final String userName;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
+    final normalizedImageUrl = imageUrl?.trim();
+    if (normalizedImageUrl != null && normalizedImageUrl.isNotEmpty) {
+      return DecibelCachedImage(
+        imageUrl: normalizedImageUrl,
+        width: 40,
+        height: 40,
+        shape: BoxShape.circle,
+        placeholderIcon: Icons.person,
+        errorIcon: Icons.person,
+        iconSize: 18,
+        iconColor: AppColors.textSecondary,
+        placeholder: _AvatarFallback(colors: colors, userName: userName),
+        errorWidget: _AvatarFallback(colors: colors, userName: userName),
+      );
+    }
+
+    return _AvatarFallback(colors: colors, userName: userName);
+  }
+}
+
+class _MobileAvatar extends StatelessWidget {
+  const _MobileAvatar({
+    required this.colors,
+    required this.userName,
+    this.imageUrl,
+  });
+
+  final List<Color> colors;
+  final String userName;
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedImageUrl = imageUrl?.trim();
+    if (normalizedImageUrl != null && normalizedImageUrl.isNotEmpty) {
+      return DecibelCachedImage(
+        imageUrl: normalizedImageUrl,
+        width: 24,
+        height: 24,
+        shape: BoxShape.circle,
+        placeholderIcon: Icons.person,
+        errorIcon: Icons.person,
+        iconSize: 14,
+        iconColor: AppColors.textSecondary,
+        placeholder: _AvatarFallback(
+          colors: colors,
+          userName: userName,
+          size: 24,
+          fontSize: 10,
+        ),
+        errorWidget: _AvatarFallback(
+          colors: colors,
+          userName: userName,
+          size: 24,
+          fontSize: 10,
+        ),
+      );
+    }
+
+    return _AvatarFallback(
+      colors: colors,
+      userName: userName,
+      size: 24,
+      fontSize: 10,
+    );
+  }
+}
+
+class _AvatarFallback extends StatelessWidget {
+  const _AvatarFallback({
+    required this.colors,
+    required this.userName,
+    this.size = 40,
+    this.fontSize = 14,
+  });
+
+  final List<Color> colors;
+  final String userName;
+  final double size;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = userName.trim().isEmpty
+        ? '?'
+        : userName.trim().substring(0, 1).toUpperCase();
+
     return Container(
-      width: 40,
-      height: 40,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(colors: colors),
       ),
       child: Center(
         child: Text(
-          userName.substring(0, 1).toUpperCase(),
+          initial,
           style: const TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
-            fontSize: 14,
-          ),
+          ).copyWith(fontSize: fontSize),
         ),
       ),
     );
@@ -293,13 +417,56 @@ class _Avatar extends StatelessWidget {
 }
 
 class _ArtworkTile extends StatelessWidget {
-  const _ArtworkTile({required this.colors, required this.title});
+  const _ArtworkTile({
+    required this.colors,
+    required this.title,
+    this.imageUrl,
+    this.onTap,
+  });
+
+  final List<Color> colors;
+  final String title;
+  final String? imageUrl;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedImageUrl = imageUrl?.trim();
+    final borderRadius = BorderRadius.circular(AppDimensions.radiusSm);
+
+    if (normalizedImageUrl != null && normalizedImageUrl.isNotEmpty) {
+      return GestureDetector(
+        onTap: onTap,
+        child: DecibelCachedImage(
+          imageUrl: normalizedImageUrl,
+          width: 162,
+          height: 162,
+          borderRadius: borderRadius,
+          placeholder: _ArtworkFallback(colors: colors, title: title),
+          errorWidget: _ArtworkFallback(colors: colors, title: title),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: _ArtworkFallback(colors: colors, title: title),
+    );
+  }
+}
+
+class _ArtworkFallback extends StatelessWidget {
+  const _ArtworkFallback({required this.colors, required this.title});
 
   final List<Color> colors;
   final String title;
 
   @override
   Widget build(BuildContext context) {
+    final initials = title.trim().isEmpty
+        ? '?'
+        : title.trim().substring(0, title.trim().length > 1 ? 2 : 1);
+
     return Container(
       width: 162,
       height: 162,
@@ -313,7 +480,7 @@ class _ArtworkTile extends StatelessWidget {
       ),
       child: Center(
         child: Text(
-          title.substring(0, title.length > 1 ? 2 : 1).toUpperCase(),
+          initials.toUpperCase(),
           style: AppTextStyles.headlineMedium.copyWith(
             color: AppColors.textPrimary.withValues(alpha: 0.85),
           ),
@@ -324,7 +491,9 @@ class _ArtworkTile extends StatelessWidget {
 }
 
 class _PlayButton extends StatefulWidget {
-  const _PlayButton();
+  const _PlayButton({this.onPressed});
+
+  final VoidCallback? onPressed;
 
   @override
   State<_PlayButton> createState() => _PlayButtonState();
@@ -342,27 +511,30 @@ class _PlayButtonState extends State<_PlayButton> {
       child: Semantics(
         button: true,
         label: 'Play track',
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: _isHovered ? AppColors.primary : AppColors.surfaceVariant,
-            boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      spreadRadius: 2,
-                    )
-                  ]
-                : [],
-          ),
-          child: Icon(
-            Icons.play_arrow,
-            color: _isHovered ? Colors.white : AppColors.textSecondary,
-            size: 34,
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _isHovered ? AppColors.primary : AppColors.surfaceVariant,
+              boxShadow: _isHovered
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      )
+                    ]
+                  : [],
+            ),
+            child: Icon(
+              Icons.play_arrow,
+              color: _isHovered ? Colors.white : AppColors.textSecondary,
+              size: 34,
+            ),
           ),
         ),
       ),
