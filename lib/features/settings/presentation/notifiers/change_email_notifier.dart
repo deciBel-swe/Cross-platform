@@ -27,9 +27,7 @@ class ChangeEmailState {
   }) {
     return ChangeEmailState(
       isLoading: isLoading ?? this.isLoading,
-      // FIX: Added '?? this.errorMessage' to prevent accidental erasure of state
       errorMessage: errorMessage ?? this.errorMessage,
-      // FIX: Added '?? this.successMessage' to prevent accidental erasure of state
       successMessage: successMessage ?? this.successMessage,
     );
   }
@@ -44,8 +42,6 @@ class ChangeEmailNotifier extends Notifier<ChangeEmailState> {
   Future<void> changeEmail(String newEmail) async {
     if (state.isLoading) return;
 
-    // By instantiating a completely new ChangeEmailState instead of using copyWith,
-    // we effectively clear out any old error or success messages for the new request.
     state = const ChangeEmailState(isLoading: true);
 
     try {
@@ -83,7 +79,6 @@ class ChangeEmailNotifier extends Notifier<ChangeEmailState> {
   }
 
   String? _extractMessageFromResponse(Object? data) {
-    // FIX: Tightened type check to Map<String, dynamic> for better type safety
     if (data is Map<String, dynamic>) {
       if (data['message'] != null) return data['message'].toString();
       if (data['data'] is Map<String, dynamic> &&
