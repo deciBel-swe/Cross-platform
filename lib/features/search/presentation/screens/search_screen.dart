@@ -71,20 +71,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     final searchAsync = hasSearchQuery
         ? ref.watch(
-            searchResultsProvider(
-              (
-                query: routeQuery,
-                type: _selectedType,
-                page: 0,
-                size: 20,
-              ),
-            ),
+            searchResultsProvider((
+              query: routeQuery,
+              type: _selectedType,
+              page: 0,
+              size: 20,
+            )),
           )
         : null;
+
     final genreStationAsync = ref.watch(
-      genreStationProvider(
-        (genre: routeGenre, page: 0, size: isDesktop ? 10 : 6),
-      ),
+      genreStationProvider((
+        genre: routeGenre,
+        page: 0,
+        size: isDesktop ? 10 : 6,
+      )),
     );
 
     return Scaffold(
@@ -204,9 +205,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   void _applyRouteState() {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     final query = _queryController.text.trim();
     final queryParameters = <String, String>{
@@ -457,6 +456,12 @@ class _PlaylistResultsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (playlists.isEmpty) {
+      return const _SearchMessageCard(
+        message: 'No playlists matched this search yet.',
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -470,13 +475,13 @@ class _PlaylistResultsList extends StatelessWidget {
                 RoutePaths.playlistTracks,
                 extra: _toPlaylistEntity(playlist),
               ),
-                        leading: _ArtworkSquare(
-                          imageUrl: playlist.coverArtUrl,
-                          icon: Icons.queue_music_rounded,
-                          colors: _colorsForGenre(
-                            playlist.genres.isEmpty ? null : playlist.genres.first,
-                          ),
-                        ),
+              leading: _ArtworkSquare(
+                imageUrl: playlist.coverArtUrl,
+                icon: Icons.queue_music_rounded,
+                colors: _colorsForGenre(
+                  playlist.genres.isEmpty ? null : playlist.genres.first,
+                ),
+              ),
               title: playlist.title,
               subtitle:
                   'By ${playlist.owner.displayName ?? playlist.owner.username}',
@@ -564,9 +569,8 @@ class _BrowseSection extends StatelessWidget {
                         bottom: AppDimensions.paddingSm,
                       ),
                       child: _SearchSurface(
-                        onTap: () => context.push(
-                          RoutePaths.trackPreview(track.id),
-                        ),
+                        onTap: () =>
+                            context.push(RoutePaths.trackPreview(track.id)),
                         leading: _ArtworkSquare(
                           imageUrl: track.coverUrl,
                           icon: Icons.music_note,
@@ -761,10 +765,7 @@ class _UserAvatar extends StatelessWidget {
 }
 
 class _SearchMessageCard extends StatelessWidget {
-  const _SearchMessageCard({
-    required this.message,
-    this.isError = false,
-  });
+  const _SearchMessageCard({required this.message, this.isError = false});
 
   final String message;
   final bool isError;
@@ -788,9 +789,7 @@ class _SearchMessageCard extends StatelessWidget {
             color: isError ? AppColors.errors : AppColors.primary,
           ),
           const SizedBox(width: AppDimensions.paddingMd),
-          Expanded(
-            child: Text(message, style: AppTextStyles.bodyMedium),
-          ),
+          Expanded(child: Text(message, style: AppTextStyles.bodyMedium)),
         ],
       ),
     );
@@ -799,9 +798,7 @@ class _SearchMessageCard extends StatelessWidget {
 
 bool _isDesktopLayout(BuildContext context) {
   final mediaQuery = MediaQuery.maybeOf(context);
-  if (mediaQuery == null) {
-    return false;
-  }
+  if (mediaQuery == null) return false;
   return mediaQuery.size.width >= 801;
 }
 
@@ -822,8 +819,9 @@ String _formatCount(int value) {
     return '${(value / 1000000).toStringAsFixed(1)}M';
   }
   if (value >= 1000) {
-    final formattedValue =
-        (value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1);
+    final formattedValue = (value / 1000).toStringAsFixed(
+      value % 1000 == 0 ? 0 : 1,
+    );
     return '${formattedValue}K';
   }
   return value.toString();
@@ -831,10 +829,7 @@ String _formatCount(int value) {
 
 String _initialsForUser(DiscoveryUser user) {
   final value = user.displayName ?? user.username;
-  if (value.trim().isEmpty) {
-    return '?';
-  }
-
+  if (value.trim().isEmpty) return '?';
   return value.trim().substring(0, 1).toUpperCase();
 }
 
@@ -854,5 +849,12 @@ Playlist _toPlaylistEntity(DiscoveryPlaylist playlist) {
       avatarUrl: playlist.owner.avatarUrl,
     ),
     tracks: const <Track>[],
+    totalDurationSeconds: playlist.totalDurationSeconds.toInt(),
+    trackCount: playlist.trackCount,
+    playlistSlug: playlist.playlistSlug,
+
+    secretToken: null,
+    access: null,
+    createdAt: playlist.createdAt,
   );
 }
