@@ -1,12 +1,3 @@
-/// Notifier responsible for fetching users to message.
-///
-/// Logic:
-/// - If query is empty: Fetches the current user's followers.
-/// - If query has text: Filters the current user's followers locally.
-///
-/// NOTE:
-/// This does not perform global user search because FollowRepository only gives followers.
-/// To search all users, we need a real search-users endpoint/repository.
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,23 +5,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../discovery/domain/entities/discovery_search_type.dart';
+import '../../../discovery/presentation/providers/discovery_provider.dart';
 import '../../../engagement/domain/entities/paginated_engagers.dart';
 import '../../../engagement/domain/repositories/follow_repository.dart';
 import '../../domain/entities/message_user.dart';
 
-/// Provider holding the current search input state
+/// Provider holding the current search input state.
 final newMessageQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 
-/// Notifier responsible for fetching users to message.
+/// Fetches users for starting a new DM.
 ///
-/// Logic:
-/// - Loads friends, following, followers, and suggested users.
-/// - Removes duplicates by user id.
-/// - If query is empty: returns the combined list.
-/// - If query has text: filters the combined list locally.
-///
-/// Note:
-/// This is not true global search. True global search needs a backend search-users endpoint.
+/// - Empty query: friends/following/followers/suggested users.
+/// - Non-empty query: real global search using Discovery `/search` with USER type.
 final newMessageSearchProvider =
     AutoDisposeAsyncNotifierProvider<
       NewMessageSearchNotifier,
@@ -41,13 +28,25 @@ class NewMessageSearchNotifier
     extends AutoDisposeAsyncNotifier<List<MessageUser>> {
   @override
   FutureOr<List<MessageUser>> build() async {
-    final rawQuery = ref.watch(newMessageQueryProvider);
-    final query = rawQuery.trim().toLowerCase();
+    final query = ref.watch(newMessageQueryProvider).trim();
 
     final authState = ref.watch(authStateProvider).valueOrNull;
-    if (authState is! AuthAuthenticated) return [];
+    if (authState is! AuthAuthenticated) return const [];
 
     final currentUserId = authState.user.id;
+
+    if (query.isEmpty) {
+      return _loadDefaultUsers(currentUserId);
+    }
+
+    if (query.length < 2) {
+      return const [];
+    }
+
+    return _searchUsersGlobally(query: query, currentUserId: currentUserId);
+  }
+
+  Future<List<MessageUser>> _loadDefaultUsers(int currentUserId) async {
     final followRepo = getIt<FollowRepository>();
 
     final results = await Future.wait([
@@ -77,10 +76,44 @@ class NewMessageSearchNotifier
         (a, b) => a.username.toLowerCase().compareTo(b.username.toLowerCase()),
       );
 
-    if (query.isEmpty) return users;
+    return users;
+  }
 
-    return users.where((user) {
-      return user.username.toLowerCase().contains(query);
-    }).toList();
+  Future<List<MessageUser>> _searchUsersGlobally({
+    required String query,
+    required int currentUserId,
+  }) async {
+    final response = await ref.watch(
+      searchResultsProvider((
+        query: query,
+        type: DiscoverySearchType.users,
+        page: 0,
+        size: 20,
+      )).future,
+    );
+
+    final usersById = <int, MessageUser>{};
+
+    for (final user in response.users) {
+      if (user.id == currentUserId) continue;
+
+      final displayName = user.displayName?.trim();
+      final username = user.username.trim();
+
+      final bestName = displayName != null && displayName.isNotEmpty
+          ? displayName
+          : username;
+
+      if (bestName.isEmpty) continue;
+
+      usersById[user.id] = MessageUser(id: user.id, username: bestName);
+    }
+
+    final users = usersById.values.toList()
+      ..sort(
+        (a, b) => a.username.toLowerCase().compareTo(b.username.toLowerCase()),
+      );
+
+    return users;
   }
 }
