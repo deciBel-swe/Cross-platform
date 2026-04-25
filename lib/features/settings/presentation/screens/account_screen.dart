@@ -185,8 +185,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                           ref
                               .read(changeEmailProvider.notifier)
                               .changeEmail(newEmail);
+                          setState(() => _isEditingEmail = false);
                           dialogContext.pop();
-                        },
+                        }, 
                         child: const Text(
                           'CONFIRM',
                           style: TextStyle(
