@@ -124,14 +124,14 @@ import '../../features/settings/data/repositories/app_icon_repository_impl.dart'
     as _i781;
 import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
     as _i292;
-import '../../features/settings/data/repositories/notification_settings_repository_impl.dart'
-    as _i414;
+import '../../features/settings/data/repositories/messaging_repository_implementation.dart'
+    as _i343;
 import '../../features/settings/domain/repositories/app_icon_repository.dart'
     as _i993;
 import '../../features/settings/domain/repositories/blocked_users_repository.dart'
     as _i288;
-import '../../features/settings/domain/repositories/notification_settings_repository.dart'
-    as _i91;
+import '../../features/settings/domain/repositories/i_messaging_repository.dart'
+    as _i23;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
     as _i464;
 import '../../features/upload/data/repository/mock_upload_repository_impl.dart'
@@ -184,6 +184,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i226.ITrackRemoteDataSource>(
       () => _i226.TrackRemoteDataSourceImpl(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i684.IFeedRemoteDatasource>(
+      () => _i684.FeedRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i582.IPlaylistRepository>(
+      () => _i874.MockPlaylistRepository(),
+      registerFor: {_mock},
     );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i238.TrackCommentsMockRepository(),
@@ -253,10 +260,18 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i469.UploadRepository(gh<_i464.UploadRemoteDatasource>()),
       registerFor: {_prod},
     );
-    gh.lazySingleton<_i91.INotificationSettingsRepository>(
-      () => _i414.NotificationSettingsRepositoryImpl(
-        gh<_i92.NotificationSettingsRemoteDatasource>(),
+    gh.lazySingleton<_i695.IFeedRepository>(
+      () => _i452.FeedRepositoryImpl(gh<_i684.IFeedRemoteDatasource>()),
+      registerFor: {_prod},
+    );
+    gh.factory<_i367.INotificationRepository>(
+      () => _i367.NotificationRepository(
+        gh<_i923.INotificationRemoteDataSource>(),
       ),
+    );
+    gh.lazySingleton<_i1005.DiscoveryRemoteDataSource>(
+      () => _i1005.DiscoveryRemoteDataSourceImpl(gh<_i667.DioClient>()),
+      registerFor: {_prod},
     );
     gh.lazySingleton<_i666.SecureStorageService>(
       () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),
@@ -277,6 +292,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i459.TrackSocialRemoteDatasource>(),
       ),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i949.DiscoveryRepository>(
+      () =>
+          _i366.DiscoveryRepositoryImpl(gh<_i1005.DiscoveryRemoteDataSource>()),
+      registerFor: {_prod},
+    );
+    gh.lazySingleton<_i23.IMessagingRepository>(
+      () =>
+          _i343.MessagingRepositoryImpl(gh<_i123.IMessagingRemoteDataSource>()),
     );
     gh.lazySingleton<_i272.DownloadTrackUseCase>(
       () => _i272.DownloadTrackUseCase(gh<_i753.IOfflineRepository>()),

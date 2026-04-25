@@ -1,6 +1,7 @@
 /// GoRouter configuration – all app routes defined here.
 library;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -219,9 +220,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       ),
                       GoRoute(
                         path: 'playlist-tracks',
+                        parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) {
                           final playlist = state.extra as Playlist;
+
                           return PlaylistDetailsScreen(
+                            key: ValueKey(
+                              'playlist-details-${playlist.id}-${state.pageKey.value}',
+                            ),
                             playlistSummary: playlist,
                           );
                         },
@@ -394,11 +400,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   }
                   return null;
                 },
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final userIdentifier =
                       state.pathParameters['userIdentifier']!;
-                  return PublicProfileScreen(userIdentifier: userIdentifier);
+
+                  return MaterialPage(
+                    key: ValueKey(
+                      'public-profile-$userIdentifier-${state.pageKey.value}',
+                    ),
+                    child: PublicProfileScreen(userIdentifier: userIdentifier),
+                  );
                 },
+
                 routes: [
                   GoRoute(
                     path: 'followers',

@@ -6,14 +6,13 @@
 /// - Highly semantic and scalable layout optimized for screen readers.
 library;
 
-import 'dart:async';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../auth/domain/entities/auth_state.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../library_profile/presentation/providers/block_provider.dart'
+    as profile_block;
+import '../providers/blocked_users_provider.dart' as settings_block;
 import '../providers/messaging_providers.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/message_bubble.dart';
@@ -35,75 +34,165 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
-  StreamSubscription<RemoteMessage>? _fcmSubscription;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _setupFirebaseForegroundListener();
-  }
 
-  void _setupFirebaseForegroundListener() {
-    _fcmSubscription = FirebaseMessaging.onMessage.listen((
-      RemoteMessage message,
-    ) {
-      final dataConversationId = message.data['conversationId'];
-      if (dataConversationId != null &&
-          dataConversationId.toString() == widget.conversationId) {
-        ref.invalidate(chatProvider(widget.conversationId));
-      }
+    Future.microtask(() {
+      ref.read(settings_block.blockedUsersListProvider.notifier).loadInitial();
     });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _fcmSubscription?.cancel();
     super.dispose();
   }
 
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(chatProvider(widget.conversationId).notifier).loadMoreHistory();
+      ref
+          .read(chatScreenControllerProvider(widget.conversationId).notifier)
+          .loadMoreHistory();
     }
   }
 
-  int? _resolveOtherUserId(int currentUserId) {
+  Future<void> _blockUser({
+    required int userId,
+    required String username,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text(
+            'Block user?',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Text(
+            'You will not be able to send messages to $username.',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text(
+                'Block',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
     try {
-      final participantIds = widget.conversationId
-          .split('_')
-          .map(int.parse)
-          .toList();
+      await ref
+          .read(profile_block.blockedUsersProvider.notifier)
+          .block(userId, username: username);
 
-      return participantIds.firstWhere(
-        (id) => id != currentUserId,
-        orElse: () => currentUserId,
-      );
+      await ref
+          .read(settings_block.blockedUsersListProvider.notifier)
+          .refresh();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$username blocked.')));
     } catch (_) {
-      return null;
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to block user.')));
     }
   }
 
-  void _handleSendMessage(String text, int? recipientId) {
-    if (text.trim().isEmpty) return;
+  Future<void> _unblockUser({
+    required int userId,
+    required String username,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text(
+            'Unblock user?',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Text(
+            'You will be able to send messages to $username again.',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Unblock'),
+            ),
+          ],
+        );
+      },
+    );
 
-    ref
-        .read(chatProvider(widget.conversationId).notifier)
-        .sendMessage(text, recipientId: recipientId);
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(profile_block.blockedUsersProvider.notifier)
+          .unblock(userId);
+
+      await ref
+          .read(settings_block.blockedUsersListProvider.notifier)
+          .refresh();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$username unblocked.')));
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to unblock user.')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final chatAsync = ref.watch(chatProvider(widget.conversationId));
-    final authState = ref.watch(authStateProvider).valueOrNull;
+    final screenState = ref.watch(
+      chatScreenControllerProvider(widget.conversationId),
+    );
+    final chatController = ref.read(
+      chatScreenControllerProvider(widget.conversationId).notifier,
+    );
 
-    final currentUserId = authState is AuthAuthenticated
-        ? authState.user.id
-        : 1;
+    final otherUserId = screenState.otherUserId;
+    final blockedListState = ref.watch(settings_block.blockedUsersListProvider);
+    final localBlockedIds = ref.watch(profile_block.blockedUsersProvider);
 
-    final otherUserId = _resolveOtherUserId(currentUserId);
+    final isBlocked =
+        otherUserId != null &&
+        (localBlockedIds.contains(otherUserId) ||
+            blockedListState.users.any((user) => user.id == otherUserId));
 
     return Semantics(
       label: 'Chat conversation with ${widget.otherUserName}',
@@ -133,13 +222,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 onPressed: () {},
               ),
             ),
-            Semantics(
-              button: true,
-              label: 'Expand options menu',
-              child: IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.white),
-                onPressed: () {},
-              ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              color: AppColors.surface,
+              onSelected: (value) {
+                if (otherUserId == null) return;
+
+                if (value == 'block') {
+                  _blockUser(
+                    userId: otherUserId,
+                    username: widget.otherUserName,
+                  );
+                }
+
+                if (value == 'unblock') {
+                  _unblockUser(
+                    userId: otherUserId,
+                    username: widget.otherUserName,
+                  );
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: isBlocked ? 'unblock' : 'block',
+                  child: Row(
+                    children: [
+                      Icon(
+                        isBlocked ? Icons.lock_open : Icons.block,
+                        color: isBlocked ? Colors.white : Colors.redAccent,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        isBlocked ? 'Unblock user' : 'Block user',
+                        style: TextStyle(
+                          color: isBlocked ? Colors.white : Colors.redAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -168,7 +291,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       }
 
                       final message = state.messages[index];
-                      final isMe = message.senderId == currentUserId;
+                      final isMe = screenState.isMessageFromMe(message);
 
                       return MessageBubble(
                         message: message,
@@ -190,34 +313,61 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ),
             ),
-            ChatInputBar(
-              onSend: (text) {
-                if (otherUserId == null) return;
+            if (isBlocked)
+              SafeArea(
+                top: false,
+                minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: const Text(
+                    'You blocked this user. You cannot send messages.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              )
+            else
+              ChatInputBar(
+                onSend: (text) {
+                  if (otherUserId == null) return;
 
-                ref
-                    .read(chatProvider(widget.conversationId).notifier)
-                    .sendMessage(text, recipientId: otherUserId);
-              },
-              onAttach: () async {
-                if (otherUserId == null) return;
+                  ref
+                      .read(chatProvider(widget.conversationId).notifier)
+                      .sendMessage(text, recipientId: otherUserId);
+                },
+                onAttach: () async {
+                  if (otherUserId == null) return;
 
-                final selection = await MessageResourcePickerSheet.show(
-                  context,
-                );
-                if (selection == null) return;
+                  final selection = await MessageResourcePickerSheet.show(
+                    context,
+                  );
+                  if (selection == null) return;
 
-                await ref
-                    .read(chatProvider(widget.conversationId).notifier)
-                    .sendResourceMessage(
-                      resourceType: selection.resourceType,
-                      resourceId: selection.resourceId,
-                      title: selection.title,
-                      subtitle: selection.subtitle,
-                      imageUrl: selection.imageUrl,
-                      recipientId: otherUserId,
-                    );
-              },
-            ),
+                  await ref
+                      .read(chatProvider(widget.conversationId).notifier)
+                      .sendResourceMessage(
+                        resourceType: selection.resourceType,
+                        resourceId: selection.resourceId,
+                        title: selection.title,
+                        subtitle: selection.subtitle,
+                        imageUrl: selection.imageUrl,
+                        recipientId: otherUserId,
+                      );
+                },
+              ),
           ],
         ),
       ),
