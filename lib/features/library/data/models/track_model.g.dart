@@ -51,5 +51,4 @@ Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
 const _$TrackStatusModelEnumMap = {
   TrackStatusModel.processing: 'PROCESSING',
   TrackStatusModel.finished: 'FINISHED',
-  TrackStatusModel.failed: 'FAILED',
 };

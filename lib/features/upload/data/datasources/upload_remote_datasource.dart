@@ -9,9 +9,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/websocket_client.dart';
 import '../../../library/data/models/track_model.dart';
-import '../../domain/entities/track_upload_status.dart';
 import '../models/track_metadata_model.dart';
-import '../models/track_upload_status_model.dart';
 
 @injectable
 class UploadRemoteDatasource {
@@ -88,13 +86,9 @@ class UploadRemoteDatasource {
 
       // Single upload call; waveform processing continues on backend after this.
       final response = await _dioClient.post<dynamic>(
-        ApiConstants.trackUploadV2,
+        '/tracks/upload/v2',
         data: formData,
-        options: Options(
-          contentType: 'multipart/form-data',
-          sendTimeout: ApiConstants.trackUploadRequestTimeout,
-          receiveTimeout: ApiConstants.trackUploadRequestTimeout,
-        ),
+        options: Options(contentType: 'multipart/form-data'),
       );
 
       final responseData = response.data as Map<String, dynamic>;
@@ -145,15 +139,20 @@ class UploadRemoteDatasource {
     return TrackModel.fromJson(normalized);
   }
 
-  Stream<TrackUploadStatus> watchUploadStatus(String uploadId) {
+  Stream<double> watchUploadProgress(String uploadId) {
     final topicEndpoint = ApiConstants.trackUploadStatusTopic(uploadId);
 
+    // Use the new watch() method which handles connecting automatically!
     return _wsClient.watch(topicEndpoint).map((data) {
-      return TrackUploadStatusModel.fromJson(data).toEntity();
+      final progress = data['progressPercentage'];
+      if (progress is num) {
+        return progress.toDouble();
+      }
+      return 0.0;
     });
   }
 
-  void cancelUploadStatusSubscription(String uploadId) {
+  void disconnectWebSocket(String uploadId) {
     final topicEndpoint = ApiConstants.trackUploadStatusTopic(uploadId);
     _wsClient.disconnect(topicEndpoint);
   }

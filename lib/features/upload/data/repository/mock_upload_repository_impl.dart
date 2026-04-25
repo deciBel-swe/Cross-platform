@@ -8,7 +8,6 @@ import '../../../library/data/datasources/library_mock_fixtures.dart';
 import '../../../library/data/models/track_model.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/track_upload_metadata.dart';
-import '../../domain/entities/track_upload_status.dart';
 import '../../domain/repositories/i_upload_repository.dart';
 import '../models/track_metadata_model.dart';
 
@@ -139,23 +138,17 @@ class MockUploadRepository implements IUploadRepository {
   }
 
   @override
-  Stream<TrackUploadStatus> watchUploadStatus(String uploadId) async* {
+  Stream<double> watchUploadProgress(String correlationId) async* {
     // Simulate a network upload stream going from 0 to 100%
     for (int i = 0; i <= 100; i += 10) {
       // ignore: inference_failure_on_instance_creation
       await Future.delayed(const Duration(milliseconds: 400));
-      yield TrackUploadStatus(
-        state: i >= 100
-            ? TrackUploadState.finished
-            : TrackUploadState.processing,
-        progressPercentage: i,
-        stepName: i >= 100 ? 'Ready' : 'Processing audio',
-      );
+      yield i.toDouble();
     }
   }
 
   @override
-  void cancelUploadStatusSubscription(String uploadId) {
+  void cancelProgressSubscription(String uploadId) {
     // No-op for the mock
     if (kDebugMode) {
       debugPrint('[MockUploadRepository] WebSocket progress cancelled');

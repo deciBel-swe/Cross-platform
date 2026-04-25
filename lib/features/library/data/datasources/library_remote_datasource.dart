@@ -505,19 +505,13 @@ class LibraryRemoteDatasource {
   }) {
     // Normalize payload differences so strict model parsing stays stable.
     final nowIso = DateTime.now().toIso8601String();
-    final normalizedTrackUrl = (trackJson['trackUrl'] as String?)?.trim();
     final rawState = (trackJson['state'] ?? trackJson['status'])
         ?.toString()
         .toUpperCase();
-
     final normalizedState = switch (rawState) {
-      'FAILED' => 'FAILED',
       'FINISHED' => 'FINISHED',
       'PROCESSING' || 'UPLOADING' => 'PROCESSING',
-      _ =>
-        (normalizedTrackUrl == null || normalizedTrackUrl.isEmpty)
-            ? 'PROCESSING'
-            : 'FINISHED',
+      _ => 'FINISHED',
     };
 
     final normalized = <String, dynamic>{

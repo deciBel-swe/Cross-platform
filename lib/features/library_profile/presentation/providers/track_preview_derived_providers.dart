@@ -22,13 +22,16 @@ final trackPreviewAutoAudioInitProvider = Provider.autoDispose
             return;
           }
 
-          if (!data.track.isPlayable) {
+          final trackUrl = data.track.trackUrl;
+          if (trackUrl == null || trackUrl.isEmpty) {
             return;
           }
 
           await ref
               .read(trackAudioProvider.notifier)
-              .playTrack(
+              .initializeForTrack(
+                trackId: data.track.id,
+                trackUrl: trackUrl,
                 track: data.track,
                 duration: Duration(seconds: trackPeaks.duration),
                 autoPlay: true,
