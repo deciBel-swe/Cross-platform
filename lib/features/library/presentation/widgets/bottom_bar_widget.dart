@@ -28,7 +28,7 @@ class BottomBarWidget extends ConsumerWidget {
   final VoidCallback onCommentPressed;
   final VoidCallback onSharePressed;
   final VoidCallback onAddToPlaylistPressed; // 2. Add this
-  final VoidCallback onMoreOptionsPressed;
+  final ValueChanged<BuildContext> onMoreOptionsPressed;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -78,9 +78,13 @@ class BottomBarWidget extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: _buildSimpleIconButton(
-              icon: Icons.more_vert,
-              onTap: onMoreOptionsPressed,
+            child: Builder(
+              builder: (buttonContext) {
+                return _buildSimpleIconButton(
+                  icon: Icons.more_vert,
+                  onTap: () => onMoreOptionsPressed(buttonContext),
+                );
+              },
             ),
           ),
         ],

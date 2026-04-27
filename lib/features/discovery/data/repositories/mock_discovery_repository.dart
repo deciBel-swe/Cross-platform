@@ -73,14 +73,35 @@ class MockDiscoveryRepository implements DiscoveryRepository {
 
   @override
   Future<Either<Failure, PaginatedDiscoveryTracks>> getTrendingTracks({
-    String? genre,
-    required int limit,
+    required int page,
+    required int size,
   }) async {
-    final filteredTracks = _filterTracksByGenre(genre).take(limit).toList();
+    final filteredTracks = _mockTracks.skip(page * size).take(size).toList();
     return Right(
       PaginatedDiscoveryTracks(
         content: filteredTracks,
-        pageNumber: 0,
+        pageNumber: page,
+        pageSize: filteredTracks.length,
+        totalElements: _mockTracks.length,
+        totalPages: 1,
+        isLast: true,
+      ),
+    );
+  }
+
+  @override
+  Future<Either<Failure, PaginatedDiscoveryTracks>> getGenreStation({
+    required int page,
+    required int size,
+  }) async {
+    final filteredTracks = _mockTracks.reversed
+        .skip(page * size)
+        .take(size)
+        .toList(growable: false);
+    return Right(
+      PaginatedDiscoveryTracks(
+        content: filteredTracks,
+        pageNumber: page,
         pageSize: filteredTracks.length,
         totalElements: filteredTracks.length,
         totalPages: 1,
@@ -90,18 +111,24 @@ class MockDiscoveryRepository implements DiscoveryRepository {
   }
 
   @override
-  Future<Either<Failure, PaginatedDiscoveryTracks>> getGenreStation({
-    required String genre,
+  Future<Either<Failure, PaginatedDiscoveryTracks>> getArtistStation({
     required int page,
     required int size,
   }) async {
-    final filteredTracks = _filterTracksByGenre(genre).take(size).toList();
+    final tracks = _mockTracks
+        .where((DiscoveryTrack track) => track.artist.id == 1)
+        .skip(page * size)
+        .take(size)
+        .toList(growable: false);
+    final content = tracks.isEmpty
+        ? _mockTracks.take(size).toList(growable: false)
+        : tracks;
     return Right(
       PaginatedDiscoveryTracks(
-        content: filteredTracks,
+        content: content,
         pageNumber: page,
-        pageSize: filteredTracks.length,
-        totalElements: filteredTracks.length,
+        pageSize: content.length,
+        totalElements: _mockTracks.length,
         totalPages: 1,
         isLast: true,
       ),
@@ -120,22 +147,6 @@ class MockDiscoveryRepository implements DiscoveryRepository {
         isLast: true,
       ),
     );
-  }
-
-  List<DiscoveryTrack> _filterTracksByGenre(String? genre) {
-    if (genre == null || genre.trim().isEmpty) {
-      return _mockTracks;
-    }
-
-    final normalizedGenre = genre.trim().toLowerCase();
-    final filtered = _mockTracks
-        .where(
-          (DiscoveryTrack track) =>
-              (track.genre ?? '').toLowerCase() == normalizedGenre,
-        )
-        .toList(growable: false);
-
-    return filtered.isEmpty ? _mockTracks : filtered;
   }
 }
 

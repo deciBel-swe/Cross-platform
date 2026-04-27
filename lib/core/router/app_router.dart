@@ -18,7 +18,10 @@ import '../../features/engagement/presentation/providers/follow_connections_prov
 import '../../features/engagement/presentation/screens/follow_connections_screen.dart';
 import '../../features/engagement/presentation/screens/liked_tracks_screen.dart';
 import '../../features/feed/presentation/screens/feed_screen.dart';
+import '../../features/home/domain/entities/station_playlist.dart';
+import '../../features/home/presentation/screens/home_collection_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/home/presentation/screens/station_playlist_screen.dart';
 import '../../features/library/domain/entities/track.dart';
 import '../../features/library/presentation/screens/add_to_playlist_screen.dart';
 import '../../features/library/presentation/screens/downloads_screen.dart';
@@ -101,8 +104,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       debugPrint(
-        '[AppRouter] -> State is Loading or Error. Staying on splash.',
+        '[AppRouter] -> State is Loading. Holding current auth route.',
       );
+      if (isAuthRoute) {
+        return null;
+      }
       return state.matchedLocation == RoutePaths.splash
           ? null
           : RoutePaths.splash;
@@ -155,7 +161,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const UploadScreen(),
               ),
               GoRoute(
-                path: 'your-likes',
+                path: RoutePaths.homePopularCollection,
+                builder: (context, state) => const HomeCollectionScreen(
+                  kind: HomeCollectionKind.popular,
+                ),
+              ),
+              GoRoute(
+                path: RoutePaths.homeLikesStation,
+                builder: (context, state) => const StationPlaylistScreen(
+                  kind: StationPlaylistKind.likes,
+                ),
+              ),
+              GoRoute(
+                path: RoutePaths.homeArtistStation,
+                builder: (context, state) => const StationPlaylistScreen(
+                  kind: StationPlaylistKind.artist,
+                ),
+              ),
+              GoRoute(
+                path: RoutePaths.homeGenreStation,
+                builder: (context, state) => const StationPlaylistScreen(
+                  kind: StationPlaylistKind.genre,
+                ),
+              ),
+              GoRoute(
+                path: RoutePaths.homeLikes,
                 builder: (context, state) => const LikedTracksScreen(),
               ),
             ],

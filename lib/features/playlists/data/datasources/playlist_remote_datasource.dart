@@ -48,7 +48,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         ApiConstants.getPlaylistSecretLink(playlistId),
       );
 
-      final responseData = response.data as Map<String, dynamic>;
+      final responseData = _extractObjectPayload(response.data);
 
       // check lowercase "secretLink" just in case your backend uses standard JSON camelCase.
       final secretLink =
@@ -62,6 +62,11 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         );
       }
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(
         error.message ?? 'Failed to fetch playlist secret link',
       );
@@ -78,11 +83,16 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         '${ApiConstants.playlists}/$playlistId',
       );
 
-      final responseData = response.data as Map<String, dynamic>;
+      final responseData = _extractObjectPayload(response.data);
       return PlaylistModel.fromJson(
         responseData,
       ); // Parses id, title, and the tracks array
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(error.message ?? 'Failed to fetch playlist tracks');
     }
   }
@@ -92,15 +102,28 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     int playlistId,
     List<int> trackIds,
   ) async {
-    final response = await _dioClient.patch<dynamic>(
-      ApiConstants.updateTracksOrder(playlistId),
-      data: {"trackIds": trackIds},
-    );
+    try {
+      final response = await _dioClient.patch<dynamic>(
+        ApiConstants.updateTracksOrder(playlistId),
+        data: {"trackIds": trackIds},
+      );
 
-    final responseData = response.data as Map<String, dynamic>;
+      final responseData = _extractObjectPayload(response.data);
 
-    // The API returns the updated Playlist object
-    return PlaylistModel.fromJson(responseData);
+      // The API returns the updated Playlist object
+      return PlaylistModel.fromJson(responseData);
+    } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
+      throw ServerException(error.message ?? 'Failed to reorder playlist');
+    } catch (error) {
+      throw ServerException(
+        'Failed to parse reorder playlist response: $error',
+      );
+    }
   }
 
   @override
@@ -125,11 +148,16 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       final response = await _dioClient.post<dynamic>(
         ApiConstants.playlists,
         data: formData,
-        options: Options(contentType: 'multipart/form-data'),
+        options: Options(contentType: Headers.multipartFormDataContentType),
       );
-      final responseData = response.data as Map<String, dynamic>;
+      final responseData = _extractObjectPayload(response.data);
       return PlaylistModel.fromJson(responseData);
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(error.message ?? 'Failed to create playlist');
     } catch (error) {
       throw ServerException('Failed to parse create playlist response: $error');
@@ -154,19 +182,18 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         return [];
       }
 
-      List<dynamic> contentList = [];
+      final contentList = _extractListPayload(data);
 
-      if (data is Map) {
-        contentList = data['content'] as List<dynamic>? ?? [];
-      } else if (data is List) {
-        contentList = data;
-      }
-
-      return contentList.where((item) => item != null).map((json) {
-        final cleanMap = Map<String, dynamic>.from(json as Map);
+      return contentList.whereType<Map<Object?, Object?>>().map((json) {
+        final cleanMap = Map<String, dynamic>.from(json);
         return PlaylistModel.fromJson(cleanMap);
       }).toList();
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(error.message ?? 'Failed to fetch playlists');
     } catch (error, stackTrace) {
       debugPrint('==========PARSING CRASH: $error');
@@ -188,13 +215,16 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       final response = await _dioClient.patch<dynamic>(
         '${ApiConstants.playlists}/$playListId',
         data: formData,
-        options: Options(
-          contentType: 'multipart/form-data; boundary=${formData.boundary}',
-        ),
+        options: Options(contentType: Headers.multipartFormDataContentType),
       );
-      final responseData = response.data as Map<String, dynamic>;
+      final responseData = _extractObjectPayload(response.data);
       return PlaylistModel.fromJson(responseData);
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(error.message ?? 'Failed to update playlist');
     } catch (error) {
       throw ServerException('Failed to parse update playlist response: $error');
@@ -208,6 +238,11 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         '${ApiConstants.playlists}/$playListId',
       ); // 204 no content
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(error.message ?? 'Failed to delete playlist');
     } catch (error) {
       throw ServerException(
@@ -228,6 +263,11 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         ),
       );
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(
         error.response?.data?.toString() ??
             error.message ??
@@ -245,6 +285,11 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         '${ApiConstants.playlists}/$playlistId/tracks/$trackId',
       );
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(
         error.message ?? 'Failed to remove track from playlist',
       );
@@ -271,5 +316,62 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     }
 
     return formData;
+  }
+
+  Map<String, dynamic> _extractObjectPayload(Object? data) {
+    if (data is! Map<Object?, Object?>) {
+      throw const ServerException('Invalid playlist response format');
+    }
+
+    final dataMap = Map<String, dynamic>.from(data);
+    final nested = dataMap['data'];
+    if (nested is Map<Object?, Object?>) {
+      return Map<String, dynamic>.from(nested);
+    }
+
+    return dataMap;
+  }
+
+  List<Object?> _extractListPayload(Object? data) {
+    if (data == null) {
+      return const <Object?>[];
+    }
+
+    if (data is List<Object?>) {
+      return data;
+    }
+
+    if (data is! Map<Object?, Object?>) {
+      return const <Object?>[];
+    }
+
+    final dataMap = Map<String, dynamic>.from(data);
+    final nested = dataMap['data'];
+    if (nested is List<Object?>) {
+      return nested;
+    }
+
+    if (nested is Map<Object?, Object?>) {
+      final nestedContent = nested['content'];
+      if (nestedContent is List<Object?>) {
+        return nestedContent;
+      }
+    }
+
+    final content = dataMap['content'];
+    if (content is List<Object?>) {
+      return content;
+    }
+
+    return const <Object?>[];
+  }
+
+  bool _isNetworkError(DioException error) {
+    return error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        (error.type == DioExceptionType.unknown &&
+            error.error is SocketException);
   }
 }

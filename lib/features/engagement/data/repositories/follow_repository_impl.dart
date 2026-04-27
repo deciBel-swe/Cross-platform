@@ -36,6 +36,8 @@ class FollowRepositoryImpl implements FollowRepository {
       return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -54,6 +56,8 @@ class FollowRepositoryImpl implements FollowRepository {
       return Right(response.isFollowing);
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -72,6 +76,8 @@ class FollowRepositoryImpl implements FollowRepository {
       return Right(response.isFollowing);
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -96,6 +102,8 @@ class FollowRepositoryImpl implements FollowRepository {
       return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -120,6 +128,8 @@ class FollowRepositoryImpl implements FollowRepository {
       return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -142,6 +152,8 @@ class FollowRepositoryImpl implements FollowRepository {
       return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -161,6 +173,8 @@ class FollowRepositoryImpl implements FollowRepository {
       return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

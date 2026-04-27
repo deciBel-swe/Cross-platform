@@ -32,10 +32,12 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
     // Fetch initial data
     final result = await _repository.getUserPlaylists(page: 0, size: 20);
 
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (playlists) => playlists,
-    );
+    return result.fold((failure) {
+      if (failure is NetworkFailure) {
+        return const <Playlist>[];
+      }
+      throw failure;
+    }, (playlists) => playlists);
   }
 
   /// Adds a [track] into the matching playlist locally (mock, client-only).

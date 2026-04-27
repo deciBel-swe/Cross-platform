@@ -1,7 +1,10 @@
 /// Desktop / mobile Feed screen — activity timeline backed by real API data.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,14 +12,21 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../library/domain/entities/artist.dart';
 import '../../../library/domain/entities/track.dart' as library_track;
 import '../../../library/domain/entities/track_status.dart';
+import '../../../library/presentation/notifiers/track_audio_notifier.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import '../../../library_profile/presentation/widgets/track_details.dart';
+import '../../../offline/presentation/notifiers/track_download_notifier.dart';
+import '../../../offline/presentation/providers/track_download_provider.dart';
 import '../../domain/entities/feed_track.dart';
 import '../notifiers/discover_feed_notifier.dart';
 import '../notifiers/feed_notifier.dart';
 import '../widgets/feed_item.dart';
+import '../widgets/mobile_discover_track_page.dart';
 
 enum FeedTab { following, discover }
 
@@ -31,15 +41,33 @@ class FeedScreen extends ConsumerStatefulWidget {
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   final ScrollController _scrollController = ScrollController();
   FeedTab _selectedTab = FeedTab.following;
+  bool _miniPlayerSyncScheduled = false;
+  bool? _pendingMiniPlayerSuppression;
+  late final StateController<bool> _miniPlayerSuppressedNotifier;
+  late final TrackAudioNotifier _audioNotifier;
+  late final FeedNotifier _feedNotifier;
+  late final DiscoverFeedNotifier _discoverFeedNotifier;
+  late final TrackDownloadNotifier _downloadNotifier;
 
   @override
   void initState() {
     super.initState();
+    _miniPlayerSuppressedNotifier = ref.read(
+      mobileMiniPlayerSuppressedProvider.notifier,
+    );
+    _audioNotifier = ref.read(trackAudioProvider.notifier);
+    _feedNotifier = ref.read(feedProvider.notifier);
+    _discoverFeedNotifier = ref.read(discoverFeedProvider.notifier);
+    _downloadNotifier = ref.read(trackDownloadProvider.notifier);
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    if (_miniPlayerSuppressedNotifier.state) {
+      Future.microtask(() => _miniPlayerSuppressedNotifier.state = false);
+    }
+
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
@@ -47,12 +75,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   void _onScroll() {
+    if (!mounted) return;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 300) {
       if (_selectedTab == FeedTab.following) {
-        ref.read(feedProvider.notifier).loadMore();
+        _feedNotifier.loadMore();
       } else {
-        ref.read(discoverFeedProvider.notifier).loadMore();
+        _discoverFeedNotifier.loadMore();
       }
     }
   }
@@ -62,29 +91,118 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     setState(() {
       _selectedTab = tab;
     });
-    // Scroll to top on switch
+    // Scroll to top on switch safely
     if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      _scrollController.jumpTo(0);
     }
+  }
+
+  Future<void> _copyTrackLink(
+    FeedTrack track, {
+    String message = 'Track link copied',
+  }) async {
+    final link =
+        'https://decibel.foo${RoutePaths.deepLinkTrack(track.artistUsername, track.id.toString())}';
+    await Clipboard.setData(ClipboardData(text: link));
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  Future<void> _downloadTrack(library_track.Track track) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Downloading "${track.title}"...'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    await _downloadNotifier.downloadTrack(track);
+    if (!mounted) {
+      return;
+    }
+
+    final state = ref.read(trackDownloadProvider);
+    messenger.hideCurrentSnackBar();
+    if (state.hasError) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Download failed: ${state.error}'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.errors,
+        ),
+      );
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Downloaded "${track.title}"'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showFeedSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  void _syncMiniPlayerSuppression(bool shouldSuppress) {
+    _pendingMiniPlayerSuppression = shouldSuppress;
+    if (_miniPlayerSyncScheduled) {
+      return;
+    }
+
+    _miniPlayerSyncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _miniPlayerSyncScheduled = false;
+      if (!mounted) {
+        return;
+      }
+
+      final target = _pendingMiniPlayerSuppression;
+      if (target == null) {
+        return;
+      }
+
+      final current = _miniPlayerSuppressedNotifier.state;
+      if (current != target) {
+        _miniPlayerSuppressedNotifier.state = target;
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final isDesktop = _isDesktopLayout(context);
+    _syncMiniPlayerSuppression(!isDesktop && _selectedTab == FeedTab.discover);
+    final authState = ref.watch(authStateProvider).valueOrNull;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
     final feedAsync = _selectedTab == FeedTab.following
         ? ref.watch(feedProvider)
         : ref.watch(discoverFeedProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: !isDesktop && _selectedTab == FeedTab.discover,
       appBar: isDesktop
           ? null
           : AppBar(
               centerTitle: true,
+              backgroundColor: _selectedTab == FeedTab.discover
+                  ? Colors.transparent
+                  : AppColors.background,
+              elevation: 0,
+              scrolledUnderElevation: 0,
               title: _MobileFeedTabs(
                 selectedTab: _selectedTab,
                 onTabChanged: _switchTab,
@@ -106,10 +224,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               error: (error, _) => _ErrorView(
                 message: error.toString(),
                 onRetry: () {
+                  if (!mounted) return;
                   if (_selectedTab == FeedTab.following) {
-                    ref.read(feedProvider.notifier).refresh();
+                    _feedNotifier.refresh();
                   } else {
-                    ref.read(discoverFeedProvider.notifier).refresh();
+                    _discoverFeedNotifier.refresh();
                   }
                 },
               ),
@@ -123,12 +242,31 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   );
                 }
 
+                if (!isDesktop && _selectedTab == FeedTab.discover) {
+                  return _MobileDiscoverFeedPager(
+                    tracks: tracks,
+                    playableQueue: playableQueue,
+                    isLoadingMore: feedState.isLoadingMore,
+                    onLoadMore: () {
+                      if (!mounted) return;
+                      _discoverFeedNotifier.loadMore();
+                    },
+                    onPlayTrack: (track, queue) {
+                      if (!mounted) return;
+                      _audioNotifier.playTrack(track: track, queue: queue);
+                    },
+                    onAddToPlaylist: (track) {
+                      context.push(RoutePaths.addToPlaylist, extra: track);
+                    },
+                  );
+                }
+
                 return RefreshIndicator(
                   onRefresh: () async {
                     if (_selectedTab == FeedTab.following) {
-                      await ref.read(feedProvider.notifier).refresh();
+                      await _feedNotifier.refresh();
                     } else {
-                      await ref.read(discoverFeedProvider.notifier).refresh();
+                      await _discoverFeedNotifier.refresh();
                     }
                   },
                   child: ListView.builder(
@@ -162,6 +300,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
                       final track = tracks[trackIndex];
                       final playableTrack = playableQueue[trackIndex];
+                      final isOwnTrack =
+                          currentUserId != null &&
+                          currentUserId == track.artistId;
                       return Padding(
                         padding: const EdgeInsets.only(
                           bottom: AppDimensions.paddingSm,
@@ -188,18 +329,60 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                           duration: _formatDuration(track.duration),
                           waveformPeaks: _buildPeaks(seed: track.id),
                           gradientColors: _colorsForTrack(track.id),
-                          onPlay: () => ref
-                              .read(trackAudioProvider.notifier)
-                              .playTrack(
-                                track: playableTrack,
-                                queue: playableQueue,
-                              ),
+                          onPlay: () {
+                            if (!mounted) return;
+                            _audioNotifier.playTrack(
+                              track: playableTrack,
+                              queue: playableQueue,
+                            );
+                          },
                           onAddToPlaylist: () {
                             // The add-to-playlist route expects the shared
                             // library Track entity, so keep conversion here.
                             context.push(
                               RoutePaths.addToPlaylist,
                               extra: playableTrack,
+                            );
+                          },
+                          onAddToQueue: () {
+                            if (!mounted) return;
+                            _audioNotifier.addToQueue(playableTrack);
+                          },
+                          onEditTrack: isOwnTrack
+                              ? () =>
+                                    context.push(RoutePaths.trackEdit(track.id))
+                              : null,
+                          onGoToArtist: () {
+                            context.push(
+                              RoutePaths.publicProfile(track.artistUsername),
+                            );
+                          },
+                          onGoToAlbum: () {
+                            _showFeedSnackBar(
+                              'Album pages are not available yet',
+                            );
+                          },
+                          onShare: () {
+                            if (!mounted) return;
+                            unawaited(
+                              _copyTrackLink(
+                                track,
+                                message: 'Track link copied to share',
+                              ),
+                            );
+                          },
+                          onCopyLink: () {
+                            if (!mounted) return;
+                            unawaited(_copyTrackLink(track));
+                          },
+                          onDownload: () {
+                            if (!mounted) return;
+                            unawaited(_downloadTrack(playableTrack));
+                          },
+                          onMoreOptions: () {
+                            if (!mounted) return;
+                            unawaited(
+                              TrackDetails.show(context, playableTrack, ref),
                             );
                           },
                         ),
@@ -243,6 +426,180 @@ library_track.Track _toLibraryTrack(FeedTrack track) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+class _MobileDiscoverFeedPager extends ConsumerStatefulWidget {
+  const _MobileDiscoverFeedPager({
+    required this.tracks,
+    required this.playableQueue,
+    required this.isLoadingMore,
+    required this.onLoadMore,
+    required this.onPlayTrack,
+    required this.onAddToPlaylist,
+  });
+
+  final List<FeedTrack> tracks;
+  final List<library_track.Track> playableQueue;
+  final bool isLoadingMore;
+  final VoidCallback onLoadMore;
+  final void Function(
+    library_track.Track track,
+    List<library_track.Track> queue,
+  )
+  onPlayTrack;
+  final ValueChanged<library_track.Track> onAddToPlaylist;
+
+  @override
+  ConsumerState<_MobileDiscoverFeedPager> createState() =>
+      _MobileDiscoverFeedPagerState();
+}
+
+class _MobileDiscoverFeedPagerState
+    extends ConsumerState<_MobileDiscoverFeedPager> {
+  int _currentIndex = 0;
+  int? _lastPlayedTrackId;
+  bool _isMuted = false;
+  int _autoplayRequestId = 0;
+  late final TrackAudioNotifier _audioNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioNotifier = ref.read(trackAudioProvider.notifier);
+    _scheduleAutoplay();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MobileDiscoverFeedPager oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_didPlayableQueueChange(
+      oldWidget.playableQueue,
+      widget.playableQueue,
+    )) {
+      return;
+    }
+
+    if (widget.playableQueue.isEmpty) {
+      _currentIndex = 0;
+      _lastPlayedTrackId = null;
+      return;
+    }
+
+    if (_currentIndex >= widget.playableQueue.length) {
+      _currentIndex = 0;
+    }
+
+    final currentTrackId = widget.playableQueue[_currentIndex].id;
+    if (_lastPlayedTrackId != currentTrackId) {
+      _lastPlayedTrackId = null;
+    }
+
+    _scheduleAutoplay();
+  }
+
+  @override
+  void dispose() {
+    _autoplayRequestId += 1;
+    if (_isMuted) {
+      Future.microtask(() => _audioNotifier.setVolume(1));
+    }
+    super.dispose();
+  }
+
+  void _scheduleAutoplay() {
+    if (widget.playableQueue.isEmpty) {
+      return;
+    }
+
+    final requestId = ++_autoplayRequestId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || requestId != _autoplayRequestId) {
+        return;
+      }
+      _playIndex(_currentIndex);
+    });
+  }
+
+  bool _didPlayableQueueChange(
+    List<library_track.Track> previousQueue,
+    List<library_track.Track> currentQueue,
+  ) {
+    if (identical(previousQueue, currentQueue)) {
+      return false;
+    }
+
+    if (previousQueue.length != currentQueue.length) {
+      return true;
+    }
+
+    for (var i = 0; i < previousQueue.length; i++) {
+      if (previousQueue[i].id != currentQueue[i].id) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  void _playIndex(int index) {
+    if (index < 0 || index >= widget.playableQueue.length) {
+      return;
+    }
+
+    final track = widget.playableQueue[index];
+    if (_lastPlayedTrackId == track.id) {
+      return;
+    }
+
+    _lastPlayedTrackId = track.id;
+    widget.onPlayTrack(track, widget.playableQueue);
+  }
+
+  void _toggleMute() {
+    final nextMuted = !_isMuted;
+    setState(() => _isMuted = nextMuted);
+    unawaited(
+      ref.read(trackAudioProvider.notifier).setVolume(nextMuted ? 0 : 1),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PageView.builder(
+      scrollDirection: Axis.vertical,
+      itemCount: widget.tracks.length + (widget.isLoadingMore ? 1 : 0),
+      onPageChanged: (index) {
+        if (index < widget.playableQueue.length) {
+          _currentIndex = index;
+          _playIndex(index);
+        }
+
+        if (index >= widget.tracks.length - 3) {
+          widget.onLoadMore();
+        }
+      },
+      itemBuilder: (context, index) {
+        if (index >= widget.tracks.length) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+
+        final track = widget.tracks[index];
+        return MobileDiscoverTrackPage(
+          track: track,
+          playableTrack: widget.playableQueue[index],
+          playableQueue: widget.playableQueue,
+          duration: _formatDuration(track.duration),
+          gradientColors: _colorsForTrack(track.id),
+          isMuted: _isMuted,
+          onToggleMute: _toggleMute,
+          onPlayTrack: widget.onPlayTrack,
+          onAddToPlaylist: widget.onAddToPlaylist,
+        );
+      },
+    );
+  }
+}
 
 bool _isDesktopLayout(BuildContext context) {
   final mq = MediaQuery.maybeOf(context);

@@ -45,7 +45,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- The scheme is the REVERSE of the Android Client ID -->
-                <data android:scheme="com.googleusercontent.apps.767709617177-l61vbedk9lanvrgirt6e0840a4kijs6u" />
+                <data android:scheme="com.googleusercontent.apps.32707752970-iogrei2270q4qni8eicn9r8osb1006mr" />
             </intent-filter>
 
             <intent-filter android:autoVerify="true">

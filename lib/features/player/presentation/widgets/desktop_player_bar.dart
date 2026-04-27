@@ -9,6 +9,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/auto_scrolling_text.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../library/domain/entities/track.dart';
@@ -142,12 +143,7 @@ class _TrackInfo extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: AppTextStyles.cardTitle,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
+              AutoScrollingText(text: title, style: AppTextStyles.cardTitle),
               const SizedBox(height: 2),
               Text(
                 artist,
@@ -312,14 +308,7 @@ class _VolumeControlsState extends State<_VolumeControls> {
         _ControlButton(
           icon: Icons.queue_music,
           size: 20,
-          onTap: () {
-            showModalBottomSheet<void>(
-              context: context,
-              backgroundColor: Colors.transparent,
-              isScrollControlled: true,
-              builder: (context) => const QueueBottomSheet(),
-            );
-          },
+          onTap: () => QueueBottomSheet.show(context),
         ),
         const SizedBox(width: AppDimensions.paddingSm),
         Icon(

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/failures.dart';
 import '../../../playlists/domain/entities/playlist.dart';
 import '../../../playlists/presentation/providers/user_playlists_provider.dart';
 
@@ -18,9 +19,11 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
 
     final result = await repository.getUserPlaylists(page: 0, size: 20);
 
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (playlists) => playlists,
-    );
+    return result.fold((failure) {
+      if (failure is NetworkFailure) {
+        return const <Playlist>[];
+      }
+      throw failure;
+    }, (playlists) => playlists);
   }
 }

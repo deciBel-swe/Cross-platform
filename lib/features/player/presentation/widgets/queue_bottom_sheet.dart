@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/right_side_panel.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 
 /// Queue manager bottom sheet.
@@ -9,9 +10,18 @@ import '../../../library_profile/presentation/providers/track_audio_provider.dar
 /// - Swipe to remove
 /// - Tap to play
 class QueueBottomSheet extends ConsumerWidget {
-  const QueueBottomSheet({super.key});
+  const QueueBottomSheet({super.key, this.asSidePanel = false});
+
+  final bool asSidePanel;
 
   static Future<void> show(BuildContext context) {
+    if (isDesktopPanelLayout(context)) {
+      return showRightSidePanel<void>(
+        context: context,
+        child: const QueueBottomSheet(asSidePanel: true),
+      );
+    }
+
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -29,10 +39,17 @@ class QueueBottomSheet extends ConsumerWidget {
     final currentId = audioState.preparedTrackId;
 
     return Container(
-      constraints: const BoxConstraints(maxHeight: 520),
+      constraints: asSidePanel
+          ? const BoxConstraints.expand()
+          : const BoxConstraints(maxHeight: 520),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: asSidePanel
+            ? const BorderRadius.horizontal(left: Radius.circular(18))
+            : const BorderRadius.vertical(top: Radius.circular(24)),
+        border: asSidePanel
+            ? const Border(left: BorderSide(color: Colors.white12, width: 0.5))
+            : null,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

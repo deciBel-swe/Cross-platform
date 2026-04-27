@@ -26,7 +26,7 @@ void main() {
   group('trackWaveformDataProvider', () {
     const tTrackId = 123;
     const tPeaksInt = [100, 200, 150];
-    final tPeaksDouble = tPeaksInt.map((e) => e.toDouble()).toList();
+    const tPeaksNormalized = [0.5, 1.0, 0.75];
 
     const tTrackPeaks = TrackPeaks(
       trackId: tTrackId,
@@ -48,7 +48,7 @@ void main() {
       );
 
       // Assert
-      expect(result, equals(tPeaksDouble));
+      expect(result, equals(tPeaksNormalized));
       verify(() => mockRepo.fetchTrackPeaksById(tTrackId)).called(1);
     });
 
@@ -68,6 +68,13 @@ void main() {
       // Assert
       expect(result, isEmpty);
       verify(() => mockRepo.fetchTrackPeaksById(tTrackId)).called(1);
+    });
+
+    test('normalizeWaveformPeaks keeps decimal waveforms clamped', () {
+      expect(
+        normalizeWaveformPeaks(const [0.1, 0.4, 1.2, -1]),
+        equals(const [0.1, 0.4, 1.0]),
+      );
     });
   });
 }

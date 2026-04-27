@@ -82,9 +82,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           )
         : null;
     final genreStationAsync = ref.watch(
-      genreStationProvider(
-        (genre: routeGenre, page: 0, size: isDesktop ? 10 : 6),
-      ),
+      genreStationProvider((page: 0, size: isDesktop ? 10 : 6)),
     );
 
     return Scaffold(

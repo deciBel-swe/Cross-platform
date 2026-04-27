@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
@@ -17,10 +18,11 @@ import '../../../library_profile/presentation/widgets/track_preview_background.d
 import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
-import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
+import '../../../offline/presentation/providers/track_download_provider.dart';
 import 'active_comments_overlay.dart';
 import 'interactive_waveform.dart';
 import 'track_comments_bottom_sheet.dart';
+import 'track_more_options_menu.dart';
 import 'track_preview_input_section.dart';
 import 'waveform_not_ready.dart';
 
@@ -136,39 +138,144 @@ class TrackPreviewContent extends ConsumerWidget {
               track: track,
             );
           },
-          onSharePressed: () {},
+          onSharePressed: () async {
+            await _copyTrackLink(
+              context: context,
+              track: track,
+              message: 'Track link copied to share',
+            );
+          },
           onAddToPlaylistPressed: () async {
             await Future<void>.delayed(Duration.zero);
             if (context.mounted) {
               context.push(RoutePaths.addToPlaylist, extra: track);
             }
           },
-          onMoreOptionsPressed: () async {
-            final action = await _showTrackOptionsBottomSheet(
+          onMoreOptionsPressed: (anchorContext) async {
+            final action = await showTrackMoreOptionsMenu(
               context: context,
-              isOwner: isOwner,
-              track: track,
+              anchorContext: anchorContext,
+              includeEdit: isOwner,
+              includeDelete: isOwner,
             );
 
-            if (action == _TrackOptionsAction.queue) {
-              if (!context.mounted) return;
-              await QueueBottomSheet.show(context);
+            if (action == null || !context.mounted) {
               return;
             }
 
-            if (action == _TrackOptionsAction.edit) {
-              if (!context.mounted) return;
-              await context.push(RoutePaths.trackEdit(trackId));
-              return;
-            }
-
-            if (action == _TrackOptionsAction.delete) {
-              if (!context.mounted) return;
-              await _deleteTrack(context: context, ref: ref, track: track);
+            switch (action) {
+              case TrackMoreOption.addToPlaylist:
+                context.push(RoutePaths.addToPlaylist, extra: track);
+                break;
+              case TrackMoreOption.addToQueue:
+                audioNotifier.addToQueue(track);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Added "${track.title}" to queue'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                break;
+              case TrackMoreOption.editTrack:
+                await context.push(RoutePaths.trackEdit(trackId));
+                break;
+              case TrackMoreOption.goToArtist:
+                if (isOwner) {
+                  context.go(RoutePaths.profile);
+                } else {
+                  context.push(RoutePaths.publicProfile(track.artist.username));
+                }
+                break;
+              case TrackMoreOption.goToAlbum:
+                _showUnavailableSnackBar(
+                  context,
+                  'Album pages are not available yet',
+                );
+                break;
+              case TrackMoreOption.share:
+                await _copyTrackLink(
+                  context: context,
+                  track: track,
+                  message: 'Track link copied to share',
+                );
+                break;
+              case TrackMoreOption.copyLink:
+                await _copyTrackLink(context: context, track: track);
+                break;
+              case TrackMoreOption.download:
+                await _downloadTrack(context: context, ref: ref, track: track);
+                break;
+              case TrackMoreOption.deleteTrack:
+                await _deleteTrack(context: context, ref: ref, track: track);
+                break;
             }
           },
         ),
       ],
+    );
+  }
+
+  Future<void> _copyTrackLink({
+    required BuildContext context,
+    required Track track,
+    String message = 'Track link copied',
+  }) async {
+    final link = 'https://decibel.foo${RoutePaths.deepLinkTrack(
+      track.artist.username,
+      track.id.toString(),
+    )}';
+    await Clipboard.setData(ClipboardData(text: link));
+    if (!context.mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  Future<void> _downloadTrack({
+    required BuildContext context,
+    required WidgetRef ref,
+    required Track track,
+  }) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Downloading "${track.title}"...'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    await ref.read(trackDownloadProvider.notifier).downloadTrack(track);
+    if (!context.mounted) {
+      return;
+    }
+
+    final state = ref.read(trackDownloadProvider);
+    messenger.hideCurrentSnackBar();
+    if (state.hasError) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Download failed: ${state.error}'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.errors,
+        ),
+      );
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Downloaded "${track.title}"'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showUnavailableSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -271,81 +378,4 @@ class TrackPreviewContent extends ConsumerWidget {
         false;
   }
 
-  Future<_TrackOptionsAction?> _showTrackOptionsBottomSheet({
-    required BuildContext context,
-    required bool isOwner,
-    required Track track,
-  }) async {
-    return showModalBottomSheet<_TrackOptionsAction>(
-      context: context,
-      backgroundColor: Colors.black,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.queue_music, color: Colors.white),
-                title: const Text(
-                  'Queue',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackOptionsAction.queue),
-              ),
-              if (isOwner)
-                ListTile(
-                  leading: const Icon(Icons.edit, color: Colors.white),
-                  title: const Text(
-                    'Edit track',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () =>
-                      Navigator.of(sheetContext).pop(_TrackOptionsAction.edit),
-                ),
-              if (isOwner)
-                ListTile(
-                  leading: const Icon(
-                    Icons.delete_outline,
-                    color: AppColors.errors,
-                  ),
-                  title: const Text(
-                    'Delete track',
-                    style: TextStyle(color: AppColors.errors),
-                  ),
-                  onTap: () => Navigator.of(
-                    sheetContext,
-                  ).pop(_TrackOptionsAction.delete),
-                ),
-              ListTile(
-                leading: const Icon(Icons.playlist_add, color: Colors.white),
-                title: const Text(
-                  'Add to playlist',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () async {
-                  Navigator.of(sheetContext).pop();
-                  await Future<void>.delayed(Duration.zero);
-                  if (context.mounted) {
-                    context.push(RoutePaths.addToPlaylist, extra: track);
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.close, color: Colors.white70),
-                title: const Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackOptionsAction.cancel),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
-
-enum _TrackOptionsAction { queue, edit, delete, cancel }

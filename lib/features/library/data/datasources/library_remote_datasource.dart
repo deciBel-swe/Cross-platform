@@ -33,14 +33,7 @@ class LibraryRemoteDatasource {
       throw Exception('Empty response');
     }
 
-    final normalizedData = Map<String, dynamic>.from(data);
-    final content = normalizedData['content'];
-    if (content is List) {
-      normalizedData['content'] = content
-          .whereType<Map<String, dynamic>>()
-          .map(_normalizeTrackJson)
-          .toList();
-    }
+    final normalizedData = _normalizePaginatedTracksPayload(data);
 
     return PaginatedTracksModel.fromJson(normalizedData);
   }
@@ -60,14 +53,7 @@ class LibraryRemoteDatasource {
       throw Exception('Empty response');
     }
 
-    final normalizedData = Map<String, dynamic>.from(data);
-    final content = normalizedData['content'];
-    if (content is List) {
-      normalizedData['content'] = content
-          .whereType<Map<String, dynamic>>()
-          .map(_normalizeTrackJson)
-          .toList();
-    }
+    final normalizedData = _normalizePaginatedTracksPayload(data);
 
     return PaginatedTracksModel.fromJson(normalizedData);
   }
@@ -535,5 +521,30 @@ class LibraryRemoteDatasource {
     }
 
     return normalized;
+  }
+
+  Map<String, dynamic> _normalizePaginatedTracksPayload(
+    Map<String, dynamic> data,
+  ) {
+    final nestedData = data['data'];
+    final source = nestedData is Map<String, dynamic> ? nestedData : data;
+    final normalizedData = Map<String, dynamic>.from(source);
+    final content = normalizedData['content'];
+
+    if (content is List) {
+      normalizedData['content'] = content
+          .whereType<Map<String, dynamic>>()
+          .map(_normalizeTrackJson)
+          .toList();
+    }
+
+    normalizedData['pageNumber'] ??= normalizedData['number'] ?? 0;
+    normalizedData['pageSize'] ??= normalizedData['size'] ?? 0;
+    normalizedData['totalElements'] ??=
+        (normalizedData['content'] as List?)?.length ?? 0;
+    normalizedData['totalPages'] ??= 1;
+    normalizedData['isLast'] ??= normalizedData['last'] ?? true;
+
+    return normalizedData;
   }
 }

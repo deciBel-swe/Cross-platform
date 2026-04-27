@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/failures.dart';
 import '../../../library/domain/entities/track.dart';
 import '../providers/track_provider.dart';
 
@@ -18,11 +19,14 @@ class UserTracksNotifier
     final result = await repository.fetchTracks(
       userId: userId,
       page: 0,
-      size: 20,
+      size: 100,
     );
 
     return result.fold((failure) {
-      throw Exception(failure.message);
+      if (failure is NetworkFailure) {
+        return const <Track>[];
+      }
+      throw failure;
     }, (paginated) => paginated.content);
   }
 

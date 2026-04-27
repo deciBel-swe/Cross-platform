@@ -12,3 +12,7 @@ final trackAudioProvider =
 /// open. The [MobileMiniPlayer] in [_MobileShell] respects this flag so it
 /// slides out of sight until the sheet is dismissed.
 final miniPlayerVisibleProvider = StateProvider<bool>((ref) => true);
+
+/// Screen-level suppression for immersive mobile experiences such as Discover.
+/// This is separate from [miniPlayerVisibleProvider], which is used by sheets.
+final mobileMiniPlayerSuppressedProvider = StateProvider<bool>((ref) => false);

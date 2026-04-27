@@ -22,7 +22,7 @@ void main() {
       when(
         () => mockDioClient.get<dynamic>(
           ApiConstants.trendingTracksEndpoint,
-          queryParams: <String, Object?>{'limit': 6},
+          queryParams: <String, Object?>{'page': 0, 'size': 6},
         ),
       ).thenAnswer(
         (_) async => Response<dynamic>(
@@ -53,13 +53,73 @@ void main() {
         ),
       );
 
-      final result = await dataSource.getTrendingTracks(limit: 6);
+      final result = await dataSource.getTrendingTracks(page: 0, size: 6);
 
       expect(result.content, hasLength(1));
       expect(result.content.first.id, 11);
       expect(result.content.first.artist.username, 'nightdrive');
       expect(result.pageSize, 6);
       expect(result.isLast, isTrue);
+    });
+
+    test('getArtistStation parses TrackSummaryDTO station responses', () async {
+      when(
+        () => mockDioClient.get<dynamic>(
+          ApiConstants.artistStationEndpoint,
+          queryParams: <String, Object?>{'page': 0, 'size': 6},
+        ),
+      ).thenAnswer(
+        (_) async => Response<dynamic>(
+          requestOptions: RequestOptions(
+            path: ApiConstants.artistStationEndpoint,
+          ),
+          data: <String, Object?>{
+            'data': <String, Object?>{
+              'content': <Map<String, Object?>>[
+                <String, Object?>{
+                  'id': 44,
+                  'title': 'Moonlit Similarity',
+                  'trackSlug': 'moonlit-similarity',
+                  'coverUrl': null,
+                  'trackUrl': null,
+                  'trackPreviewUrl': 'https://example.com/preview.mp3',
+                  'artist': <String, Object?>{
+                    'id': 9,
+                    'username': 'sunder',
+                    'displayName': 'SUNDER',
+                    'avatarUrl': null,
+                    'isFollowing': false,
+                    'followerCount': 12,
+                    'trackCount': 5,
+                  },
+                  'playCount': 88,
+                  'likeCount': 9,
+                  'repostCount': 1,
+                  'commentCount': 2,
+                  'isLiked': true,
+                  'isReposted': false,
+                  'secretToken': 'secret',
+                  'access': 'PREVIEW',
+                },
+              ],
+              'pageNumber': 0,
+              'pageSize': 6,
+              'totalElements': 1,
+              'totalPages': 1,
+              'isLast': true,
+            },
+          },
+        ),
+      );
+
+      final result = await dataSource.getArtistStation(page: 0, size: 6);
+
+      expect(result.content.single.id, 44);
+      expect(result.content.single.slug, 'moonlit-similarity');
+      expect(result.content.single.trackPreviewUrl, endsWith('preview.mp3'));
+      expect(result.content.single.artist.displayName, 'SUNDER');
+      expect(result.content.single.availability, 'PREVIEW');
+      expect(result.content.single.isLiked, isTrue);
     });
 
     test('search parses resource-based responses', () async {
@@ -127,11 +187,7 @@ void main() {
       when(
         () => mockDioClient.get<dynamic>(
           ApiConstants.genreStationEndpoint,
-          queryParams: <String, Object?>{
-            'genre': 'Electronic',
-            'page': 0,
-            'size': 6,
-          },
+          queryParams: <String, Object?>{'page': 0, 'size': 6},
         ),
       ).thenAnswer(
         (_) async => throw DioException(
@@ -149,7 +205,6 @@ void main() {
       );
 
       final result = await dataSource.getGenreStation(
-        genre: 'Electronic',
         page: 0,
         size: 6,
       );

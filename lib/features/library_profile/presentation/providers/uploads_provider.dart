@@ -4,8 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/failures.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/domain/entities/track_status.dart';
 import 'track_repository_provider.dart';
@@ -109,10 +111,19 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     final repo = ref.read(trackRepositoryProvider);
     final result = await repo.fetchMyTracks(page: 0, size: _pageSize);
 
-    final paginated = result.fold(
-      (failure) => throw Exception(failure.message),
-      (value) => value,
-    );
+    final PaginatedTracks? paginated = result.fold((failure) {
+      if (failure is NetworkFailure) {
+        _currentPage = 0;
+        _isLastPage = true;
+        return null;
+      }
+      throw Exception(failure.message);
+    }, (value) => value);
+
+    if (paginated == null) {
+      _syncProcessingPolling(const <Track>[]);
+      return const <Track>[];
+    }
 
     _currentPage = paginated.pageNumber;
     _isLastPage = paginated.isLast;
@@ -168,10 +179,17 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
 
       if (_isDisposed) return;
 
-      final paginated = result.fold(
-        (failure) => throw Exception(failure.message),
-        (value) => value,
-      );
+      final PaginatedTracks? paginated = result.fold((failure) {
+        if (failure is NetworkFailure) {
+          _isLastPage = true;
+          return null;
+        }
+        throw Exception(failure.message);
+      }, (value) => value);
+
+      if (paginated == null) {
+        return;
+      }
 
       _currentPage = paginated.pageNumber;
       _isLastPage = paginated.isLast;

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
@@ -17,12 +19,16 @@ abstract class DiscoveryRemoteDataSource {
   });
 
   Future<PaginatedDiscoveryTracksModel> getTrendingTracks({
-    String? genre,
-    required int limit,
+    required int page,
+    required int size,
   });
 
   Future<PaginatedDiscoveryTracksModel> getGenreStation({
-    required String genre,
+    required int page,
+    required int size,
+  });
+
+  Future<PaginatedDiscoveryTracksModel> getArtistStation({
     required int page,
     required int size,
   });
@@ -56,6 +62,11 @@ class DiscoveryRemoteDataSourceImpl implements DiscoveryRemoteDataSource {
 
       return DiscoverySearchResponseModel.fromResponse(response.data);
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(error.message ?? 'Failed to search discovery');
     } catch (error) {
       throw ServerException('Failed to parse search response: $error');
@@ -64,20 +75,22 @@ class DiscoveryRemoteDataSourceImpl implements DiscoveryRemoteDataSource {
 
   @override
   Future<PaginatedDiscoveryTracksModel> getTrendingTracks({
-    String? genre,
-    required int limit,
+    required int page,
+    required int size,
   }) async {
     try {
       final response = await _dioClient.get<dynamic>(
         ApiConstants.trendingTracksEndpoint,
-        queryParams: <String, Object?>{
-          'limit': limit,
-          if (genre != null && genre.trim().isNotEmpty) 'genre': genre,
-        },
+        queryParams: <String, Object?>{'page': page, 'size': size},
       );
 
       return PaginatedDiscoveryTracksModel.fromResponse(response.data);
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       throw ServerException(
         error.message ?? 'Failed to fetch trending discovery tracks',
       );
@@ -88,22 +101,22 @@ class DiscoveryRemoteDataSourceImpl implements DiscoveryRemoteDataSource {
 
   @override
   Future<PaginatedDiscoveryTracksModel> getGenreStation({
-    required String genre,
     required int page,
     required int size,
   }) async {
     try {
       final response = await _dioClient.get<dynamic>(
         ApiConstants.genreStationEndpoint,
-        queryParams: <String, Object?>{
-          'genre': genre,
-          'page': page,
-          'size': size,
-        },
+        queryParams: <String, Object?>{'page': page, 'size': size},
       );
 
       return PaginatedDiscoveryTracksModel.fromResponse(response.data);
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       if (_isNoResultsStationResponse(error)) {
         return const PaginatedDiscoveryTracksModel();
       }
@@ -116,6 +129,35 @@ class DiscoveryRemoteDataSourceImpl implements DiscoveryRemoteDataSource {
   }
 
   @override
+  Future<PaginatedDiscoveryTracksModel> getArtistStation({
+    required int page,
+    required int size,
+  }) async {
+    try {
+      final response = await _dioClient.get<dynamic>(
+        ApiConstants.artistStationEndpoint,
+        queryParams: <String, Object?>{'page': page, 'size': size},
+      );
+
+      return PaginatedDiscoveryTracksModel.fromResponse(response.data);
+    } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
+      if (_isNoResultsStationResponse(error)) {
+        return const PaginatedDiscoveryTracksModel();
+      }
+      throw ServerException(
+        error.message ?? 'Failed to fetch artist station tracks',
+      );
+    } catch (error) {
+      throw ServerException('Failed to parse artist station response: $error');
+    }
+  }
+
+  @override
   Future<PaginatedDiscoveryTracksModel> getLikesStation() async {
     try {
       final response = await _dioClient.get<dynamic>(
@@ -124,6 +166,11 @@ class DiscoveryRemoteDataSourceImpl implements DiscoveryRemoteDataSource {
 
       return PaginatedDiscoveryTracksModel.fromResponse(response.data);
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       if (_isNoResultsStationResponse(error)) {
         return const PaginatedDiscoveryTracksModel();
       }
@@ -141,7 +188,7 @@ class DiscoveryRemoteDataSourceImpl implements DiscoveryRemoteDataSource {
     }
 
     final data = error.response?.data;
-    if (data is! Map) {
+    if (data is! Map<Object?, Object?>) {
       return false;
     }
 
@@ -151,5 +198,14 @@ class DiscoveryRemoteDataSourceImpl implements DiscoveryRemoteDataSource {
 
     return errorLabel == 'no results' ||
         (message?.contains('no tracks found for this station') ?? false);
+  }
+
+  bool _isNetworkError(DioException error) {
+    return error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        (error.type == DioExceptionType.unknown &&
+            error.error is SocketException);
   }
 }

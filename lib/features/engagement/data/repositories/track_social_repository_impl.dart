@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../library/data/models/paginated_tracks_model.dart';
 import '../../../library/domain/entities/paginated_tracks.dart';
@@ -67,6 +68,8 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
         size: size,
       );
       return Right(model.toEntity());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -85,6 +88,8 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
         size: size,
       );
       return Right(model.toEntity());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

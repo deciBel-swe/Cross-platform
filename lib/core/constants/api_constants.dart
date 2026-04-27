@@ -61,6 +61,7 @@ class ApiConstants {
 
   /// Station endpoints are relative to the `/api` base URL.
   static const String genreStationEndpoint = '/stations/genre';
+  static const String artistStationEndpoint = '/stations/artist';
   static const String likesStationEndpoint = '/stations/likes';
 
   static const String subscriptionCancelEndpoint = '/subscription/cancel';
@@ -129,8 +130,9 @@ class ApiConstants {
   /// Endpoint to get playlists created by a specific user ID
   static String userPublicPlaylists(int userId) => '/users/$userId/playlists';
 
-  /// Endpoint for liked playlists
-  static const String likedPlaylists = '/users/me/playlists/liked';
+  /// Endpoint for playlists liked by a public user.
+  static String likedPlaylistsByUsername(String username) =>
+      '/users/${Uri.encodeComponent(username)}/liked-playlists';
 
   /// Endpoint for playlist's tracks reordering
   static String updateTracksOrder(int playlistId) =>
@@ -158,10 +160,30 @@ class ApiConstants {
   // Google OAuth specific constants
   static const String googleAuthUrl =
       'https://accounts.google.com/o/oauth2/v2/auth';
-  static const String googleDesktopRedirectUri = 'http://localhost:8081';
+  static const String googleDesktopRedirectUri =
+      'http://localhost:8081/oauth/callback';
 
   static String get googleMobileClientId =>
       _requiredEnv('GOOGLE_MOBILE_CLIENT_ID');
+
+  /// Web OAuth client used by Google to mint server auth codes that the
+  /// backend can exchange with Google's token endpoint.
+  static String get googleServerClientId {
+    if (!dotenv.isInitialized) {
+      throw StateError(
+        'Missing required environment variable (dotenv uninitialized)',
+      );
+    }
+    final web = dotenv.env['GOOGLE_WEB_CLIENT_ID']?.trim();
+    if (web != null && web.isNotEmpty) {
+      return web;
+    }
+
+    throw StateError(
+      'Missing required environment variable: GOOGLE_WEB_CLIENT_ID',
+    );
+  }
+
   static String get googleDesktopClientId {
     if (!dotenv.isInitialized) {
       throw StateError(

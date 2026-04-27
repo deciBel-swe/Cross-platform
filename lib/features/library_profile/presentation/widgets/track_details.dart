@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -80,12 +81,40 @@ class TrackDetails extends ConsumerWidget {
         currentUserId != null && currentUserId == track.artist.id;
 
     void goToArtist() {
-      context.pop(); // dismiss the sheet first
-      if (isOwnTrack) {
-        context.go(RoutePaths.profile);
-      } else {
-        context.push(RoutePaths.publicProfile(track.artist.username));
+      Navigator.of(context).pop();
+      Future.microtask(() {
+        if (!parentContext.mounted) {
+          return;
+        }
+        if (isOwnTrack) {
+          parentContext.go(RoutePaths.profile);
+        } else {
+          parentContext.push(RoutePaths.publicProfile(track.artist.username));
+        }
+      });
+    }
+
+    Future<void> copyTrackLink({String message = 'Track link copied'}) async {
+      Navigator.of(context).pop();
+      final link = 'https://decibel.foo${RoutePaths.deepLinkTrack(
+        track.artist.username,
+        track.id.toString(),
+      )}';
+      await Clipboard.setData(ClipboardData(text: link));
+      if (!parentContext.mounted) {
+        return;
       }
+
+      ScaffoldMessenger.of(parentContext).showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
+    }
+
+    void showUnavailable(String message) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(parentContext).showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
     }
 
     final userProfile = profileAsync.valueOrNull?.fold(
@@ -158,6 +187,7 @@ class TrackDetails extends ConsumerWidget {
     return _SheetContent(
       track: track,
       isPro: isPro,
+      showEditAction: isOwnTrack,
       showDeleteAction: isOwnTrack,
       onAddToPlaylist: () {
         // Close the sheet, then push the AddToPlaylist route using the parent
@@ -175,17 +205,22 @@ class TrackDetails extends ConsumerWidget {
         context.pop();
       },
       onGoToArtist: goToArtist,
+      onEditTrack: () {
+        Navigator.of(context).pop();
+        Future.microtask(() {
+          if (parentContext.mounted) {
+            parentContext.push(RoutePaths.trackEdit(track.id));
+          }
+        });
+      },
       onGoToAlbum: () {
-        /* dummy */
+        showUnavailable('Album pages are not available yet');
       },
       onShare: () {
-        /* dummy */
+        unawaited(copyTrackLink(message: 'Track link copied to share'));
       },
       onCopyLink: () {
-        /* dummy */
-      },
-      onReport: () {
-        /* dummy */
+        unawaited(copyTrackLink());
       },
       onDownload: () {
         if (!isPro) {
@@ -273,28 +308,30 @@ class _SheetContent extends StatelessWidget {
   const _SheetContent({
     required this.track,
     required this.isPro,
+    required this.showEditAction,
     required this.showDeleteAction,
     required this.onAddToPlaylist,
     required this.onAddToQueue,
+    required this.onEditTrack,
     required this.onGoToArtist,
     required this.onGoToAlbum,
     required this.onShare,
     required this.onCopyLink,
-    required this.onReport,
     required this.onDownload,
     required this.onDeleteTrack,
   });
 
   final Track track;
   final bool isPro;
+  final bool showEditAction;
   final bool showDeleteAction;
   final VoidCallback onAddToPlaylist;
   final VoidCallback onAddToQueue;
+  final VoidCallback onEditTrack;
   final VoidCallback onGoToArtist;
   final VoidCallback onGoToAlbum;
   final VoidCallback onShare;
   final VoidCallback onCopyLink;
-  final VoidCallback onReport;
   final VoidCallback onDownload;
   final Future<void> Function() onDeleteTrack;
 
@@ -404,6 +441,12 @@ class _SheetContent extends StatelessWidget {
             label: 'Add to queue',
             onTap: onAddToQueue,
           ),
+          if (showEditAction)
+            _ActionTile(
+              icon: Icons.edit_outlined,
+              label: 'Edit track',
+              onTap: onEditTrack,
+            ),
           _ActionTile(
             icon: Icons.person_outline_rounded,
             label: 'Go to artist',
@@ -438,13 +481,6 @@ class _SheetContent extends StatelessWidget {
               onTap: () => unawaited(onDeleteTrack()),
               isDestructive: true,
             ),
-          // _ActionTile(
-          //   icon: Icons.flag_outlined,
-          //   label: 'Report',
-          //   onTap: onReport,
-          //   isDestructive: true,
-          // ),
-
           // Safe-area bottom padding
           SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],

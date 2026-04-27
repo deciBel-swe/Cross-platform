@@ -9,7 +9,6 @@ part 'subscription_status.freezed.dart';
 /// Domain entity representing the user's subscription state.
 @freezed
 class SubscriptionStatus with _$SubscriptionStatus {
-
   const factory SubscriptionStatus({
     required String status,
     required String plan,
@@ -26,4 +25,6 @@ class SubscriptionStatus with _$SubscriptionStatus {
       normalizedStatus == 'ACTIVE' || normalizedStatus == 'TRIALING';
 
   bool get isPro => SubscriptionTierHelper.isPremium(plan);
+
+  bool get hasActivePaidSubscription => isActive && isPro;
 }

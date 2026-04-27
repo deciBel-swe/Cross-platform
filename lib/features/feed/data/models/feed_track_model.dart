@@ -89,7 +89,10 @@ class FeedTrackModel with _$FeedTrackModel {
     }
 
     // Guarantee required Map artist is always a valid map
-    if (flatMap['artist'] is! Map<String, dynamic>) {
+    final rawArtist = flatMap['artist'];
+    if (rawArtist is Map<Object?, Object?>) {
+      flatMap['artist'] = Map<String, dynamic>.from(rawArtist);
+    } else {
       flatMap['artist'] = <String, dynamic>{'id': 0, 'username': 'Unknown'};
     }
 

@@ -45,6 +45,10 @@ class RoutePaths {
   static const String editProfile = '/profile/edit-profile';
   static const String upload = '/home/upload';
   static const String homeLikes = '/home/your-likes';
+  static const String homePopularCollection = '/home/collections/popular';
+  static const String homeLikesStation = '/home/stations/likes';
+  static const String homeArtistStation = '/home/stations/artist';
+  static const String homeGenreStation = '/home/stations/genre';
   static const String uploadLibrary = '/library/uploads';
   static const String libraryDownloads = '/library/downloads';
   static const String libraryLikes = '/library/likes';

@@ -22,6 +22,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
   bool _isDisposed = false;
   bool _isStopping = false;
+  int _operationGeneration = 0;
+  Future<void> _transitionQueue = Future<void>.value();
 
   AudioPlayer get _audioPlayer {
     final player = _player;
@@ -37,6 +39,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     _listenToPlayer();
 
     ref.onDispose(() async {
+      _operationGeneration += 1;
       _isDisposed = true;
       await _disposeCurrentPlayer();
     });
@@ -96,7 +99,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
       if (event.processingState == ProcessingState.completed &&
           !state.isDragging) {
-        replay();
+        unawaited(replay());
       }
     }, onError: (_) {});
 
@@ -126,6 +129,21 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     }, onError: (_) {});
   }
 
+  Future<void> _runSerializedTransition(
+    Future<void> Function(int operationId) transition,
+  ) {
+    final operationId = ++_operationGeneration;
+    final nextTransition = _transitionQueue.then((_) async {
+      if (_isDisposed) {
+        return;
+      }
+      await transition(operationId);
+    });
+
+    _transitionQueue = nextTransition.catchError((_) {});
+    return nextTransition;
+  }
+
   Future<void> initializeForTrack({
     required int trackId,
     required String trackUrl,
@@ -135,7 +153,6 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     bool autoPlay = true,
   }) async {
     if (_isDisposed || _isStopping) return;
-    if (state.isPreparing) return;
 
     final sanitizedQueue = _sanitizeQueue(
       queue ?? state.queue,
@@ -154,53 +171,64 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       return;
     }
 
-    state = state.copyWith(
-      isPreparing: true,
-      duration: duration,
-      queue: sanitizedQueue,
-    );
+    await _runSerializedTransition((operationId) async {
+      if (_isDisposed) {
+        return;
+      }
 
-    try {
-      debugPrint(
-        '[AudioStream] Initializing source: $trackUrl (Network Streaming Active)',
-      );
-
-      await _prepareInternal(
-        trackId: trackId,
-        trackUrl: trackUrl,
-        track: track,
+      state = state.copyWith(
+        isPreparing: true,
         duration: duration,
+        queue: sanitizedQueue,
       );
 
-      if (autoPlay) {
-        await play();
-      }
-    } catch (error) {
-      // Guard against source-load failures (e.g. invalid/unreachable URL)
-      // so playback errors don't bubble as unhandled UI exceptions.
-      if (kDebugMode) {
-        debugPrint('TrackAudioNotifier initializeForTrack failed: $error');
-      }
-
-      if (!_isDisposed) {
-        state = state.copyWith(
-          isPrepared: false,
-          preparedTrackId: null,
-          preparedTrackUrl: null,
-          currentTrack: null,
-          isPlaying: false,
-          position: Duration.zero,
-          progress: 0,
-          dragProgress: null,
-          dragPosition: null,
-          isDragging: false,
+      try {
+        debugPrint(
+          '[AudioStream] Initializing source: $trackUrl (Network Streaming Active)',
         );
+
+        await _prepareInternal(
+          trackId: trackId,
+          trackUrl: trackUrl,
+          track: track,
+          duration: duration,
+          operationId: operationId,
+        );
+
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        if (autoPlay) {
+          await play();
+        }
+      } catch (error) {
+        // Guard against source-load failures (e.g. invalid/unreachable URL)
+        // so playback errors don't bubble as unhandled UI exceptions.
+        if (kDebugMode) {
+          debugPrint('TrackAudioNotifier initializeForTrack failed: $error');
+        }
+
+        if (!_isDisposed && operationId == _operationGeneration) {
+          state = state.copyWith(
+            isPrepared: false,
+            preparedTrackId: null,
+            preparedTrackUrl: null,
+            currentTrack: null,
+            isPlaying: false,
+            position: Duration.zero,
+            progress: 0,
+            dragProgress: null,
+            dragPosition: null,
+            isDragging: false,
+          );
+        }
+      } finally {
+        if (!_isDisposed && operationId == _operationGeneration) {
+          state = state.copyWith(isPreparing: false);
+        }
       }
-    } finally {
-      if (!_isDisposed) {
-        state = state.copyWith(isPreparing: false);
-      }
-    }
+    });
   }
 
   Future<void> _prepareInternal({
@@ -208,8 +236,9 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     required String trackUrl,
     Track? track,
     required Duration duration,
+    required int operationId,
   }) async {
-    if (_isDisposed) return;
+    if (_isDisposed || operationId != _operationGeneration) return;
 
     if (state.isPrepared) {
       try {
@@ -237,7 +266,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       track: track,
     );
 
-    if (_isDisposed) return;
+    if (_isDisposed || operationId != _operationGeneration) return;
 
     var resolvedDuration = duration;
 
@@ -250,7 +279,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       }
     }
 
-    if (_isDisposed) return;
+    if (_isDisposed || operationId != _operationGeneration) return;
 
     state = state.copyWith(
       isPrepared: true,
@@ -517,54 +546,73 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   }
 
   Future<void> replay() async {
-    if (_isDisposed || _isStopping) return;
-    if (!state.isPrepared) return;
-    if (state.preparedTrackUrl == null || state.preparedTrackId == null) return;
-
-    _isStopping = true;
-
-    var didRestart = false;
-
-    try {
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-      await _audioPlayer.stop();
-
-      await _disposeCurrentPlayer();
-      final preparedurl = state.preparedTrackUrl!;
-      if (_isDisposed) return;
-      _createPlayer();
-
-      await _setSource(
-        trackId: state.preparedTrackId!,
-        urlOrPath: preparedurl,
-        track: state.currentTrack,
-      );
-      _listenToPlayer();
-      await _audioPlayer.seek(Duration.zero);
-      if (_isDisposed) return;
-
-      state = state.copyWith(
-        isPlaying: false,
-        isDragging: false,
-        dragProgress: null,
-        dragPosition: null,
-        position: Duration.zero,
-        progress: 0,
-      );
-
-      didRestart = true;
-    } catch (_) {
-      if (!_isDisposed) {
-        state = state.copyWith(isPlaying: false);
+    await _runSerializedTransition((operationId) async {
+      if (_isDisposed || _isStopping || state.isPreparing) return;
+      if (!state.isPrepared) return;
+      if (state.preparedTrackUrl == null || state.preparedTrackId == null) {
+        return;
       }
-    } finally {
-      _isStopping = false;
-    }
 
-    if (_isDisposed || !didRestart) return;
+      _isStopping = true;
+      var didRestart = false;
 
-    // Actually resume playback after recreating the player.
-    await play();
+      final preparedTrackId = state.preparedTrackId!;
+      final preparedUrl = state.preparedTrackUrl!;
+      final currentTrack = state.currentTrack;
+
+      try {
+        await _audioPlayer.stop();
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        await _disposeCurrentPlayer();
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        _createPlayer();
+
+        await _setSource(
+          trackId: preparedTrackId,
+          urlOrPath: preparedUrl,
+          track: currentTrack,
+        );
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        _listenToPlayer();
+        await _audioPlayer.seek(Duration.zero);
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        state = state.copyWith(
+          isPlaying: false,
+          isDragging: false,
+          dragProgress: null,
+          dragPosition: null,
+          position: Duration.zero,
+          progress: 0,
+        );
+
+        didRestart = true;
+      } catch (_) {
+        if (!_isDisposed && operationId == _operationGeneration) {
+          state = state.copyWith(isPlaying: false);
+        }
+      } finally {
+        _isStopping = false;
+      }
+
+      if (_isDisposed || !didRestart || operationId != _operationGeneration) {
+        return;
+      }
+
+      // Resume playback after recreating the player only for the latest operation.
+      await play();
+    });
   }
 
   Future<Duration?> _setSource({

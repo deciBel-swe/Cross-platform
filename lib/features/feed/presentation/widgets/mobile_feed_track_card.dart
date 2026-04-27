@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/auto_scrolling_text.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
@@ -22,6 +23,7 @@ class MobileFeedTrackCard extends StatelessWidget {
     this.coverUrl,
     this.onPlay,
     this.onAddToPlaylist,
+    this.onMoreOptions,
     required this.duration,
     required this.likeCount,
     required this.repostCount,
@@ -37,6 +39,7 @@ class MobileFeedTrackCard extends StatelessWidget {
   final String? coverUrl;
   final VoidCallback? onPlay;
   final VoidCallback? onAddToPlaylist;
+  final VoidCallback? onMoreOptions;
   final String duration;
   final int likeCount;
   final int repostCount;
@@ -75,6 +78,7 @@ class MobileFeedTrackCard extends StatelessWidget {
                   initialIsReposted: isReposted,
                   commentCount: commentCount,
                   onAddToPlaylist: onAddToPlaylist,
+                  onMoreOptions: onMoreOptions,
                 ),
               ),
               Positioned(
@@ -101,10 +105,8 @@ class MobileFeedTrackCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              AutoScrollingText(
+                                text: title,
                                 style: AppTextStyles.sectionTitle.copyWith(
                                   fontSize: 18,
                                 ),
@@ -263,6 +265,7 @@ class _MobileRightActions extends ConsumerStatefulWidget {
     required this.initialIsReposted,
     required this.commentCount,
     this.onAddToPlaylist,
+    this.onMoreOptions,
   });
 
   final int trackId;
@@ -272,6 +275,7 @@ class _MobileRightActions extends ConsumerStatefulWidget {
   final bool initialIsReposted;
   final int commentCount;
   final VoidCallback? onAddToPlaylist;
+  final VoidCallback? onMoreOptions;
 
   @override
   ConsumerState<_MobileRightActions> createState() =>
@@ -282,6 +286,7 @@ class _MobileRightActionsState extends ConsumerState<_MobileRightActions> {
   late int _currentCommentCount;
   bool _isCommentHovered = false;
   bool _isAddHovered = false;
+  bool _isMoreHovered = false;
 
   @override
   void initState() {
@@ -310,9 +315,6 @@ class _MobileRightActionsState extends ConsumerState<_MobileRightActions> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Icon(Icons.volume_off_outlined, color: AppColors.textPrimary),
-        const SizedBox(height: AppDimensions.paddingMd),
-
         LikeButton(
           trackId: widget.trackId,
           isLiked: widget.initialIsLiked,
@@ -404,6 +406,41 @@ class _MobileRightActionsState extends ConsumerState<_MobileRightActions> {
                     'Add',
                     style: AppTextStyles.cardTitle.copyWith(
                       color: _isAddHovered
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: AppDimensions.paddingMd),
+        Semantics(
+          button: true,
+          label: 'More options',
+          child: GestureDetector(
+            onTap: widget.onMoreOptions,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isMoreHovered = true),
+              onExit: (_) => setState(() => _isMoreHovered = false),
+              cursor: SystemMouseCursors.click,
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.more_horiz_rounded,
+                    color: _isMoreHovered
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
+                    size: 28,
+                  ),
+                  const SizedBox(height: AppDimensions.paddingXs),
+                  Text(
+                    'More',
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: _isMoreHovered
                           ? AppColors.primary
                           : AppColors.textPrimary,
                       fontSize: 12,

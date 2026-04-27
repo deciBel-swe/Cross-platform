@@ -32,6 +32,8 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
         size: size,
       );
       return Right(response.toEntity());
+    } on NetworkException catch (error) {
+      return Left(NetworkFailure(error.message));
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
     } catch (error) {
@@ -41,15 +43,17 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
 
   @override
   Future<Either<Failure, PaginatedDiscoveryTracks>> getTrendingTracks({
-    String? genre,
-    required int limit,
+    required int page,
+    required int size,
   }) async {
     try {
       final response = await _remoteDataSource.getTrendingTracks(
-        genre: genre,
-        limit: limit,
+        page: page,
+        size: size,
       );
       return Right(response.toEntity());
+    } on NetworkException catch (error) {
+      return Left(NetworkFailure(error.message));
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
     } catch (error) {
@@ -59,17 +63,37 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
 
   @override
   Future<Either<Failure, PaginatedDiscoveryTracks>> getGenreStation({
-    required String genre,
     required int page,
     required int size,
   }) async {
     try {
       final response = await _remoteDataSource.getGenreStation(
-        genre: genre,
         page: page,
         size: size,
       );
       return Right(response.toEntity());
+    } on NetworkException catch (error) {
+      return Left(NetworkFailure(error.message));
+    } on ServerException catch (error) {
+      return Left(ServerFailure(error.message));
+    } catch (error) {
+      return Left(ServerFailure('An unexpected error occurred: $error'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedDiscoveryTracks>> getArtistStation({
+    required int page,
+    required int size,
+  }) async {
+    try {
+      final response = await _remoteDataSource.getArtistStation(
+        page: page,
+        size: size,
+      );
+      return Right(response.toEntity());
+    } on NetworkException catch (error) {
+      return Left(NetworkFailure(error.message));
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
     } catch (error) {
@@ -82,6 +106,8 @@ class DiscoveryRepositoryImpl implements DiscoveryRepository {
     try {
       final response = await _remoteDataSource.getLikesStation();
       return Right(response.toEntity());
+    } on NetworkException catch (error) {
+      return Left(NetworkFailure(error.message));
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
     } catch (error) {

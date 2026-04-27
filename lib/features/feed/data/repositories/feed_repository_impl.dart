@@ -25,6 +25,8 @@ class FeedRepositoryImpl implements IFeedRepository {
       // Datasource returns the model, convert to entity here.
       final model = await _remote.getFeed(page: page, size: size);
       return Right(model.toEntity());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -34,17 +36,17 @@ class FeedRepositoryImpl implements IFeedRepository {
 
   @override
   Future<Either<Failure, PaginatedFeed>> getDiscoverFeed({
-    required int artistId,
     required int page,
     required int size,
   }) async {
     try {
       final model = await _remote.getDiscoverFeed(
-        artistId: artistId,
         page: page,
         size: size,
       );
       return Right(model.toEntity());
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
@@ -515,6 +517,12 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
 
   /// Translates common [DioException] status codes into typed [AppException]s.
   Never _handleDioError(DioException e, String action) {
+    if (_isNetworkError(e)) {
+      throw const NetworkException(
+        'No internet connection. Offline content is still available.',
+      );
+    }
+
     if (e.response?.statusCode == 401) {
       throw const AuthException('Unauthorized. Please log in again.');
     } else if (e.response?.statusCode == 404) {
@@ -529,5 +537,14 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     throw ServerException(
       backendMessage ?? e.message ?? 'Failed to $action user',
     );
+  }
+
+  bool _isNetworkError(DioException error) {
+    return error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        (error.type == DioExceptionType.unknown &&
+            error.error is SocketException);
   }
 }

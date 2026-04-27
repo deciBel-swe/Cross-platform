@@ -149,6 +149,7 @@ class _PlaylistHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final trackCount = playlist.tracks.length;
     final trackString = trackCount == 1 ? 'One Track' : '$trackCount Tracks';
+    final coverArt = playlist.coverArt?.trim();
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,17 +162,8 @@ class _PlaylistHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
           clipBehavior: Clip.hardEdge,
-          child:
-              (playlist.coverArt != null &&
-                  playlist.coverArt!.trim().isNotEmpty)
-              ? Image.file(
-                  File(playlist.coverArt!),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.broken_image,
-                    color: AppColors.textMuted,
-                  ),
-                )
+          child: coverArt != null && coverArt.isNotEmpty
+              ? _PlaylistCoverImage(coverArt: coverArt)
               : _MosaicCover(tracks: playlist.tracks),
         ),
         const SizedBox(width: 16),
@@ -248,6 +240,31 @@ class _PlaylistHeader extends StatelessWidget {
       ],
     );
   }
+}
+
+class _PlaylistCoverImage extends StatelessWidget {
+  const _PlaylistCoverImage({required this.coverArt});
+
+  final String coverArt;
+
+  @override
+  Widget build(BuildContext context) {
+    return _isRemote(coverArt)
+        ? DecibelCachedImage(imageUrl: coverArt, fit: BoxFit.cover)
+        : Image.file(
+            File(coverArt),
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => const Icon(
+              Icons.broken_image,
+              color: AppColors.textMuted,
+            ),
+          );
+  }
+}
+
+bool _isRemote(String path) {
+  final uri = Uri.tryParse(path);
+  return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
 }
 
 class _PlaylistActions extends StatelessWidget {

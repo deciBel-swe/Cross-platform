@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/exceptions.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../library/domain/entities/track.dart';
@@ -37,21 +38,29 @@ final publicProfileSnapshotProvider = FutureProvider.autoDispose
 final publicLikedTracksProvider = FutureProvider.autoDispose
     .family<List<Track>, int>((ref, userId) async {
       final repository = ref.read(trackSocialRepositoryProvider);
-      final page = await repository.getLikedTracks(
-        page: 0,
-        size: 3,
-        userId: userId,
-      );
-      return page.content;
+      try {
+        final page = await repository.getLikedTracks(
+          page: 0,
+          size: 100,
+          userId: userId,
+        );
+        return page.content;
+      } on NetworkException {
+        return const <Track>[];
+      }
     });
 
 final publicRepostedTracksProvider = FutureProvider.autoDispose
     .family<List<Track>, int>((ref, userId) async {
       final repository = ref.read(trackSocialRepositoryProvider);
-      final page = await repository.getRepostedTracks(
-        page: 0,
-        size: 3,
-        userId: userId,
-      );
-      return page.content;
+      try {
+        final page = await repository.getRepostedTracks(
+          page: 0,
+          size: 100,
+          userId: userId,
+        );
+        return page.content;
+      } on NetworkException {
+        return const <Track>[];
+      }
     });

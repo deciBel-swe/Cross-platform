@@ -57,10 +57,12 @@ class UpgradeNotifier extends AutoDisposeAsyncNotifier<UpgradeViewState> {
         .read(upgradeRepositoryProvider)
         .getSubscriptionStatus();
 
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (subscription) => UpgradeViewState(subscription: subscription),
-    );
+    return result.fold((failure) {
+      if (failure is NetworkFailure) {
+        return fallbackViewState;
+      }
+      throw Exception(failure.message);
+    }, (subscription) => UpgradeViewState(subscription: subscription));
   }
 
   Future<Either<Failure, String>> startCheckout({
@@ -143,6 +145,13 @@ class UpgradeNotifier extends AutoDisposeAsyncNotifier<UpgradeViewState> {
 
     result.fold(
       (failure) {
+        if (failure is NetworkFailure) {
+          if (current == null) {
+            state = const AsyncData(fallbackViewState);
+          }
+          return;
+        }
+
         if (current == null) {
           state = AsyncError(Exception(failure.message), StackTrace.current);
         }

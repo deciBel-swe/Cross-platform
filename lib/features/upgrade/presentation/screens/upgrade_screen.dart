@@ -76,7 +76,7 @@ class _UpgradeScreenState extends ConsumerState<UpgradeScreen>
     final notifier = ref.read(upgradeNotifierProvider.notifier);
 
     try {
-      if (!subscription.isActive) {
+      if (!subscription.hasActivePaidSubscription) {
         final checkoutResult = await notifier.startCheckout();
         if (checkoutResult.isLeft()) {
           checkoutResult.fold(_showFailureMessage, (_) {});
@@ -139,7 +139,7 @@ class _UpgradeScreenState extends ConsumerState<UpgradeScreen>
   }
 
   String _resolvePrimaryActionLabel(SubscriptionStatus subscription) {
-    if (!subscription.isActive) {
+    if (!subscription.hasActivePaidSubscription) {
       return AppConstants.upgradeActionSubscribeNow;
     }
 

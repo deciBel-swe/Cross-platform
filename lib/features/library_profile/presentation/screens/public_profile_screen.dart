@@ -17,13 +17,13 @@ import '../../../engagement/presentation/widgets/follow_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../settings/presentation/providers/blocked_users_provider.dart';
 import '../../domain/entities/public_profile.dart';
+import '../notifiers/track_notifier.dart';
 import '../providers/block_provider.dart';
 import '../providers/public_profile_provider.dart';
 import '../providers/track_audio_provider.dart';
 import '../widgets/expandable_bio.dart';
 import '../widgets/pro_badge.dart';
 import '../widgets/social_links_widget.dart';
-import '../widgets/spotlight_section.dart';
 import '../widgets/track_tile.dart';
 
 class PublicProfileScreen extends ConsumerStatefulWidget {
@@ -338,13 +338,17 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   const SizedBox(height: AppConstants.spacingSmall),
                   _ActionRow(userId: profile.id, profile: profile),
                   const SizedBox(height: AppConstants.spacingRegular),
-                  const _SectionTitle(title: AppConstants.tracksSectionTitle),
-                  const SizedBox(height: AppConstants.spacingSmall),
-                  TopTracksSection(userId: profile.id),
-                  const SizedBox(height: AppConstants.spacingLarge),
-                  const _SectionTitle(title: 'Likes'),
-                  const SizedBox(height: AppConstants.spacingSmall),
                   _PublicTrackCollectionSection(
+                    title: AppConstants.tracksSectionTitle,
+                    tracksAsync: _shouldWatchSections
+                        ? ref.watch(userTracksProvider(profile.id))
+                        : const AsyncData(<Track>[]),
+                    emptyLabel: 'No tracks uploaded yet',
+                    errorLabel: 'Could not load tracks',
+                  ),
+                  const SizedBox(height: AppConstants.spacingLarge),
+                  _PublicTrackCollectionSection(
+                    title: 'Likes',
                     tracksAsync: _shouldWatchSections
                         ? ref.watch(publicLikedTracksProvider(profile.id))
                         : const AsyncData(<Track>[]),
@@ -352,9 +356,8 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                     errorLabel: 'Could not load likes',
                   ),
                   const SizedBox(height: AppConstants.spacingLarge),
-                  const _SectionTitle(title: 'Reposts'),
-                  const SizedBox(height: AppConstants.spacingSmall),
                   _PublicTrackCollectionSection(
+                    title: 'Reposts',
                     tracksAsync: _shouldWatchSections
                         ? ref.watch(publicRepostedTracksProvider(profile.id))
                         : const AsyncData(<Track>[]),
@@ -383,12 +386,14 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             Icon(
               error is NotFoundFailure
                   ? Icons.person_off_rounded
+                  : error is NetworkFailure
+                  ? Icons.cloud_off_rounded
                   : Icons.wifi_off_rounded,
               color: AppColors.surface,
               size: AppConstants.errorIconSize,
             ),
             const SizedBox(height: AppConstants.spacingRegular),
-            if (error is! NotFoundFailure) ...[
+            if (error is! NotFoundFailure && error is! NetworkFailure) ...[
               Text(
                 AppConstants.errorGeneric,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -401,6 +406,8 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             Text(
               error is NotFoundFailure
                   ? '404 | Not Found'
+                  : error is NetworkFailure
+                  ? 'You are offline. Downloads are still available from your library.'
                   : error.toString().replaceAll(
                       AppConstants.errorExceptionPrefix,
                       '',
@@ -796,73 +803,149 @@ class _UnblockButtonState extends ConsumerState<_UnblockButton> {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    required this.canShowAll,
+    required this.onShowAll,
+  });
 
   final String title;
+  final bool canShowAll;
+  final VoidCallback onShowAll;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-      ),
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+        if (canShowAll)
+          TextButton(
+            onPressed: onShowAll,
+            child: const Text(AppConstants.seeAll),
+          ),
+      ],
     );
   }
 }
 
-class _PublicTrackCollectionSection extends ConsumerWidget {
+class _PublicTrackCollectionSection extends ConsumerStatefulWidget {
   const _PublicTrackCollectionSection({
+    required this.title,
     required this.tracksAsync,
     required this.emptyLabel,
     required this.errorLabel,
   });
 
+  final String title;
   final AsyncValue<List<Track>> tracksAsync;
   final String emptyLabel;
   final String errorLabel;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return tracksAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppConstants.spacingMedium),
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (_, _) => Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: AppConstants.spacingSmall,
+  ConsumerState<_PublicTrackCollectionSection> createState() =>
+      _PublicTrackCollectionSectionState();
+}
+
+class _PublicTrackCollectionSectionState
+    extends ConsumerState<_PublicTrackCollectionSection> {
+  static const int _pageSize = 3;
+
+  int _visibleCount = _pageSize;
+
+  @override
+  void didUpdateWidget(covariant _PublicTrackCollectionSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final oldTracks = oldWidget.tracksAsync.valueOrNull;
+    final newTracks = widget.tracksAsync.valueOrNull;
+    if (oldWidget.title != widget.title || !identical(oldTracks, newTracks)) {
+      _visibleCount = _pageSize;
+    }
+  }
+
+  void _showMore(int totalCount) {
+    setState(() {
+      _visibleCount = math.min(_visibleCount + _pageSize, totalCount);
+    });
+  }
+
+  void _showAll(int totalCount) {
+    setState(() => _visibleCount = totalCount);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tracks = widget.tracksAsync.valueOrNull ?? const <Track>[];
+    final canShowAll =
+        tracks.length > _pageSize && _visibleCount < tracks.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(
+          title: widget.title,
+          canShowAll: canShowAll,
+          onShowAll: () => _showAll(tracks.length),
         ),
-        child: Text(
-          errorLabel,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-        ),
-      ),
-      data: (tracks) {
-        if (tracks.isEmpty) {
-          return Padding(
+        const SizedBox(height: AppConstants.spacingSmall),
+        widget.tracksAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppConstants.spacingMedium),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (_, _) => Padding(
             padding: const EdgeInsets.symmetric(
               vertical: AppConstants.spacingSmall,
             ),
             child: Text(
-              emptyLabel,
+              widget.errorLabel,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
-          );
-        }
+          ),
+          data: _buildTrackList,
+        ),
+      ],
+    );
+  }
 
-        return ListView.builder(
+  Widget _buildTrackList(List<Track> tracks) {
+    if (tracks.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppConstants.spacingSmall,
+        ),
+        child: Text(
+          widget.emptyLabel,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    final visibleCount = math.min(_visibleCount, tracks.length);
+    final visibleTracks = tracks.take(visibleCount).toList(growable: false);
+    final canShowMore = visibleCount < tracks.length;
+
+    return Column(
+      children: [
+        ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: tracks.length,
+          itemCount: visibleTracks.length,
           itemBuilder: (context, index) {
-            final track = tracks[index];
+            final track = visibleTracks[index];
             return TrackTile(
               track: track,
               onTap: () => ref
@@ -870,8 +953,17 @@ class _PublicTrackCollectionSection extends ConsumerWidget {
                   .playTrack(track: track, queue: tracks),
             );
           },
-        );
-      },
+        ),
+        if (canShowMore)
+          Align(
+            alignment: Alignment.center,
+            child: TextButton.icon(
+              onPressed: () => _showMore(tracks.length),
+              icon: const Icon(Icons.expand_more_rounded),
+              label: const Text('See more'),
+            ),
+          ),
+      ],
     );
   }
 }

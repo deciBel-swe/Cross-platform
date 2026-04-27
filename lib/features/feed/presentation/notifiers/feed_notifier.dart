@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/failures.dart';
 import '../providers/feed_repository_provider.dart';
 
 /// [FeedState] holds the accumulated list of feed tracks plus pagination info.
@@ -73,13 +74,25 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
     final result = await repo.getFeed(page: page, size: _pageSize);
 
     return result.fold(
-      (failure) => throw Exception(failure.message),
-      (paginated) => FeedState(
-        tracks: [...?existing, ...paginated.content],
-        currentPage: paginated.pageNumber,
-        isLast: paginated.isLast,
-        isLoadingMore: false,
-      ),
+      (failure) {
+        if (failure is NetworkFailure) {
+          return FeedState(
+            tracks: existing ?? const [],
+            currentPage: page == 0 ? 0 : page - 1,
+            isLast: true,
+            isLoadingMore: false,
+          );
+        }
+        throw Exception(failure.message);
+      },
+      (paginated) {
+        return FeedState(
+          tracks: [...?existing, ...paginated.content],
+          currentPage: paginated.pageNumber,
+          isLast: paginated.isLast,
+          isLoadingMore: false,
+        );
+      },
     );
   }
 }

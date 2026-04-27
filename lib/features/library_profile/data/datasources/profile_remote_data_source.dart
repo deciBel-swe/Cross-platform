@@ -85,6 +85,11 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
       return SocialLinksModel.fromJson(normalizedLinksPayload);
     } on DioException catch (e) {
+      if (_isNetworkError(e)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized to update social links');
       }
@@ -107,6 +112,11 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       );
       return response.statusCode == 200 || response.statusCode == 204;
     } on DioException catch (e) {
+      if (_isNetworkError(e)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized to update profile');
       } else if (e.response?.statusCode == 404) {
@@ -184,6 +194,11 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
       return UserProfileModel.fromJson(normalizedResponse);
     } on DioException catch (e) {
+      if (_isNetworkError(e)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       if (e.response?.statusCode == 401) {
         throw const AuthException(
           'Unauthorized to fetch profile. Please log in again.',
@@ -253,6 +268,11 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
       return UserProfileModel.fromJson(normalizedResponse);
     } on DioException catch (e) {
+      if (_isNetworkError(e)) {
+        throw const NetworkException(
+          'No internet connection. Offline content is still available.',
+        );
+      }
       if (e.response?.statusCode == 404) {
         throw const NotFoundException('Public profile not found.');
       }
@@ -506,6 +526,11 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
       return response.statusCode == 200 || response.statusCode == 204;
     } on DioException catch (error) {
+      if (_isNetworkError(error)) {
+        throw const NetworkException(
+          'No internet. Image kept locally but not uploaded.',
+        );
+      }
       final responseData = error.response?.data;
       final String? backendMessage = responseData is Map<String, dynamic>
           ? responseData['message'] as String?
@@ -514,5 +539,14 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
     } catch (e) {
       throw ServerException('Unexpected error: $e');
     }
+  }
+
+  bool _isNetworkError(DioException error) {
+    return error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        (error.type == DioExceptionType.unknown &&
+            error.error is SocketException);
   }
 }

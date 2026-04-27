@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/right_side_panel.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../domain/entities/track.dart';
 import '../notifiers/track_comment_notifier.dart';
@@ -15,15 +16,28 @@ class TrackCommentsBottomSheet extends ConsumerStatefulWidget {
     super.key,
     required this.trackId,
     required this.track,
+    this.asSidePanel = false,
   });
   final int trackId;
   final Track track;
+  final bool asSidePanel;
 
   static Future<void> show(
     BuildContext context, {
     required int trackId,
     required Track track,
   }) {
+    if (isDesktopPanelLayout(context)) {
+      return showRightSidePanel<void>(
+        context: context,
+        child: TrackCommentsBottomSheet(
+          trackId: trackId,
+          track: track,
+          asSidePanel: true,
+        ),
+      );
+    }
+
     return showModalBottomSheet(
       useSafeArea: true,
       context: context,
@@ -112,7 +126,12 @@ class _TrackCommentsBottomSheetState
     return Container(
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: widget.asSidePanel
+            ? const BorderRadius.horizontal(left: Radius.circular(18))
+            : const BorderRadius.vertical(top: Radius.circular(24)),
+        border: widget.asSidePanel
+            ? const Border(left: BorderSide(color: Colors.white12, width: 0.5))
+            : null,
       ),
       child: Column(
         children: [

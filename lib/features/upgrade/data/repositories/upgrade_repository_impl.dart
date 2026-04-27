@@ -19,7 +19,7 @@ class UpgradeRepositoryImpl implements UpgradeRepository {
     } on AuthException catch (error) {
       return Left(AuthFailure(error.message));
     } on NetworkException catch (error) {
-      return Left(ServerFailure(error.message));
+      return Left(NetworkFailure(error.message));
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
     } catch (error) {
@@ -35,7 +35,7 @@ class UpgradeRepositoryImpl implements UpgradeRepository {
     } on AuthException catch (error) {
       return Left(AuthFailure(error.message));
     } on NetworkException catch (error) {
-      return Left(ServerFailure(error.message));
+      return Left(NetworkFailure(error.message));
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
     } catch (error) {
@@ -51,7 +51,7 @@ class UpgradeRepositoryImpl implements UpgradeRepository {
     } on AuthException catch (error) {
       return Left(AuthFailure(error.message));
     } on NetworkException catch (error) {
-      return Left(ServerFailure(error.message));
+      return Left(NetworkFailure(error.message));
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
     } catch (error) {
@@ -67,7 +67,7 @@ class UpgradeRepositoryImpl implements UpgradeRepository {
     } on AuthException catch (error) {
       return Left(AuthFailure(error.message));
     } on NetworkException catch (error) {
-      return Left(ServerFailure(error.message));
+      return Left(NetworkFailure(error.message));
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
     } catch (error) {

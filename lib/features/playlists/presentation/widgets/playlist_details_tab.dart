@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../domain/entities/playlist.dart';
 import '../notifiers/playlist_form_notifier.dart';
 
@@ -23,6 +24,7 @@ class PlaylistDetailsTab extends ConsumerWidget {
     if (metadata == null) {
       return const Center(child: CircularProgressIndicator());
     }
+    final coverArt = playlist.coverArt?.trim();
 
     return ListView(
       padding: const EdgeInsets.all(16.0),
@@ -59,15 +61,22 @@ class PlaylistDetailsTab extends ConsumerWidget {
                       ),
                     )
                   // Fallback to existing playlist image
-                  else if (playlist.coverArt != null)
+                  else if (coverArt != null && coverArt.isNotEmpty)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        File(playlist.coverArt!),
-                        fit: BoxFit.cover,
-                        width: 160,
-                        height: 160,
-                      ),
+                      child: _isRemote(coverArt)
+                          ? DecibelCachedImage(
+                              imageUrl: coverArt,
+                              fit: BoxFit.cover,
+                              width: 160,
+                              height: 160,
+                            )
+                          : Image.file(
+                              File(coverArt),
+                              fit: BoxFit.cover,
+                              width: 160,
+                              height: 160,
+                            ),
                     )
                   else
                     Container(
@@ -237,4 +246,9 @@ class PlaylistDetailsTab extends ConsumerWidget {
       ],
     );
   }
+}
+
+bool _isRemote(String path) {
+  final uri = Uri.tryParse(path);
+  return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
 }

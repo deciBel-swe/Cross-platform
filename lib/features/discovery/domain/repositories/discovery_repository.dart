@@ -14,12 +14,16 @@ abstract class DiscoveryRepository {
   });
 
   Future<Either<Failure, PaginatedDiscoveryTracks>> getTrendingTracks({
-    String? genre,
-    required int limit,
+    required int page,
+    required int size,
   });
 
   Future<Either<Failure, PaginatedDiscoveryTracks>> getGenreStation({
-    required String genre,
+    required int page,
+    required int size,
+  });
+
+  Future<Either<Failure, PaginatedDiscoveryTracks>> getArtistStation({
     required int page,
     required int size,
   });

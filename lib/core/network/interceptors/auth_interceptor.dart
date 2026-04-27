@@ -116,6 +116,13 @@ class AuthInterceptor extends Interceptor {
       return handler.next(err);
     }
 
+    // Login/register/OAuth requests are intentionally unauthenticated. If one
+    // of them returns 401, surface that response to the caller instead of
+    // trying to refresh a token that does not exist yet.
+    if (_isPublicEndpoint(err.requestOptions.path)) {
+      return handler.next(err);
+    }
+
     // Check if the error is due to an invalid/expired token (401)
     if (err.response?.statusCode == 401) {
       try {

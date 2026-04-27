@@ -22,7 +22,9 @@ class PaginatedDiscoveryTracksModel with _$PaginatedDiscoveryTracksModel {
       _$PaginatedDiscoveryTracksModelFromJson(_normalizePaginatedJson(json));
 
   factory PaginatedDiscoveryTracksModel.fromResponse(Object? response) {
-    return PaginatedDiscoveryTracksModel.fromJson(asMapOrEmpty(response));
+    return PaginatedDiscoveryTracksModel.fromJson(
+      asMapOrEmpty(unwrapDataEnvelope(response)),
+    );
   }
 
   static Map<String, dynamic> _normalizePaginatedJson(

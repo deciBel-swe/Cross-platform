@@ -100,9 +100,11 @@ class _MobileShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
+    final miniPlayerSuppressed = ref.watch(mobileMiniPlayerSuppressedProvider);
     final hideMiniPlayer =
         location == RoutePaths.editProfile ||
         location.startsWith(RoutePaths.settings) ||
+        (location == RoutePaths.feed && miniPlayerSuppressed) ||
         // Hide only when on the upload flow (add track/details), not in
         // the user's uploads list.
         location.startsWith(RoutePaths.upload);

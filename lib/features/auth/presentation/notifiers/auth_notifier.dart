@@ -81,6 +81,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   Future<void> loginWithGoogle() async {
     debugPrint('[AuthNotifier] loginWithGoogle() started.');
     state = const AsyncLoading();
+    String? failureMessage;
 
     try {
       final repo = ref.read(authRepositoryProvider);
@@ -88,20 +89,19 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
       final userEither = await repo.loginWithGoogle();
 
-      final user = userEither.fold(
+      userEither.fold(
         (failure) {
           debugPrint('[AuthNotifier] Failure: ${failure.message}');
-          throw Exception(failure.message);
+          failureMessage = failure.message;
+          state = const AsyncData(AuthUnauthenticated());
         },
         (user) {
           debugPrint(
             '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
           );
-          return user;
+          state = AsyncData(AuthAuthenticated(user: user));
         },
       );
-
-      state = AsyncData(AuthAuthenticated(user: user));
     } on AppException catch (e) {
       debugPrint('[AuthNotifier] AppException: ${e.message}');
       state = const AsyncData(AuthUnauthenticated());
@@ -110,6 +110,10 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       debugPrint('[AuthNotifier] Unexpected Exception: $e\n$st');
       state = const AsyncData(AuthUnauthenticated());
       throw Exception(e.toString());
+    }
+
+    if (failureMessage != null) {
+      throw Exception(failureMessage);
     }
 
     debugPrint('[AuthNotifier] State is now: $state');

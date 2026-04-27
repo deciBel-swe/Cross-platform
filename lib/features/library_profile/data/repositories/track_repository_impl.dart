@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -28,7 +31,7 @@ class TrackRepositoryImpl implements TrackRepository {
       final model = await _remote.fetchMyTracks(page: page, size: size);
       return Right(model.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_toFailure(e));
     }
   }
 
@@ -46,7 +49,7 @@ class TrackRepositoryImpl implements TrackRepository {
       );
       return Right(model.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_toFailure(e));
     }
   }
 
@@ -56,7 +59,7 @@ class TrackRepositoryImpl implements TrackRepository {
       final model = await _remote.fetchTrackById(id);
       return Right(model.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_toFailure(e));
     }
   }
 
@@ -68,7 +71,7 @@ class TrackRepositoryImpl implements TrackRepository {
       final trackId = await _remote.resolveTrackIdentifier(trackIdentifier);
       return Right(trackId);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_toFailure(e));
     }
   }
 
@@ -79,7 +82,7 @@ class TrackRepositoryImpl implements TrackRepository {
       final status = await _remote.fetchTrackStatusById(id);
       return Right(status);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_toFailure(e));
     }
   }
 
@@ -89,7 +92,7 @@ class TrackRepositoryImpl implements TrackRepository {
       final model = await _remote.fetchTrackPeaks(id);
       return Right(model.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_toFailure(e));
     }
   }
 
@@ -111,7 +114,7 @@ class TrackRepositoryImpl implements TrackRepository {
       );
       return Right(model.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_toFailure(e));
     }
   }
 
@@ -121,7 +124,7 @@ class TrackRepositoryImpl implements TrackRepository {
       await _remote.deleteTrack(trackId);
       return const Right(true);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_toFailure(e));
     }
   }
 
@@ -131,7 +134,23 @@ class TrackRepositoryImpl implements TrackRepository {
       await _remote.deleteTrackCover(trackId);
       return const Right(true);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(_toFailure(e));
     }
+  }
+
+  Failure _toFailure(Object error) {
+    if (error is DioException &&
+        (error.type == DioExceptionType.connectionError ||
+            error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.receiveTimeout ||
+            error.type == DioExceptionType.sendTimeout ||
+            (error.type == DioExceptionType.unknown &&
+                error.error is SocketException))) {
+      return const NetworkFailure(
+        'No internet connection. Offline content is still available.',
+      );
+    }
+
+    return ServerFailure(error.toString());
   }
 }

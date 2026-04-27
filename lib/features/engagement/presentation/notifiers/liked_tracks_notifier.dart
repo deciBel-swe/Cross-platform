@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 
+import '../../../../core/errors/exceptions.dart';
 import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/repositories/track_social_repository.dart';
@@ -31,10 +32,15 @@ class TrackCollectionNotifier
     _isLastPage = false;
     _isLoadingMore = false;
 
-    final response = await _fetchPage(page: 0, size: 20);
-    _currentPage = response.pageNumber;
-    _isLastPage = response.isLast;
-    return response.content;
+    try {
+      final response = await _fetchPage(page: 0, size: 20);
+      _currentPage = response.pageNumber;
+      _isLastPage = response.isLast;
+      return response.content;
+    } on NetworkException {
+      _isLastPage = true;
+      return const <Track>[];
+    }
   }
 
   Future<PaginatedTracks> _fetchPage({required int page, required int size}) {
@@ -78,6 +84,8 @@ class TrackCollectionNotifier
       }
 
       state = AsyncValue.data([...currentTracks, ...newTracks]);
+    } on NetworkException {
+      _isLastPage = true;
     } catch (e, st) {
       // Could set an error state, but since it's appending, we might just re-throw or silently fail.
       // Setting state to error will completely replace the list with an error screen depending on `when`.

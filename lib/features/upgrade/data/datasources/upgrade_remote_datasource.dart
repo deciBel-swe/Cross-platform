@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import '../../../../core/constants/api_constants.dart';
@@ -119,7 +121,9 @@ class UpgradeRemoteDatasource implements IUpgradeRemoteDatasource {
     if (error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.sendTimeout) {
+        error.type == DioExceptionType.sendTimeout ||
+        (error.type == DioExceptionType.unknown &&
+            error.error is SocketException)) {
       return const NetworkException();
     }
 

@@ -251,12 +251,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 Icon(
                   error is NotFoundFailure
                       ? Icons.person_off_rounded
+                      : error is NetworkFailure
+                      ? Icons.cloud_off_rounded
                       : Icons.wifi_off_rounded,
                   color: AppColors.surface,
                   size: AppConstants.errorIconSize,
                 ),
                 const SizedBox(height: AppConstants.spacingRegular),
-                if (error is! NotFoundFailure) ...[
+                if (error is! NotFoundFailure && error is! NetworkFailure) ...[
                   Text(
                     'Oops! Something went wrong.',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -269,6 +271,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 Text(
                   error is NotFoundFailure
                       ? '404 | Not Found'
+                      : error is NetworkFailure
+                      ? 'You are offline. Downloads are still available from your library.'
                       : error.toString().replaceAll(
                           AppConstants.errorExceptionPrefix,
                           '',
@@ -322,6 +326,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       Icon(
                         failure is NotFoundFailure
                             ? Icons.person_off_rounded
+                            : failure is NetworkFailure
+                            ? Icons.cloud_off_rounded
                             : Icons.error_outline_rounded,
                         color: AppColors.onPrimary.withValues(alpha: 0.5),
                         size: AppConstants.errorIconSize,
@@ -334,6 +340,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         child: Text(
                           failure is NotFoundFailure
                               ? '404 | Not Found'
+                              : failure is NetworkFailure
+                              ? 'You are offline. Downloads are still available from your library.'
                               : 'Could not load profile: ${failure.message}',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.titleMedium

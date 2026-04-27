@@ -7,10 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/auto_scrolling_text.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
+import '../../../library/presentation/widgets/track_more_options_menu.dart';
+import '../../../library_profile/presentation/providers/track_peaks_provider.dart';
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
 import 'mobile_feed_track_card.dart';
@@ -36,6 +39,15 @@ class FeedItem extends StatelessWidget {
     required this.waveformPeaks,
     this.onPlay,
     this.onAddToPlaylist,
+    this.onAddToQueue,
+    this.onEditTrack,
+    this.onGoToArtist,
+    this.onGoToAlbum,
+    this.onShare,
+    this.onCopyLink,
+    this.onDownload,
+    this.onDeleteTrack,
+    this.onMoreOptions,
     this.userAvatarUrl,
     this.coverUrl,
     this.gradientColors,
@@ -58,6 +70,15 @@ class FeedItem extends StatelessWidget {
   final List<double> waveformPeaks;
   final VoidCallback? onPlay;
   final VoidCallback? onAddToPlaylist;
+  final VoidCallback? onAddToQueue;
+  final VoidCallback? onEditTrack;
+  final VoidCallback? onGoToArtist;
+  final VoidCallback? onGoToAlbum;
+  final VoidCallback? onShare;
+  final VoidCallback? onCopyLink;
+  final VoidCallback? onDownload;
+  final VoidCallback? onDeleteTrack;
+  final VoidCallback? onMoreOptions;
   final String? userAvatarUrl;
   final String? coverUrl;
   final List<Color>? gradientColors;
@@ -86,6 +107,7 @@ class FeedItem extends StatelessWidget {
         duration: duration,
         onPlay: onPlay,
         onAddToPlaylist: onAddToPlaylist,
+        onMoreOptions: onMoreOptions,
         coverUrl: coverUrl,
         gradientColors: colors,
       );
@@ -155,10 +177,8 @@ class FeedItem extends StatelessWidget {
                                       color: AppColors.textSecondary,
                                     ),
                                   ),
-                                  Text(
-                                    trackTitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  AutoScrollingText(
+                                    text: trackTitle,
                                     style: AppTextStyles.sectionTitle.copyWith(
                                       fontSize: 33,
                                     ),
@@ -171,7 +191,11 @@ class FeedItem extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: AppDimensions.paddingMd),
-                      _WaveformStrip(peaks: waveformPeaks, duration: duration),
+                      _WaveformStrip(
+                        trackId: trackId,
+                        fallbackPeaks: waveformPeaks,
+                        duration: duration,
+                      ),
                       const SizedBox(height: AppDimensions.paddingMd),
                       _DesktopFeedActions(
                         trackId: trackId,
@@ -181,6 +205,15 @@ class FeedItem extends StatelessWidget {
                         initialIsReposted: isReposted,
                         commentCount: commentCount,
                         plays: plays,
+                        onAddToPlaylist: onAddToPlaylist,
+                        onAddToQueue: onAddToQueue,
+                        onEditTrack: onEditTrack,
+                        onGoToArtist: onGoToArtist,
+                        onGoToAlbum: onGoToAlbum,
+                        onShare: onShare,
+                        onCopyLink: onCopyLink,
+                        onDownload: onDownload,
+                        onDeleteTrack: onDeleteTrack,
                       ),
                     ],
                   ),
@@ -219,6 +252,7 @@ class _MobileFeedItem extends StatelessWidget {
     required this.duration,
     this.onPlay,
     this.onAddToPlaylist,
+    this.onMoreOptions,
     this.coverUrl,
     required this.gradientColors,
   });
@@ -238,6 +272,7 @@ class _MobileFeedItem extends StatelessWidget {
   final String duration;
   final VoidCallback? onPlay;
   final VoidCallback? onAddToPlaylist;
+  final VoidCallback? onMoreOptions;
   final String? coverUrl;
   final List<Color> gradientColors;
 
@@ -269,8 +304,6 @@ class _MobileFeedItem extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: AppDimensions.paddingSm),
-                const Icon(Icons.more_vert, color: AppColors.textSecondary),
               ],
             ),
             const SizedBox(height: AppDimensions.paddingMd),
@@ -281,6 +314,7 @@ class _MobileFeedItem extends StatelessWidget {
               coverUrl: coverUrl,
               onPlay: onPlay,
               onAddToPlaylist: onAddToPlaylist,
+              onMoreOptions: onMoreOptions,
               duration: duration,
               likeCount: likeCount,
               repostCount: repostCount,
@@ -570,7 +604,35 @@ class _GenreChip extends StatelessWidget {
 }
 
 class _WaveformStrip extends StatelessWidget {
-  const _WaveformStrip({required this.peaks, required this.duration});
+  const _WaveformStrip({
+    required this.trackId,
+    required this.fallbackPeaks,
+    required this.duration,
+  });
+
+  final int trackId;
+  final List<double> fallbackPeaks;
+  final String duration;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final waveformAsync = ref.watch(trackWaveformDataProvider(trackId));
+        final peaks = waveformAsync.maybeWhen(
+          data: (waveformPeaks) =>
+              waveformPeaks.isEmpty ? fallbackPeaks : waveformPeaks,
+          orElse: () => fallbackPeaks,
+        );
+
+        return _WaveformPaint(peaks: peaks, duration: duration);
+      },
+    );
+  }
+}
+
+class _WaveformPaint extends StatelessWidget {
+  const _WaveformPaint({required this.peaks, required this.duration});
 
   final List<double> peaks;
   final String duration;
@@ -618,6 +680,15 @@ class _DesktopFeedActions extends ConsumerStatefulWidget {
     required this.initialIsReposted,
     required this.commentCount,
     required this.plays,
+    this.onAddToPlaylist,
+    this.onAddToQueue,
+    this.onEditTrack,
+    this.onGoToArtist,
+    this.onGoToAlbum,
+    this.onShare,
+    this.onCopyLink,
+    this.onDownload,
+    this.onDeleteTrack,
   });
 
   final int trackId;
@@ -627,6 +698,15 @@ class _DesktopFeedActions extends ConsumerStatefulWidget {
   final bool initialIsReposted;
   final int commentCount;
   final String plays;
+  final VoidCallback? onAddToPlaylist;
+  final VoidCallback? onAddToQueue;
+  final VoidCallback? onEditTrack;
+  final VoidCallback? onGoToArtist;
+  final VoidCallback? onGoToAlbum;
+  final VoidCallback? onShare;
+  final VoidCallback? onCopyLink;
+  final VoidCallback? onDownload;
+  final VoidCallback? onDeleteTrack;
 
   @override
   ConsumerState<_DesktopFeedActions> createState() => _DesktopFeedActionsState();
@@ -679,11 +759,6 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
           fontSize: 13,
         ),
         const SizedBox(width: AppDimensions.paddingSm),
-        const _IconSquareButton(icon: Icons.ios_share_outlined),
-        const SizedBox(width: AppDimensions.paddingSm),
-        const _IconSquareButton(icon: Icons.content_copy_outlined),
-        const SizedBox(width: AppDimensions.paddingSm),
-        const _IconSquareButton(icon: Icons.more_horiz),
         const Spacer(),
         Icon(
           Icons.play_arrow,
@@ -703,9 +778,11 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
           label: 'View $_currentCommentCount comments',
           child: GestureDetector(
             onTap: () async {
-              final data = await ref.read(trackPreviewProvider(widget.trackId).future);
+              final data = await ref.read(
+                trackPreviewProvider(widget.trackId).future,
+              );
               if (!context.mounted) return;
-              
+
               await TrackCommentsBottomSheet.show(
                 context,
                 trackId: widget.trackId,
@@ -731,7 +808,9 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
                   AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 200),
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: _isCommentHovered ? AppColors.textPrimary : AppColors.textSecondary,
+                      color: _isCommentHovered
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                     ),
                     child: Text(_formatCount(_currentCommentCount)),
                   ),
@@ -740,46 +819,100 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
             ),
           ),
         ),
+        const SizedBox(width: AppDimensions.paddingSm),
+        _DesktopMoreOptionsButton(
+          onAddToPlaylist: widget.onAddToPlaylist,
+          onAddToQueue: widget.onAddToQueue,
+          onEditTrack: widget.onEditTrack,
+          onGoToArtist: widget.onGoToArtist,
+          onGoToAlbum: widget.onGoToAlbum,
+          onShare: widget.onShare,
+          onCopyLink: widget.onCopyLink,
+          onDownload: widget.onDownload,
+          onDeleteTrack: widget.onDeleteTrack,
+        ),
       ],
     );
   }
 }
 
-class _IconSquareButton extends StatefulWidget {
-  const _IconSquareButton({required this.icon});
+class _DesktopMoreOptionsButton extends StatelessWidget {
+  const _DesktopMoreOptionsButton({
+    this.onAddToPlaylist,
+    this.onAddToQueue,
+    this.onEditTrack,
+    this.onGoToArtist,
+    this.onGoToAlbum,
+    this.onShare,
+    this.onCopyLink,
+    this.onDownload,
+    this.onDeleteTrack,
+  });
 
-  final IconData icon;
-
-  @override
-  State<_IconSquareButton> createState() => _IconSquareButtonState();
-}
-
-class _IconSquareButtonState extends State<_IconSquareButton> {
-  bool _isHovered = false;
+  final VoidCallback? onAddToPlaylist;
+  final VoidCallback? onAddToQueue;
+  final VoidCallback? onEditTrack;
+  final VoidCallback? onGoToArtist;
+  final VoidCallback? onGoToAlbum;
+  final VoidCallback? onShare;
+  final VoidCallback? onCopyLink;
+  final VoidCallback? onDownload;
+  final VoidCallback? onDeleteTrack;
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 40,
-        height: 34,
-        decoration: BoxDecoration(
-          color: _isHovered ? AppColors.surfaceLight : AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-          border: Border.all(
-            color: _isHovered ? AppColors.borderLight.withValues(alpha: 0.5) : Colors.transparent,
+    return Builder(
+      builder: (buttonContext) {
+        return IconButton(
+          tooltip: 'More options',
+          onPressed: () async {
+            final option = await showTrackMoreOptionsMenu(
+              context: context,
+              anchorContext: buttonContext,
+              includeEdit: onEditTrack != null,
+              includeDelete: onDeleteTrack != null,
+            );
+            if (option == null) {
+              return;
+            }
+
+            switch (option) {
+              case TrackMoreOption.addToPlaylist:
+                onAddToPlaylist?.call();
+                break;
+              case TrackMoreOption.addToQueue:
+                onAddToQueue?.call();
+                break;
+              case TrackMoreOption.editTrack:
+                onEditTrack?.call();
+                break;
+              case TrackMoreOption.goToArtist:
+                onGoToArtist?.call();
+                break;
+              case TrackMoreOption.goToAlbum:
+                onGoToAlbum?.call();
+                break;
+              case TrackMoreOption.share:
+                onShare?.call();
+                break;
+              case TrackMoreOption.copyLink:
+                onCopyLink?.call();
+                break;
+              case TrackMoreOption.download:
+                onDownload?.call();
+                break;
+              case TrackMoreOption.deleteTrack:
+                onDeleteTrack?.call();
+                break;
+            }
+          },
+          icon: const Icon(
+            Icons.more_horiz,
+            color: AppColors.textSecondary,
+            size: 20,
           ),
-        ),
-        child: Icon(
-          widget.icon,
-          color: _isHovered ? AppColors.textPrimary : AppColors.textSecondary,
-          size: 18,
-        ),
-      ),
+        );
+      },
     );
   }
 }

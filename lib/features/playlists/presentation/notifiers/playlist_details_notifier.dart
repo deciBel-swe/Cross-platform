@@ -1,7 +1,9 @@
 import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/errors/failures.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
@@ -34,10 +36,19 @@ class PlaylistDetailsNotifier
 
     final result = await repository.getPlaylistDetails(arg);
 
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (playlist) => playlist,
-    );
+    return result.fold((failure) {
+      if (failure is NetworkFailure) {
+        final cachedPlaylists = ref.read(userPlaylistsProvider).valueOrNull;
+        if (cachedPlaylists != null) {
+          for (final playlist in cachedPlaylists) {
+            if (playlist.id == arg) {
+              return playlist;
+            }
+          }
+        }
+      }
+      throw Exception(failure.message);
+    }, (playlist) => playlist);
   }
 
   @override
@@ -109,6 +120,37 @@ class PlaylistDetailsNotifier
     _keepAliveLink = null;
 
     ref.invalidateSelf(); // Instantly fetch the original tracks back from the backend
+  }
+
+  void updatePlaylistLocally(Playlist updatedPlaylist) {
+    final current = state.valueOrNull;
+    if (current == null || current.id != updatedPlaylist.id) {
+      state = AsyncData(updatedPlaylist);
+      return;
+    }
+
+    state = AsyncData(
+      Playlist(
+        id: updatedPlaylist.id,
+        title: updatedPlaylist.title,
+        description: updatedPlaylist.description,
+        type: updatedPlaylist.type,
+        isPrivate: updatedPlaylist.isPrivate,
+        isLiked: updatedPlaylist.isLiked,
+        coverArt: updatedPlaylist.coverArt,
+        owner: updatedPlaylist.owner ?? current.owner,
+        tracks: updatedPlaylist.tracks.isNotEmpty
+            ? updatedPlaylist.tracks
+            : current.tracks,
+        totalDurationSeconds: updatedPlaylist.totalDurationSeconds,
+        trackCount: updatedPlaylist.trackCount,
+        playlistSlug: updatedPlaylist.playlistSlug,
+        firstTrackWaveformUrl: updatedPlaylist.firstTrackWaveformUrl,
+        secretToken: updatedPlaylist.secretToken,
+        access: updatedPlaylist.access,
+        createdAt: updatedPlaylist.createdAt ?? current.createdAt,
+      ),
+    );
   }
 
   void _flushDeletions() {

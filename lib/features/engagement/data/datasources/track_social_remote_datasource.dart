@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
@@ -63,7 +65,11 @@ class TrackSocialRemoteDatasource {
           }
         },
       );
-    } on AppException {
+    } on AppException catch (error) {
+      if (error is NetworkException) {
+        rethrow;
+      }
+
       final resolvedUserId = userId ?? await _resolveCurrentUserId();
       final fallbackEndpoints = <String>[
         if (resolvedUserId != null) '/users/$resolvedUserId/liked-tracks',
@@ -100,7 +106,11 @@ class TrackSocialRemoteDatasource {
           }
         },
       );
-    } on AppException {
+    } on AppException catch (error) {
+      if (error is NetworkException) {
+        rethrow;
+      }
+
       final resolvedUserId = userId ?? await _resolveCurrentUserId();
       final fallbackEndpoints = <String>[
         if (resolvedUserId != null) '/users/$resolvedUserId/repost',
@@ -136,7 +146,7 @@ class TrackSocialRemoteDatasource {
 
         onSuccess?.call(endpoint);
 
-        return PaginatedTracksModel.fromJson(data);
+        return PaginatedTracksModel.fromJson(_normalizeTrackPage(data));
       } on DioException catch (error) {
         lastDioException = error;
         final statusCode = error.response?.statusCode;
@@ -303,6 +313,21 @@ class TrackSocialRemoteDatasource {
     return normalized;
   }
 
+  Map<String, dynamic> _normalizeTrackPage(Map<String, dynamic> json) {
+    final nestedData = json['data'];
+    final source = nestedData is Map<String, dynamic> ? nestedData : json;
+    final normalized = Map<String, dynamic>.from(source);
+
+    normalized['pageNumber'] ??= normalized['number'] ?? 0;
+    normalized['pageSize'] ??= normalized['size'] ?? 0;
+    normalized['totalElements'] ??=
+        (normalized['content'] as List?)?.length ?? 0;
+    normalized['totalPages'] ??= 1;
+    normalized['isLast'] ??= normalized['last'] ?? true;
+
+    return normalized;
+  }
+
   /// Maps a [DioException] to the appropriate [AppException] subclass.
   AppException _handleDioError(DioException e) {
     switch (e.type) {
@@ -344,8 +369,14 @@ class TrackSocialRemoteDatasource {
       case DioExceptionType.cancel:
         return const ServerException('Request was cancelled.');
 
-      case DioExceptionType.unknown:
       case DioExceptionType.badCertificate:
+        return ServerException(e.message ?? 'An unexpected error occurred.');
+      case DioExceptionType.unknown:
+        if (e.error is SocketException) {
+          return const NetworkException(
+            'No internet connection. Please check your network and try again.',
+          );
+        }
         return ServerException(e.message ?? 'An unexpected error occurred.');
     }
   }

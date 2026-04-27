@@ -1,12 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../auth/domain/entities/auth_state.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/errors/failures.dart';
 import '../providers/feed_repository_provider.dart';
 import 'feed_notifier.dart';
 
 /// Async notifier for the "Discover" feed (artist station).
-/// Uses the current user's ID as the artistId for discovery.
 class DiscoverFeedNotifier extends AsyncNotifier<FeedState> {
   static const int _pageSize = 20;
 
@@ -38,27 +36,32 @@ class DiscoverFeedNotifier extends AsyncNotifier<FeedState> {
 
   Future<FeedState> _fetchPage(int page, {List<dynamic>? existing}) async {
     final repo = ref.read(feedRepositoryProvider);
-    final auth = ref.read(authStateProvider);
-
-    int artistId = 0;
-    if (auth is AsyncData<AuthState> && auth.value is AuthAuthenticated) {
-      artistId = (auth.value as AuthAuthenticated).user.id;
-    }
 
     final result = await repo.getDiscoverFeed(
-      artistId: artistId,
       page: page,
       size: _pageSize,
     );
 
     return result.fold(
-      (failure) => throw Exception(failure.message),
-      (paginated) => FeedState(
-        tracks: [...?existing, ...paginated.content],
-        currentPage: paginated.pageNumber,
-        isLast: paginated.isLast,
-        isLoadingMore: false,
-      ),
+      (failure) {
+        if (failure is NetworkFailure) {
+          return FeedState(
+            tracks: existing ?? const [],
+            currentPage: page == 0 ? 0 : page - 1,
+            isLast: true,
+            isLoadingMore: false,
+          );
+        }
+        throw Exception(failure.message);
+      },
+      (paginated) {
+        return FeedState(
+          tracks: [...?existing, ...paginated.content],
+          currentPage: paginated.pageNumber,
+          isLast: paginated.isLast,
+          isLoadingMore: false,
+        );
+      },
     );
   }
 }

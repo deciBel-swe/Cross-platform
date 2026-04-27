@@ -114,7 +114,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     if (isMobile) {
       try {
         await g_sign_in.GoogleSignIn.instance.initialize(
-          serverClientId: ApiConstants.googleDesktopClientId,
+          serverClientId: ApiConstants.googleServerClientId,
         );
         // I removed the signOut call as it causes crashes from google credential center for some weird reason
 
@@ -143,137 +143,146 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         throw AuthException('Google Sign In failed: ${e.message}');
       }
     } else {
-      // DESKTOP: Use local HTTP server loopback
-      final completer = Completer<LoginResponseModel>();
+      return _loginWithGoogleLoopback(deviceInfo);
+    }
+  }
 
-      final clientId = ApiConstants.googleDesktopClientId;
-      const redirectUri = ApiConstants.googleDesktopRedirectUri;
+  /// Uses the OAuth loopback redirect flow that the backend already accepts.
+  Future<LoginResponseModel> _loginWithGoogleLoopback(
+    DeviceInfoModel deviceInfo,
+  ) async {
+    final completer = Completer<LoginResponseModel>();
 
-      final Uri authUrl = Uri.parse(
-        '${ApiConstants.googleAuthUrl}'
-        '?client_id=$clientId'
-        '&redirect_uri=$redirectUri'
-        '&response_type=code'
-        '&scope=email%20profile',
-      );
+    final clientId = ApiConstants.googleDesktopClientId;
+    const redirectUri = ApiConstants.googleDesktopRedirectUri;
 
-      // Early error check: pre-flight the auth URL
-      try {
-        final checkResponse = await Dio().getUri<dynamic>(authUrl);
-        if (checkResponse.realUri.toString().contains('oauth/error')) {
-          return Future.error(
-            const AuthException('error while loging with google'),
-          );
-        }
-      } on DioException catch (e) {
-        if (e.response?.realUri.toString().contains('oauth/error') == true) {
-          return Future.error(
-            const AuthException('error while loging with google'),
-          );
-        }
-      } catch (_) {
-        // Ignored, proceed to normal flow if the check fails for some other reason
+    final Uri authUrl = Uri.parse(ApiConstants.googleAuthUrl).replace(
+      queryParameters: {
+        'client_id': clientId,
+        'redirect_uri': redirectUri,
+        'response_type': 'code',
+        'scope': 'email profile',
+      },
+    );
+
+    // Early error check: pre-flight the auth URL
+    try {
+      final checkResponse = await Dio().getUri<dynamic>(authUrl);
+      if (checkResponse.realUri.toString().contains('oauth/error')) {
+        return Future.error(
+          const AuthException('error while loging with google'),
+        );
       }
+    } on DioException catch (e) {
+      if (e.response?.realUri.toString().contains('oauth/error') == true) {
+        return Future.error(
+          const AuthException('error while loging with google'),
+        );
+      }
+    } catch (_) {
+      // Ignored, proceed to normal flow if the check fails for some other reason
+    }
 
-      HttpServer? localServer;
-      try {
-        localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 8081);
+    HttpServer? localServer;
+    try {
+      localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 8081);
 
-        localServer.listen((HttpRequest request) async {
-          final Uri uri = request.uri;
+      localServer.listen((HttpRequest request) async {
+        final Uri uri = request.uri;
 
-          if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
-            final authCode =
-                uri.queryParameters['token'] ?? uri.queryParameters['code'];
-            final error = uri.queryParameters['error'];
+        if (uri.path == '/oauth/callback' ||
+            uri.path == '/login/oauth2/code/google' ||
+            uri.path == '/') {
+          final authCode =
+              uri.queryParameters['token'] ?? uri.queryParameters['code'];
+          final error = uri.queryParameters['error'];
 
-            if (authCode != null) {
-              final String html = await buildAuthSuccessHtml();
+          if (authCode != null) {
+            final String html = await buildAuthSuccessHtml();
 
-              request.response
-                ..statusCode = 200
-                ..headers.contentType = ContentType.html
-                ..write(html);
+            request.response
+              ..statusCode = 200
+              ..headers.contentType = ContentType.html
+              ..write(html);
 
-              await request.response.close();
-              await localServer?.close(force: true);
+            await request.response.close();
+            await localServer?.close(force: true);
 
-              try {
-                final model = await exchangeCodeWithBackend(
-                  authCode,
-                  deviceInfo,
-                );
-                if (!completer.isCompleted) {
-                  completer.complete(model);
-                }
-              } catch (e) {
-                if (!completer.isCompleted) {
-                  completer.completeError(AuthException(e.toString()));
-                }
-              }
-            } else if (error != null) {
-              request.response
-                ..statusCode = 400
-                ..write('Error: $error');
-              await request.response.close();
-              await localServer?.close(force: true);
-
+            try {
+              final model = await exchangeCodeWithBackend(
+                authCode,
+                deviceInfo,
+              );
               if (!completer.isCompleted) {
-                completer.completeError(
-                  AuthException('Google Auth Error: $error'),
-                );
+                completer.complete(model);
               }
-            } else {
-              request.response
-                ..statusCode = 400
-                ..write('Missing auth code');
-              await request.response.close();
-              await localServer?.close(force: true);
-
+            } catch (e) {
               if (!completer.isCompleted) {
-                completer.completeError(
-                  const AuthException('No code returned from redirect'),
-                );
+                completer.completeError(AuthException(e.toString()));
               }
             }
-          }
-        });
-      } catch (e) {
-        if (!completer.isCompleted) {
-          completer.completeError(
-            AuthException('Could not start local server on port 3000: $e'),
-          );
-        }
-        return completer.future;
-      }
+          } else if (error != null) {
+            request.response
+              ..statusCode = 400
+              ..write('Error: $error');
+            await request.response.close();
+            await localServer?.close(force: true);
 
-      try {
-        final bool launched = await launchUrl(
-          authUrl,
-          mode: LaunchMode.externalApplication,
+            if (!completer.isCompleted) {
+              completer.completeError(
+                AuthException('Google Auth Error: $error'),
+              );
+            }
+          } else {
+            request.response
+              ..statusCode = 400
+              ..write('Missing auth code');
+            await request.response.close();
+            await localServer?.close(force: true);
+
+            if (!completer.isCompleted) {
+              completer.completeError(
+                const AuthException('No code returned from redirect'),
+              );
+            }
+          }
+        }
+      });
+    } catch (e) {
+      if (!completer.isCompleted) {
+        completer.completeError(
+          AuthException('Could not start local server on port 8081: $e'),
         );
+      }
+      return completer.future;
+    }
 
-        if (!launched) {
-          await localServer.close(force: true);
-          if (!completer.isCompleted) {
-            completer.completeError(
-              const AuthException(
-                'Could not launch browser for Google Sign In.',
-              ),
-            );
-          }
-        }
-      } catch (e) {
+    try {
+      final bool launched = await launchUrl(
+        authUrl,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
         await localServer.close(force: true);
         if (!completer.isCompleted) {
           completer.completeError(
-            AuthException('Failed to launch the browser: $e'),
+            const AuthException(
+              'Could not launch browser for Google Sign In.',
+            ),
           );
         }
       }
-
-      return completer.future;
+    } catch (e) {
+      await localServer.close(force: true);
+      if (!completer.isCompleted) {
+        completer.completeError(
+          AuthException('Failed to launch the browser: $e'),
+        );
+      }
     }
+
+    return completer.future;
   }
 
   @override
@@ -450,45 +459,72 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     String authCode,
     DeviceInfoModel deviceInfo,
   ) async {
-    try {
-      final OauthExchangeRequestDto dto = OauthExchangeRequestDto(
-        code: authCode,
-        deviceInfo: deviceInfo,
-      );
-      if (kDebugMode) {
-        debugPrint('=== OAUTH BACKEND PAYLOAD ===');
-        debugPrint(jsonEncode(dto.toApiJson()));
-        debugPrint('=============================');
-      }
+    final OauthExchangeRequestDto dto = OauthExchangeRequestDto(
+      code: authCode,
+      deviceInfo: deviceInfo,
+    );
 
-      final response = await _dioClient.post<dynamic>(
-        ApiConstants.googleTokenExchangeEndpoint,
-        data: dto.toApiJson(),
-      );
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        if (kDebugMode) {
+          debugPrint('=== OAUTH BACKEND PAYLOAD ===');
+          debugPrint(jsonEncode(dto.toApiJson()));
+          debugPrint('=============================');
+        }
 
-      if (kDebugMode) {
-        debugPrint('=== OAUTH BACKEND RESPONSE ===');
-        debugPrint('Status: ${response.statusCode}');
-        debugPrint(jsonEncode(response.data));
-        debugPrint('==============================');
-      }
+        final response = await _dioClient.post<dynamic>(
+          ApiConstants.googleTokenExchangeEndpoint,
+          data: dto.toApiJson(),
+        );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return _parseLoginResponse(response);
-      } else {
+        if (kDebugMode) {
+          debugPrint('=== OAUTH BACKEND RESPONSE ===');
+          debugPrint('Status: ${response.statusCode}');
+          debugPrint(jsonEncode(response.data));
+          debugPrint('==============================');
+        }
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          return _parseLoginResponse(response);
+        } else {
+          throw AuthException(
+            'Backend returned an error. Status Code: ${response.statusCode}',
+          );
+        }
+      } on DioException catch (e) {
+        if (_shouldRetryOAuthExchange(e, attempt)) {
+          await Future<void>.delayed(
+            Duration(milliseconds: 700 * (attempt + 1)),
+          );
+          continue;
+        }
+
+        throw ServerException(
+          _extractDioErrorMessage(e, fallback: 'Google Sign-In failed'),
+        );
+      } on AppException {
+        rethrow;
+      } catch (e) {
         throw AuthException(
-          'Backend returned an error. Status Code: ${response.statusCode}',
+          'An unexpected error occurred during Google Sign In: $e',
         );
       }
-    } on DioException catch (e) {
-      throw ServerException(
-        'A network error occurred during login: ${e.message}',
-      );
-    } catch (e) {
-      throw AuthException(
-        'An unexpected error occurred during Google Sign In: $e',
-      );
     }
+
+    throw const ServerException('Google Sign-In failed');
+  }
+
+  bool _shouldRetryOAuthExchange(DioException e, int attempt) {
+    if (attempt >= 2) return false;
+    if (e.response != null) return false;
+
+    final message = e.message ?? '';
+    return e.type == DioExceptionType.connectionError ||
+        e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.error is SocketException ||
+        message.contains('Failed host lookup');
   }
 
   LoginResponseModel _parseLoginResponse(Response<dynamic> response) {

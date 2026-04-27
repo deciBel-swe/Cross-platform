@@ -13,7 +13,6 @@ abstract class IFeedRepository {
 
   /// Fetches a page of tracks for the "Discover" feed (artist station).
   Future<Either<Failure, PaginatedFeed>> getDiscoverFeed({
-    required int artistId,
     required int page,
     required int size,
   });
