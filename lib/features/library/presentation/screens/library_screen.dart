@@ -98,10 +98,7 @@ class _LibraryTab extends ConsumerWidget {
           const _DesktopLibraryHeader(),
           const SizedBox(height: AppDimensions.paddingLg),
         ],
-        const _RecentlyPlayedLibraryRail(),
-        const SizedBox(height: AppDimensions.paddingXl),
-        const _ListeningHistoryPreview(),
-        const SizedBox(height: AppDimensions.paddingLg),
+
         _NavigationRow(
           title: 'Playlists',
           onTap: () {
@@ -129,6 +126,11 @@ class _LibraryTab extends ConsumerWidget {
           title: 'Your reposts',
           onTap: () => context.go(RoutePaths.libraryReposts),
         ),
+        const SizedBox(height: AppDimensions.paddingXl),
+        const _RecentlyPlayedLibraryRail(),
+        const SizedBox(height: AppDimensions.paddingXl),
+        const _ListeningHistoryPreview(),
+        const SizedBox(height: AppDimensions.paddingLg),
       ],
     );
   }
