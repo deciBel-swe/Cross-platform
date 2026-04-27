@@ -106,11 +106,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
 
           Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop
+                  ? AppDimensions.paddingLg
+                  : AppDimensions.paddingSm,
+            ),
+            child: const LikedTracksShortcut(),
+          ),
+
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const LikedTracksShortcut(),
                 const SizedBox(height: AppDimensions.paddingXl),
                 const RecentlyPlayedSection(),
                 const SizedBox(height: AppDimensions.paddingXl),
