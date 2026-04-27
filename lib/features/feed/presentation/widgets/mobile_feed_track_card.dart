@@ -1,7 +1,6 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -10,8 +9,8 @@ import '../../../../core/widgets/auto_scrolling_text.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
-import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 
 /// Reusable mobile feed track card matching the native-style post layout.
 class MobileFeedTrackCard extends StatelessWidget {
@@ -30,6 +29,7 @@ class MobileFeedTrackCard extends StatelessWidget {
     required this.isLiked,
     required this.isReposted,
     required this.commentCount,
+    required this.commentTrack,
     required this.gradientColors,
   });
 
@@ -46,6 +46,7 @@ class MobileFeedTrackCard extends StatelessWidget {
   final bool isLiked;
   final bool isReposted;
   final int commentCount;
+  final Track commentTrack;
   final List<Color> gradientColors;
 
   @override
@@ -77,6 +78,7 @@ class MobileFeedTrackCard extends StatelessWidget {
                   initialIsLiked: isLiked,
                   initialIsReposted: isReposted,
                   commentCount: commentCount,
+                  commentTrack: commentTrack,
                   onAddToPlaylist: onAddToPlaylist,
                   onMoreOptions: onMoreOptions,
                 ),
@@ -256,7 +258,7 @@ class _CardPlayButtonState extends State<_CardPlayButton> {
   }
 }
 
-class _MobileRightActions extends ConsumerStatefulWidget {
+class _MobileRightActions extends StatefulWidget {
   const _MobileRightActions({
     required this.trackId,
     required this.initialLikeCount,
@@ -264,6 +266,7 @@ class _MobileRightActions extends ConsumerStatefulWidget {
     required this.initialIsLiked,
     required this.initialIsReposted,
     required this.commentCount,
+    required this.commentTrack,
     this.onAddToPlaylist,
     this.onMoreOptions,
   });
@@ -274,15 +277,15 @@ class _MobileRightActions extends ConsumerStatefulWidget {
   final bool initialIsLiked;
   final bool initialIsReposted;
   final int commentCount;
+  final Track commentTrack;
   final VoidCallback? onAddToPlaylist;
   final VoidCallback? onMoreOptions;
 
   @override
-  ConsumerState<_MobileRightActions> createState() =>
-      _MobileRightActionsState();
+  State<_MobileRightActions> createState() => _MobileRightActionsState();
 }
 
-class _MobileRightActionsState extends ConsumerState<_MobileRightActions> {
+class _MobileRightActionsState extends State<_MobileRightActions> {
   late int _currentCommentCount;
   bool _isCommentHovered = false;
   bool _isAddHovered = false;
@@ -342,15 +345,11 @@ class _MobileRightActionsState extends ConsumerState<_MobileRightActions> {
           button: true,
           label: 'View $_currentCommentCount comments',
           child: GestureDetector(
-            onTap: () async {
-              final data = await ref.read(
-                trackPreviewProvider(widget.trackId).future,
-              );
-              if (!context.mounted) return;
+            onTap: () {
               TrackCommentsBottomSheet.show(
                 context,
                 trackId: widget.trackId,
-                track: data.track,
+                track: widget.commentTrack,
               );
             },
             child: MouseRegion(

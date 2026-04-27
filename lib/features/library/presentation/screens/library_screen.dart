@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../library_profile/domain/entities/user_profile.dart';
 import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../upgrade/presentation/widgets/get_pro_button.dart';
@@ -13,7 +14,7 @@ class LibraryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = _isDesktopLayout(context);
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     void goToProfile() {
       context.push(RoutePaths.profile);
@@ -30,7 +31,7 @@ class LibraryScreen extends ConsumerWidget {
           : AppBar(
               backgroundColor: AppColors.background,
               scrolledUnderElevation: 0,
-              title:  Semantics(
+              title: Semantics(
                 header: true,
                 child: const Text(
                   'Library',
@@ -59,14 +60,6 @@ class LibraryScreen extends ConsumerWidget {
       body: const _LibraryTab(),
     );
   }
-}
-
-bool _isDesktopLayout(BuildContext context) {
-  final mediaQuery = MediaQuery.maybeOf(context);
-  if (mediaQuery == null) {
-    return false;
-  }
-  return mediaQuery.size.width >= 801;
 }
 
 class _LibraryTab extends ConsumerWidget {

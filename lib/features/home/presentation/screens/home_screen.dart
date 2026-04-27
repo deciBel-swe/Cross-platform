@@ -9,6 +9,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/auto_scrolling_text.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../discovery/domain/entities/discovery_track.dart';
@@ -35,7 +36,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    final isDesktop = _isDesktopLayout(context);
+    final isDesktop = ResponsiveUtils.isDesktop(context);
     final stationPageSize = isDesktop ? 12 : 8;
     final likesStationAsync = ref.watch(likesStationProvider);
     final artistStationAsync = ref.watch(
@@ -67,6 +68,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onPressed: () => context.go(RoutePaths.search),
                 ),
                 const GetProButton(),
+                IconButton(
+                  icon: const Icon(Icons.inbox),
+                  onPressed: () {
+                    context.push(RoutePaths.messages);
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.cloud_upload),
                   onPressed: () => context.push(RoutePaths.upload),
@@ -232,7 +239,7 @@ class _StationRailCard extends StatelessWidget {
   }
 }
 
-class _TrackRailSection extends StatelessWidget {
+class _TrackRailSection extends ConsumerWidget {
   const _TrackRailSection({
     required this.asyncTracks,
     required this.emptyMessage,
@@ -242,12 +249,14 @@ class _TrackRailSection extends StatelessWidget {
   final String emptyMessage;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return asyncTracks.when(
       data: (PaginatedDiscoveryTracks response) {
         if (response.content.isEmpty) {
           return _SectionMessageCard(message: emptyMessage);
         }
+
+        final queue = discoveryTracksToLibraryTracks(response.content);
 
         return SizedBox(
           height: 286,
@@ -258,6 +267,7 @@ class _TrackRailSection extends StatelessWidget {
                 const SizedBox(width: AppDimensions.paddingMd),
             itemBuilder: (BuildContext context, int index) {
               final track = response.content[index];
+              final playableTrack = queue[index];
 
               return TrackCard(
                 title: track.title,
@@ -267,7 +277,15 @@ class _TrackRailSection extends StatelessWidget {
                 tagLabel: track.genre,
                 supportingText:
                     '${_formatCount(track.playCount)} plays - ${_formatCount(track.likeCount)} likes',
-                onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+                onTap: () {
+                  ref
+                      .read(trackAudioProvider.notifier)
+                      .playTrack(
+                        track: playableTrack,
+                        queue: queue,
+                        autoPlay: true,
+                      );
+                },
               );
             },
           ),
@@ -854,14 +872,6 @@ class _SectionMessageCard extends StatelessWidget {
       ),
     );
   }
-}
-
-bool _isDesktopLayout(BuildContext context) {
-  final mediaQuery = MediaQuery.maybeOf(context);
-  if (mediaQuery == null) {
-    return false;
-  }
-  return mediaQuery.size.width >= 801;
 }
 
 List<Color> _colorsForGenre(String? genre) {

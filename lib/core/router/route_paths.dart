@@ -17,6 +17,13 @@ class RoutePaths {
     'profile-image',
     'resend-verification',
   };
+  // ==========================================
+  // MESSAGING ROUTES
+  // ==========================================
+
+  static const String chat = '/chat';
+  static const String messages = '/messages';
+  static const String newMessage = '/messages/new';
 
   static const String splash = '/';
   static const String start = '/start';

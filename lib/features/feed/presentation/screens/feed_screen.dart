@@ -12,6 +12,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../library/domain/entities/artist.dart';
@@ -76,13 +77,22 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   void _onScroll() {
     if (!mounted) return;
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 300) {
-      if (_selectedTab == FeedTab.following) {
-        _feedNotifier.loadMore();
-      } else {
-        _discoverFeedNotifier.loadMore();
-      }
+
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 300) {
+      _loadMoreSelectedFeed();
+    }
+  }
+
+  void _loadMoreSelectedFeed() {
+    if (_selectedTab == FeedTab.following) {
+      _feedNotifier.loadMore();
+    } else {
+      _discoverFeedNotifier.loadMore();
     }
   }
 
@@ -181,7 +191,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = _isDesktopLayout(context);
+    final isDesktop = ResponsiveUtils.isDesktop(context);
     _syncMiniPlayerSuppression(!isDesktop && _selectedTab == FeedTab.discover);
     final authState = ref.watch(authStateProvider).valueOrNull;
     final currentUserId = authState is AuthAuthenticated
@@ -260,7 +270,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     },
                   );
                 }
-
                 return RefreshIndicator(
                   onRefresh: () async {
                     if (_selectedTab == FeedTab.following) {
@@ -269,125 +278,122 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       await _discoverFeedNotifier.refresh();
                     }
                   },
-                  child: ListView.builder(
+                  child: Scrollbar(
                     controller: _scrollController,
-                    padding: EdgeInsets.fromLTRB(
-                      isDesktop
-                          ? AppDimensions.paddingLg
-                          : AppDimensions.paddingMd,
-                      isDesktop ? 0 : AppDimensions.paddingMd,
-                      isDesktop
-                          ? AppDimensions.paddingLg
-                          : AppDimensions.paddingMd,
-                      AppDimensions.paddingLg,
-                    ),
-                    itemCount: tracks.length + 1,
-                    itemBuilder: (context, index) {
-                      final trackIndex = index;
-
-                      // Footer — load-more indicator or sentinel
-                      if (trackIndex == tracks.length) {
-                        if (feedState.isLoadingMore) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: AppDimensions.paddingMd,
-                            ),
-                            child: Center(child: CircularProgressIndicator()),
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      primary: false,
+                      padding: EdgeInsets.fromLTRB(
+                        isDesktop
+                            ? AppDimensions.paddingLg
+                            : AppDimensions.paddingMd,
+                        isDesktop ? 0 : AppDimensions.paddingMd,
+                        isDesktop
+                            ? AppDimensions.paddingLg
+                            : AppDimensions.paddingMd,
+                        AppDimensions.paddingLg,
+                      ),
+                      itemCount: tracks.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == tracks.length) {
+                          return _FeedPaginationFooter(
+                            isLoadingMore: feedState.isLoadingMore,
                           );
                         }
-                        return const SizedBox.shrink();
-                      }
 
-                      final track = tracks[trackIndex];
-                      final playableTrack = playableQueue[trackIndex];
-                      final isOwnTrack =
-                          currentUserId != null &&
-                          currentUserId == track.artistId;
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppDimensions.paddingSm,
-                        ),
-                        child: FeedItem(
-                          trackId: track.id,
-                          userName: track.feedActorName,
-                          userAvatarUrl: track.isARepost
-                              ? track.repostedByAvatarUrl ??
-                                    track.artistAvatarUrl
-                              : track.artistAvatarUrl,
-                          action: track.feedAction,
-                          trackTitle: track.title,
-                          trackArtist: track.displayArtistName,
-                          coverUrl: track.coverUrl,
-                          timeAgo: _timeAgo(track.feedTimestamp),
-                          genre: track.genre,
-                          likeCount: track.likeCount,
-                          repostCount: track.repostCount,
-                          isLiked: track.isLiked,
-                          isReposted: track.isARepost,
-                          plays: _formatCount(track.playCount),
-                          commentCount: track.commentCount,
-                          duration: _formatDuration(track.duration),
-                          waveformPeaks: _buildPeaks(seed: track.id),
-                          gradientColors: _colorsForTrack(track.id),
-                          onPlay: () {
-                            if (!mounted) return;
-                            _audioNotifier.playTrack(
-                              track: playableTrack,
-                              queue: playableQueue,
-                            );
-                          },
-                          onAddToPlaylist: () {
-                            // The add-to-playlist route expects the shared
-                            // library Track entity, so keep conversion here.
-                            context.push(
-                              RoutePaths.addToPlaylist,
-                              extra: playableTrack,
-                            );
-                          },
-                          onAddToQueue: () {
-                            if (!mounted) return;
-                            _audioNotifier.addToQueue(playableTrack);
-                          },
-                          onEditTrack: isOwnTrack
-                              ? () =>
-                                    context.push(RoutePaths.trackEdit(track.id))
-                              : null,
-                          onGoToArtist: () {
-                            context.push(
-                              RoutePaths.publicProfile(track.artistUsername),
-                            );
-                          },
-                          onGoToAlbum: () {
-                            _showFeedSnackBar(
-                              'Album pages are not available yet',
-                            );
-                          },
-                          onShare: () {
-                            if (!mounted) return;
-                            unawaited(
-                              _copyTrackLink(
-                                track,
-                                message: 'Track link copied to share',
-                              ),
-                            );
-                          },
-                          onCopyLink: () {
-                            if (!mounted) return;
-                            unawaited(_copyTrackLink(track));
-                          },
-                          onDownload: () {
-                            if (!mounted) return;
-                            unawaited(_downloadTrack(playableTrack));
-                          },
-                          onMoreOptions: () {
-                            if (!mounted) return;
-                            unawaited(
-                              TrackDetails.show(context, playableTrack, ref),
-                            );
-                          },
-                        ),
-                      );
-                    },
+                        final track = tracks[index];
+                        final playableTrack = playableQueue[index];
+                        final isOwnTrack =
+                            currentUserId != null &&
+                            currentUserId == track.artistId;
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppDimensions.paddingSm,
+                          ),
+                          child: FeedItem(
+                            trackId: track.id,
+                            userName: track.feedActorName,
+                            userAvatarUrl: track.isARepost
+                                ? track.repostedByAvatarUrl ??
+                                      track.artistAvatarUrl
+                                : track.artistAvatarUrl,
+                            action: track.feedAction,
+                            trackTitle: track.title,
+                            trackArtist: track.displayArtistName,
+                            coverUrl: track.coverUrl,
+                            timeAgo: _timeAgo(track.feedTimestamp),
+                            genre: track.genre,
+                            likeCount: track.likeCount,
+                            repostCount: track.repostCount,
+                            isLiked: track.isLiked,
+                            isReposted: track.isARepost,
+                            plays: _formatCount(track.playCount),
+                            commentCount: track.commentCount,
+                            duration: _formatDuration(track.duration),
+                            waveformPeaks: _buildPeaks(seed: track.id),
+                            commentTrack: playableTrack,
+                            gradientColors: _colorsForTrack(track.id),
+                            onPlay: () {
+                              if (!mounted) return;
+                              _audioNotifier.playTrack(
+                                track: playableTrack,
+                                queue: playableQueue,
+                              );
+                            },
+                            onAddToPlaylist: () {
+                              // The add-to-playlist route expects the shared
+                              // library Track entity, so keep conversion here.
+                              context.push(
+                                RoutePaths.addToPlaylist,
+                                extra: playableTrack,
+                              );
+                            },
+                            onAddToQueue: () {
+                              if (!mounted) return;
+                              _audioNotifier.addToQueue(playableTrack);
+                            },
+                            onEditTrack: isOwnTrack
+                                ? () => context.push(
+                                    RoutePaths.trackEdit(track.id),
+                                  )
+                                : null,
+                            onGoToArtist: () {
+                              context.push(
+                                RoutePaths.publicProfile(track.artistUsername),
+                              );
+                            },
+                            onGoToAlbum: () {
+                              _showFeedSnackBar(
+                                'Album pages are not available yet',
+                              );
+                            },
+                            onShare: () {
+                              if (!mounted) return;
+                              unawaited(
+                                _copyTrackLink(
+                                  track,
+                                  message: 'Track link copied to share',
+                                ),
+                              );
+                            },
+                            onCopyLink: () {
+                              if (!mounted) return;
+                              unawaited(_copyTrackLink(track));
+                            },
+                            onDownload: () {
+                              if (!mounted) return;
+                              unawaited(_downloadTrack(playableTrack));
+                            },
+                            onMoreOptions: () {
+                              if (!mounted) return;
+                              unawaited(
+                                TrackDetails.show(context, playableTrack, ref),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 );
               },
@@ -568,12 +574,12 @@ class _MobileDiscoverFeedPagerState
       scrollDirection: Axis.vertical,
       itemCount: widget.tracks.length + (widget.isLoadingMore ? 1 : 0),
       onPageChanged: (index) {
-        if (index < widget.playableQueue.length) {
+        if (index < widget.tracks.length) {
           _currentIndex = index;
           _playIndex(index);
         }
 
-        if (index >= widget.tracks.length - 3) {
+        if (index >= widget.tracks.length - 3 && !widget.isLoadingMore) {
           widget.onLoadMore();
         }
       },
@@ -599,11 +605,6 @@ class _MobileDiscoverFeedPagerState
       },
     );
   }
-}
-
-bool _isDesktopLayout(BuildContext context) {
-  final mq = MediaQuery.maybeOf(context);
-  return mq != null && mq.size.width >= 801;
 }
 
 String _formatCount(int n) {
@@ -744,6 +745,24 @@ class _ErrorView extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _FeedPaginationFooter extends StatelessWidget {
+  const _FeedPaginationFooter({required this.isLoadingMore});
+
+  final bool isLoadingMore;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoadingMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppDimensions.paddingMd),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }
 

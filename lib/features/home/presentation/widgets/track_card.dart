@@ -48,53 +48,60 @@ class _TrackCardState extends State<TrackCard> {
         widget.gradientColors ??
         [AppColors.surfaceLight, AppColors.surfaceContainer];
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: SizedBox(
-          width: AppDimensions.trackCardSize,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ---- Artwork ----
-              _Artwork(
-                isHovered: _isHovered,
-                gradientColors: colors,
-                imageUrl: widget.imageUrl,
-                tagLabel: widget.tagLabel,
-              ),
-              const SizedBox(height: AppDimensions.paddingSm),
-              // ---- Title ----
-              Text(
-                widget.title,
-                style: AppTextStyles.cardTitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              // ---- Artist ----
-              Text(
-                widget.artist,
-                style: AppTextStyles.cardSubtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (widget.supportingText != null &&
-                  widget.supportingText!.trim().isNotEmpty) ...[
-                const SizedBox(height: 4),
+    return Semantics(
+      button: widget.onTap != null,
+      enabled: widget.onTap != null,
+      label: 'Play ${widget.title} by ${widget.artist}',
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: widget.onTap != null
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: SizedBox(
+            width: AppDimensions.trackCardSize,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ---- Artwork ----
+                _Artwork(
+                  isHovered: _isHovered,
+                  gradientColors: colors,
+                  imageUrl: widget.imageUrl,
+                  tagLabel: widget.tagLabel,
+                ),
+                const SizedBox(height: AppDimensions.paddingSm),
+                // ---- Title ----
                 Text(
-                  widget.supportingText!,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textHint,
-                  ),
+                  widget.title,
+                  style: AppTextStyles.cardTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 2),
+                // ---- Artist ----
+                Text(
+                  widget.artist,
+                  style: AppTextStyles.cardSubtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (widget.supportingText != null &&
+                    widget.supportingText!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.supportingText!,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textHint,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

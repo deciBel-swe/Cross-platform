@@ -76,6 +76,7 @@ class MockTrackSocialRepository implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   }) async {
     await Future<void>.delayed(_mockDelay);
     return PaginatedTracks(
@@ -93,6 +94,7 @@ class MockTrackSocialRepository implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   }) async {
     await Future<void>.delayed(_mockDelay);
     return PaginatedTracks(

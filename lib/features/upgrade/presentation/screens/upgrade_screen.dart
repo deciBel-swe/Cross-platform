@@ -10,6 +10,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../library_profile/presentation/providers/public_profile_provider.dart';
 import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../domain/entities/subscription_status.dart';
@@ -150,7 +151,7 @@ class _UpgradeScreenState extends ConsumerState<UpgradeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = _isDesktopLayout(context);
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     ref.listen<AsyncValue<UpgradeViewState>>(upgradeNotifierProvider, (
       previous,
@@ -261,14 +262,6 @@ class _UpgradeScreenState extends ConsumerState<UpgradeScreen>
       ),
     );
   }
-}
-
-bool _isDesktopLayout(BuildContext context) {
-  final mediaQuery = MediaQuery.maybeOf(context);
-  if (mediaQuery == null) {
-    return false;
-  }
-  return mediaQuery.size.width >= 801;
 }
 
 /// Hero banner with gradient and tagline.

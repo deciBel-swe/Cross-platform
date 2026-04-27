@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../library/data/models/paginated_tracks_model.dart';
@@ -46,11 +47,19 @@ class TrackSocialRemoteDatasource {
     int page = 0,
     int size = 10,
     int? userId,
+    String? username,
   }) async {
+    final publicUsername = _normalizeUsername(username);
     final meEndpoints = <String>[
-      if (userId == null && _cachedLikedMeEndpoint != null)
+      if (publicUsername != null)
+        ApiConstants.likedTracksByUsername(publicUsername),
+      if (publicUsername == null &&
+          userId == null &&
+          _cachedLikedMeEndpoint != null)
         _cachedLikedMeEndpoint!,
-      if (userId == null) '/users/me/liked-tracks',
+      if (publicUsername == null && userId == null) '/users/me/liked-tracks',
+      if (publicUsername == null && userId != null)
+        '/users/$userId/liked-tracks',
     ];
 
     final firstPass = _uniqueEndpoints(meEndpoints);
@@ -60,7 +69,9 @@ class TrackSocialRemoteDatasource {
         page: page,
         size: size,
         onSuccess: (endpoint) {
-          if (userId == null && endpoint.startsWith('/users/me/')) {
+          if (publicUsername == null &&
+              userId == null &&
+              endpoint.startsWith('/users/me/')) {
             _cachedLikedMeEndpoint = endpoint;
           }
         },
@@ -72,7 +83,10 @@ class TrackSocialRemoteDatasource {
 
       final resolvedUserId = userId ?? await _resolveCurrentUserId();
       final fallbackEndpoints = <String>[
-        if (resolvedUserId != null) '/users/$resolvedUserId/liked-tracks',
+        if (publicUsername != null)
+          ApiConstants.likedTracksByUsername(publicUsername),
+        if (publicUsername == null && resolvedUserId != null)
+          '/users/$resolvedUserId/liked-tracks',
       ];
 
       return _fetchTrackCollection(
@@ -87,11 +101,20 @@ class TrackSocialRemoteDatasource {
     int page = 0,
     int size = 10,
     int? userId,
+    String? username,
   }) async {
+    final publicUsername = _normalizeUsername(username);
     final meEndpoints = <String>[
-      if (userId == null && _cachedRepostedMeEndpoint != null)
+      if (publicUsername != null)
+        ApiConstants.repostedTracksByUsername(publicUsername),
+      if (publicUsername == null &&
+          userId == null &&
+          _cachedRepostedMeEndpoint != null)
         _cachedRepostedMeEndpoint!,
-      if (userId == null) '/users/me/repost',
+      if (publicUsername == null && userId == null) '/users/me/repost',
+      if (publicUsername == null && userId != null)
+        '/users/$userId/reposted-tracks',
+      if (publicUsername == null && userId != null) '/users/$userId/repost',
     ];
 
     final firstPass = _uniqueEndpoints(meEndpoints);
@@ -101,7 +124,9 @@ class TrackSocialRemoteDatasource {
         page: page,
         size: size,
         onSuccess: (endpoint) {
-          if (userId == null && endpoint.startsWith('/users/me/')) {
+          if (publicUsername == null &&
+              userId == null &&
+              endpoint.startsWith('/users/me/')) {
             _cachedRepostedMeEndpoint = endpoint;
           }
         },
@@ -113,7 +138,12 @@ class TrackSocialRemoteDatasource {
 
       final resolvedUserId = userId ?? await _resolveCurrentUserId();
       final fallbackEndpoints = <String>[
-        if (resolvedUserId != null) '/users/$resolvedUserId/repost',
+        if (publicUsername != null)
+          ApiConstants.repostedTracksByUsername(publicUsername),
+        if (publicUsername == null && resolvedUserId != null)
+          '/users/$resolvedUserId/reposted-tracks',
+        if (publicUsername == null && resolvedUserId != null)
+          '/users/$resolvedUserId/repost',
       ];
 
       return _fetchTrackCollection(
@@ -165,6 +195,14 @@ class TrackSocialRemoteDatasource {
     }
 
     throw const ServerException('No track collection endpoint succeeded.');
+  }
+
+  String? _normalizeUsername(String? username) {
+    final trimmed = username?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
   }
 
   List<String> _uniqueEndpoints(List<String> endpoints) {

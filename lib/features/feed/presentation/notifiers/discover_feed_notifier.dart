@@ -16,11 +16,11 @@ class DiscoverFeedNotifier extends AsyncNotifier<FeedState> {
   Future<void> loadMore() async {
     final current = state.valueOrNull;
     if (current == null) return;
-    if (current.isLast || current.isLoadingMore) return;
+    if (current.isLoadingMore) return;
 
     state = AsyncData(current.copyWith(isLoadingMore: true));
 
-    final nextPage = current.currentPage + 1;
+    final nextPage = current.isLast ? 0 : current.currentPage + 1;
     try {
       final next = await _fetchPage(nextPage, existing: current.tracks);
       state = AsyncData(next);
@@ -37,10 +37,7 @@ class DiscoverFeedNotifier extends AsyncNotifier<FeedState> {
   Future<FeedState> _fetchPage(int page, {List<dynamic>? existing}) async {
     final repo = ref.read(feedRepositoryProvider);
 
-    final result = await repo.getDiscoverFeed(
-      page: page,
-      size: _pageSize,
-    );
+    final result = await repo.getDiscoverFeed(page: page, size: _pageSize);
 
     return result.fold(
       (failure) {

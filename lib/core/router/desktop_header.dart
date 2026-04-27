@@ -46,6 +46,15 @@ class DesktopHeader extends StatelessWidget {
             onPressed: () {},
           ),
 
+          const SizedBox(width: AppDimensions.paddingXs),
+
+          // ---- Messages ----
+          _HeaderIconButton(
+            icon: Icons.mail_outline,
+            tooltip: 'Messages',
+            onPressed: () => context.go(RoutePaths.messages),
+          ),
+
           const SizedBox(width: AppDimensions.paddingSm),
 
           // ---- User avatar ----
@@ -87,7 +96,9 @@ class _DesktopSearchFieldState extends State<_DesktopSearchField> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final routeQuery = GoRouterState.of(context).uri.queryParameters['q']?.trim();
+    final routeQuery = GoRouterState.of(
+      context,
+    ).uri.queryParameters['q']?.trim();
     if (_lastSyncedQuery == routeQuery) {
       return;
     }
@@ -188,26 +199,30 @@ class _HeaderIconButtonState extends State<_HeaderIconButton> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: Tooltip(
-        message: widget.tooltip,
-        child: InkWell(
-          onTap: widget.onPressed,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: _isHovered ? AppColors.surfaceLight : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            ),
-            child: Icon(
-              widget.icon,
-              size: 22,
-              color: _isHovered ? Colors.white : AppColors.textSecondary,
+    return Semantics(
+      button: true,
+      label: widget.tooltip,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Tooltip(
+          message: widget.tooltip,
+          child: InkWell(
+            onTap: widget.onPressed,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: _isHovered ? AppColors.surfaceLight : Colors.transparent,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              ),
+              child: Icon(
+                widget.icon,
+                size: 22,
+                color: _isHovered ? Colors.white : AppColors.textSecondary,
+              ),
             ),
           ),
         ),

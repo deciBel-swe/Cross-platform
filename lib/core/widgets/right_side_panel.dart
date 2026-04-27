@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../utils/responsive_utils.dart';
 
 Future<T?> showRightSidePanel<T>({
   required BuildContext context,
@@ -20,11 +21,7 @@ Future<T?> showRightSidePanel<T>({
         child: SafeArea(
           child: Material(
             color: Colors.transparent,
-            child: SizedBox(
-              width: width,
-              height: size.height,
-              child: child,
-            ),
+            child: SizedBox(width: width, height: size.height, child: child),
           ),
         ),
       );
@@ -47,8 +44,7 @@ Future<T?> showRightSidePanel<T>({
 }
 
 bool isDesktopPanelLayout(BuildContext context) {
-  final mediaQuery = MediaQuery.maybeOf(context);
-  return mediaQuery != null && mediaQuery.size.width >= 801;
+  return ResponsiveUtils.isDesktop(context);
 }
 
 BoxDecoration rightSidePanelDecoration() {

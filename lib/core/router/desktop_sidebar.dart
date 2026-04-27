@@ -62,6 +62,13 @@ class DesktopSidebar extends StatelessWidget {
             isSelected: currentIndex == 3,
             onTap: () => onTap(3),
           ),
+          _SidebarNavItem(
+            icon: Icons.mail_outline,
+            activeIcon: Icons.mail,
+            label: 'Messages',
+            isSelected: currentIndex == 6,
+            onTap: () => onTap(6),
+          ),
 
           const Divider(
             color: AppColors.divider,
@@ -156,39 +163,46 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
         ? Colors.white
         : AppColors.textSecondary;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          height: AppDimensions.sidebarItemHeight,
-          margin: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingSm,
-            vertical: 2,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingSm,
-          ),
-          decoration: BoxDecoration(
-            color: isHighlighted ? AppColors.surfaceLight : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                widget.isSelected ? widget.activeIcon : widget.icon,
-                color: iconColor,
-                size: 22,
-              ),
-              const SizedBox(width: AppDimensions.paddingSm),
-              Text(
-                widget.label,
-                style: AppTextStyles.sidebarItem.copyWith(color: textColor),
-              ),
-            ],
+    return Semantics(
+      button: true,
+      selected: widget.isSelected,
+      label: 'Navigate to ${widget.label}',
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            height: AppDimensions.sidebarItemHeight,
+            margin: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingSm,
+              vertical: 2,
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingSm,
+            ),
+            decoration: BoxDecoration(
+              color: isHighlighted
+                  ? AppColors.surfaceLight
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  widget.isSelected ? widget.activeIcon : widget.icon,
+                  color: iconColor,
+                  size: 22,
+                ),
+                const SizedBox(width: AppDimensions.paddingSm),
+                Text(
+                  widget.label,
+                  style: AppTextStyles.sidebarItem.copyWith(color: textColor),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -212,45 +226,50 @@ class _SidebarUpgradeItemState extends State<_SidebarUpgradeItem> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          margin: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingSm,
-          ),
-          padding: const EdgeInsets.all(AppDimensions.paddingSm),
-          decoration: BoxDecoration(
-            gradient: (widget.isSelected || _isHovered)
-                ? const LinearGradient(
+    return Semantics(
+      button: true,
+      selected: widget.isSelected,
+      label: 'Navigate to Upgrade',
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            margin: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingSm,
+            ),
+            padding: const EdgeInsets.all(AppDimensions.paddingSm),
+            decoration: BoxDecoration(
+              gradient: (widget.isSelected || _isHovered)
+                  ? const LinearGradient(
                     colors: [AppColors.primaryDark, AppColors.primary],
                   )
-                : null,
-            color: (widget.isSelected || _isHovered)
-                ? null
-                : AppColors.surfaceLight,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          ),
-          child: Row(
-            children: [
-              Image.asset(
-                'assets/icon/white_app_icon_trans.png',
-                width: 22,
-                height: 22,
-              ),
-              const SizedBox(width: AppDimensions.paddingSm),
-              Text(
-                'Upgrade',
-                style: AppTextStyles.sidebarItem.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                  : null,
+              color: (widget.isSelected || _isHovered)
+                  ? null
+                  : AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            ),
+            child: Row(
+              children: [
+                Image.asset(
+                  'assets/icon/white_app_icon_trans.png',
+                  width: 22,
+                  height: 22,
                 ),
-              ),
-            ],
+                const SizedBox(width: AppDimensions.paddingSm),
+                Text(
+                  'Upgrade',
+                  style: AppTextStyles.sidebarItem.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

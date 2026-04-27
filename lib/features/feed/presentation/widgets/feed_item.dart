@@ -7,14 +7,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/auto_scrolling_text.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
 import '../../../library/presentation/widgets/track_more_options_menu.dart';
 import '../../../library_profile/presentation/providers/track_peaks_provider.dart';
-import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
 import 'mobile_feed_track_card.dart';
 
@@ -37,6 +38,7 @@ class FeedItem extends StatelessWidget {
     required this.commentCount,
     required this.duration,
     required this.waveformPeaks,
+    required this.commentTrack,
     this.onPlay,
     this.onAddToPlaylist,
     this.onAddToQueue,
@@ -68,6 +70,7 @@ class FeedItem extends StatelessWidget {
   final int commentCount;
   final String duration;
   final List<double> waveformPeaks;
+  final Track commentTrack;
   final VoidCallback? onPlay;
   final VoidCallback? onAddToPlaylist;
   final VoidCallback? onAddToQueue;
@@ -88,7 +91,7 @@ class FeedItem extends StatelessWidget {
     final colors =
         gradientColors ??
         const [AppColors.surfaceLight, AppColors.surfaceContainer];
-    final isDesktop = _isDesktopLayout(context);
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     if (!isDesktop) {
       return _MobileFeedItem(
@@ -104,6 +107,7 @@ class FeedItem extends StatelessWidget {
         isLiked: isLiked,
         isReposted: isReposted,
         commentCount: commentCount,
+        commentTrack: commentTrack,
         duration: duration,
         onPlay: onPlay,
         onAddToPlaylist: onAddToPlaylist,
@@ -132,7 +136,10 @@ class FeedItem extends StatelessWidget {
                   child: RichText(
                     text: TextSpan(
                       children: [
-                        TextSpan(text: userName, style: AppTextStyles.cardTitle),
+                        TextSpan(
+                          text: userName,
+                          style: AppTextStyles.cardTitle,
+                        ),
                         TextSpan(
                           text: ' $action $timeAgo',
                           style: AppTextStyles.bodyMedium.copyWith(
@@ -204,6 +211,7 @@ class FeedItem extends StatelessWidget {
                         initialIsLiked: isLiked,
                         initialIsReposted: isReposted,
                         commentCount: commentCount,
+                        commentTrack: commentTrack,
                         plays: plays,
                         onAddToPlaylist: onAddToPlaylist,
                         onAddToQueue: onAddToQueue,
@@ -227,14 +235,6 @@ class FeedItem extends StatelessWidget {
   }
 }
 
-bool _isDesktopLayout(BuildContext context) {
-  final mediaQuery = MediaQuery.maybeOf(context);
-  if (mediaQuery == null) {
-    return false;
-  }
-  return mediaQuery.size.width >= 801;
-}
-
 class _MobileFeedItem extends StatelessWidget {
   const _MobileFeedItem({
     required this.trackId,
@@ -249,6 +249,7 @@ class _MobileFeedItem extends StatelessWidget {
     required this.isLiked,
     required this.isReposted,
     required this.commentCount,
+    required this.commentTrack,
     required this.duration,
     this.onPlay,
     this.onAddToPlaylist,
@@ -269,6 +270,7 @@ class _MobileFeedItem extends StatelessWidget {
   final bool isLiked;
   final bool isReposted;
   final int commentCount;
+  final Track commentTrack;
   final String duration;
   final VoidCallback? onPlay;
   final VoidCallback? onAddToPlaylist;
@@ -321,6 +323,7 @@ class _MobileFeedItem extends StatelessWidget {
               isLiked: isLiked,
               isReposted: isReposted,
               commentCount: commentCount,
+              commentTrack: commentTrack,
               gradientColors: gradientColors,
             ),
           ],
@@ -331,11 +334,7 @@ class _MobileFeedItem extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({
-    required this.colors,
-    required this.userName,
-    this.imageUrl,
-  });
+  const _Avatar({required this.colors, required this.userName, this.imageUrl});
 
   final List<Color> colors;
   final String userName;
@@ -560,7 +559,7 @@ class _PlayButtonState extends State<_PlayButton> {
                         color: AppColors.primary.withValues(alpha: 0.4),
                         blurRadius: 12,
                         spreadRadius: 2,
-                      )
+                      ),
                     ]
                   : [],
             ),
@@ -679,6 +678,7 @@ class _DesktopFeedActions extends ConsumerStatefulWidget {
     required this.initialIsLiked,
     required this.initialIsReposted,
     required this.commentCount,
+    required this.commentTrack,
     required this.plays,
     this.onAddToPlaylist,
     this.onAddToQueue,
@@ -697,6 +697,7 @@ class _DesktopFeedActions extends ConsumerStatefulWidget {
   final bool initialIsLiked;
   final bool initialIsReposted;
   final int commentCount;
+  final Track commentTrack;
   final String plays;
   final VoidCallback? onAddToPlaylist;
   final VoidCallback? onAddToQueue;
@@ -709,7 +710,8 @@ class _DesktopFeedActions extends ConsumerStatefulWidget {
   final VoidCallback? onDeleteTrack;
 
   @override
-  ConsumerState<_DesktopFeedActions> createState() => _DesktopFeedActionsState();
+  ConsumerState<_DesktopFeedActions> createState() =>
+      _DesktopFeedActionsState();
 }
 
 class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
@@ -778,15 +780,10 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
           label: 'View $_currentCommentCount comments',
           child: GestureDetector(
             onTap: () async {
-              final data = await ref.read(
-                trackPreviewProvider(widget.trackId).future,
-              );
-              if (!context.mounted) return;
-
               await TrackCommentsBottomSheet.show(
                 context,
                 trackId: widget.trackId,
-                track: data.track,
+                track: widget.commentTrack,
               );
             },
             behavior: HitTestBehavior.opaque,

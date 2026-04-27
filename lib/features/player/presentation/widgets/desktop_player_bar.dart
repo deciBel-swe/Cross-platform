@@ -44,18 +44,25 @@ class DesktopPlayerBar extends ConsumerWidget {
         children: [
           Expanded(
             flex: 3,
-            child: GestureDetector(
-              onTap: track != null
-                  ? () => context.push(RoutePaths.trackPreview(track.id))
-                  : null,
-              behavior: HitTestBehavior.opaque,
-              child: MouseRegion(
-                cursor: track != null
-                    ? SystemMouseCursors.click
-                    : SystemMouseCursors.basic,
-                child: _TrackInfo(
-                  track: track,
-                  isPrepared: audioState.isPrepared,
+            child: Semantics(
+              button: track != null,
+              enabled: track != null,
+              label: track == null
+                  ? 'No track playing'
+                  : 'Open player for ${track.title}',
+              child: GestureDetector(
+                onTap: track != null
+                    ? () => context.push(RoutePaths.trackPreview(track.id))
+                    : null,
+                behavior: HitTestBehavior.opaque,
+                child: MouseRegion(
+                  cursor: track != null
+                      ? SystemMouseCursors.click
+                      : SystemMouseCursors.basic,
+                  child: _TrackInfo(
+                    track: track,
+                    isPrepared: audioState.isPrepared,
+                  ),
                 ),
               ),
             ),

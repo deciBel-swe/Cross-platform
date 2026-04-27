@@ -130,6 +130,18 @@ class ApiConstants {
   /// Endpoint to get playlists created by a specific user ID
   static String userPublicPlaylists(int userId) => '/users/$userId/playlists';
 
+  /// Endpoint to get public playlists created by a specific username.
+  static String userPublicPlaylistsByUsername(String username) =>
+      '/users/${Uri.encodeComponent(username)}/playlists';
+
+  /// Endpoint for tracks liked by a public user.
+  static String likedTracksByUsername(String username) =>
+      '/users/${Uri.encodeComponent(username)}/liked-tracks';
+
+  /// Endpoint for tracks reposted by a public user.
+  static String repostedTracksByUsername(String username) =>
+      '/users/${Uri.encodeComponent(username)}/reposted-tracks';
+
   /// Endpoint for playlists liked by a public user.
   static String likedPlaylistsByUsername(String username) =>
       '/users/${Uri.encodeComponent(username)}/liked-playlists';
@@ -157,6 +169,19 @@ class ApiConstants {
 
   static const String notificationSettingsEndpoint = '/notifications/settings';
 
+  // ==========================================
+  // MESSAGING ENDPOINTS
+  // ==========================================
+
+  /// Base endpoint for direct messages conversations
+  static const String conversations = '/conversations';
+
+  /// Endpoint to get messages for a specific conversation
+  static String conversationMessages(String id) =>
+      '/conversations/$id/messages';
+
+  /// Endpoint to start a new conversation with a user
+  static String startConversation(int id) => '/conversations/$id/start';
   // Google OAuth specific constants
   static const String googleAuthUrl =
       'https://accounts.google.com/o/oauth2/v2/auth';

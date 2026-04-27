@@ -7,6 +7,7 @@ import '../../features/notifications/presentation/providers/device_token_provide
 import '../../features/player/presentation/widgets/desktop_player_bar.dart';
 import '../../features/player/presentation/widgets/mobile_mini_player.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive_utils.dart';
 import 'desktop_header.dart';
 import 'desktop_sidebar.dart';
 import 'route_paths.dart';
@@ -22,7 +23,7 @@ class MainShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = _isDesktopLayout(context);
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     ref.watch(syncDeviceTokenProvider);
 
@@ -32,14 +33,6 @@ class MainShell extends ConsumerWidget {
 
     return _MobileShell(navigationShell: navigationShell);
   }
-}
-
-bool _isDesktopLayout(BuildContext context) {
-  final mediaQuery = MediaQuery.maybeOf(context);
-  if (mediaQuery == null) {
-    return false;
-  }
-  return mediaQuery.size.width >= 801;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -107,7 +100,9 @@ class _MobileShell extends ConsumerWidget {
         (location == RoutePaths.feed && miniPlayerSuppressed) ||
         // Hide only when on the upload flow (add track/details), not in
         // the user's uploads list.
-        location.startsWith(RoutePaths.upload);
+        location.startsWith(RoutePaths.upload) ||
+        location.startsWith(RoutePaths.messages) ||
+        location.startsWith(RoutePaths.chat);
 
     final miniPlayerVisible = ref.watch(miniPlayerVisibleProvider);
 
@@ -134,13 +129,15 @@ class _MobileShell extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: _BottomNavBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        ),
-      ),
+      bottomNavigationBar: navigationShell.currentIndex == 6
+          ? null
+          : _BottomNavBar(
+              currentIndex: navigationShell.currentIndex,
+              onTap: (index) => navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              ),
+            ),
     );
   }
 }

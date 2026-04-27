@@ -28,7 +28,8 @@ List<double> normalizeWaveformPeaks(Iterable<num> peaks) {
   if (maxPeak <= 0) {
     return const <double>[];
   }
-  if (maxPeak <= 1) {
+  final hasUnitScalePeak = values.any((peak) => peak > 0 && peak < 1);
+  if (maxPeak <= 1 || hasUnitScalePeak) {
     return values
         .map((peak) => peak.clamp(0.0, 1.0).toDouble())
         .toList(growable: false);

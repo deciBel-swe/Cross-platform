@@ -42,15 +42,15 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
     return _fetchPage(0);
   }
 
-  /// Loads the next page when available; no-op when already at the last page.
+  /// Loads the next page, wrapping back to page 0 after the last page.
   Future<void> loadMore() async {
     final current = state.valueOrNull;
     if (current == null) return;
-    if (current.isLast || current.isLoadingMore) return;
+    if (current.isLoadingMore) return;
 
     state = AsyncData(current.copyWith(isLoadingMore: true));
 
-    final nextPage = current.currentPage + 1;
+    final nextPage = current.isLast ? 0 : current.currentPage + 1;
     try {
       final next = await _fetchPage(nextPage, existing: current.tracks);
       state = AsyncData(next);

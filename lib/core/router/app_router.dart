@@ -1,7 +1,7 @@
 /// GoRouter configuration – all app routes defined here.
 library;
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -44,6 +44,9 @@ import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/settings/presentation/screens/basic_settings_screen.dart';
 import '../../features/settings/presentation/screens/blocked_users_screen.dart';
 import '../../features/settings/presentation/screens/change_app_icon_screen.dart';
+import '../../features/settings/presentation/screens/chat_screen.dart';
+import '../../features/settings/presentation/screens/inbox_screen.dart';
+import '../../features/settings/presentation/screens/new_message_screen.dart';
 import '../../features/settings/presentation/screens/notification_settings_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/social_settings_screen.dart';
@@ -121,6 +124,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.start,
         builder: (context, state) => const StartScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.login,
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: RoutePaths.login,
@@ -239,9 +246,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       ),
                       GoRoute(
                         path: 'playlist-tracks',
+                        parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) {
                           final playlist = state.extra as Playlist;
+
                           return PlaylistDetailsScreen(
+                            key: ValueKey(
+                              'playlist-details-${playlist.id}-${state.pageKey.value}',
+                            ),
                             playlistSummary: playlist,
                           );
                         },
@@ -414,11 +426,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   }
                   return null;
                 },
-                builder: (context, state) {
+                pageBuilder: (context, state) {
                   final userIdentifier =
                       state.pathParameters['userIdentifier']!;
-                  return PublicProfileScreen(userIdentifier: userIdentifier);
+
+                  return MaterialPage(
+                    key: ValueKey(
+                      'public-profile-$userIdentifier-${state.pageKey.value}',
+                    ),
+                    child: PublicProfileScreen(userIdentifier: userIdentifier),
+                  );
                 },
+
                 routes: [
                   GoRoute(
                     path: 'followers',
@@ -461,6 +480,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     },
                   ),
                 ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RoutePaths.messages,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: InboxScreen()),
+                routes: [
+                  GoRoute(
+                    path: 'new',
+                    builder: (context, state) => const NewMessageScreen(),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: '${RoutePaths.chat}/:id',
+                builder: (context, state) {
+                  final conversationId = state.pathParameters['id']!;
+                  final otherUserName = state.extra as String? ?? 'Chat';
+                  return ChatScreen(
+                    conversationId: conversationId,
+                    otherUserName: otherUserName,
+                  );
+                },
               ),
             ],
           ),

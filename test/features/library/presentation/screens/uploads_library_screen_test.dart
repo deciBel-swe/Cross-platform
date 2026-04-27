@@ -51,6 +51,7 @@ class FakeTrackSocialRepository implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   }) async {
     return const PaginatedTracks(
       content: <Track>[],
@@ -67,6 +68,7 @@ class FakeTrackSocialRepository implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   }) async {
     return const PaginatedTracks(
       content: <Track>[],

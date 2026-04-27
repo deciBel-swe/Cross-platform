@@ -58,12 +58,23 @@ class PlaylistRepository implements IPlaylistRepository {
   Future<Either<Failure, List<Playlist>>> getUserPlaylists({
     int page = 0,
     int size = 20,
+    int? userId,
+    String? username,
   }) async {
     try {
-      final playlistModels = await _remoteDataSource.getUserPlaylists(
-        page: page,
-        size: size,
-      );
+      final playlistModels = username != null && username.trim().isNotEmpty
+          ? await _remoteDataSource.getUserPlaylists(
+              page: page,
+              size: size,
+              username: username,
+            )
+          : userId != null
+          ? await _remoteDataSource.getUserPlaylists(
+              page: page,
+              size: size,
+              userId: userId,
+            )
+          : await _remoteDataSource.getUserPlaylists(page: page, size: size);
 
       final playlists = playlistModels
           .map((model) => model.toEntity())

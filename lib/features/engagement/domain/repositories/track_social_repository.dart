@@ -15,6 +15,7 @@ abstract class ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   });
 
   /// Fetches reposted tracks for the current user.
@@ -22,6 +23,7 @@ abstract class ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   });
 
   /// Fetches a paginated list of users who liked [trackId].

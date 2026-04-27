@@ -20,12 +20,21 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   }) async {
-    final model = await _datasource.getLikedTracks(
-      page: page,
-      size: size,
-      userId: userId,
-    );
+    final model = username != null && username.trim().isNotEmpty
+        ? await _datasource.getLikedTracks(
+            page: page,
+            size: size,
+            username: username,
+          )
+        : userId != null
+        ? await _datasource.getLikedTracks(
+            page: page,
+            size: size,
+            userId: userId,
+          )
+        : await _datasource.getLikedTracks(page: page, size: size);
     return model.toEntity();
   }
 
@@ -34,12 +43,21 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   }) async {
-    final model = await _datasource.getRepostedTracks(
-      page: page,
-      size: size,
-      userId: userId,
-    );
+    final model = username != null && username.trim().isNotEmpty
+        ? await _datasource.getRepostedTracks(
+            page: page,
+            size: size,
+            username: username,
+          )
+        : userId != null
+        ? await _datasource.getRepostedTracks(
+            page: page,
+            size: size,
+            userId: userId,
+          )
+        : await _datasource.getRepostedTracks(page: page, size: size);
     return model.toEntity();
   }
 

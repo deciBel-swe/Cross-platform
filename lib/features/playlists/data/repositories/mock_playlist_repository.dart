@@ -116,8 +116,10 @@ final List<Playlist> _mockPlaylists = [
 class MockPlaylistRepository implements IPlaylistRepository {
   @override
   Future<Either<Failure, List<Playlist>>> getUserPlaylists({
-    int page = 0,
-    int size = 20,
+    required int page,
+    required int size,
+    int? userId,
+    String? username,
   }) async {
     return Right(_mockPlaylists);
   }

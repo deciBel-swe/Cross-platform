@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 enum TrackMoreOption {
   addToPlaylist,
@@ -22,7 +23,7 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
   bool includeEdit = false,
   bool includeDelete = false,
 }) {
-  if (_isDesktopLayout(context)) {
+  if (ResponsiveUtils.isDesktop(context)) {
     return showMenu<TrackMoreOption>(
       context: context,
       color: const Color(0xFF1F1F1F),
@@ -172,12 +173,7 @@ RelativeRect _menuPosition({
   final anchor = anchorContext?.findRenderObject() as RenderBox?;
   if (overlay == null || anchor == null || !anchor.attached) {
     final size = MediaQuery.sizeOf(context);
-    return RelativeRect.fromLTRB(
-      size.width - 420,
-      96,
-      24,
-      size.height - 96,
-    );
+    return RelativeRect.fromLTRB(size.width - 420, 96, 24, size.height - 96);
   }
 
   final topLeft = anchor.localToGlobal(Offset.zero, ancestor: overlay);
@@ -241,9 +237,4 @@ Widget _mobileTrackOptionItem(
     ),
     onTap: () => Navigator.of(context).pop(value),
   );
-}
-
-bool _isDesktopLayout(BuildContext context) {
-  final mediaQuery = MediaQuery.maybeOf(context);
-  return mediaQuery != null && mediaQuery.size.width >= 801;
 }

@@ -11,18 +11,18 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../discovery/domain/entities/discovery_playlist.dart';
 import '../../../discovery/domain/entities/discovery_search_response.dart';
 import '../../../discovery/domain/entities/discovery_search_type.dart';
 import '../../../discovery/domain/entities/discovery_track.dart';
 import '../../../discovery/domain/entities/discovery_user.dart';
-import '../../../discovery/domain/entities/paginated_discovery_tracks.dart';
-import '../../../discovery/presentation/discovery_genres.dart';
 import '../../../discovery/presentation/providers/discovery_provider.dart';
+import '../../../home/presentation/utils/discovery_track_mapper.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../playlists/domain/entities/playlist.dart';
-import '../widgets/genre_tile.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -35,11 +35,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   late final TextEditingController _queryController;
   Timer? _debounce;
   DiscoverySearchType _selectedType = DiscoverySearchType.all;
-  String _selectedGenre = discoveryGenreOptions.first.label;
 
   String? _lastSyncedQuery;
   String? _lastSyncedType;
-  String? _lastSyncedGenre;
 
   @override
   void initState() {
@@ -62,28 +60,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = _isDesktopLayout(context);
     final uri = GoRouterState.of(context).uri;
     final routeQuery = uri.queryParameters['q']?.trim() ?? '';
-    final routeGenre = uri.queryParameters['genre']?.trim() ?? _selectedGenre;
     final hasSearchQuery = routeQuery.length >= 2;
     final hasTooShortQuery = routeQuery.isNotEmpty && routeQuery.length < 2;
 
     final searchAsync = hasSearchQuery
         ? ref.watch(
-            searchResultsProvider(
-              (
-                query: routeQuery,
-                type: _selectedType,
-                page: 0,
-                size: 20,
-              ),
-            ),
+            searchResultsProvider((
+              query: routeQuery,
+              type: _selectedType,
+              page: 0,
+              size: 20,
+            )),
           )
         : null;
-    final genreStationAsync = ref.watch(
-      genreStationProvider((page: 0, size: isDesktop ? 10 : 6)),
-    );
+
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -135,10 +128,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               selectedType: _selectedType,
             )
           else
-            _BrowseSection(
-              selectedGenre: routeGenre,
-              genreStationAsync: genreStationAsync,
-              onGenreSelected: _handleGenreSelected,
+            _RecentSearchesSection(
+              onSearchTap: (query) {
+                _queryController.text = query;
+                _applyRouteState();
+              },
             ),
         ],
       ),
@@ -149,22 +143,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final uri = GoRouterState.of(context).uri;
     final routeQuery = uri.queryParameters['q']?.trim() ?? '';
     final routeType = uri.queryParameters['type'];
-    final routeGenre = uri.queryParameters['genre']?.trim();
 
-    if (_lastSyncedQuery == routeQuery &&
-        _lastSyncedType == routeType &&
-        _lastSyncedGenre == routeGenre) {
+    if (_lastSyncedQuery == routeQuery && _lastSyncedType == routeType) {
       return;
     }
 
     _lastSyncedQuery = routeQuery;
     _lastSyncedType = routeType;
-    _lastSyncedGenre = routeGenre;
 
     _selectedType = DiscoverySearchType.fromQueryValue(routeType);
-    _selectedGenre = routeGenre?.isNotEmpty == true
-        ? routeGenre!
-        : discoveryGenreOptions.first.label;
 
     if (_queryController.text != routeQuery) {
       _queryController.value = TextEditingValue(
@@ -194,24 +181,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _applyRouteState();
   }
 
-  void _handleGenreSelected(String genre) {
-    setState(() {
-      _selectedGenre = genre;
-    });
-    _applyRouteState();
-  }
-
   void _applyRouteState() {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     final query = _queryController.text.trim();
     final queryParameters = <String, String>{
       if (query.isNotEmpty) 'q': query,
       if (_selectedType != DiscoverySearchType.all)
         'type': _selectedType.queryValue,
-      'genre': _selectedGenre,
     };
 
     context.go(
@@ -237,29 +214,38 @@ class _SearchInputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      onSubmitted: onSubmitted,
-      style: const TextStyle(fontSize: 15, color: Colors.white),
-      decoration: InputDecoration(
-        hintText: 'Search for artists, tracks, playlists...',
-        hintStyle: const TextStyle(fontSize: 15, color: Colors.white38),
-        prefixIcon: const Icon(Icons.search, color: Colors.white38),
-        suffixIcon: hasText
-            ? IconButton(
-                icon: const Icon(Icons.close, color: Colors.white54),
-                onPressed: onClear,
-              )
-            : null,
-        filled: true,
-        fillColor: AppColors.surfaceLight,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.paddingMd,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-          borderSide: BorderSide.none,
+    return Semantics(
+      textField: true,
+      label: 'Search for artists, tracks, and playlists',
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        onSubmitted: onSubmitted,
+        style: const TextStyle(fontSize: 15, color: Colors.white),
+        decoration: InputDecoration(
+          hintText: 'Search for artists, tracks, playlists...',
+          hintStyle: const TextStyle(fontSize: 15, color: Colors.white38),
+          prefixIcon: const Icon(Icons.search, color: Colors.white38),
+          suffixIcon: hasText
+              ? Semantics(
+                  button: true,
+                  label: 'Clear search text',
+                  child: IconButton(
+                    tooltip: 'Clear search',
+                    icon: const Icon(Icons.close, color: Colors.white54),
+                    onPressed: onClear,
+                  ),
+                )
+              : null,
+          filled: true,
+          fillColor: AppColors.surfaceLight,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingMd,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
@@ -282,20 +268,25 @@ class _SearchTypeBar extends StatelessWidget {
       runSpacing: AppDimensions.paddingSm,
       children: DiscoverySearchType.values
           .map(
-            (DiscoverySearchType type) => ChoiceChip(
-              label: Text(type.label),
+            (DiscoverySearchType type) => Semantics(
+              button: true,
               selected: type == selectedType,
-              onSelected: (_) => onTypeSelected(type),
-              labelStyle: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-              selectedColor: AppColors.primary,
-              backgroundColor: AppColors.surfaceVariant,
-              side: BorderSide(
-                color: type == selectedType
-                    ? AppColors.primary
-                    : AppColors.borderLight,
+              label: '${type.label} search filter',
+              child: ChoiceChip(
+                label: Text(type.label),
+                selected: type == selectedType,
+                onSelected: (_) => onTypeSelected(type),
+                labelStyle: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+                selectedColor: AppColors.primary,
+                backgroundColor: AppColors.surfaceVariant,
+                side: BorderSide(
+                  color: type == selectedType
+                      ? AppColors.primary
+                      : AppColors.borderLight,
+                ),
               ),
             ),
           )
@@ -366,29 +357,38 @@ class _SearchResultsSection extends StatelessWidget {
   }
 }
 
-class _TrackResultsList extends StatelessWidget {
+class _TrackResultsList extends ConsumerWidget {
   const _TrackResultsList({required this.tracks});
 
   final List<DiscoveryTrack> tracks;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (tracks.isEmpty) {
       return const _SearchMessageCard(
         message: 'No tracks matched this search yet.',
       );
     }
 
+    final playableQueue = discoveryTracksToLibraryTracks(tracks);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         const _SearchSectionTitle('Tracks'),
         const SizedBox(height: AppDimensions.paddingMd),
-        ...tracks.map(
-          (DiscoveryTrack track) => Padding(
+        ...List<Widget>.generate(tracks.length, (index) {
+          final track = tracks[index];
+          final playableTrack = playableQueue[index];
+
+          return Padding(
             padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
             child: _SearchSurface(
-              onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+              onTap: () => unawaited(
+                ref
+                    .read(trackAudioProvider.notifier)
+                    .playTrack(track: playableTrack, queue: playableQueue),
+              ),
               leading: _ArtworkSquare(
                 imageUrl: track.coverUrl,
                 icon: Icons.music_note,
@@ -400,9 +400,11 @@ class _TrackResultsList extends StatelessWidget {
               meta:
                   '${_formatCount(track.playCount)} plays · ${_formatCount(track.likeCount)} likes',
               trailingIcon: Icons.play_circle_fill_rounded,
+              semanticLabel:
+                  'Play ${track.title} by ${track.artist.displayName ?? track.artist.username}',
             ),
-          ),
-        ),
+          );
+        }),
       ],
     );
   }
@@ -455,6 +457,12 @@ class _PlaylistResultsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (playlists.isEmpty) {
+      return const _SearchMessageCard(
+        message: 'No playlists matched this search yet.',
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -468,13 +476,13 @@ class _PlaylistResultsList extends StatelessWidget {
                 RoutePaths.playlistTracks,
                 extra: _toPlaylistEntity(playlist),
               ),
-                        leading: _ArtworkSquare(
-                          imageUrl: playlist.coverArtUrl,
-                          icon: Icons.queue_music_rounded,
-                          colors: _colorsForGenre(
-                            playlist.genres.isEmpty ? null : playlist.genres.first,
-                          ),
-                        ),
+              leading: _ArtworkSquare(
+                imageUrl: playlist.coverArtUrl,
+                icon: Icons.queue_music_rounded,
+                colors: _colorsForGenre(
+                  playlist.genres.isEmpty ? null : playlist.genres.first,
+                ),
+              ),
               title: playlist.title,
               subtitle:
                   'By ${playlist.owner.displayName ?? playlist.owner.username}',
@@ -489,113 +497,99 @@ class _PlaylistResultsList extends StatelessWidget {
   }
 }
 
-class _BrowseSection extends StatelessWidget {
-  const _BrowseSection({
-    required this.selectedGenre,
-    required this.genreStationAsync,
-    required this.onGenreSelected,
-  });
+class _RecentSearchesSection extends StatelessWidget {
+  const _RecentSearchesSection({required this.onSearchTap});
 
-  final String selectedGenre;
-  final AsyncValue<PaginatedDiscoveryTracks> genreStationAsync;
-  final ValueChanged<String> onGenreSelected;
+  final ValueChanged<String> onSearchTap;
 
   @override
   Widget build(BuildContext context) {
+    // Mock recent searches for now
+    final List<String> recent = <String>[
+      'Lofi hip hop',
+      'Electronic vibes',
+      'The Weeknd',
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const Text('Browse categories', style: AppTextStyles.sectionTitle),
+        const _SearchSectionTitle('Recent searches'),
         const SizedBox(height: AppDimensions.paddingMd),
-        LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            final crossAxisCount = constraints.maxWidth > 900
-                ? 4
-                : constraints.maxWidth > 600
-                ? 3
-                : 2;
-
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                mainAxisSpacing: AppDimensions.paddingMd,
-                crossAxisSpacing: AppDimensions.paddingMd,
-                childAspectRatio: 2.0,
-              ),
-              itemCount: discoveryGenreOptions.length,
-              itemBuilder: (BuildContext context, int index) {
-                final genre = discoveryGenreOptions[index];
-                return GenreTile(
-                  label: genre.label,
-                  gradientColors: genre.colors,
-                  onTap: () => onGenreSelected(genre.label),
-                );
+        ...recent.map(
+          (String query) => Padding(
+            padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
+            child: _RecentSearchTile(
+              onTap: () => onSearchTap(query),
+              title: query,
+              onClear: () {
+                // Placeholder for clear logic
               },
-            );
-          },
-        ),
-        const SizedBox(height: AppDimensions.paddingXl),
-        _SearchSectionTitle('$selectedGenre station'),
-        const SizedBox(height: AppDimensions.paddingSm),
-        Text(
-          'A genre-led stream inspired by the SoundCloud station flow.',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: AppDimensions.paddingMd),
-        genreStationAsync.when(
-          data: (PaginatedDiscoveryTracks tracks) {
-            if (tracks.content.isEmpty) {
-              return const _SearchMessageCard(
-                message: 'This station is quiet right now. Try another genre.',
-              );
-            }
-
-            return Column(
-              children: tracks.content
-                  .map(
-                    (DiscoveryTrack track) => Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: AppDimensions.paddingSm,
-                      ),
-                      child: _SearchSurface(
-                        onTap: () => context.push(
-                          RoutePaths.trackPreview(track.id),
-                        ),
-                        leading: _ArtworkSquare(
-                          imageUrl: track.coverUrl,
-                          icon: Icons.music_note,
-                          colors: _colorsForGenre(track.genre),
-                        ),
-                        title: track.title,
-                        subtitle:
-                            '${track.artist.displayName ?? track.artist.username} • ${track.genre ?? selectedGenre}',
-                        meta:
-                            '${_formatCount(track.playCount)} plays · ${_formatCount(track.likeCount)} likes',
-                        trailingIcon: Icons.graphic_eq_rounded,
-                      ),
-                    ),
-                  )
-                  .toList(growable: false),
-            );
-          },
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(AppDimensions.paddingLg),
-              child: CircularProgressIndicator(color: AppColors.primary),
             ),
           ),
-          error: (Object error, StackTrace stackTrace) {
-            return _SearchMessageCard(
-              message: error.toString().replaceFirst('Exception: ', ''),
-              isError: true,
-            );
-          },
         ),
       ],
+    );
+  }
+}
+
+class _RecentSearchTile extends StatelessWidget {
+  const _RecentSearchTile({
+    required this.onTap,
+    required this.title,
+    required this.onClear,
+  });
+
+  final VoidCallback onTap;
+  final String title;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+      child: Semantics(
+        button: true,
+        label: 'Search again for $title',
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingMd,
+              vertical: AppDimensions.paddingSm,
+            ),
+            child: Row(
+              children: <Widget>[
+                const Icon(
+                  Icons.history_rounded,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: AppDimensions.paddingMd),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppTextStyles.bodyMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Semantics(
+                  button: true,
+                  label: 'Remove $title from recent searches',
+                  child: IconButton(
+                    tooltip: 'Remove recent search',
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    color: AppColors.textSecondary,
+                    onPressed: onClear,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -619,6 +613,7 @@ class _SearchSurface extends StatelessWidget {
     required this.subtitle,
     required this.meta,
     required this.trailingIcon,
+    this.semanticLabel,
   });
 
   final VoidCallback onTap;
@@ -627,55 +622,60 @@ class _SearchSurface extends StatelessWidget {
   final String subtitle;
   final String meta;
   final IconData trailingIcon;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.paddingMd),
-          child: Row(
-            children: <Widget>[
-              leading,
-              const SizedBox(width: AppDimensions.paddingMd),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      title,
-                      style: AppTextStyles.cardTitle.copyWith(fontSize: 15),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+      child: Semantics(
+        button: true,
+        label: semanticLabel ?? '$title, $subtitle, $meta',
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.paddingMd),
+            child: Row(
+              children: <Widget>[
+                leading,
+                const SizedBox(width: AppDimensions.paddingMd),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        title,
+                        style: AppTextStyles.cardTitle.copyWith(fontSize: 15),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      meta,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textHint,
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      Text(
+                        meta,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textHint,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppDimensions.paddingSm),
-              Icon(trailingIcon, color: AppColors.textSecondary),
-            ],
+                const SizedBox(width: AppDimensions.paddingSm),
+                Icon(trailingIcon, color: AppColors.textSecondary),
+              ],
+            ),
           ),
         ),
       ),
@@ -759,10 +759,7 @@ class _UserAvatar extends StatelessWidget {
 }
 
 class _SearchMessageCard extends StatelessWidget {
-  const _SearchMessageCard({
-    required this.message,
-    this.isError = false,
-  });
+  const _SearchMessageCard({required this.message, this.isError = false});
 
   final String message;
   final bool isError;
@@ -786,32 +783,14 @@ class _SearchMessageCard extends StatelessWidget {
             color: isError ? AppColors.errors : AppColors.primary,
           ),
           const SizedBox(width: AppDimensions.paddingMd),
-          Expanded(
-            child: Text(message, style: AppTextStyles.bodyMedium),
-          ),
+          Expanded(child: Text(message, style: AppTextStyles.bodyMedium)),
         ],
       ),
     );
   }
 }
 
-bool _isDesktopLayout(BuildContext context) {
-  final mediaQuery = MediaQuery.maybeOf(context);
-  if (mediaQuery == null) {
-    return false;
-  }
-  return mediaQuery.size.width >= 801;
-}
-
 List<Color> _colorsForGenre(String? genre) {
-  final normalizedGenre = genre?.trim().toLowerCase();
-
-  for (final DiscoveryGenreOption option in discoveryGenreOptions) {
-    if (option.label.toLowerCase() == normalizedGenre) {
-      return option.colors;
-    }
-  }
-
   return const <Color>[AppColors.surfaceLight, AppColors.surfaceContainer];
 }
 
@@ -820,8 +799,9 @@ String _formatCount(int value) {
     return '${(value / 1000000).toStringAsFixed(1)}M';
   }
   if (value >= 1000) {
-    final formattedValue =
-        (value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1);
+    final formattedValue = (value / 1000).toStringAsFixed(
+      value % 1000 == 0 ? 0 : 1,
+    );
     return '${formattedValue}K';
   }
   return value.toString();
@@ -829,10 +809,7 @@ String _formatCount(int value) {
 
 String _initialsForUser(DiscoveryUser user) {
   final value = user.displayName ?? user.username;
-  if (value.trim().isEmpty) {
-    return '?';
-  }
-
+  if (value.trim().isEmpty) return '?';
   return value.trim().substring(0, 1).toUpperCase();
 }
 
@@ -852,9 +829,12 @@ Playlist _toPlaylistEntity(DiscoveryPlaylist playlist) {
       avatarUrl: playlist.owner.avatarUrl,
     ),
     tracks: const <Track>[],
-    totalDurationSeconds: playlist.totalDurationSeconds,
+    totalDurationSeconds: playlist.totalDurationSeconds.toInt(),
     trackCount: playlist.trackCount,
     playlistSlug: playlist.playlistSlug,
+
+    secretToken: null,
+    access: null,
     createdAt: playlist.createdAt,
   );
 }

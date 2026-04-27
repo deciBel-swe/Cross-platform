@@ -13,7 +13,12 @@ import '../models/playlist_model.dart';
 abstract class IPlaylistRemoteDataSource {
   Future<PlaylistModel> getPlaylistDetails(int playlistId);
 
-  Future<List<PlaylistModel>> getUserPlaylists({int page = 0, int size = 20});
+  Future<List<PlaylistModel>> getUserPlaylists({
+    int page = 0,
+    int size = 20,
+    int? userId,
+    String? username,
+  });
 
   Future<PlaylistModel> reorderTracks(int playlistId, List<int> trackIds);
 
@@ -168,10 +173,19 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   Future<List<PlaylistModel>> getUserPlaylists({
     int page = 0,
     int size = 20,
+    int? userId,
+    String? username,
   }) async {
     try {
+      final publicUsername = username?.trim();
+      final endpoint = publicUsername != null && publicUsername.isNotEmpty
+          ? ApiConstants.userPublicPlaylistsByUsername(publicUsername)
+          : userId != null
+          ? ApiConstants.userPublicPlaylists(userId)
+          : ApiConstants.myPlaylists;
+
       final response = await _dioClient.get<dynamic>(
-        ApiConstants.myPlaylists,
+        endpoint,
         queryParams: {'page': page, 'size': size},
       );
 

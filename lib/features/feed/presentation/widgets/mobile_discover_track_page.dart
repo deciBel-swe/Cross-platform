@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -10,10 +9,9 @@ import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/domain/entities/track.dart' as library_track;
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
-import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 import '../../domain/entities/feed_track.dart';
 
-class MobileDiscoverTrackPage extends ConsumerWidget {
+class MobileDiscoverTrackPage extends StatelessWidget {
   const MobileDiscoverTrackPage({
     super.key,
     required this.track,
@@ -41,7 +39,7 @@ class MobileDiscoverTrackPage extends ConsumerWidget {
   final ValueChanged<library_track.Track> onAddToPlaylist;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     void play() => onPlayTrack(playableTrack, playableQueue);
 
     return Semantics(
@@ -78,15 +76,11 @@ class MobileDiscoverTrackPage extends ConsumerWidget {
                     bottom: 112,
                     child: _DiscoverActionRail(
                       track: track,
-                      onComment: () async {
-                        final data = await ref.read(
-                          trackPreviewProvider(track.id).future,
-                        );
-                        if (!context.mounted) return;
+                      onComment: () {
                         TrackCommentsBottomSheet.show(
                           context,
                           trackId: track.id,
-                          track: data.track,
+                          track: playableTrack,
                         );
                       },
                       onAddToPlaylist: () => onAddToPlaylist(playableTrack),
