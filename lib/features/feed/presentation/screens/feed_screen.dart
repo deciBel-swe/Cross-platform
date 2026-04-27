@@ -358,8 +358,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                   )
                                 : null,
                             onGoToArtist: () {
+                              final artistIdentifier =
+                                  track.artistUsername.trim().isNotEmpty
+                                  ? track.artistUsername
+                                  : track.artistId.toString();
                               context.push(
-                                RoutePaths.publicProfile(track.artistUsername),
+                                RoutePaths.publicProfile(artistIdentifier),
                               );
                             },
                             onGoToAlbum: () {
@@ -467,6 +471,12 @@ class _MobileDiscoverFeedPagerState
   int _autoplayRequestId = 0;
   late final TrackAudioNotifier _audioNotifier;
 
+  int get _visibleTrackCount {
+    final trackCount = widget.tracks.length;
+    final queueCount = widget.playableQueue.length;
+    return trackCount < queueCount ? trackCount : queueCount;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -484,13 +494,13 @@ class _MobileDiscoverFeedPagerState
       return;
     }
 
-    if (widget.playableQueue.isEmpty) {
+    if (_visibleTrackCount == 0) {
       _currentIndex = 0;
       _lastPlayedTrackId = null;
       return;
     }
 
-    if (_currentIndex >= widget.playableQueue.length) {
+    if (_currentIndex >= _visibleTrackCount) {
       _currentIndex = 0;
     }
 
@@ -512,7 +522,7 @@ class _MobileDiscoverFeedPagerState
   }
 
   void _scheduleAutoplay() {
-    if (widget.playableQueue.isEmpty) {
+    if (_visibleTrackCount == 0) {
       return;
     }
 
@@ -547,7 +557,7 @@ class _MobileDiscoverFeedPagerState
   }
 
   void _playIndex(int index) {
-    if (index < 0 || index >= widget.playableQueue.length) {
+    if (index < 0 || index >= _visibleTrackCount) {
       return;
     }
 
@@ -570,21 +580,34 @@ class _MobileDiscoverFeedPagerState
 
   @override
   Widget build(BuildContext context) {
+    final visibleTrackCount = _visibleTrackCount;
+    final showPaginationLoader =
+        widget.isLoadingMore || visibleTrackCount < widget.tracks.length;
+
+    if (visibleTrackCount == 0) {
+      if (showPaginationLoader) {
+        return const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        );
+      }
+      return const SizedBox.shrink();
+    }
+
     return PageView.builder(
       scrollDirection: Axis.vertical,
-      itemCount: widget.tracks.length + (widget.isLoadingMore ? 1 : 0),
+      itemCount: visibleTrackCount + (showPaginationLoader ? 1 : 0),
       onPageChanged: (index) {
-        if (index < widget.tracks.length) {
+        if (index < visibleTrackCount) {
           _currentIndex = index;
           _playIndex(index);
         }
 
-        if (index >= widget.tracks.length - 3 && !widget.isLoadingMore) {
+        if (index >= visibleTrackCount - 3 && !widget.isLoadingMore) {
           widget.onLoadMore();
         }
       },
       itemBuilder: (context, index) {
-        if (index >= widget.tracks.length) {
+        if (index >= visibleTrackCount) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           );

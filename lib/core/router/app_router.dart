@@ -21,6 +21,7 @@ import '../../features/feed/presentation/screens/feed_screen.dart';
 import '../../features/home/domain/entities/station_playlist.dart';
 import '../../features/home/presentation/screens/home_collection_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/home/presentation/screens/recently_played_screen.dart';
 import '../../features/home/presentation/screens/station_playlist_screen.dart';
 import '../../features/library/domain/entities/track.dart';
 import '../../features/library/presentation/screens/add_to_playlist_screen.dart';
@@ -288,6 +289,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'reposts',
                     builder: (context, state) => const RepostedTracksScreen(),
+                  ),
+                  GoRoute(
+                    path: 'recently-played',
+                    builder: (context, state) => const RecentlyPlayedScreen(),
                   ),
                   GoRoute(
                     path: 'track-preview/:trackId',

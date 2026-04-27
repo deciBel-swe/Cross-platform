@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../home/presentation/providers/history_provider.dart';
 import '../../domain/entities/track.dart';
 import '../state/track_audio_state.dart';
 
@@ -24,6 +25,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   bool _isStopping = false;
   int _operationGeneration = 0;
   Future<void> _transitionQueue = Future<void>.value();
+  bool _hasReportedPlayForPreparedTrack = false;
+  int? _reportedPlayTrackId;
 
   AudioPlayer get _audioPlayer {
     final player = _player;
@@ -99,6 +102,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
       if (event.processingState == ProcessingState.completed &&
           !state.isDragging) {
+        _reportTrackCompleted();
         unawaited(replay());
       }
     }, onError: (_) {});
@@ -199,6 +203,10 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
           return;
         }
 
+        if (track != null) {
+          ref.read(historyProvider.notifier).addLocalRecentlyPlayed(track);
+        }
+
         if (autoPlay) {
           await play();
         }
@@ -292,6 +300,9 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       dragProgress: null,
       dragPosition: null,
     );
+
+    _hasReportedPlayForPreparedTrack = false;
+    _reportedPlayTrackId = trackId;
   }
 
   Future<void> skipNext() async {
@@ -422,6 +433,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     if (_isDisposed || _isStopping) return;
 
     state = state.copyWith(isPlaying: true);
+    _reportPlayStartedIfNeeded();
   }
 
   Future<void> pause() async {
@@ -462,6 +474,9 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         dragProgress: null,
         dragPosition: null,
       );
+
+      _hasReportedPlayForPreparedTrack = false;
+      _reportedPlayTrackId = null;
     }
 
     _isStopping = false;
@@ -675,6 +690,42 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     try {
       await _audioPlayer.setVolume(volume);
     } catch (_) {}
+  }
+
+  void _reportPlayStartedIfNeeded() {
+    final trackId = state.preparedTrackId;
+    if (trackId == null) {
+      return;
+    }
+
+    final alreadyReported =
+        _hasReportedPlayForPreparedTrack && _reportedPlayTrackId == trackId;
+    if (alreadyReported) {
+      return;
+    }
+
+    _hasReportedPlayForPreparedTrack = true;
+    _reportedPlayTrackId = trackId;
+    unawaited(_recordTrackPlayStarted(trackId));
+  }
+
+  void _reportTrackCompleted() {
+    final trackId = state.preparedTrackId;
+    if (trackId == null) {
+      return;
+    }
+
+    unawaited(_recordTrackCompleted(trackId));
+  }
+
+  Future<void> _recordTrackPlayStarted(int trackId) async {
+    final repository = ref.read(historyRepositoryProvider);
+    await repository.incrementPlayCount(trackId: trackId);
+  }
+
+  Future<void> _recordTrackCompleted(int trackId) async {
+    final repository = ref.read(historyRepositoryProvider);
+    await repository.markTrackCompleted(trackId: trackId);
   }
 
   List<Track> _sanitizeQueue(List<Track> queue, {Track? currentTrack}) {

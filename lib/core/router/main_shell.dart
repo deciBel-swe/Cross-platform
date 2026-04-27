@@ -47,35 +47,37 @@ class _DesktopShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: [
-          // ---- Sidebar ----
-          DesktopSidebar(
-            currentIndex: navigationShell.currentIndex,
-            onTap: (index) => navigationShell.goBranch(
-              index,
-              initialLocation: index == navigationShell.currentIndex,
+      body: SafeArea(
+        child: Row(
+          children: [
+            // ---- Sidebar ----
+            DesktopSidebar(
+              currentIndex: navigationShell.currentIndex,
+              onTap: (index) => navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              ),
             ),
-          ),
 
-          // ---- Vertical divider ----
-          const VerticalDivider(
-            width: 1,
-            thickness: 0.5,
-            color: AppColors.divider,
-          ),
-
-          // ---- Content area ----
-          Expanded(
-            child: Column(
-              children: [
-                const DesktopHeader(),
-                Expanded(child: navigationShell),
-                const DesktopPlayerBar(),
-              ],
+            // ---- Vertical divider ----
+            const VerticalDivider(
+              width: 1,
+              thickness: 0.5,
+              color: AppColors.divider,
             ),
-          ),
-        ],
+
+            // ---- Content area ----
+            Expanded(
+              child: Column(
+                children: [
+                  const DesktopHeader(),
+                  Expanded(child: navigationShell),
+                  const DesktopPlayerBar(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -107,27 +109,30 @@ class _MobileShell extends ConsumerWidget {
     final miniPlayerVisible = ref.watch(miniPlayerVisibleProvider);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          navigationShell,
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 5,
-            child: AnimatedSlide(
-              // Slide out when either a sheet requests hiding (`miniPlayerVisible`
-              // == false) or when we explicitly want to hide for a route
-              // (e.g. upload flow). This reuses the same animation used by
-              // `TrackDetails.show` which toggles `miniPlayerVisibleProvider`.
-              offset: (miniPlayerVisible && !hideMiniPlayer)
-                  ? Offset.zero
-                  : const Offset(0, 1.5), // slide below the screen
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: const MobileMiniPlayer(),
+      body: SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            navigationShell,
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 5,
+              child: AnimatedSlide(
+                // Slide out when either a sheet requests hiding (`miniPlayerVisible`
+                // == false) or when we explicitly want to hide for a route
+                // (e.g. upload flow). This reuses the same animation used by
+                // `TrackDetails.show` which toggles `miniPlayerVisibleProvider`.
+                offset: (miniPlayerVisible && !hideMiniPlayer)
+                    ? Offset.zero
+                    : const Offset(0, 1.5), // slide below the screen
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: const MobileMiniPlayer(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: navigationShell.currentIndex == 6
           ? null
@@ -150,6 +155,8 @@ class _BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPhoneLandscape = ResponsiveUtils.isPhoneLandscape(context);
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -157,7 +164,7 @@ class _BottomNavBar extends StatelessWidget {
       ),
       child: SafeArea(
         child: SizedBox(
-          height: 56,
+          height: isPhoneLandscape ? 48 : 56,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -166,6 +173,7 @@ class _BottomNavBar extends StatelessWidget {
                 activeIcon: Icons.home,
                 label: 'Home',
                 isSelected: currentIndex == 0,
+                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(0),
               ),
               _NavItem(
@@ -173,6 +181,7 @@ class _BottomNavBar extends StatelessWidget {
                 activeIcon: Icons.video_library,
                 label: 'Feed',
                 isSelected: currentIndex == 1,
+                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(1),
               ),
               _NavItem(
@@ -180,6 +189,7 @@ class _BottomNavBar extends StatelessWidget {
                 activeIcon: Icons.search,
                 label: 'Search',
                 isSelected: currentIndex == 2,
+                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(2),
               ),
               _NavItem(
@@ -187,10 +197,12 @@ class _BottomNavBar extends StatelessWidget {
                 activeIcon: Icons.library_books,
                 label: 'Library',
                 isSelected: currentIndex == 3,
+                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(3),
               ),
               _UpgradeNavItem(
                 isSelected: currentIndex == 4,
+                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(4),
               ),
             ],
@@ -208,6 +220,7 @@ class _NavItem extends StatelessWidget {
     required this.activeIcon,
     required this.label,
     required this.isSelected,
+    required this.showLabel,
     required this.onTap,
   });
 
@@ -215,22 +228,30 @@ class _NavItem extends StatelessWidget {
   final IconData activeIcon;
   final String label;
   final bool isSelected;
+  final bool showLabel;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : Colors.white54;
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(isSelected ? activeIcon : icon, color: color, size: 24),
-            const SizedBox(height: 2),
-            Text(label, style: TextStyle(fontSize: 10, color: color)),
-          ],
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(isSelected ? activeIcon : icon, color: color, size: 24),
+              if (showLabel) ...[
+                const SizedBox(height: 2),
+                Text(label, style: TextStyle(fontSize: 10, color: color)),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -239,34 +260,46 @@ class _NavItem extends StatelessWidget {
 
 /// Upgrade nav item – uses the app icon instead of a Material icon.
 class _UpgradeNavItem extends StatelessWidget {
-  const _UpgradeNavItem({required this.isSelected, required this.onTap});
+  const _UpgradeNavItem({
+    required this.isSelected,
+    required this.showLabel,
+    required this.onTap,
+  });
 
   final bool isSelected;
+  final bool showLabel;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : Colors.white54;
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Transform.scale(
-              scale: 1.45,
-              child: Image.asset(
-                'assets/icon/white_app_icon_trans.png',
-                width: 24,
-                height: 24,
-                color: color,
-                colorBlendMode: BlendMode.srcIn,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: 'Upgrade',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Transform.scale(
+                scale: 1.45,
+                child: Image.asset(
+                  'assets/icon/white_app_icon_trans.png',
+                  width: 24,
+                  height: 24,
+                  color: color,
+                  colorBlendMode: BlendMode.srcIn,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text('Upgrade', style: TextStyle(fontSize: 10, color: color)),
-          ],
+              if (showLabel) ...[
+                const SizedBox(height: 2),
+                Text('Upgrade', style: TextStyle(fontSize: 10, color: color)),
+              ],
+            ],
+          ),
         ),
       ),
     );

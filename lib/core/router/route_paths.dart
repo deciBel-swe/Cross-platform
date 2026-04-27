@@ -69,6 +69,7 @@ class RoutePaths {
   static const String playlistTracks = '/library/playlists/playlist-tracks';
   static const String addToPlaylist = '/library/add-to-playlist';
   static const String notifications = '/notifications';
+  static const String recentlyPlayed = '/library/recently-played';
 
   static String trackPreview(int trackId) => '$trackPreviewBase/$trackId';
   static String trackEdit(int trackId) => '$trackEditBase/$trackId';
@@ -77,12 +78,33 @@ class RoutePaths {
   static const String publicProfileBase = '/user';
   static const String publicProfileFollowersBase = '/followers';
   static const String publicProfileFollowingBase = '/following';
-  static String publicProfile(String userIdentifier) =>
-      '$publicProfileBase/$userIdentifier';
-  static String publicProfileFollowers(String userIdentifier) =>
-      '$publicProfileBase/$userIdentifier$publicProfileFollowersBase';
-  static String publicProfileFollowing(String userIdentifier) =>
-      '$publicProfileBase/$userIdentifier$publicProfileFollowingBase';
+
+  static String publicProfile(String userIdentifier) {
+    final encodedIdentifier = _encodeUserIdentifier(userIdentifier);
+    if (encodedIdentifier.isEmpty) {
+      return home;
+    }
+
+    return '$publicProfileBase/$encodedIdentifier';
+  }
+
+  static String publicProfileFollowers(String userIdentifier) {
+    final encodedIdentifier = _encodeUserIdentifier(userIdentifier);
+    if (encodedIdentifier.isEmpty) {
+      return home;
+    }
+
+    return '$publicProfileBase/$encodedIdentifier$publicProfileFollowersBase';
+  }
+
+  static String publicProfileFollowing(String userIdentifier) {
+    final encodedIdentifier = _encodeUserIdentifier(userIdentifier);
+    if (encodedIdentifier.isEmpty) {
+      return home;
+    }
+
+    return '$publicProfileBase/$encodedIdentifier$publicProfileFollowingBase';
+  }
 
   static String deepLinkProfile(String username) => '/$username';
 
@@ -91,6 +113,14 @@ class RoutePaths {
 
   static bool isReservedDeepLinkSegment(String value) {
     return reservedDeepLinkSegments.contains(value.toLowerCase());
+  }
+
+  static String _encodeUserIdentifier(String userIdentifier) {
+    final normalized = userIdentifier.trim();
+    if (normalized.isEmpty) {
+      return '';
+    }
+    return Uri.encodeComponent(normalized);
   }
 
   static const String forgotPassword = '/login-create-account/forgot-password';

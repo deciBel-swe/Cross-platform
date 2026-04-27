@@ -80,6 +80,19 @@ class TrackDetails extends ConsumerWidget {
     final isOwnTrack =
         currentUserId != null && currentUserId == track.artist.id;
 
+    String? artistIdentifier() {
+      final username = track.artist.username.trim();
+      if (username.isNotEmpty) {
+        return username;
+      }
+
+      if (track.artist.id > 0) {
+        return track.artist.id.toString();
+      }
+
+      return null;
+    }
+
     void goToArtist() {
       Navigator.of(context).pop();
       Future.microtask(() {
@@ -89,17 +102,26 @@ class TrackDetails extends ConsumerWidget {
         if (isOwnTrack) {
           parentContext.go(RoutePaths.profile);
         } else {
-          parentContext.push(RoutePaths.publicProfile(track.artist.username));
+          final identifier = artistIdentifier();
+          if (identifier == null) {
+            ScaffoldMessenger.of(parentContext).showSnackBar(
+              const SnackBar(
+                content: Text('Artist profile is unavailable for this track.'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            return;
+          }
+
+          parentContext.push(RoutePaths.publicProfile(identifier));
         }
       });
     }
 
     Future<void> copyTrackLink({String message = 'Track link copied'}) async {
       Navigator.of(context).pop();
-      final link = 'https://decibel.foo${RoutePaths.deepLinkTrack(
-        track.artist.username,
-        track.id.toString(),
-      )}';
+      final link =
+          'https://decibel.foo${RoutePaths.deepLinkTrack(track.artist.username, track.id.toString())}';
       await Clipboard.setData(ClipboardData(text: link));
       if (!parentContext.mounted) {
         return;

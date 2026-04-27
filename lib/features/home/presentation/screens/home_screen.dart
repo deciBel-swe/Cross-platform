@@ -22,6 +22,7 @@ import '../../../upgrade/presentation/widgets/get_pro_button.dart';
 import '../../domain/entities/station_playlist.dart';
 import '../utils/discovery_track_mapper.dart';
 import '../widgets/liked_tracks_shortcut.dart';
+import '../widgets/recently_played_section.dart';
 import '../widgets/section_header.dart';
 import '../widgets/station_playlist_card.dart';
 import '../widgets/track_card.dart';
@@ -103,12 +104,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
             ),
-          const LikedTracksShortcut(),
+
           Padding(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
+                const LikedTracksShortcut(),
+                const SizedBox(height: AppDimensions.paddingXl),
+                const RecentlyPlayedSection(),
                 const SizedBox(height: AppDimensions.paddingXl),
                 const SectionHeader(title: 'Stations'),
                 const SizedBox(height: AppDimensions.paddingMd),

@@ -50,6 +50,12 @@ import '../../features/feed/data/repositories/feed_repository_impl.dart'
     as _i452;
 import '../../features/feed/domain/repositories/i_feed_repository.dart'
     as _i695;
+import '../../features/home/data/datasources/history_remote_datasource.dart'
+    as _i870;
+import '../../features/home/data/repositories/history_repository_impl.dart'
+    as _i694;
+import '../../features/home/domain/repositories/history_repository.dart'
+    as _i419;
 import '../../features/library/data/datasources/library_remote_datasource.dart'
     as _i534;
 import '../../features/library/data/datasources/track_comments_remote_data_source.dart'
@@ -208,6 +214,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i92.NotificationSettingsRemoteDatasource>(
       () => _i92.NotificationSettingsRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i870.HistoryRemoteDatasource>(
+      () => _i870.HistoryRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i419.HistoryRepository>(
+      () => _i694.HistoryRepositoryImpl(gh<_i870.HistoryRemoteDatasource>()),
     );
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i690.MockTrackRepository(),

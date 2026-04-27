@@ -58,9 +58,8 @@
                     android:pathPrefix="/" />
             </intent-filter>
         </activity>
-<activity
+        <activity
             android:name="com.yalantis.ucrop.UCropActivity"
-            android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         <activity-alias
             android:name="com.decibel.decibel.MainActivity.black"

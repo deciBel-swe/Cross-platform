@@ -72,6 +72,7 @@ class ApiConstants {
   static const String userProfileEndpoint = '/users/me';
   static const String userProfilePrivacy = '/users/me/privacy';
   static const String userProfileImage = '/users/me/images';
+  static const String listeningHistory = '/users/me/history';
 
   /// Base endpoint for upload operations
   static const String uploads = '/uploads';
@@ -160,6 +161,12 @@ class ApiConstants {
   static const String tracks = '/tracks';
   static const String comments = '/comments';
   static const String replies = '/replies';
+
+  /// Endpoint for recording a track play start.
+  static String trackPlay(int trackId) => '/tracks/$trackId/play';
+
+  /// Endpoint for recording a completed listen.
+  static String trackComplete(int trackId) => '/tracks/$trackId/complete';
 
   // --- Notifications ---
   static const String notifications = '/notifications';

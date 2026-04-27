@@ -26,78 +26,104 @@ class DesktopSidebar extends StatelessWidget {
     return Container(
       width: AppDimensions.sidebarWidth,
       color: AppColors.surface,
-      child: Column(
-        children: [
-          // ---- Logo ----
-          const _SidebarLogo(),
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isShortViewport = constraints.maxHeight < 520;
+            final navigationItems = _buildNavigationItems();
 
-          const SizedBox(height: AppDimensions.paddingMd),
+            if (isShortViewport) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ...navigationItems,
+                    _SidebarUpgradeItem(
+                      isSelected: currentIndex == 4,
+                      onTap: () => onTap(4),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingMd),
+                  ],
+                ),
+              );
+            }
 
-          // ---- Primary nav ----
-          _SidebarNavItem(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home,
-            label: 'Home',
-            isSelected: currentIndex == 0,
-            onTap: () => onTap(0),
-          ),
-          _SidebarNavItem(
-            icon: Icons.dynamic_feed_outlined,
-            activeIcon: Icons.dynamic_feed,
-            label: 'Feed',
-            isSelected: currentIndex == 1,
-            onTap: () => onTap(1),
-          ),
-          _SidebarNavItem(
-            icon: Icons.search,
-            activeIcon: Icons.search,
-            label: 'Search',
-            isSelected: currentIndex == 2,
-            onTap: () => onTap(2),
-          ),
-          _SidebarNavItem(
-            icon: Icons.library_music_outlined,
-            activeIcon: Icons.library_music,
-            label: 'Library',
-            isSelected: currentIndex == 3,
-            onTap: () => onTap(3),
-          ),
-          _SidebarNavItem(
-            icon: Icons.mail_outline,
-            activeIcon: Icons.mail,
-            label: 'Messages',
-            isSelected: currentIndex == 6,
-            onTap: () => onTap(6),
-          ),
-
-          const Divider(
-            color: AppColors.divider,
-            height: 32,
-            indent: AppDimensions.paddingMd,
-            endIndent: AppDimensions.paddingMd,
-          ),
-
-          // ---- Secondary nav ----
-          _SidebarNavItem(
-            icon: Icons.upload_outlined,
-            activeIcon: Icons.upload,
-            label: 'Upload',
-            isSelected: false,
-            onTap: () {},
-          ),
-
-          const Spacer(),
-
-          // ---- Upgrade ----
-          _SidebarUpgradeItem(
-            isSelected: currentIndex == 4,
-            onTap: () => onTap(4),
-          ),
-
-          const SizedBox(height: AppDimensions.paddingMd),
-        ],
+            return Column(
+              children: [
+                ...navigationItems,
+                const Spacer(),
+                _SidebarUpgradeItem(
+                  isSelected: currentIndex == 4,
+                  onTap: () => onTap(4),
+                ),
+                const SizedBox(height: AppDimensions.paddingMd),
+              ],
+            );
+          },
+        ),
       ),
     );
+  }
+
+  List<Widget> _buildNavigationItems() {
+    return [
+      // ---- Logo ----
+      const _SidebarLogo(),
+      const SizedBox(height: AppDimensions.paddingMd),
+
+      // ---- Primary nav ----
+      _SidebarNavItem(
+        icon: Icons.home_outlined,
+        activeIcon: Icons.home,
+        label: 'Home',
+        isSelected: currentIndex == 0,
+        onTap: () => onTap(0),
+      ),
+      _SidebarNavItem(
+        icon: Icons.dynamic_feed_outlined,
+        activeIcon: Icons.dynamic_feed,
+        label: 'Feed',
+        isSelected: currentIndex == 1,
+        onTap: () => onTap(1),
+      ),
+      _SidebarNavItem(
+        icon: Icons.search,
+        activeIcon: Icons.search,
+        label: 'Search',
+        isSelected: currentIndex == 2,
+        onTap: () => onTap(2),
+      ),
+      _SidebarNavItem(
+        icon: Icons.library_music_outlined,
+        activeIcon: Icons.library_music,
+        label: 'Library',
+        isSelected: currentIndex == 3,
+        onTap: () => onTap(3),
+      ),
+      _SidebarNavItem(
+        icon: Icons.mail_outline,
+        activeIcon: Icons.mail,
+        label: 'Messages',
+        isSelected: currentIndex == 6,
+        onTap: () => onTap(6),
+      ),
+      const Divider(
+        color: AppColors.divider,
+        height: 32,
+        indent: AppDimensions.paddingMd,
+        endIndent: AppDimensions.paddingMd,
+      ),
+
+      // ---- Secondary nav ----
+      _SidebarNavItem(
+        icon: Icons.upload_outlined,
+        activeIcon: Icons.upload,
+        label: 'Upload',
+        isSelected: false,
+        onTap: () {},
+      ),
+      const SizedBox(height: AppDimensions.paddingMd),
+    ];
   }
 }
 
