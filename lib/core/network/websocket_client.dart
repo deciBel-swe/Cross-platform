@@ -15,43 +15,104 @@ class WebSocketClient {
   final SecureStorageService _secureStorage;
 
   StompClient? _stompClient;
+
   bool _isConnected = false;
   bool _isConnecting = false;
 
-  // Keep track of streams using the topic endpoint as the key
-  final Map<String, StreamController<Map<String, dynamic>>> _controllers = {};
+  // One stream controller per topic.
+  final Map<String, StreamController<Map<String, dynamic>>> _controllers =
+      <String, StreamController<Map<String, dynamic>>>{};
 
-  // Stores the unsubscribe callbacks provided by the STOMP client
-  final Map<String, StompUnsubscribe> _unsubscribeFunctions = {};
+  // One unsubscribe callback per subscribed topic.
+  final Map<String, StompUnsubscribe> _unsubscribeFunctions =
+      <String, StompUnsubscribe>{};
 
-  /// Returns a stream for a specific STOMP topic, connecting to the hub if needed.
+  // Topics waiting for the socket to connect.
+  final Set<String> _pendingTopics = <String>{};
+
+  /// Returns a stream for a specific STOMP topic.
+  ///
+  /// Important:
+  /// - If STOMP is already connected, it subscribes immediately.
+  /// - If STOMP is not connected yet, it queues the topic and connects.
+  /// - When onConnect fires, all pending/current topics are subscribed.
   Stream<Map<String, dynamic>> watch(String topicEndpoint) {
-    if (!_controllers.containsKey(topicEndpoint)) {
-      // 1. Create a stream controller for this specific track's UI to listen to
+    debugPrint('==============================');
+    debugPrint('[WebSocketClient] watch() called');
+    debugPrint('[WebSocketClient] topicEndpoint: $topicEndpoint');
+    debugPrint('[WebSocketClient] isConnected: $_isConnected');
+    debugPrint('[WebSocketClient] isConnecting: $_isConnecting');
+    debugPrint('[WebSocketClient] stomp connected: ${_stompClient?.connected}');
+
+    final existingController = _controllers[topicEndpoint];
+
+    if (existingController == null || existingController.isClosed) {
+      debugPrint('[WebSocketClient] creating new controller for topic');
+
       _controllers[topicEndpoint] =
-          StreamController<Map<String, dynamic>>.broadcast();
+          StreamController<Map<String, dynamic>>.broadcast(
+            onListen: () {
+              debugPrint('[WebSocketClient] stream listener attached');
+              debugPrint('[WebSocketClient] topicEndpoint: $topicEndpoint');
+            },
+            onCancel: () {
+              debugPrint('[WebSocketClient] stream listener cancelled');
+              debugPrint('[WebSocketClient] topicEndpoint: $topicEndpoint');
+            },
+          );
+    } else {
+      debugPrint('[WebSocketClient] reusing existing controller for topic');
     }
 
-    // 2. If already connected to the STOMP hub, subscribe instantly.
-    if (_isConnected && _stompClient?.connected == true) {
-      if (!_unsubscribeFunctions.containsKey(topicEndpoint)) {
-        _subscribeToTopic(topicEndpoint);
-      }
+    _pendingTopics.add(topicEndpoint);
+
+    if (_isSocketReady) {
+      debugPrint('[WebSocketClient] socket ready, subscribing now');
+      _subscribeToTopic(topicEndpoint);
     } else {
-      // 3. Otherwise, boot up or restore the main connection first.
-      _connect();
+      debugPrint('[WebSocketClient] socket not ready, connecting first');
+      unawaited(_connect());
     }
 
     return _controllers[topicEndpoint]!.stream;
   }
 
+  bool get _isSocketReady {
+    return _isConnected && _stompClient != null && _stompClient!.connected;
+  }
+
   Future<void> _connect() async {
-    if (_isConnecting) return;
-    if (_stompClient?.connected == true && _isConnected) return;
+    debugPrint('==============================');
+    debugPrint('[WebSocketClient] _connect() called');
+    debugPrint('[WebSocketClient] isConnected: $_isConnected');
+    debugPrint('[WebSocketClient] isConnecting: $_isConnecting');
+    debugPrint('[WebSocketClient] stomp connected: ${_stompClient?.connected}');
+
+    if (_isConnecting) {
+      debugPrint('[WebSocketClient] already connecting, skipping');
+      return;
+    }
+
+    if (_isSocketReady) {
+      debugPrint('[WebSocketClient] socket already ready');
+
+      _subscribeToAllPendingTopics();
+      return;
+    }
 
     if (_stompClient != null && _stompClient!.connected == false) {
-      _stompClient!.deactivate();
+      debugPrint('[WebSocketClient] old disconnected client found');
+      debugPrint('[WebSocketClient] deactivating old client');
+
+      try {
+        _stompClient!.deactivate();
+      } catch (error, stackTrace) {
+        debugPrint('[WebSocketClient] old deactivate failed: $error');
+        debugPrint('[WebSocketClient] stackTrace: $stackTrace');
+      }
+
       _stompClient = null;
+      _isConnected = false;
       _unsubscribeFunctions.clear();
     }
 
@@ -60,133 +121,307 @@ class WebSocketClient {
     try {
       final token = await _secureStorage.getAccessToken();
 
-      // I am assuming '/ws' here, which is the Spring Boot default.
+      if (token == null || token.isEmpty) {
+        debugPrint('[WebSocketClient] access token is null/empty');
+        _isConnecting = false;
+        _broadcastError('Missing access token for WebSocket connection');
+        return;
+      }
+
       final String stompHubUrl = '${ApiConstants.wsBaseUrl}/ws?token=$token';
+
+      debugPrint('[WebSocketClient] creating STOMP client');
+      debugPrint('[WebSocketClient] url: $stompHubUrl');
 
       _stompClient = StompClient(
         config: StompConfig(
           url: stompHubUrl,
-          onConnect: _onConnect,
           beforeConnect: () async {
-            if (kDebugMode) {
-              debugPrint(
-                'STOMP: Booting up main connection to $stompHubUrl...',
-              );
-            }
+            debugPrint('STOMP: Booting up main connection to $stompHubUrl...');
           },
+          onConnect: _onConnect,
           onWebSocketError: (error) {
+            debugPrint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            debugPrint('[WebSocketClient] onWebSocketError');
+            debugPrint('[WebSocketClient] error: $error');
+
+            _isConnected = false;
             _isConnecting = false;
-            debugPrint('STOMP WebSocket Error: $error');
-            _broadcastError(error as Object);
+
+            _broadcastError(error is Object ? error : error.toString());
           },
           onStompError: (StompFrame frame) {
-            debugPrint('STOMP Protocol Error: ${frame.body}');
+            debugPrint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            debugPrint('[WebSocketClient] onStompError');
+            debugPrint('[WebSocketClient] command: ${frame.command}');
+            debugPrint('[WebSocketClient] headers: ${frame.headers}');
+            debugPrint('[WebSocketClient] body: ${frame.body}');
+
             _broadcastError(frame.body ?? 'STOMP Protocol Error');
           },
           onDisconnect: (StompFrame frame) {
-            debugPrint('STOMP: Main Hub Disconnected');
+            debugPrint('------------------------------');
+            debugPrint('[WebSocketClient] onDisconnect');
+            debugPrint('[WebSocketClient] command: ${frame.command}');
+            debugPrint('[WebSocketClient] headers: ${frame.headers}');
+            debugPrint('[WebSocketClient] body: ${frame.body}');
+
             _isConnected = false;
             _isConnecting = false;
             _unsubscribeFunctions.clear();
+
+            // Keep controllers alive.
+            // If reconnect happens, existing topics can be subscribed again.
+            _pendingTopics.addAll(_controllers.keys);
           },
-          // Spring Boot often expects the token in the CONNECT frame headers as well
-          stompConnectHeaders: {'Authorization': 'Bearer $token'},
-          webSocketConnectHeaders: {'Authorization': 'Bearer $token'},
+          stompConnectHeaders: <String, String>{
+            'Authorization': 'Bearer $token',
+          },
+          webSocketConnectHeaders: <String, String>{
+            'Authorization': 'Bearer $token',
+          },
           reconnectDelay: const Duration(seconds: 5),
         ),
       );
 
+      debugPrint('[WebSocketClient] activating STOMP client');
       _stompClient!.activate();
-    } catch (e) {
+    } catch (error, stackTrace) {
+      debugPrint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+      debugPrint('[WebSocketClient] STOMP setup failed');
+      debugPrint('[WebSocketClient] error: $error');
+      debugPrint('[WebSocketClient] stackTrace: $stackTrace');
+
+      _isConnected = false;
       _isConnecting = false;
-      debugPrint('STOMP setup failed: $e');
+
+      _broadcastError(error);
     }
   }
 
   void _onConnect(StompFrame frame) {
+    debugPrint('==============================');
+    debugPrint('[WebSocketClient] onConnect');
+    debugPrint('[WebSocketClient] command: ${frame.command}');
+    debugPrint('[WebSocketClient] headers: ${frame.headers}');
+    debugPrint('[WebSocketClient] body: ${frame.body}');
     debugPrint('STOMP: Connected to Main Hub Successfully!');
+
     _isConnected = true;
     _isConnecting = false;
 
-    // Use a tiny delay to let the socket settle, but verify it's still alive afterward!
-    Future.delayed(const Duration(milliseconds: 150), () {
-      if (_stompClient != null && _stompClient!.connected) {
-        for (final topic in _controllers.keys) {
-          if (!_unsubscribeFunctions.containsKey(topic)) {
-            _subscribeToTopic(topic);
-          }
-        }
-      } else {
-        debugPrint('STOMP: Connection dropped before we could subscribe!');
+    // Give the socket a tiny moment, then subscribe all queued topics.
+    Future<void>.delayed(const Duration(milliseconds: 150), () {
+      if (!_isSocketReady) {
+        debugPrint('[WebSocketClient] connection dropped before subscribe');
+        return;
       }
+
+      _subscribeToAllPendingTopics();
     });
   }
 
+  void _subscribeToAllPendingTopics() {
+    debugPrint('==============================');
+    debugPrint('[WebSocketClient] _subscribeToAllPendingTopics() called');
+    debugPrint('[WebSocketClient] controllers: ${_controllers.keys.toList()}');
+    debugPrint('[WebSocketClient] pendingTopics: ${_pendingTopics.toList()}');
+
+    final topicsToSubscribe = <String>{..._controllers.keys, ..._pendingTopics};
+
+    for (final topic in topicsToSubscribe) {
+      _subscribeToTopic(topic);
+    }
+  }
+
   void _subscribeToTopic(String topicEndpoint) {
-    // strict !_stompClient!.connected safety check!
-    if (_stompClient == null || !_isConnected || !_stompClient!.connected) {
-      debugPrint(
-        'STOMP: Aborting subscription to $topicEndpoint. Socket is dead.',
-      );
+    debugPrint('------------------------------');
+    debugPrint('[WebSocketClient] _subscribeToTopic() called');
+    debugPrint('[WebSocketClient] topicEndpoint: $topicEndpoint');
+    debugPrint('[WebSocketClient] isSocketReady: $_isSocketReady');
+
+    if (!_controllers.containsKey(topicEndpoint)) {
+      debugPrint('[WebSocketClient] no controller found for topic');
       return;
     }
 
-    debugPrint('STOMP: Subscribing to $topicEndpoint');
+    if (_unsubscribeFunctions.containsKey(topicEndpoint)) {
+      debugPrint('[WebSocketClient] already subscribed to topic');
+      _pendingTopics.remove(topicEndpoint);
+      return;
+    }
 
-    _unsubscribeFunctions[topicEndpoint] = _stompClient!.subscribe(
-      destination: topicEndpoint,
-      callback: (StompFrame frame) {
-        if (frame.body != null) {
-          try {
-            final decoded = jsonDecode(frame.body!) as Map<String, dynamic>;
-            _controllers[topicEndpoint]?.add(decoded);
-          } catch (e) {
-            debugPrint('STOMP JSON decode error on $topicEndpoint: $e');
+    if (!_isSocketReady) {
+      debugPrint('[WebSocketClient] socket not ready, keeping topic pending');
+      _pendingTopics.add(topicEndpoint);
+      unawaited(_connect());
+      return;
+    }
+
+    try {
+      debugPrint('STOMP: Subscribing to $topicEndpoint');
+
+      final unsubscribe = _stompClient!.subscribe(
+        destination: topicEndpoint,
+        callback: (StompFrame frame) {
+          debugPrint('==============================');
+          debugPrint('[WebSocketClient] STOMP message received');
+          debugPrint('[WebSocketClient] topicEndpoint: $topicEndpoint');
+          debugPrint('[WebSocketClient] command: ${frame.command}');
+          debugPrint('[WebSocketClient] headers: ${frame.headers}');
+          debugPrint('[WebSocketClient] body: ${frame.body}');
+
+          final body = frame.body;
+
+          if (body == null || body.isEmpty) {
+            debugPrint('[WebSocketClient] ignored empty STOMP body');
+            return;
           }
-        }
-      },
-    );
+
+          try {
+            final decoded = jsonDecode(body);
+
+            if (decoded is! Map<String, dynamic>) {
+              debugPrint('[WebSocketClient] decoded body is not a map');
+              debugPrint('[WebSocketClient] decoded: $decoded');
+              return;
+            }
+
+            final controller = _controllers[topicEndpoint];
+
+            if (controller == null || controller.isClosed) {
+              debugPrint('[WebSocketClient] controller missing/closed');
+              return;
+            }
+
+            debugPrint('[WebSocketClient] adding decoded message to stream');
+            controller.add(decoded);
+          } catch (error, stackTrace) {
+            debugPrint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            debugPrint('[WebSocketClient] STOMP JSON decode error');
+            debugPrint('[WebSocketClient] topicEndpoint: $topicEndpoint');
+            debugPrint('[WebSocketClient] body: $body');
+            debugPrint('[WebSocketClient] error: $error');
+            debugPrint('[WebSocketClient] stackTrace: $stackTrace');
+
+            _controllers[topicEndpoint]?.addError(error, stackTrace);
+          }
+        },
+      );
+
+      _unsubscribeFunctions[topicEndpoint] = unsubscribe;
+      _pendingTopics.remove(topicEndpoint);
+
+      debugPrint('[WebSocketClient] subscription saved successfully');
+    } catch (error, stackTrace) {
+      debugPrint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+      debugPrint('[WebSocketClient] subscribe failed');
+      debugPrint('[WebSocketClient] topicEndpoint: $topicEndpoint');
+      debugPrint('[WebSocketClient] error: $error');
+      debugPrint('[WebSocketClient] stackTrace: $stackTrace');
+
+      _pendingTopics.add(topicEndpoint);
+      _controllers[topicEndpoint]?.addError(error, stackTrace);
+    }
   }
 
   void _broadcastError(Object error) {
-    for (final controller in _controllers.values) {
-      controller.addError(error);
+    debugPrint('[WebSocketClient] _broadcastError() called');
+    debugPrint('[WebSocketClient] error: $error');
+
+    for (final entry in _controllers.entries) {
+      final topic = entry.key;
+      final controller = entry.value;
+
+      if (!controller.isClosed) {
+        debugPrint('[WebSocketClient] broadcasting error to $topic');
+        controller.addError(error);
+      }
     }
   }
 
-  /// Unsubscribes from a specific topic without closing the main Hub connection
+  /// Unsubscribes from a specific topic without closing the main Hub connection.
   void disconnect(String topicEndpoint) {
-    // 1. Send the STOMP 'UNSUBSCRIBE' frame to the server
-    if (_unsubscribeFunctions.containsKey(topicEndpoint)) {
-      final unsubscribeFn = _unsubscribeFunctions[topicEndpoint]!;
-      unsubscribeFn(); // Execute the un-sub callback
-      _unsubscribeFunctions.remove(topicEndpoint);
-      debugPrint('STOMP: Unsubscribed from $topicEndpoint');
+    debugPrint('==============================');
+    debugPrint('[WebSocketClient] disconnect() called');
+    debugPrint('[WebSocketClient] topicEndpoint: $topicEndpoint');
+
+    _pendingTopics.remove(topicEndpoint);
+
+    final unsubscribe = _unsubscribeFunctions.remove(topicEndpoint);
+
+    if (unsubscribe != null) {
+      try {
+        debugPrint('[WebSocketClient] executing STOMP unsubscribe');
+        unsubscribe();
+        debugPrint('STOMP: Unsubscribed from $topicEndpoint');
+      } catch (error, stackTrace) {
+        debugPrint('[WebSocketClient] unsubscribe failed: $error');
+        debugPrint('[WebSocketClient] stackTrace: $stackTrace');
+      }
+    } else {
+      debugPrint('[WebSocketClient] no unsubscribe function found');
     }
 
-    // 2. Close the Riverpod stream for this track
-    _controllers[topicEndpoint]?.close();
-    _controllers.remove(topicEndpoint);
+    final controller = _controllers.remove(topicEndpoint);
+
+    if (controller != null && !controller.isClosed) {
+      debugPrint('[WebSocketClient] closing stream controller');
+      unawaited(controller.close());
+    } else {
+      debugPrint('[WebSocketClient] no open controller found');
+    }
 
     if (_controllers.isEmpty) {
-      _stompClient?.deactivate();
+      debugPrint('[WebSocketClient] no active controllers left');
+
+      // Keep this behavior if you want to close socket when no topic is watched.
+      // If you want a persistent socket for the whole app, remove this block.
+      try {
+        debugPrint('[WebSocketClient] deactivating STOMP client');
+        _stompClient?.deactivate();
+      } catch (error, stackTrace) {
+        debugPrint('[WebSocketClient] deactivate failed: $error');
+        debugPrint('[WebSocketClient] stackTrace: $stackTrace');
+      }
+
       _stompClient = null;
       _isConnected = false;
       _isConnecting = false;
       _unsubscribeFunctions.clear();
+      _pendingTopics.clear();
     }
   }
 
   void dispose() {
-    _stompClient?.deactivate();
+    debugPrint('==============================');
+    debugPrint('[WebSocketClient] dispose() called');
+
+    try {
+      _stompClient?.deactivate();
+    } catch (error, stackTrace) {
+      debugPrint('[WebSocketClient] dispose deactivate failed: $error');
+      debugPrint('[WebSocketClient] stackTrace: $stackTrace');
+    }
+
     _stompClient = null;
     _isConnected = false;
     _isConnecting = false;
 
-    for (final controller in _controllers.values) {
-      controller.close();
+    for (final entry in _controllers.entries) {
+      final topic = entry.key;
+      final controller = entry.value;
+
+      if (!controller.isClosed) {
+        debugPrint('[WebSocketClient] closing controller for $topic');
+        unawaited(controller.close());
+      }
     }
+
     _controllers.clear();
     _unsubscribeFunctions.clear();
+    _pendingTopics.clear();
+
+    debugPrint('[WebSocketClient] dispose finished');
   }
 }

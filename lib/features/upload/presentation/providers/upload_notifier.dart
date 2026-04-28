@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
+
 import '../../../../core/services/picker_service.dart';
 import '../../../../core/services/waveform_extraction_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
@@ -15,10 +16,8 @@ import 'upload_sessions_provider.dart';
 
 export 'upload_repository_provider.dart' show uploadRepositoryProvider;
 
-// 2. Provide the notifier to the UI
 final uploadNotifierProvider =
     AsyncNotifierProvider<UploadNotifier, TrackUploadMetadata>(
-      // Create a Riverpod provider for UploadNotifier to manage state of (TrackUploadMetadata)
       UploadNotifier.new,
     );
 
@@ -26,22 +25,28 @@ final genreListProvider = StateProvider<List<String>>((ref) {
   return GenreConstants.genres;
 });
 
-// Maps an integer track ID to its String WebSocket UUID
-// 3. The Notifier which containing the form logic "Upload Form Controller"
 class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
-  // Keep Track of 3 genre suggestions.
   List<String> _genreSuggestions = [];
 
   @override
   FutureOr<TrackUploadMetadata> build() async {
-    // 1. Read the service via Riverpod
-    final prefsService = ref.read(sharedPrefsServiceProvider);
+    debugPrint('==============================');
+    debugPrint('[UploadNotifier] build() called');
 
-    // 2. Fetch the saved setting
+    final prefsService = ref.read(sharedPrefsServiceProvider);
+    debugPrint('[UploadNotifier] sharedPrefsService read');
+
     final savedIsPrivate = await prefsService.getLastPrivacySettings();
+    debugPrint('[UploadNotifier] savedIsPrivate: $savedIsPrivate');
 
     final pool = ref.read(genreListProvider);
+    debugPrint('[UploadNotifier] genre pool length: ${pool.length}');
+
     _genreSuggestions = pool.take(3).toList();
+    debugPrint('[UploadNotifier] genreSuggestions: $_genreSuggestions');
+
+    final uploadId = const Uuid().v4();
+    debugPrint('[UploadNotifier] initial uploadId: $uploadId');
 
     return TrackUploadMetadata(
       audioFile: null,
@@ -52,64 +57,98 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       description: '',
       tags: [],
       releaseDate: null,
-      uploadId: const Uuid().v4(),
+      uploadId: uploadId,
       access: 'PLAYABLE',
     );
   }
 
-  // Update the fields of the form. Entity is immutable so use copyWith
-  void updateTitle(String title) =>
-      _updateState((state) => state.copyWith(title: title));
+  void updateTitle(String title) {
+    debugPrint('[UploadNotifier] updateTitle(): $title');
+    _updateState((state) => state.copyWith(title: title));
+  }
 
-  // Getter for the UI to see which chips to show
   List<String> get genreSuggestions => _genreSuggestions;
+
   void updateGenre(String genre) {
+    debugPrint('[UploadNotifier] updateGenre(): $genre');
+
     final currentState = state.value;
-    if (currentState == null) return;
 
-    // 1. Update the actual metadata
+    if (currentState == null) {
+      debugPrint('[UploadNotifier] updateGenre ignored because state is null');
+      return;
+    }
+
     state = AsyncData(currentState.copyWith(genre: genre));
+    debugPrint('[UploadNotifier] genre saved in state');
 
-    // 2. Rotation Logic: If the picked genre was a chip, swap it
     if (genreSuggestions.contains(genre)) {
+      debugPrint('[UploadNotifier] selected genre exists in suggestions');
+
       final pool = ref.read(genreListProvider);
 
-      // Find genres in pool not currently displayed
       final available = pool
           .where((g) => !genreSuggestions.contains(g))
           .toList();
 
+      debugPrint(
+        '[UploadNotifier] available replacement genres: ${available.length}',
+      );
+
       if (available.isNotEmpty) {
         final index = genreSuggestions.indexOf(genre);
         genreSuggestions[index] = available.first;
-        // Trigger a UI refresh by re-emitting the state
+
         state = AsyncData(currentState.copyWith(genre: genre));
+
+        debugPrint(
+          '[UploadNotifier] genreSuggestions updated: $_genreSuggestions',
+        );
       }
     }
   }
 
-  void updateDescription(String desc) =>
-      _updateState((state) => state.copyWith(description: desc));
-  void updateAccess(String access) =>
-      _updateState((state) => state.copyWith(access: access));
-  void togglePrivacy(bool isPrivate) async {
-    // 1. Update the UI state instantly
-    final currentState = state.value;
-    if (currentState != null) {
-      state = AsyncData(currentState.copyWith(isPrivate: isPrivate));
-    }
-
-    // 2. Save it to local storage cleanly in the background
-    final prefsService = ref.read(sharedPrefsServiceProvider);
-    await prefsService.saveLastPrivacySettings(isPrivate);
+  void updateDescription(String desc) {
+    debugPrint('[UploadNotifier] updateDescription(): length=${desc.length}');
+    _updateState((state) => state.copyWith(description: desc));
   }
 
-  void updateReleaseDate(DateTime date) =>
-      _updateState((state) => state.copyWith(releaseDate: date));
-  void clearReleaseDate() {
+  void updateAccess(String access) {
+    debugPrint('[UploadNotifier] updateAccess(): $access');
+    _updateState((state) => state.copyWith(access: access));
+  }
+
+  void togglePrivacy(bool isPrivate) async {
+    debugPrint('[UploadNotifier] togglePrivacy(): $isPrivate');
+
     final currentState = state.value;
+
     if (currentState != null) {
-      // create a new instance to force releaseDate back to null
+      state = AsyncData(currentState.copyWith(isPrivate: isPrivate));
+      debugPrint('[UploadNotifier] privacy updated in state');
+    } else {
+      debugPrint(
+        '[UploadNotifier] privacy state update skipped because currentState is null',
+      );
+    }
+
+    final prefsService = ref.read(sharedPrefsServiceProvider);
+    await prefsService.saveLastPrivacySettings(isPrivate);
+
+    debugPrint('[UploadNotifier] privacy saved to prefs');
+  }
+
+  void updateReleaseDate(DateTime date) {
+    debugPrint('[UploadNotifier] updateReleaseDate(): $date');
+    _updateState((state) => state.copyWith(releaseDate: date));
+  }
+
+  void clearReleaseDate() {
+    debugPrint('[UploadNotifier] clearReleaseDate() called');
+
+    final currentState = state.value;
+
+    if (currentState != null) {
       state = AsyncData(
         TrackUploadMetadata(
           audioFile: currentState.audioFile,
@@ -124,178 +163,385 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
           releaseDate: null,
         ),
       );
+
+      debugPrint('[UploadNotifier] releaseDate cleared');
+    } else {
+      debugPrint(
+        '[UploadNotifier] clearReleaseDate skipped because currentState is null',
+      );
     }
   }
 
-  // Managing Tags
   void addTag(String tag) {
+    debugPrint('[UploadNotifier] addTag() called: $tag');
+
     final currentState = state.value;
 
-    // Replace all whitespace with underscores
-    // Remove anything that isn't letter, number, or underscore
     final sanitizedTag = tag
         .trim()
         .replaceAll(RegExp(r'\s+'), '_')
         .replaceAll(RegExp(r'[^\w]'), '');
-    // Check if state exit, max 10 tags, and tag is not empty
-    if (currentState != null &&
-        currentState.tags.length < 10 &&
-        sanitizedTag.length < 21 && // Max number of chars is 20
-        sanitizedTag.length > 2 && // Min number of chars is 2
+
+    debugPrint('[UploadNotifier] sanitizedTag: $sanitizedTag');
+
+    if (currentState == null) {
+      debugPrint(
+        '[UploadNotifier] addTag ignored because currentState is null',
+      );
+      return;
+    }
+
+    debugPrint(
+      '[UploadNotifier] current tags length: ${currentState.tags.length}',
+    );
+
+    if (currentState.tags.length < 10 &&
+        sanitizedTag.length < 21 &&
+        sanitizedTag.length > 2 &&
         sanitizedTag.isNotEmpty) {
       final newTags = List<String>.from(currentState.tags)..add(sanitizedTag);
       _updateState((state) => state.copyWith(tags: newTags));
+
+      debugPrint('[UploadNotifier] tag added');
+      debugPrint('[UploadNotifier] new tags: $newTags');
+    } else {
+      debugPrint('[UploadNotifier] tag rejected by validation');
     }
   }
 
   void removeTag(String tag) {
+    debugPrint('[UploadNotifier] removeTag() called: $tag');
+
     final currentState = state.value;
+
     if (currentState != null) {
-      // Create new list and add the tag, and avoid mutating the original list
       final newTags = List<String>.from(currentState.tags)..remove(tag);
       _updateState((state) => state.copyWith(tags: newTags));
+
+      debugPrint('[UploadNotifier] tag removed');
+      debugPrint('[UploadNotifier] new tags: $newTags');
+    } else {
+      debugPrint(
+        '[UploadNotifier] removeTag ignored because currentState is null',
+      );
     }
   }
 
-  // File picker
   Future<void> pickAudioFile() async {
-    // Reading the injected service
+    debugPrint('==============================');
+    debugPrint('[UploadNotifier] pickAudioFile() called');
+
     final pickerService = ref.read(pickerServiceProvider);
+    debugPrint('[UploadNotifier] pickerService read');
 
     final file = await pickerService.pickAudioFile();
-    if (file != null) {
-      final audioSizeInMB = file.lengthSync() / (1024 * 1024);
 
-      // Read the first bytes (Magic Bits)
-      // MIME prioritize the extention of the file over the Magic bytes,
-      // so without the file path, MIME will only chick the bytes not the fake extention
+    if (file == null) {
+      debugPrint('[UploadNotifier] audio picking cancelled / file is null');
+      return;
+    }
+
+    debugPrint('[UploadNotifier] audio file selected');
+    debugPrint('[UploadNotifier] audio path: ${file.path}');
+
+    try {
+      final audioSizeInMB = file.lengthSync() / (1024 * 1024);
+      debugPrint('[UploadNotifier] audio size MB: $audioSizeInMB');
+
       final headerBytes = await file.openRead(0, 16).first;
       final mimeType = lookupMimeType('', headerBytes: headerBytes);
 
-      // The allowed mime types
-      const allowedAudioMimeTypes = [
-        'audio/mpeg', // MP3
-        'audio/wav', // WAV
-        'audio/x-wav', // Alternate WAV
-      ];
+      debugPrint('[UploadNotifier] audio mimeType: $mimeType');
+
+      const allowedAudioMimeTypes = ['audio/mpeg', 'audio/wav', 'audio/x-wav'];
 
       if (mimeType == null || !allowedAudioMimeTypes.contains(mimeType)) {
+        debugPrint('[UploadNotifier] invalid audio mime type');
+
         state = AsyncValue<TrackUploadMetadata>.error(
           'Security Alert: This file is not a valid audio format, FAKE EXTENSION. Please upload a real MP3/WAV file.,',
           StackTrace.current,
         ).copyWithPrevious(state);
+
         return;
       }
 
-      // Check if the user didn't cancel the upload
       if (audioSizeInMB > 20) {
+        debugPrint('[UploadNotifier] audio file too large');
+
         state = AsyncValue<TrackUploadMetadata>.error(
-          "Audio file exceeds 20MB limit.",
+          'Audio file exceeds 20MB limit.',
           StackTrace.current,
         ).copyWithPrevious(state);
+
         return;
       }
 
-      // Duration check, in windows we have some problem to access the file and extract
-      // the duration from it, so we used "just_audio_windows" in addition and trying to
-      // catch windows crashes during upload the audio file
+      debugPrint('[UploadNotifier] reading audio duration');
+
       final duration = await pickerService.getAudioDuration(file.path);
 
+      debugPrint('[UploadNotifier] audio duration: $duration');
+
       if (duration == null || duration.inSeconds < 1) {
+        debugPrint('[UploadNotifier] invalid audio duration');
+
         state = AsyncValue<TrackUploadMetadata>.error(
-          "Audio file must be at least 1 second long.",
+          'Audio file must be at least 1 second long.',
           StackTrace.current,
         ).copyWithPrevious(state);
+
         return;
       }
 
-      final metadata = state.value!.copyWith(audioFile: file);
+      final currentState = state.value;
+
+      if (currentState == null) {
+        debugPrint('[UploadNotifier] currentState is null after picking audio');
+        return;
+      }
+
+      final metadata = currentState.copyWith(audioFile: file);
       state = AsyncData(metadata);
+
+      debugPrint('[UploadNotifier] audioFile saved in state');
+      debugPrint('[UploadNotifier] current uploadId: ${metadata.uploadId}');
+      debugPrint('[UploadNotifier] current title: ${metadata.title}');
+      debugPrint('[UploadNotifier] current genre: ${metadata.genre}');
+    } catch (error, stackTrace) {
+      debugPrint('[UploadNotifier] pickAudioFile failed: $error');
+      debugPrint('[UploadNotifier] stackTrace: $stackTrace');
+
+      state = AsyncValue<TrackUploadMetadata>.error(
+        error.toString(),
+        StackTrace.current,
+      ).copyWithPrevious(state);
     }
   }
 
   Future<void> pickCoverImage() async {
-    // Reade the injection service
+    debugPrint('==============================');
+    debugPrint('[UploadNotifier] pickCoverImage() called');
+
     final pickerService = ref.read(pickerServiceProvider);
+    debugPrint('[UploadNotifier] pickerService read');
 
     final image = await pickerService.pickCoverImage();
-    if (image != null) {
-      // Read the first bytes (Magic Bits)
+
+    if (image == null) {
+      debugPrint('[UploadNotifier] image picking cancelled / image is null');
+      return;
+    }
+
+    debugPrint('[UploadNotifier] cover image selected');
+    debugPrint('[UploadNotifier] image path: ${image.path}');
+
+    try {
       final imageSize = image.lengthSync() / (1024 * 1024);
+      debugPrint('[UploadNotifier] image size MB: $imageSize');
 
       final headerBytes = await image.openRead(0, 16).first;
-
       final mimeType = lookupMimeType('', headerBytes: headerBytes);
+
+      debugPrint('[UploadNotifier] image mimeType: $mimeType');
 
       const allowedImageMimeTypes = ['image/jpeg', 'image/png'];
 
       if (mimeType == null || !allowedImageMimeTypes.contains(mimeType)) {
+        debugPrint('[UploadNotifier] invalid image mime type');
+
         state = AsyncValue<TrackUploadMetadata>.error(
-          "Security Alert: This file is not a valid image format, FAKE EXTENSION. Please upload a real JPG or PNG file.",
+          'Security Alert: This file is not a valid image format, FAKE EXTENSION. Please upload a real JPG or PNG file.',
           StackTrace.current,
         ).copyWithPrevious(state);
+
         return;
       }
 
-      // Check if the user didn't cancel the upload
       if (imageSize > 20) {
+        debugPrint('[UploadNotifier] image file too large');
+
         state = AsyncValue<TrackUploadMetadata>.error(
-          "Image file exceeds 20MB limit.",
+          'Image file exceeds 20MB limit.',
           StackTrace.current,
         ).copyWithPrevious(state);
+
         return;
       }
 
       _updateState((state) => state.copyWith(coverImage: image));
+
+      debugPrint('[UploadNotifier] coverImage saved in state');
+    } catch (error, stackTrace) {
+      debugPrint('[UploadNotifier] pickCoverImage failed: $error');
+      debugPrint('[UploadNotifier] stackTrace: $stackTrace');
+
+      state = AsyncValue<TrackUploadMetadata>.error(
+        error.toString(),
+        StackTrace.current,
+      ).copyWithPrevious(state);
     }
   }
 
   Future<bool> submitTrack() async {
+    debugPrint('==============================');
+    debugPrint('[UploadNotifier] submitTrack() called');
+
     final currentState = state.value;
-    if (currentState == null || currentState.audioFile == null) return false;
+
+    if (currentState == null) {
+      debugPrint('[UploadNotifier] currentState is null');
+      return false;
+    }
+
+    debugPrint('[UploadNotifier] current uploadId: ${currentState.uploadId}');
+    debugPrint('[UploadNotifier] current title: ${currentState.title}');
+    debugPrint('[UploadNotifier] current genre: ${currentState.genre}');
+    debugPrint(
+      '[UploadNotifier] current description length: ${currentState.description.length}',
+    );
+    debugPrint('[UploadNotifier] current tags: ${currentState.tags}');
+    debugPrint('[UploadNotifier] current isPrivate: ${currentState.isPrivate}');
+    debugPrint('[UploadNotifier] current access: ${currentState.access}');
+    debugPrint(
+      '[UploadNotifier] has audioFile: ${currentState.audioFile != null}',
+    );
+    debugPrint(
+      '[UploadNotifier] has coverImage: ${currentState.coverImage != null}',
+    );
+    debugPrint('[UploadNotifier] releaseDate: ${currentState.releaseDate}');
+
+    if (currentState.audioFile == null) {
+      debugPrint('[UploadNotifier] audioFile is null');
+      return false;
+    }
+
+    debugPrint('[UploadNotifier] audio file exists');
+    debugPrint('[UploadNotifier] audio path: ${currentState.audioFile!.path}');
 
     List<double> waveFormData = [];
+
     try {
+      debugPrint('[UploadNotifier] extracting waveform');
+
       final waveformService = ref.read(waveformExtractionServiceProvider);
+      debugPrint('[UploadNotifier] waveformService read');
+
       waveFormData = await waveformService.extractWaveform(
         currentState.audioFile!.path,
         noOfSamples: 100,
       );
-      debugPrint('WaveformDebug extracted: $waveFormData');
-    } catch (e) {
+
+      debugPrint('[UploadNotifier] waveform extracted');
+      debugPrint('[UploadNotifier] waveform length: ${waveFormData.length}');
+
+      if (waveFormData.isNotEmpty) {
+        debugPrint(
+          '[UploadNotifier] waveform first value: ${waveFormData.first}',
+        );
+        debugPrint(
+          '[UploadNotifier] waveform last value: ${waveFormData.last}',
+        );
+      }
+    } catch (e, st) {
+      debugPrint('[UploadNotifier] waveform extraction failed: $e');
+      debugPrint('[UploadNotifier] stackTrace: $st');
       waveFormData = [];
     }
 
     if (waveFormData.isEmpty) {
+      debugPrint('[UploadNotifier] waveform is empty, stopping upload');
+
       state = AsyncValue<TrackUploadMetadata>.error(
         'Could not extract waveform data from this audio file.',
         StackTrace.current,
       ).copyWithPrevious(state);
+
       return false;
     }
+
+    debugPrint('[UploadNotifier] setting upload form to loading');
 
     state = const AsyncLoading<TrackUploadMetadata>().copyWithPrevious(state);
 
     final repository = ref.read(uploadRepositoryProvider);
+    debugPrint('[UploadNotifier] uploadRepository read');
 
-    // We do NOT generate a new Uuid here. We use the one already in currentState
-    final result = await repository.uploadTrack(
-      currentState.copyWith(waveFormData: waveFormData),
+    final metadataToUpload = currentState.copyWith(waveFormData: waveFormData);
+
+    debugPrint(
+      '[UploadNotifier] metadataToUpload uploadId: ${metadataToUpload.uploadId}',
     );
+    debugPrint(
+      '[UploadNotifier] metadataToUpload title: ${metadataToUpload.title}',
+    );
+    debugPrint(
+      '[UploadNotifier] metadataToUpload genre: ${metadataToUpload.genre}',
+    );
+    debugPrint(
+      '[UploadNotifier] metadataToUpload access: ${metadataToUpload.access}',
+    );
+    debugPrint(
+      '[UploadNotifier] metadataToUpload waveform length: ${metadataToUpload.waveFormData.length}',
+    );
+
+    // Subscribe BEFORE sending the upload request.
+    // This prevents missing fast backend WebSocket messages.
+    ref
+        .read(uploadSessionsProvider.notifier)
+        .watchUploadStatusBeforeTrack(uploadId: metadataToUpload.uploadId);
+
+    debugPrint(
+      '[UploadNotifier] pre-subscribed to upload status: ${metadataToUpload.uploadId}',
+    );
+
+    debugPrint('[UploadNotifier] calling repository.uploadTrack()');
+
+    final result = await repository.uploadTrack(metadataToUpload);
+
+    debugPrint('[UploadNotifier] uploadTrack() returned result');
 
     return result.fold(
       (failure) {
+        debugPrint('[UploadNotifier] upload failed');
+        debugPrint('[UploadNotifier] failure: ${failure.message}');
+
+        ref
+            .read(uploadSessionsProvider.notifier)
+            .cancelUploadStatusWatch(metadataToUpload.uploadId);
+
         state = AsyncValue<TrackUploadMetadata>.error(
           failure.message,
           StackTrace.current,
         ).copyWithPrevious(state);
+
         return false;
       },
       (track) {
+        debugPrint('[UploadNotifier] upload succeeded');
+        debugPrint('[UploadNotifier] backend track id: ${track.id}');
+        debugPrint('[UploadNotifier] backend track title: ${track.title}');
+        debugPrint('[UploadNotifier] backend track state: ${track.state}');
+        debugPrint(
+          '[UploadNotifier] backend track isPlayable: ${track.isPlayable}',
+        );
+        debugPrint(
+          '[UploadNotifier] backend track normalizedTrackUrl: ${track.normalizedTrackUrl}',
+        );
+        debugPrint('[UploadNotifier] calling trackUpload()');
+        debugPrint('[UploadNotifier] uploadId: ${metadataToUpload.uploadId}');
+
         ref
             .read(uploadSessionsProvider.notifier)
-            .trackUpload(uploadId: currentState.uploadId, track: track);
+            .trackUpload(uploadId: metadataToUpload.uploadId, track: track);
+
+        debugPrint('[UploadNotifier] trackUpload() called');
+
         ref.read(uploadsProvider.notifier).addTrack(track);
+
+        debugPrint('[UploadNotifier] track added to uploadsProvider');
+
+        final nextUploadId = const Uuid().v4();
 
         state = AsyncData(
           TrackUploadMetadata(
@@ -307,18 +553,29 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
             tags: [],
             isPrivate: currentState.isPrivate,
             releaseDate: null,
-            uploadId: const Uuid().v4(),
+            uploadId: nextUploadId,
             access: 'PLAYABLE',
           ),
         );
+
+        debugPrint('[UploadNotifier] upload form reset');
+        debugPrint('[UploadNotifier] next uploadId: $nextUploadId');
+
         return true;
       },
     );
   }
 
   void _updateState(TrackUploadMetadata Function(TrackUploadMetadata) update) {
+    debugPrint('[UploadNotifier] _updateState() called');
+
     if (state.value != null) {
       state = AsyncData(update(state.value!));
+      debugPrint('[UploadNotifier] state updated');
+    } else {
+      debugPrint(
+        '[UploadNotifier] _updateState ignored because state.value is null',
+      );
     }
   }
 }
