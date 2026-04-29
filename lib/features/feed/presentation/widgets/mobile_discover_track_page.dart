@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -9,6 +10,7 @@ import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/domain/entities/track.dart' as library_track;
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../domain/entities/feed_track.dart';
 
 class MobileDiscoverTrackPage extends StatelessWidget {
@@ -32,10 +34,11 @@ class MobileDiscoverTrackPage extends StatelessWidget {
   final List<Color> gradientColors;
   final bool isMuted;
   final VoidCallback onToggleMute;
-  final void Function(
+  final Future<void> Function(
     library_track.Track track,
     List<library_track.Track> queue,
-  ) onPlayTrack;
+  )
+  onPlayTrack;
   final ValueChanged<library_track.Track> onAddToPlaylist;
 
   @override
@@ -90,15 +93,15 @@ class MobileDiscoverTrackPage extends StatelessWidget {
                     left: AppDimensions.paddingMd,
                     right: 92,
                     bottom: AppDimensions.paddingLg,
-                    child: _DiscoverTrackInfo(
-                      track: track,
-                      duration: duration,
-                    ),
+                    child: _DiscoverTrackInfo(track: track, duration: duration),
                   ),
                   Positioned(
                     right: AppDimensions.paddingMd,
                     bottom: AppDimensions.paddingLg,
-                    child: _DiscoverPlayButton(onPressed: play),
+                    child: _DiscoverPlayButton(
+                      onPressed: play,
+                      trackId: track.id,
+                    ),
                   ),
                 ],
               ),
@@ -171,11 +174,7 @@ class _DiscoverScrim extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0x66000000),
-            Color(0x11000000),
-            Color(0xE6000000),
-          ],
+          colors: [Color(0x66000000), Color(0x11000000), Color(0xE6000000)],
           stops: [0, 0.48, 1],
         ),
       ),
@@ -349,18 +348,31 @@ class _RailActionButton extends StatelessWidget {
   }
 }
 
-class _DiscoverPlayButton extends StatelessWidget {
-  const _DiscoverPlayButton({required this.onPressed});
+class _DiscoverPlayButton extends ConsumerWidget {
+  const _DiscoverPlayButton({required this.onPressed, required this.trackId});
 
   final VoidCallback onPressed;
+  final int trackId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPlaying = ref.watch(
+      trackAudioProvider.select(
+        (s) => s.isPlaying && s.preparedTrackId == trackId,
+      ),
+    );
+
     return Semantics(
       button: true,
-      label: 'Play track',
+      label: isPlaying ? 'Pause track' : 'Play track',
       child: GestureDetector(
-        onTap: onPressed,
+        onTap: () {
+          if (isPlaying) {
+            ref.read(trackAudioProvider.notifier).pause();
+          } else {
+            onPressed();
+          }
+        },
         behavior: HitTestBehavior.opaque,
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -374,10 +386,10 @@ class _DiscoverPlayButton extends StatelessWidget {
               ),
             ],
           ),
-          child: const SizedBox.square(
+          child: SizedBox.square(
             dimension: 58,
             child: Icon(
-              Icons.play_arrow_rounded,
+              isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
               color: AppColors.background,
               size: 38,
             ),
@@ -389,10 +401,7 @@ class _DiscoverPlayButton extends StatelessWidget {
 }
 
 class _DiscoverMuteButton extends StatelessWidget {
-  const _DiscoverMuteButton({
-    required this.isMuted,
-    required this.onPressed,
-  });
+  const _DiscoverMuteButton({required this.isMuted, required this.onPressed});
 
   final bool isMuted;
   final VoidCallback onPressed;

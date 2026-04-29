@@ -65,7 +65,7 @@ class CommentReplyItem extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.favorite_border, size: 14, color: Colors.grey),
+          // const Icon(Icons.favorite_border, size: 14, color: Colors.grey),
         ],
       ),
     );
