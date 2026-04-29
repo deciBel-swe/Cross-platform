@@ -7,6 +7,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../engagement/presentation/widgets/track_report_bottom_sheet.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/notifiers/track_comment_notifier.dart';
 import '../../../library/presentation/widgets/bottom_bar_widget.dart';
@@ -80,6 +81,9 @@ class TrackPreviewContent extends ConsumerWidget {
                       title: track.title,
                       artistName: track.artist.username,
                       tagLabel: 'Behind this track',
+                      onTagTap: () {
+                        context.push(RoutePaths.behindTrack(trackId));
+                      },
                     ),
                     const Spacer(),
                     Padding(
@@ -138,13 +142,6 @@ class TrackPreviewContent extends ConsumerWidget {
               track: track,
             );
           },
-          onSharePressed: () async {
-            await _copyTrackLink(
-              context: context,
-              track: track,
-              message: 'Track link copied to share',
-            );
-          },
           onAddToPlaylistPressed: () async {
             await Future<void>.delayed(Duration.zero);
             if (context.mounted) {
@@ -164,6 +161,9 @@ class TrackPreviewContent extends ConsumerWidget {
             }
 
             switch (action) {
+              case TrackMoreOption.report:
+                await TrackReportBottomSheet.show(context, trackId);
+                break;
               case TrackMoreOption.addToPlaylist:
                 context.push(RoutePaths.addToPlaylist, extra: track);
                 break;
@@ -183,7 +183,7 @@ class TrackPreviewContent extends ConsumerWidget {
                 if (isOwner) {
                   context.go(RoutePaths.profile);
                 } else {
-                  context.push(RoutePaths.publicProfile(track.artist.username));
+                  context.go(RoutePaths.publicProfile(track.artist.username));
                 }
                 break;
               case TrackMoreOption.goToAlbum:
@@ -220,10 +220,8 @@ class TrackPreviewContent extends ConsumerWidget {
     required Track track,
     String message = 'Track link copied',
   }) async {
-    final link = 'https://decibel.foo${RoutePaths.deepLinkTrack(
-      track.artist.username,
-      track.id.toString(),
-    )}';
+    final link =
+        'https://decibel.foo${RoutePaths.deepLinkTrack(track.artist.username, track.id.toString())}';
     await Clipboard.setData(ClipboardData(text: link));
     if (!context.mounted) {
       return;
@@ -377,5 +375,4 @@ class TrackPreviewContent extends ConsumerWidget {
         ) ??
         false;
   }
-
 }

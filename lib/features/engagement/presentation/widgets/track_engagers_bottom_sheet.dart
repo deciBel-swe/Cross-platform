@@ -7,6 +7,8 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/track_engager.dart';
 import '../notifiers/track_engagers_notifier.dart';
 import '../providers/follow_state_provider.dart';
@@ -217,13 +219,17 @@ class _TrackEngagersBottomSheetState
   }
 }
 
-class _EngagerTile extends StatelessWidget {
+class _EngagerTile extends ConsumerWidget {
   const _EngagerTile({required this.user});
 
   final TrackEngager user;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider).valueOrNull;
+    final isAuthenticated = authState is AuthAuthenticated;
+    final isOwnProfile = isAuthenticated && authState.user.id == user.id;
+
     return Semantics(
       identifier: 'engager_tile_${user.id}',
       label: 'User ${user.username}',
@@ -237,8 +243,10 @@ class _EngagerTile extends StatelessWidget {
               label: '${user.username}\'s avatar',
               button: true,
               child: GestureDetector(
-                onTap: () =>
-                    context.push(RoutePaths.publicProfile(user.id.toString())),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.go(RoutePaths.publicProfile(user.username));
+                },
                 child: CircleAvatar(
                   radius: 20,
                   backgroundColor: Colors.white10,
@@ -258,20 +266,25 @@ class _EngagerTile extends StatelessWidget {
                 label: user.username,
                 button: true,
                 child: GestureDetector(
-                  onTap: () => context.push(
-                    RoutePaths.publicProfile(user.id.toString()),
-                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    context.go(RoutePaths.publicProfile(user.username));
+                  },
                   behavior: HitTestBehavior.opaque,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Text(
-                            user.username,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          Flexible(
+                            child: Text(
+                              user.username,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                           if (user.tier == 'PRO') ...[
@@ -291,7 +304,11 @@ class _EngagerTile extends StatelessWidget {
                 ),
               ),
             ),
-            _FollowButton(userId: user.id, initialFollowing: user.isFollowing),
+            if (isAuthenticated && !isOwnProfile)
+              _FollowButton(
+                userId: user.id,
+                initialFollowing: user.isFollowing,
+              ),
           ],
         ),
       ),

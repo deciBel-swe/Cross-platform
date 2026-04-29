@@ -127,6 +127,13 @@ class FakeTrackSocialRepository implements ITrackSocialRepository {
       ),
     );
   }
+
+  @override
+  Future<void> reportTrack({
+    required int trackId,
+    required String reason,
+    String? description,
+  }) async {}
 }
 
 void main() {

@@ -25,6 +25,7 @@ import '../../features/home/presentation/screens/recently_played_screen.dart';
 import '../../features/home/presentation/screens/station_playlist_screen.dart';
 import '../../features/library/domain/entities/track.dart';
 import '../../features/library/presentation/screens/add_to_playlist_screen.dart';
+import '../../features/library/presentation/screens/behind_track_screen.dart';
 import '../../features/library/presentation/screens/downloads_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/library/presentation/screens/track_edit_screen.dart';
@@ -132,10 +133,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
-        path: RoutePaths.login,
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
         path: RoutePaths.register,
         builder: (context, state) => const RegisterScreen(),
       ),
@@ -212,8 +209,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: RoutePaths.search,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: SearchScreen()),
+                builder: (context, state) => SearchScreen(
+                  query: state.uri.queryParameters['q'],
+                  type: state.uri.queryParameters['type'],
+                ),
               ),
             ],
           ),
@@ -236,31 +235,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     },
                   ),
                   GoRoute(
+                    path: 'behind-track/:trackId',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final trackIdStr = state.pathParameters['trackId']!;
+                      final trackId = int.parse(trackIdStr);
+                      return BehindTrackScreen(trackId: trackId);
+                    },
+                  ),
+                  GoRoute(
                     path: 'playlists',
                     builder: (context, state) => const PlaylistsScreen(),
-                    routes: [
-                      GoRoute(
-                        path: 'edit',
-                        builder: (context, state) {
-                          final playlist = state.extra as Playlist;
-                          return EditPlaylistScreen(playlist: playlist);
-                        },
-                      ),
-                      GoRoute(
-                        path: 'playlist-tracks',
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: (context, state) {
-                          final playlist = state.extra as Playlist;
+                  ),
+                  GoRoute(
+                    path: 'playlists/edit',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final playlist = state.extra as Playlist;
+                      return EditPlaylistScreen(playlist: playlist);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'playlists/playlist-tracks',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final playlist = state.extra as Playlist;
 
-                          return PlaylistDetailsScreen(
-                            key: ValueKey(
-                              'playlist-details-${playlist.id}-${state.pageKey.value}',
-                            ),
-                            playlistSummary: playlist,
-                          );
-                        },
-                      ),
-                    ],
+                      return PlaylistDetailsScreen(
+                        key: ValueKey(
+                          'playlist-details-${playlist.id}-${state.pageKey.value}',
+                        ),
+                        playlistSummary: playlist,
+                      );
+                    },
                   ),
                   GoRoute(
                     path: 'following',
@@ -440,10 +447,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   final userIdentifier =
                       state.pathParameters['userIdentifier']!;
 
-                  return MaterialPage(
-                    key: ValueKey(
-                      'public-profile-$userIdentifier-${state.pageKey.value}',
-                    ),
+                  return NoTransitionPage(
+                    key: state.pageKey,
                     child: PublicProfileScreen(userIdentifier: userIdentifier),
                   );
                 },

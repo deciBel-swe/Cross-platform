@@ -19,6 +19,7 @@ class Track {
     required this.isLiked,
     required this.isReposted,
     required this.createdAt,
+    this.description,
   });
 
   final int id;
@@ -37,6 +38,7 @@ class Track {
   final bool isLiked;
   final bool isReposted;
   final DateTime createdAt;
+  final String? description;
 
   String? get normalizedTrackUrl {
     final value = trackUrl?.trim();
@@ -71,6 +73,7 @@ class Track {
     bool? isLiked,
     bool? isReposted,
     DateTime? createdAt,
+    String? description,
   }) {
     return Track(
       id: id ?? this.id,
@@ -89,6 +92,7 @@ class Track {
       isLiked: isLiked ?? this.isLiked,
       isReposted: isReposted ?? this.isReposted,
       createdAt: createdAt ?? this.createdAt,
+      description: description ?? this.description,
     );
   }
 }

@@ -11,7 +11,6 @@ import '../state/track_audio_state.dart';
 
 class TrackAudioNotifier extends Notifier<TrackAudioState> {
   AudioPlayer? _player;
-  double _playerVolume = 1;
 
   /// Factory for creating AudioPlayer instances, customizable for testing.
   @visibleForTesting

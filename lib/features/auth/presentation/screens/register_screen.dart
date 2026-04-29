@@ -403,16 +403,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     items: const [
                       DropdownMenuItem(value: 'male', child: Text('Male')),
                       DropdownMenuItem(value: 'female', child: Text('Female')),
-                      DropdownMenuItem(
-                        value: 'non_binary',
-                        child: Text('Non-binary'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'prefer_not_to_say',
-                        child: Text('Prefer not to say'),
-                      ),
                     ],
-                    onChanged: (value) => setState(() => _selectedGender = value),
+                    onChanged: (value) =>
+                        setState(() => _selectedGender = value),
                   ),
                 ),
 
@@ -430,40 +423,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     stateSearchPlaceholder: "State",
                     countryDropdownLabel: "Country (optional)",
                     stateDropdownLabel: "State (optional)",
-                  dropdownDecoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.outline),
+                    dropdownDecoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.outline),
+                    ),
+                    disabledDropdownDecoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.outline),
+                    ),
+                    selectedItemStyle: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                    dropdownHeadingStyle: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    dropdownItemStyle: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                    dropdownDialogRadius: 12.0,
+                    searchBarRadius: 12.0,
+                    onCountryChanged: (value) {
+                      _countryController.text = value.toString();
+                      _cityController.clear();
+                    },
+                    onStateChanged: (value) {
+                      _cityController.text = value.toString();
+                    },
                   ),
-                  disabledDropdownDecoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.outline),
-                  ),
-                  selectedItemStyle: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                  ),
-                  dropdownHeadingStyle: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  dropdownItemStyle: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                  ),
-                  dropdownDialogRadius: 12.0,
-                  searchBarRadius: 12.0,
-                  onCountryChanged: (value) {
-                    _countryController.text = value.toString();
-                    _cityController.clear();
-                  },
-                  onStateChanged: (value) {
-                    _cityController.text = value.toString();
-                  },
                 ),
-              ),
 
                 const SizedBox(height: 16),
 

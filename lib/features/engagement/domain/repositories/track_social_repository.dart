@@ -39,4 +39,11 @@ abstract class ITrackSocialRepository {
     required int page,
     required int size,
   });
+
+  /// Reports a track for moderation.
+  Future<void> reportTrack({
+    required int trackId,
+    required String reason,
+    String? description,
+  });
 }

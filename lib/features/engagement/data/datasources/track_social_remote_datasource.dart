@@ -276,6 +276,28 @@ class TrackSocialRemoteDatasource {
     }
   }
 
+  Future<void> reportTrack({
+    required int trackId,
+    required String reason,
+    String? description,
+  }) async {
+    try {
+      final data = <String, dynamic>{
+        'reason': reason,
+      };
+      if (description != null) {
+        data['description'] = description;
+      }
+
+      await _dioClient.post<dynamic>(
+        '/tracks/$trackId/report',
+        data: data,
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
   /// Fetches the paginated list of users who liked [trackId].
   Future<PaginatedEngagersModel> fetchTrackLikers({
     required int trackId,

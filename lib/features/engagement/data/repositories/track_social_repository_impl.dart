@@ -112,4 +112,16 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<void> reportTrack({
+    required int trackId,
+    required String reason,
+    String? description,
+  }) =>
+      _datasource.reportTrack(
+        trackId: trackId,
+        reason: reason,
+        description: description,
+      );
 }

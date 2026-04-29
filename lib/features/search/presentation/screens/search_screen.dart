@@ -25,7 +25,10 @@ import '../../../library_profile/presentation/providers/track_audio_provider.dar
 import '../../../playlists/domain/entities/playlist.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({this.query, this.type, super.key});
+
+  final String? query;
+  final String? type;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -36,19 +39,54 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Timer? _debounce;
   DiscoverySearchType _selectedType = DiscoverySearchType.all;
 
-  String? _lastSyncedQuery;
-  String? _lastSyncedType;
+  // Removed unused sync variables
 
   @override
   void initState() {
     super.initState();
-    _queryController = TextEditingController();
+    _queryController = TextEditingController(text: widget.query ?? '');
+    if (widget.type != null) {
+      _selectedType = DiscoverySearchType.fromQueryValue(widget.type!);
+    }
+  }
+
+  @override
+  void didUpdateWidget(SearchScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.query != oldWidget.query || widget.type != oldWidget.type) {
+      _syncFromParams();
+    }
+  }
+
+  void _syncFromParams() {
+    final routeQuery = widget.query ?? '';
+    if (_queryController.text != routeQuery) {
+      _queryController.value = TextEditingValue(
+        text: routeQuery,
+        selection: TextSelection.collapsed(offset: routeQuery.length),
+      );
+    }
+
+    if (widget.type != null) {
+      final type = DiscoverySearchType.fromQueryValue(widget.type!);
+      if (_selectedType != type) {
+        setState(() {
+          _selectedType = type;
+        });
+      }
+    } else {
+      if (_selectedType != DiscoverySearchType.all) {
+        setState(() {
+          _selectedType = DiscoverySearchType.all;
+        });
+      }
+    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _syncFromRoute();
+    // No longer syncing from route state here
   }
 
   @override
@@ -60,8 +98,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final uri = GoRouterState.of(context).uri;
-    final routeQuery = uri.queryParameters['q']?.trim() ?? '';
+    final routeQuery = widget.query?.trim() ?? '';
     final hasSearchQuery = routeQuery.length >= 2;
     final hasTooShortQuery = routeQuery.isNotEmpty && routeQuery.length < 2;
 
@@ -139,27 +176,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  void _syncFromRoute() {
-    final uri = GoRouterState.of(context).uri;
-    final routeQuery = uri.queryParameters['q']?.trim() ?? '';
-    final routeType = uri.queryParameters['type'];
-
-    if (_lastSyncedQuery == routeQuery && _lastSyncedType == routeType) {
-      return;
-    }
-
-    _lastSyncedQuery = routeQuery;
-    _lastSyncedType = routeType;
-
-    _selectedType = DiscoverySearchType.fromQueryValue(routeType);
-
-    if (_queryController.text != routeQuery) {
-      _queryController.value = TextEditingValue(
-        text: routeQuery,
-        selection: TextSelection.collapsed(offset: routeQuery.length),
-      );
-    }
-  }
 
   void _handleQueryChanged(String value) {
     setState(() {});
@@ -426,7 +442,7 @@ class _UserResultsList extends StatelessWidget {
           (DiscoveryUser user) => Padding(
             padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
             child: _SearchSurface(
-              onTap: () => context.push(
+              onTap: () => context.go(
                 RoutePaths.publicProfile(
                   user.username.trim().isNotEmpty
                       ? user.username
@@ -505,11 +521,7 @@ class _RecentSearchesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Mock recent searches for now
-    final List<String> recent = <String>[
-      'Lofi hip hop',
-      'Electronic vibes',
-      'The Weeknd',
-    ];
+    final List<String> recent = <String>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -5,6 +5,15 @@ import '../../domain/entities/listening_history_page.dart';
 
 /// Response model for `GET /users/me/history`.
 class ListeningHistoryResponse {
+  const ListeningHistoryResponse({
+    required this.content,
+    required this.pageNumber,
+    required this.pageSize,
+    required this.totalElements,
+    required this.totalPages,
+    required this.isLast,
+  });
+
   factory ListeningHistoryResponse.fromJson(Map<String, dynamic> json) {
     final content = json['content'];
     final tracks = content is List<dynamic>
@@ -22,15 +31,6 @@ class ListeningHistoryResponse {
       isLast: _asBool(json['isLast']),
     );
   }
-
-  const ListeningHistoryResponse({
-    required this.content,
-    required this.pageNumber,
-    required this.pageSize,
-    required this.totalElements,
-    required this.totalPages,
-    required this.isLast,
-  });
 
   final List<Track> content;
   final int pageNumber;

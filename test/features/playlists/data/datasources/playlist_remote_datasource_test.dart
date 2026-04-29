@@ -82,13 +82,15 @@ void main() {
         cover,
       );
 
-      final captured = verify(
-        () => dioClient.post<dynamic>(
-          ApiConstants.playlists,
-          data: captureAny(named: 'data'),
-          options: any(named: 'options'),
-        ),
-      ).captured.single as FormData;
+      final captured =
+          verify(
+                () => dioClient.post<dynamic>(
+                  ApiConstants.playlists,
+                  data: captureAny(named: 'data'),
+                  options: any(named: 'options'),
+                ),
+              ).captured.single
+              as FormData;
 
       expect(captured.files.map((entry) => entry.key), contains('CoverArt'));
     });
@@ -120,13 +122,15 @@ void main() {
         cover,
       );
 
-      final captured = verify(
-        () => dioClient.patch<dynamic>(
-          '${ApiConstants.playlists}/7',
-          data: captureAny(named: 'data'),
-          options: any(named: 'options'),
-        ),
-      ).captured.single as FormData;
+      final captured =
+          verify(
+                () => dioClient.patch<dynamic>(
+                  '${ApiConstants.playlists}/7',
+                  data: captureAny(named: 'data'),
+                  options: any(named: 'options'),
+                ),
+              ).captured.single
+              as FormData;
 
       expect(captured.files.map((entry) => entry.key), contains('CoverArt'));
     });

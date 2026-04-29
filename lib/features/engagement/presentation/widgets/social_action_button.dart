@@ -96,21 +96,29 @@ class _SocialActionButtonState extends State<SocialActionButton>
       widget.isVertical
           ? const SizedBox(height: 4)
           : const SizedBox(width: AppConstants.spacingSmall),
-      Semantics(
-        identifier: '${widget.identifier}_count',
-        label: '${widget.count}',
-        button: widget.onCountTap != null,
-        child: GestureDetector(
-          onTap: widget.onCountTap,
-          behavior: HitTestBehavior.opaque,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: Text(
-              '${widget.count}',
-              key: ValueKey<int>(widget.count),
-              style: TextStyle(
-                color: AppColors.onPrimary,
-                fontSize: widget.fontSize,
+      Flexible(
+        child: Semantics(
+          identifier: '${widget.identifier}_count',
+          label: '${widget.count}',
+          button: widget.onCountTap != null,
+          child: GestureDetector(
+            onTap: widget.onCountTap,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Text(
+                  '${widget.count}',
+                  key: ValueKey<int>(widget.count),
+                  style: TextStyle(
+                    color: AppColors.onPrimary,
+                    fontSize: widget.fontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ),
             ),
           ),

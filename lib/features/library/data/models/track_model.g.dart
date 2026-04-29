@@ -26,6 +26,7 @@ _$TrackModelImpl _$$TrackModelImplFromJson(Map<String, dynamic> json) =>
       isLiked: json['isLiked'] as bool? ?? false,
       isReposted: json['isReposted'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      description: json['description'] as String?,
     );
 
 Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
@@ -46,6 +47,7 @@ Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
       'isLiked': instance.isLiked,
       'isReposted': instance.isReposted,
       'createdAt': instance.createdAt.toIso8601String(),
+      'description': instance.description,
     };
 
 const _$TrackStatusModelEnumMap = {

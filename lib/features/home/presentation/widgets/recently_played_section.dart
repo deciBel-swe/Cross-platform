@@ -20,12 +20,22 @@ class RecentlyPlayedSection extends ConsumerWidget {
     final historyAsync = ref.watch(historyProvider);
 
     return historyAsync.when(
-      loading: () => Semantics(
-        label: 'Loading recently played tracks',
-        child: const SizedBox(
-          height: 172,
-          child: Center(child: CircularProgressIndicator()),
-        ),
+      loading: () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitleRow(title: 'Recently played', onSeeAll: () {}),
+          const SizedBox(height: AppDimensions.paddingSm),
+          SizedBox(
+            height: 168,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(width: AppDimensions.paddingMd),
+              itemBuilder: (_, _) => const _RecentlyPlayedPlaceholder(),
+            ),
+          ),
+        ],
       ),
       error: (error, _) => _HistoryPreviewError(message: error.toString()),
       data: (history) {
@@ -234,6 +244,48 @@ class _HistoryPreviewError extends StatelessWidget {
             color: AppColors.textSecondary,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _RecentlyPlayedPlaceholder extends StatelessWidget {
+  const _RecentlyPlayedPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 116,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 116,
+            height: 116,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.paddingXs),
+          Container(
+            width: 80,
+            height: 12,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: 60,
+            height: 10,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ],
       ),
     );
   }

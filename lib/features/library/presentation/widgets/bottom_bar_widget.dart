@@ -14,7 +14,6 @@ class BottomBarWidget extends ConsumerWidget {
     required this.isReposted,
     required this.commentCount,
     required this.onCommentPressed,
-    required this.onSharePressed,
     required this.onAddToPlaylistPressed,
     required this.onMoreOptionsPressed,
   });
@@ -26,14 +25,13 @@ class BottomBarWidget extends ConsumerWidget {
   final bool isReposted;
   final int commentCount;
   final VoidCallback onCommentPressed;
-  final VoidCallback onSharePressed;
-  final VoidCallback onAddToPlaylistPressed; // 2. Add this
+  final VoidCallback onAddToPlaylistPressed;
   final ValueChanged<BuildContext> onMoreOptionsPressed;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
       decoration: BoxDecoration(
         color: Colors.black,
         border: Border(
@@ -69,12 +67,6 @@ class BottomBarWidget extends ConsumerWidget {
             child: _buildSimpleIconButton(
               icon: Icons.playlist_add_outlined,
               onTap: onAddToPlaylistPressed,
-            ),
-          ),
-          Expanded(
-            child: _buildSimpleIconButton(
-              icon: Icons.share_outlined,
-              onTap: onSharePressed,
             ),
           ),
           Expanded(
@@ -114,18 +106,22 @@ class BottomBarWidget extends ConsumerWidget {
         highlightColor: Colors.transparent,
         borderRadius: BorderRadius.circular(8.0),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 24, color: activeColor),
-              const SizedBox(width: 6.0),
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: activeColor,
+              Icon(icon, size: 28, color: activeColor),
+              const SizedBox(width: 4.0),
+              Flexible(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: activeColor,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
@@ -141,7 +137,7 @@ class BottomBarWidget extends ConsumerWidget {
   }) {
     return Center(
       child: IconButton(
-        icon: Icon(icon, color: Colors.white),
+        icon: Icon(icon, color: Colors.white, size: 28),
         onPressed: onTap,
         splashColor: Colors.black,
         highlightColor: Colors.black,

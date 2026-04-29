@@ -25,6 +25,8 @@ mixin _$ArtistModel {
   String get username => throw _privateConstructorUsedError;
   String? get displayName => throw _privateConstructorUsedError;
   String? get avatarUrl => throw _privateConstructorUsedError;
+  String? get location => throw _privateConstructorUsedError;
+  String? get bio => throw _privateConstructorUsedError;
 
   /// Serializes this ArtistModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -43,7 +45,14 @@ abstract class $ArtistModelCopyWith<$Res> {
     $Res Function(ArtistModel) then,
   ) = _$ArtistModelCopyWithImpl<$Res, ArtistModel>;
   @useResult
-  $Res call({int id, String username, String? displayName, String? avatarUrl});
+  $Res call({
+    int id,
+    String username,
+    String? displayName,
+    String? avatarUrl,
+    String? location,
+    String? bio,
+  });
 }
 
 /// @nodoc
@@ -65,6 +74,8 @@ class _$ArtistModelCopyWithImpl<$Res, $Val extends ArtistModel>
     Object? username = null,
     Object? displayName = freezed,
     Object? avatarUrl = freezed,
+    Object? location = freezed,
+    Object? bio = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -84,6 +95,14 @@ class _$ArtistModelCopyWithImpl<$Res, $Val extends ArtistModel>
                 ? _value.avatarUrl
                 : avatarUrl // ignore: cast_nullable_to_non_nullable
                       as String?,
+            location: freezed == location
+                ? _value.location
+                : location // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            bio: freezed == bio
+                ? _value.bio
+                : bio // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -99,7 +118,14 @@ abstract class _$$ArtistModelImplCopyWith<$Res>
   ) = __$$ArtistModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int id, String username, String? displayName, String? avatarUrl});
+  $Res call({
+    int id,
+    String username,
+    String? displayName,
+    String? avatarUrl,
+    String? location,
+    String? bio,
+  });
 }
 
 /// @nodoc
@@ -120,6 +146,8 @@ class __$$ArtistModelImplCopyWithImpl<$Res>
     Object? username = null,
     Object? displayName = freezed,
     Object? avatarUrl = freezed,
+    Object? location = freezed,
+    Object? bio = freezed,
   }) {
     return _then(
       _$ArtistModelImpl(
@@ -139,6 +167,14 @@ class __$$ArtistModelImplCopyWithImpl<$Res>
             ? _value.avatarUrl
             : avatarUrl // ignore: cast_nullable_to_non_nullable
                   as String?,
+        location: freezed == location
+            ? _value.location
+            : location // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        bio: freezed == bio
+            ? _value.bio
+            : bio // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -152,6 +188,8 @@ class _$ArtistModelImpl implements _ArtistModel {
     required this.username,
     this.displayName,
     this.avatarUrl,
+    this.location,
+    this.bio,
   });
 
   factory _$ArtistModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -165,10 +203,14 @@ class _$ArtistModelImpl implements _ArtistModel {
   final String? displayName;
   @override
   final String? avatarUrl;
+  @override
+  final String? location;
+  @override
+  final String? bio;
 
   @override
   String toString() {
-    return 'ArtistModel(id: $id, username: $username, displayName: $displayName, avatarUrl: $avatarUrl)';
+    return 'ArtistModel(id: $id, username: $username, displayName: $displayName, avatarUrl: $avatarUrl, location: $location, bio: $bio)';
   }
 
   @override
@@ -182,13 +224,23 @@ class _$ArtistModelImpl implements _ArtistModel {
             (identical(other.displayName, displayName) ||
                 other.displayName == displayName) &&
             (identical(other.avatarUrl, avatarUrl) ||
-                other.avatarUrl == avatarUrl));
+                other.avatarUrl == avatarUrl) &&
+            (identical(other.location, location) ||
+                other.location == location) &&
+            (identical(other.bio, bio) || other.bio == bio));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, username, displayName, avatarUrl);
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    username,
+    displayName,
+    avatarUrl,
+    location,
+    bio,
+  );
 
   /// Create a copy of ArtistModel
   /// with the given fields replaced by the non-null parameter values.
@@ -210,6 +262,8 @@ abstract class _ArtistModel implements ArtistModel {
     required final String username,
     final String? displayName,
     final String? avatarUrl,
+    final String? location,
+    final String? bio,
   }) = _$ArtistModelImpl;
 
   factory _ArtistModel.fromJson(Map<String, dynamic> json) =
@@ -223,6 +277,10 @@ abstract class _ArtistModel implements ArtistModel {
   String? get displayName;
   @override
   String? get avatarUrl;
+  @override
+  String? get location;
+  @override
+  String? get bio;
 
   /// Create a copy of ArtistModel
   /// with the given fields replaced by the non-null parameter values.

@@ -618,13 +618,16 @@ class _ProfileHeaderContent extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              profile.displayName ?? profile.username,
-              style: textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.onPrimary,
+            Flexible(
+              child: Text(
+                profile.displayName ?? profile.username,
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onPrimary,
+                ),
               ),
             ),
+
             if (isPremium) ...[
               const SizedBox(width: AppConstants.spacingSmall),
               const ProBadge(),

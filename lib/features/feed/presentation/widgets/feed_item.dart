@@ -12,6 +12,7 @@ import '../../../../core/widgets/auto_scrolling_text.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
+import '../../../engagement/presentation/widgets/track_report_bottom_sheet.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
 import '../../../library/presentation/widgets/track_more_options_menu.dart';
@@ -818,6 +819,7 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
         ),
         const SizedBox(width: AppDimensions.paddingSm),
         _DesktopMoreOptionsButton(
+          trackId: widget.trackId,
           onAddToPlaylist: widget.onAddToPlaylist,
           onAddToQueue: widget.onAddToQueue,
           onEditTrack: widget.onEditTrack,
@@ -835,6 +837,7 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
 
 class _DesktopMoreOptionsButton extends StatelessWidget {
   const _DesktopMoreOptionsButton({
+    required this.trackId,
     this.onAddToPlaylist,
     this.onAddToQueue,
     this.onEditTrack,
@@ -845,6 +848,8 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
     this.onDownload,
     this.onDeleteTrack,
   });
+
+  final int trackId;
 
   final VoidCallback? onAddToPlaylist;
   final VoidCallback? onAddToQueue;
@@ -869,11 +874,14 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
               includeEdit: onEditTrack != null,
               includeDelete: onDeleteTrack != null,
             );
-            if (option == null) {
+            if (option == null || !context.mounted) {
               return;
             }
 
             switch (option) {
+              case TrackMoreOption.report:
+                await TrackReportBottomSheet.show(context, trackId);
+                break;
               case TrackMoreOption.addToPlaylist:
                 onAddToPlaylist?.call();
                 break;

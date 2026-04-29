@@ -168,4 +168,13 @@ class MockTrackSocialRepository implements ITrackSocialRepository {
       ),
     );
   }
+
+  @override
+  Future<void> reportTrack({
+    required int trackId,
+    required String reason,
+    String? description,
+  }) async {
+    await Future<void>.delayed(_mockDelay);
+  }
 }

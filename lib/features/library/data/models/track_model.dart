@@ -28,6 +28,7 @@ class TrackModel with _$TrackModel {
     @Default(false) bool isLiked,
     @Default(false) bool isReposted,
     required DateTime createdAt,
+    String? description,
   }) = _TrackModel;
 
   factory TrackModel.fromJson(Map<String, dynamic> json) =>
@@ -97,6 +98,7 @@ extension TrackModelX on TrackModel {
       isLiked: isLiked,
       isReposted: isReposted,
       createdAt: createdAt,
+      description: description,
     );
   }
 
@@ -118,6 +120,7 @@ extension TrackModelX on TrackModel {
       isLiked: track.isLiked,
       isReposted: track.isReposted,
       createdAt: track.createdAt,
+      description: track.description,
     );
   }
 }

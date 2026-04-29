@@ -15,6 +15,7 @@ enum TrackMoreOption {
   copyLink,
   download,
   deleteTrack,
+  report,
 }
 
 Future<TrackMoreOption?> showTrackMoreOptionsMenu({
@@ -72,6 +73,11 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
           icon: Icons.download_rounded,
           label: 'Download',
         ),
+        _desktopTrackOptionItem(
+          value: TrackMoreOption.report,
+          icon: Icons.flag_outlined,
+          label: 'Report',
+        ),
         if (includeDelete) const PopupMenuDivider(height: 8),
         if (includeDelete)
           _desktopTrackOptionItem(
@@ -88,6 +94,7 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
     context: context,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black54,
+    isScrollControlled: true,
     builder: (sheetContext) {
       return SafeArea(
         child: DecoratedBox(
@@ -95,69 +102,77 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
             color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: AppDimensions.paddingSm),
-              _mobileTrackOptionItem(
-                sheetContext,
-                value: TrackMoreOption.addToPlaylist,
-                icon: Icons.playlist_add_rounded,
-                label: 'Add to playlist',
-              ),
-              _mobileTrackOptionItem(
-                sheetContext,
-                value: TrackMoreOption.addToQueue,
-                icon: Icons.queue_music_rounded,
-                label: 'Add to queue',
-              ),
-              if (includeEdit)
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: AppDimensions.paddingSm),
                 _mobileTrackOptionItem(
                   sheetContext,
-                  value: TrackMoreOption.editTrack,
-                  icon: Icons.edit_outlined,
-                  label: 'Edit track',
+                  value: TrackMoreOption.addToPlaylist,
+                  icon: Icons.playlist_add_rounded,
+                  label: 'Add to playlist',
                 ),
-              _mobileTrackOptionItem(
-                sheetContext,
-                value: TrackMoreOption.goToArtist,
-                icon: Icons.person_outline_rounded,
-                label: 'Go to artist',
-              ),
-              _mobileTrackOptionItem(
-                sheetContext,
-                value: TrackMoreOption.goToAlbum,
-                icon: Icons.album_rounded,
-                label: 'Go to album',
-              ),
-              _mobileTrackOptionItem(
-                sheetContext,
-                value: TrackMoreOption.share,
-                icon: Icons.share_outlined,
-                label: 'Share',
-              ),
-              _mobileTrackOptionItem(
-                sheetContext,
-                value: TrackMoreOption.copyLink,
-                icon: Icons.link_rounded,
-                label: 'Copy link',
-              ),
-              _mobileTrackOptionItem(
-                sheetContext,
-                value: TrackMoreOption.download,
-                icon: Icons.download_rounded,
-                label: 'Download',
-              ),
-              if (includeDelete)
                 _mobileTrackOptionItem(
                   sheetContext,
-                  value: TrackMoreOption.deleteTrack,
-                  icon: Icons.delete_outline_rounded,
-                  label: 'Delete track',
-                  color: AppColors.errors,
+                  value: TrackMoreOption.addToQueue,
+                  icon: Icons.queue_music_rounded,
+                  label: 'Add to queue',
                 ),
-              SizedBox(height: MediaQuery.paddingOf(sheetContext).bottom + 8),
-            ],
+                if (includeEdit)
+                  _mobileTrackOptionItem(
+                    sheetContext,
+                    value: TrackMoreOption.editTrack,
+                    icon: Icons.edit_outlined,
+                    label: 'Edit track',
+                  ),
+                _mobileTrackOptionItem(
+                  sheetContext,
+                  value: TrackMoreOption.goToArtist,
+                  icon: Icons.person_outline_rounded,
+                  label: 'Go to artist',
+                ),
+                _mobileTrackOptionItem(
+                  sheetContext,
+                  value: TrackMoreOption.goToAlbum,
+                  icon: Icons.album_rounded,
+                  label: 'Go to album',
+                ),
+                _mobileTrackOptionItem(
+                  sheetContext,
+                  value: TrackMoreOption.share,
+                  icon: Icons.share_outlined,
+                  label: 'Share',
+                ),
+                _mobileTrackOptionItem(
+                  sheetContext,
+                  value: TrackMoreOption.copyLink,
+                  icon: Icons.link_rounded,
+                  label: 'Copy link',
+                ),
+                _mobileTrackOptionItem(
+                  sheetContext,
+                  value: TrackMoreOption.download,
+                  icon: Icons.download_rounded,
+                  label: 'Download',
+                ),
+                _mobileTrackOptionItem(
+                  sheetContext,
+                  value: TrackMoreOption.report,
+                  icon: Icons.flag_outlined,
+                  label: 'Report',
+                ),
+                if (includeDelete)
+                  _mobileTrackOptionItem(
+                    sheetContext,
+                    value: TrackMoreOption.deleteTrack,
+                    icon: Icons.delete_outline_rounded,
+                    label: 'Delete track',
+                    color: AppColors.errors,
+                  ),
+                SizedBox(height: MediaQuery.paddingOf(sheetContext).bottom + 8),
+              ],
+            ),
           ),
         ),
       );

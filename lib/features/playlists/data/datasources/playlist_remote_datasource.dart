@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:path/path.dart' as path;
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
@@ -141,7 +142,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       final formData = FormData.fromMap(dataMap);
 
       if (coverImage != null) {
-        final imageName = coverImage.path.split('/').last;
+        final imageName = path.basename(coverImage.path);
         formData.files.add(
           MapEntry(
             'CoverArt',
@@ -320,7 +321,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     final formData = FormData.fromMap(dataMap);
 
     if (coverImage != null) {
-      final imageName = coverImage.path.split('/').last;
+      final imageName = path.basename(coverImage.path);
       formData.files.add(
         MapEntry(
           'CoverArt',
