@@ -120,6 +120,8 @@ import '../../features/playlists/domain/repositories/i_playlist_repository.dart'
     as _i582;
 import '../../features/settings/data/datasources/blocked_users_remote_datasource.dart'
     as _i688;
+import '../../features/settings/data/datasources/change_email_remote_datasource.dart'
+    as _i707;
 import '../../features/settings/data/datasources/messaging_remote_datasource.dart'
     as _i123;
 import '../../features/settings/data/datasources/notification_settings_remote_datasource.dart'
@@ -128,12 +130,16 @@ import '../../features/settings/data/repositories/app_icon_repository_impl.dart'
     as _i781;
 import '../../features/settings/data/repositories/blocked_users_repository_impl.dart'
     as _i292;
+import '../../features/settings/data/repositories/change_email_repository_impl.dart'
+    as _i225;
 import '../../features/settings/data/repositories/messaging_repository_implementation.dart'
     as _i343;
 import '../../features/settings/domain/repositories/app_icon_repository.dart'
     as _i993;
 import '../../features/settings/domain/repositories/blocked_users_repository.dart'
     as _i288;
+import '../../features/settings/domain/repositories/change_email_repository.dart'
+    as _i346;
 import '../../features/settings/domain/repositories/i_messaging_repository.dart'
     as _i23;
 import '../../features/upload/data/datasources/upload_remote_datasource.dart'
@@ -218,6 +224,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i870.HistoryRemoteDatasource>(
       () => _i870.HistoryRemoteDatasource(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i707.ChangeEmailRemoteDatasource>(
+      () => _i707.ChangeEmailRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.lazySingleton<_i419.HistoryRepository>(
       () => _i694.HistoryRepositoryImpl(gh<_i870.HistoryRemoteDatasource>()),
     );
@@ -286,6 +295,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i573.SharedPrefsService>(),
       ),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i346.ChangeEmailRepository>(
+      () => _i225.ChangeEmailRepositoryImpl(
+        gh<_i707.ChangeEmailRemoteDatasource>(),
+      ),
     );
     gh.lazySingleton<_i590.ITrackSocialRepository>(
       () => _i529.TrackSocialRepositoryImpl(

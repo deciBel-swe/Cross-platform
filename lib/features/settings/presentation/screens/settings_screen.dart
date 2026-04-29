@@ -14,6 +14,8 @@ class SettingsScreen extends ConsumerWidget {
   static const String _notificationSettingsTitle = 'Notifications';
   static const String _notificationSettingsSubtitle =
       'Push and activity notifications';
+  static const String _accountTitle = 'Account';
+  static const String _accountSubtitle = 'Manage your account';
   static const String _socalSettingsTitle = 'Social Settings';
   static const String _socalSettingsSubtitle = 'Privacy Settings';
 
@@ -24,6 +26,11 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _SettingsNavigationTile(
+            title: _accountTitle,
+            subtitle: _accountSubtitle,
+            onTap: () => context.push(RoutePaths.accountSettings),
+          ),
           _SettingsNavigationTile(
             title: _basicSettingsTitle,
             subtitle: _basicSettingsSubtitle,

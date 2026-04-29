@@ -11,6 +11,7 @@ import '../state/track_audio_state.dart';
 
 class TrackAudioNotifier extends Notifier<TrackAudioState> {
   AudioPlayer? _player;
+  double _playerVolume = 1;
 
   /// Factory for creating AudioPlayer instances, customizable for testing.
   @visibleForTesting
@@ -588,6 +589,10 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
         _createPlayer();
 
+        try {
+          await _audioPlayer.setVolume(_playerVolume);
+        } catch (_) {}
+
         await _setSource(
           trackId: preparedTrackId,
           urlOrPath: preparedUrl,
@@ -687,8 +692,9 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
   Future<void> setVolume(double volume) async {
     if (_isDisposed || _isStopping) return;
+    _playerVolume = volume.clamp(0.0, 1.0).toDouble();
     try {
-      await _audioPlayer.setVolume(volume);
+      await _audioPlayer.setVolume(_playerVolume);
     } catch (_) {}
   }
 

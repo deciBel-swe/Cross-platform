@@ -70,6 +70,7 @@ class RoutePaths {
   static const String addToPlaylist = '/library/add-to-playlist';
   static const String notifications = '/notifications';
   static const String recentlyPlayed = '/library/recently-played';
+  static const String accountSettings = '/library/settings/account';
 
   static String trackPreview(int trackId) => '$trackPreviewBase/$trackId';
   static String trackEdit(int trackId) => '$trackEditBase/$trackId';
