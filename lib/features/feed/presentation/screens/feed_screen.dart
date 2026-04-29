@@ -261,9 +261,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       if (!mounted) return;
                       _discoverFeedNotifier.loadMore();
                     },
-                    onPlayTrack: (track, queue) {
+                    onPlayTrack: (track, queue) async {
                       if (!mounted) return;
-                      _audioNotifier.playTrack(track: track, queue: queue);
+                      await _audioNotifier.playTrack(track: track, queue: queue);
                     },
                     onAddToPlaylist: (track) {
                       context.push(RoutePaths.addToPlaylist, extra: track);
@@ -451,7 +451,7 @@ class _MobileDiscoverFeedPager extends ConsumerStatefulWidget {
   final List<library_track.Track> playableQueue;
   final bool isLoadingMore;
   final VoidCallback onLoadMore;
-  final void Function(
+  final Future<void> Function(
     library_track.Track track,
     List<library_track.Track> queue,
   )
@@ -556,6 +556,13 @@ class _MobileDiscoverFeedPagerState
     return false;
   }
 
+  Future<void> _playTrack(library_track.Track track, List<library_track.Track> queue) async {
+    unawaited(_audioNotifier.setVolume(_isMuted ? 0 : 1));
+    await widget.onPlayTrack(track, queue);
+    if (!mounted) return;
+    unawaited(_audioNotifier.setVolume(_isMuted ? 0 : 1));
+  }
+
   void _playIndex(int index) {
     if (index < 0 || index >= _visibleTrackCount) {
       return;
@@ -567,7 +574,7 @@ class _MobileDiscoverFeedPagerState
     }
 
     _lastPlayedTrackId = track.id;
-    widget.onPlayTrack(track, widget.playableQueue);
+    unawaited(_playTrack(track, widget.playableQueue));
   }
 
   void _toggleMute() {
@@ -622,7 +629,7 @@ class _MobileDiscoverFeedPagerState
           gradientColors: _colorsForTrack(track.id),
           isMuted: _isMuted,
           onToggleMute: _toggleMute,
-          onPlayTrack: widget.onPlayTrack,
+          onPlayTrack: _playTrack,
           onAddToPlaylist: widget.onAddToPlaylist,
         );
       },
