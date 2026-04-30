@@ -16,6 +16,7 @@ class RoutePaths {
     'user',
     'profile-image',
     'resend-verification',
+    'playlist',
   };
   // ==========================================
   // MESSAGING ROUTES
@@ -105,6 +106,12 @@ class RoutePaths {
 
     return '$publicProfileBase/$encodedIdentifier$publicProfileFollowingBase';
   }
+
+  static String deepLinkPlaylist(String username, String playlistIdentifier) =>
+      '/$username/playlist/$playlistIdentifier';
+
+  static String deepLinkSecretPlaylist(String token) =>
+      '/playlist/secret/$token';
 
   static String deepLinkProfile(String username) => '/$username';
 

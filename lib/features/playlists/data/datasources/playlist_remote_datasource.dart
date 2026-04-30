@@ -57,7 +57,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
 
       // check lowercase "secretLink" just in case your backend uses standard JSON camelCase.
       final secretLink =
-          responseData['SecretLink'] ?? responseData['secretLink'];
+          responseData['secretUrl'] ?? responseData['secretLink'];
 
       if (secretLink != null) {
         return secretLink as String;

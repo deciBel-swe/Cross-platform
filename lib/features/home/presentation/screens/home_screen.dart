@@ -38,17 +38,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveUtils.isDesktop(context);
-    final stationPageSize = isDesktop ? 12 : 8;
+
     final likesStationAsync = ref.watch(likesStationProvider);
     final artistStationAsync = ref.watch(
-      artistStationProvider((page: 0, size: stationPageSize)),
+      artistStationProvider((page: 0, size: 40)),
     );
     final genreStationAsync = ref.watch(
-      genreStationProvider((page: 0, size: stationPageSize)),
+      genreStationProvider((page: 0, size: 40)),
     );
     final popularTracksAsync = ref.watch(
       popularTracksProvider((page: 0, size: isDesktop ? 8 : 6)),
     );
+
     final horizontalPadding = isDesktop
         ? AppDimensions.paddingXl
         : AppDimensions.paddingMd;
