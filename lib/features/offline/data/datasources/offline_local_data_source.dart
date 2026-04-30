@@ -8,14 +8,18 @@ import 'package:path_provider/path_provider.dart';
 
 
 import '../../../../core/network/dio_client.dart';
+import '../../../library/data/datasources/library_remote_datasource.dart';
 import '../../../library/data/models/track_model.dart';
+import '../../../library/data/models/track_peaks_model.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library/domain/entities/track_peaks.dart';
 
 @lazySingleton
 class OfflineLocalDataSource {
-  OfflineLocalDataSource(this._dioClient);
+  OfflineLocalDataSource(this._dioClient, this._libraryRemoteDatasource);
 
   final DioClient _dioClient;
+  final LibraryRemoteDatasource _libraryRemoteDatasource;
 
   Future<String> downloadAndSave(Track track) async {
     final trackUrl = track.trackUrl;
@@ -43,6 +47,17 @@ class OfflineLocalDataSource {
       // Modify URL of saved metadata so that `TrackModel` points to the local path.
       final localizedModel = TrackModelX.fromEntity(track).copyWith(trackUrl: savePath);
       await metaFile.writeAsString(jsonEncode(localizedModel.toJson()));
+    }
+
+    // Fetch and save peaks
+    try {
+      final peaksModel = await _libraryRemoteDatasource.fetchTrackPeaks(track.id);
+      final peaksPath = '${directory.path}/tracks/peaks_${track.id}.json';
+      final peaksFile = File(peaksPath);
+      await peaksFile.writeAsString(jsonEncode(peaksModel.toJson()));
+    } catch (e) {
+      debugPrint('Failed to download peaks for track ${track.id}: $e');
+      // Non-fatal, we continue to download the audio
     }
 
     try {
@@ -75,7 +90,7 @@ class OfflineLocalDataSource {
     final entities = tracksDir.listSync();
 
     for (var entity in entities) {
-      if (entity is File && entity.path.endsWith('.json')) {
+      if (entity is File && entity.path.endsWith('.json') && !entity.path.contains('peaks_')) {
         try {
           final content = await entity.readAsString();
           final trackModel = TrackModel.fromJsonString(content);
@@ -114,5 +129,31 @@ class OfflineLocalDataSource {
       }
     }
     return null;
+  }
+
+  Future<TrackPeaks?> getOfflineTrackPeaksById(int id) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final peaksPath = '${directory.path}/tracks/peaks_$id.json';
+    final peaksFile = File(peaksPath);
+    
+    if (await peaksFile.exists()) {
+      try {
+        final content = await peaksFile.readAsString();
+        final Map<String, dynamic> jsonMap = jsonDecode(content) as Map<String, dynamic>;
+        final peaksModel = TrackPeaksModel.fromJson(jsonMap);
+        return peaksModel.toEntity();
+      } catch (e) {
+        debugPrint('Failed to load peaks JSON for $peaksPath: $e');
+      }
+    }
+    return null;
+  }
+
+  Future<void> clearAll() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final tracksDir = Directory('${directory.path}/tracks');
+    if (await tracksDir.exists()) {
+      await tracksDir.delete(recursive: true);
+    }
   }
 }

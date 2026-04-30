@@ -253,21 +253,26 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 }
 
                 if (!isDesktop && _selectedTab == FeedTab.discover) {
-                  return _MobileDiscoverFeedPager(
-                    tracks: tracks,
-                    playableQueue: playableQueue,
-                    isLoadingMore: feedState.isLoadingMore,
-                    onLoadMore: () {
-                      if (!mounted) return;
-                      _discoverFeedNotifier.loadMore();
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      await _discoverFeedNotifier.refresh();
                     },
-                    onPlayTrack: (track, queue) async {
-                      if (!mounted) return;
-                      await _audioNotifier.playTrack(track: track, queue: queue);
-                    },
-                    onAddToPlaylist: (track) {
-                      context.push(RoutePaths.addToPlaylist, extra: track);
-                    },
+                    child: _MobileDiscoverFeedPager(
+                      tracks: tracks,
+                      playableQueue: playableQueue,
+                      isLoadingMore: feedState.isLoadingMore,
+                      onLoadMore: () {
+                        if (!mounted) return;
+                        _discoverFeedNotifier.loadMore();
+                      },
+                      onPlayTrack: (track, queue) async {
+                        if (!mounted) return;
+                        await _audioNotifier.playTrack(track: track, queue: queue);
+                      },
+                      onAddToPlaylist: (track) {
+                        context.push(RoutePaths.addToPlaylist, extra: track);
+                      },
+                    ),
                   );
                 }
                 return RefreshIndicator(

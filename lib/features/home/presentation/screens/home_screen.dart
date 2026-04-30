@@ -83,9 +83,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const SizedBox(width: 8),
               ],
             ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(0, topPadding, 0, AppDimensions.paddingXl),
-        children: <Widget>[
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(likesStationProvider);
+          ref.invalidate(artistStationProvider((page: 0, size: stationPageSize)));
+          ref.invalidate(genreStationProvider((page: 0, size: stationPageSize)));
+          ref.invalidate(popularTracksProvider((page: 0, size: isDesktop ? 8 : 6)));
+          // Delay briefly to show the spinner
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(0, topPadding, 0, AppDimensions.paddingXl),
+          children: <Widget>[
           if (isDesktop)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -174,6 +183,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

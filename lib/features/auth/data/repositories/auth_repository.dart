@@ -13,6 +13,7 @@ import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
+import '../../../offline/data/datasources/offline_local_data_source.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../models/device_info_model.dart';
 import '../models/login_local_request_model.dart';
@@ -25,11 +26,13 @@ class AuthRepository implements IAuthRepository {
     this._remoteDataSource,
     this._secureStorageService,
     this._sharedPrefsService,
+    this._offlineLocalDataSource,
   );
 
   final IAuthRemoteDataSource _remoteDataSource;
   final SecureStorageService _secureStorageService;
   final SharedPrefsService _sharedPrefsService;
+  final OfflineLocalDataSource _offlineLocalDataSource;
 
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
@@ -121,8 +124,10 @@ class AuthRepository implements IAuthRepository {
       if (isExpired && hasRefreshToken) {
         final refreshResult = await refreshToken();
         return refreshResult.fold(
-          (failure) =>
-              const Right(null), // If refresh fails, user must log in again
+          (failure) {
+            _offlineLocalDataSource.clearAll();
+            return const Right(null); // If refresh fails, user must log in again
+          },
           (user) => Right(user),
         );
       }
@@ -260,6 +265,7 @@ class AuthRepository implements IAuthRepository {
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     } finally {
+      await _offlineLocalDataSource.clearAll();
       await _secureStorageService.clearAll();
       await _sharedPrefsService.clearAll();
     }

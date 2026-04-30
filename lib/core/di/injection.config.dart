@@ -212,9 +212,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
-    gh.lazySingleton<_i776.OfflineLocalDataSource>(
-      () => _i776.OfflineLocalDataSource(gh<_i667.DioClient>()),
-    );
     gh.lazySingleton<_i688.BlockedUsersRemoteDatasource>(
       () => _i688.BlockedUsersRemoteDatasource(gh<_i667.DioClient>()),
     );
@@ -248,9 +245,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => const _i580.MockUploadRepository(),
       registerFor: {_mock},
     );
-    gh.lazySingleton<_i753.IOfflineRepository>(
-      () => _i720.OfflineRepositoryImpl(gh<_i776.OfflineLocalDataSource>()),
-    );
     gh.lazySingleton<_i364.IProfileRemoteDataSource>(
       () => _i364.ProfileRemoteDataSource(gh<_i667.DioClient>()),
     );
@@ -262,6 +256,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i485.IFollowRemoteDataSource>(
       () => _i485.FollowRemoteDataSource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i776.OfflineLocalDataSource>(
+      () => _i776.OfflineLocalDataSource(
+        gh<_i667.DioClient>(),
+        gh<_i534.LibraryRemoteDatasource>(),
+      ),
     );
     gh.lazySingleton<_i993.AppIconRepository>(
       () => _i781.AppIconRepositoryImpl(gh<_i573.SharedPrefsService>()),
@@ -288,14 +288,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i121.ImageRepository>(
       () => _i423.ImageRepositoryImpl(gh<_i183.ImagePicker>()),
     );
-    gh.lazySingleton<_i589.IAuthRepository>(
-      () => _i573.AuthRepository(
-        gh<_i107.IAuthRemoteDataSource>(),
-        gh<_i666.SecureStorageService>(),
-        gh<_i573.SharedPrefsService>(),
-      ),
-      registerFor: {_prod},
-    );
     gh.lazySingleton<_i346.ChangeEmailRepository>(
       () => _i225.ChangeEmailRepositoryImpl(
         gh<_i707.ChangeEmailRemoteDatasource>(),
@@ -315,12 +307,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i23.IMessagingRepository>(
       () =>
           _i343.MessagingRepositoryImpl(gh<_i123.IMessagingRemoteDataSource>()),
-    );
-    gh.lazySingleton<_i272.DownloadTrackUseCase>(
-      () => _i272.DownloadTrackUseCase(gh<_i753.IOfflineRepository>()),
-    );
-    gh.lazySingleton<_i212.GetOfflineTracksUseCase>(
-      () => _i212.GetOfflineTracksUseCase(gh<_i753.IOfflineRepository>()),
     );
     gh.lazySingleton<_i127.TrackRepository>(
       () => _i928.TrackRepositoryImpl(
@@ -366,11 +352,29 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i777.WebSocketClient>(
       () => _i777.WebSocketClient(gh<_i666.SecureStorageService>()),
     );
+    gh.lazySingleton<_i589.IAuthRepository>(
+      () => _i573.AuthRepository(
+        gh<_i107.IAuthRemoteDataSource>(),
+        gh<_i666.SecureStorageService>(),
+        gh<_i573.SharedPrefsService>(),
+        gh<_i776.OfflineLocalDataSource>(),
+      ),
+      registerFor: {_prod},
+    );
+    gh.lazySingleton<_i753.IOfflineRepository>(
+      () => _i720.OfflineRepositoryImpl(gh<_i776.OfflineLocalDataSource>()),
+    );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i229.TrackCommentsRepository(
         gh<_i688.ITrackCommentsRemoteDataSource>(),
       ),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i272.DownloadTrackUseCase>(
+      () => _i272.DownloadTrackUseCase(gh<_i753.IOfflineRepository>()),
+    );
+    gh.lazySingleton<_i212.GetOfflineTracksUseCase>(
+      () => _i212.GetOfflineTracksUseCase(gh<_i753.IOfflineRepository>()),
     );
     gh.factory<_i464.UploadRemoteDatasource>(
       () => _i464.UploadRemoteDatasource(
