@@ -272,28 +272,12 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   ) {
     final operationId = ++_operationGeneration;
 
-    debugPrint('------------------------------');
-    debugPrint(
-      '[TrackAudioNotifier] _runSerializedTransition() queued | operationId=$operationId',
-    );
-
     final nextTransition = _transitionQueue.then((_) async {
-      debugPrint(
-        '[TrackAudioNotifier] transition started | operationId=$operationId | currentGeneration=$_operationGeneration',
-      );
-
       if (_isDisposed) {
-        debugPrint(
-          '[TrackAudioNotifier] transition cancelled because notifier is disposed',
-        );
         return;
       }
 
       await transition(operationId);
-
-      debugPrint(
-        '[TrackAudioNotifier] transition finished | operationId=$operationId',
-      );
     });
 
     _transitionQueue = nextTransition.catchError((Object error, StackTrace st) {

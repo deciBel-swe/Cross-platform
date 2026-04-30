@@ -3,6 +3,7 @@ class TrackEngager {
   const TrackEngager({
     required this.id,
     required this.username,
+    this.displayName,
     this.avatarUrl,
     required this.tier,
     required this.isFollowing,
@@ -10,6 +11,7 @@ class TrackEngager {
 
   final int id;
   final String username;
+  final String? displayName;
   final String? avatarUrl;
   final String tier;
   final bool isFollowing;

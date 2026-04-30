@@ -389,9 +389,14 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         false;
 
     return <String, dynamic>{
-      'id': _asInt(profile['id']) ?? 0,
-      'username': (profile['username'] ?? '').toString(),
-      'tier': (profile['tier'] ?? 'FREE').toString(),
+      'id': _asInt(profile['id'] ?? payload['id']) ?? 0,
+      'username': (profile['username'] ?? payload['username'] ?? '').toString(),
+      'displayName':
+          (payload['displayName'] ??
+                  profile['displayName'] ??
+                  profile['DisplayName'])
+              ?.toString(),
+      'tier': (profile['tier'] ?? payload['tier'] ?? 'FREE').toString(),
       'profile': <String, dynamic>{
         'bio': profile['bio']?.toString(),
         'Location': location,
@@ -461,9 +466,12 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         (profile['username'] ??
                 user['username'] ??
                 user['userName'] ??
-                user['displayName'] ??
                 '')
             .toString();
+    final displayName = (user['displayName'] ??
+            profile['displayName'] ??
+            profile['DisplayName'])
+        ?.toString();
     final avatarUrl =
         (profile['avatarUrl'] ??
                 profile['profilePic'] ??
@@ -495,6 +503,7 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     return <String, dynamic>{
       'id': id,
       'username': username,
+      'displayName': displayName,
       'avatarUrl': avatarUrl,
       'tier': tier,
       'isFollowing': isFollowing,

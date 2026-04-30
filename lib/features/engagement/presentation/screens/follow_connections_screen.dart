@@ -215,7 +215,7 @@ class _ConnectionTile extends ConsumerWidget {
 
     return Semantics(
       identifier: 'connection_tile_${user.id}',
-      label: 'User ${user.username}',
+      label: 'User ${user.displayName ?? user.username}',
       container: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -225,7 +225,7 @@ class _ConnectionTile extends ConsumerWidget {
           children: [
             Semantics(
               identifier: 'connection_avatar_${user.id}',
-              label: '${user.username}\'s avatar',
+              label: '${user.displayName ?? user.username}\'s avatar',
               button: true,
               child: GestureDetector(
                 onTap: openProfile,
@@ -257,7 +257,7 @@ class _ConnectionTile extends ConsumerWidget {
             Expanded(
               child: Semantics(
                 identifier: 'connection_name_${user.id}',
-                label: user.username,
+                label: user.displayName ?? user.username,
                 button: true,
                 child: GestureDetector(
                   onTap: openProfile,
@@ -266,7 +266,9 @@ class _ConnectionTile extends ConsumerWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          user.username,
+                          (user.displayName?.isNotEmpty == true)
+                              ? user.displayName!
+                              : user.username,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.bodyLarge
