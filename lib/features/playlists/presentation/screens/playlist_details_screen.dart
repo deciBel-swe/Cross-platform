@@ -44,10 +44,6 @@ class PlaylistDetailsScreen extends ConsumerWidget {
         ),
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.cast, color: AppColors.textPrimary),
-            onPressed: () {},
-          ),
         ],
       ),
       body: CustomScrollView(

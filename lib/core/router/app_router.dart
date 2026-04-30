@@ -441,6 +441,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   if (userIdentifier == null || userIdentifier.isEmpty) {
                     return RoutePaths.home;
                   }
+
+                  final authState = ref.read(authStateProvider).valueOrNull;
+                  if (authState is AuthAuthenticated) {
+                    if (userIdentifier == authState.user.id.toString() ||
+                        userIdentifier == authState.user.username) {
+                      return RoutePaths.profile;
+                    }
+                  }
+
                   return null;
                 },
                 pageBuilder: (context, state) {
