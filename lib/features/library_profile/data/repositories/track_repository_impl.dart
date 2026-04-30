@@ -13,14 +13,16 @@ import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/domain/entities/track_edit_request.dart';
 import '../../../library/domain/entities/track_peaks.dart';
+import '../../../offline/data/datasources/offline_local_data_source.dart';
 import '../../domain/repositories/track_repository.dart';
 
 @Environment('prod')
 @LazySingleton(as: TrackRepository)
 class TrackRepositoryImpl implements TrackRepository {
-  const TrackRepositoryImpl(this._remote);
+  const TrackRepositoryImpl(this._remote, this._offlineLocalDataSource);
 
   final LibraryRemoteDatasource _remote;
+  final OfflineLocalDataSource _offlineLocalDataSource;
 
   @override
   Future<Either<Failure, PaginatedTracks>> fetchMyTracks({
@@ -59,7 +61,17 @@ class TrackRepositoryImpl implements TrackRepository {
       final model = await _remote.fetchTrackById(id);
       return Right(model.toEntity());
     } catch (e) {
-      return Left(_toFailure(e));
+      final failure = _toFailure(e);
+      if (failure is NetworkFailure) {
+        try {
+          final offlineTrack = await _offlineLocalDataSource
+              .getOfflineTrackById(id);
+          if (offlineTrack != null) {
+            return Right(offlineTrack);
+          }
+        } catch (_) {}
+      }
+      return Left(failure);
     }
   }
 

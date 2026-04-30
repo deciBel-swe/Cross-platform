@@ -209,9 +209,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i459.TrackSocialRemoteDatasource>(
       () => _i459.TrackSocialRemoteDatasource(gh<_i667.DioClient>()),
     );
-    gh.lazySingleton<_i870.HistoryRemoteDatasource>(
-      () => _i870.HistoryRemoteDatasource(gh<_i667.DioClient>()),
-    );
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
     );
@@ -221,11 +218,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i688.BlockedUsersRemoteDatasource>(
       () => _i688.BlockedUsersRemoteDatasource(gh<_i667.DioClient>()),
     );
-    gh.lazySingleton<_i707.ChangeEmailRemoteDatasource>(
-      () => _i707.ChangeEmailRemoteDatasource(gh<_i667.DioClient>()),
-    );
     gh.lazySingleton<_i92.NotificationSettingsRemoteDatasource>(
       () => _i92.NotificationSettingsRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i870.HistoryRemoteDatasource>(
+      () => _i870.HistoryRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i707.ChangeEmailRemoteDatasource>(
+      () => _i707.ChangeEmailRemoteDatasource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i419.HistoryRepository>(
       () => _i694.HistoryRepositoryImpl(gh<_i870.HistoryRemoteDatasource>()),
@@ -322,6 +322,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i212.GetOfflineTracksUseCase>(
       () => _i212.GetOfflineTracksUseCase(gh<_i753.IOfflineRepository>()),
     );
+    gh.lazySingleton<_i127.TrackRepository>(
+      () => _i928.TrackRepositoryImpl(
+        gh<_i534.LibraryRemoteDatasource>(),
+        gh<_i776.OfflineLocalDataSource>(),
+      ),
+      registerFor: {_prod},
+    );
     gh.factory<_i582.IPlaylistRepository>(
       () => _i757.PlaylistRepository(gh<_i108.IPlaylistRemoteDataSource>()),
     );
@@ -344,10 +351,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i703.MockAuthRepository(gh<_i666.SecureStorageService>()),
       registerFor: {_mock},
-    );
-    gh.lazySingleton<_i127.TrackRepository>(
-      () => _i928.TrackRepositoryImpl(gh<_i534.LibraryRemoteDatasource>()),
-      registerFor: {_prod},
     );
     gh.lazySingleton<_i11.ModerationRepository>(
       () => _i810.ModerationRepositoryImpl(

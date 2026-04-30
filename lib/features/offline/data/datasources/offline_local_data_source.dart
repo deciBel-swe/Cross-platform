@@ -94,4 +94,25 @@ class OfflineLocalDataSource {
     tracks.sort((a, b) => b.id.compareTo(a.id));
     return tracks;
   }
+
+  Future<Track?> getOfflineTrackById(int id) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final metaPath = '${directory.path}/tracks/track_$id.json';
+    final metaFile = File(metaPath);
+    
+    if (await metaFile.exists()) {
+      try {
+        final content = await metaFile.readAsString();
+        final trackModel = TrackModel.fromJsonString(content);
+        
+        final dataFile = File(metaPath.replaceAll('.json', '.dat'));
+        if (await dataFile.exists()) {
+          return trackModel.toEntity();
+        }
+      } catch (e) {
+        debugPrint('Failed to load JSON for $metaPath: $e');
+      }
+    }
+    return null;
+  }
 }
