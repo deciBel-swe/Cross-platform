@@ -51,7 +51,10 @@ class OfflineLocalDataSource {
 
     // Fetch and save peaks
     try {
-      final peaksModel = await _libraryRemoteDatasource.fetchTrackPeaks(track.id);
+      final peaksModel = await _libraryRemoteDatasource.fetchTrackPeaks(
+        track.id,
+        waveformUrl: track.waveformUrl,
+      );
       final peaksPath = '${directory.path}/tracks/peaks_${track.id}.json';
       final peaksFile = File(peaksPath);
       await peaksFile.writeAsString(jsonEncode(peaksModel.toJson()));

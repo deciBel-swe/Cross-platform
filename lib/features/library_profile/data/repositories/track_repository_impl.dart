@@ -104,14 +104,13 @@ class TrackRepositoryImpl implements TrackRepository {
       final model = await _remote.fetchTrackPeaks(id);
       return Right(model.toEntity());
     } catch (e) {
-      final failure = _toFailure(e);
-      if (failure is NetworkFailure) {
-        final offlinePeaks = await _offlineLocalDataSource.getOfflineTrackPeaksById(id);
-        if (offlinePeaks != null) {
-          return Right(offlinePeaks);
-        }
+      // Always attempt to fetch offline peaks if remote fetch fails for any reason
+      final offlinePeaks = await _offlineLocalDataSource.getOfflineTrackPeaksById(id);
+      if (offlinePeaks != null) {
+        return Right(offlinePeaks);
       }
-      return Left(failure);
+      
+      return Left(_toFailure(e));
     }
   }
 

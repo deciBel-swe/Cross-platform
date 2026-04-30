@@ -246,9 +246,30 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 final tracks = feedState.tracks.cast<FeedTrack>();
                 final playableQueue = tracks.map(_toLibraryTrack).toList();
                 if (tracks.isEmpty) {
-                  return _EmptyFeedView(
-                    isDesktop: isDesktop,
-                    tab: _selectedTab,
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      if (_selectedTab == FeedTab.following) {
+                        await _feedNotifier.refresh();
+                      } else {
+                        await _discoverFeedNotifier.refresh();
+                      }
+                    },
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: _EmptyFeedView(
+                              isDesktop: isDesktop,
+                              tab: _selectedTab,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   );
                 }
 
@@ -287,6 +308,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     controller: _scrollController,
                     child: ListView.builder(
                       controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
                       primary: false,
                       padding: EdgeInsets.fromLTRB(
                         isDesktop

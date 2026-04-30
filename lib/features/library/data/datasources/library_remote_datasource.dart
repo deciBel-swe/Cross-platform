@@ -219,8 +219,8 @@ class LibraryRemoteDatasource {
     return normalized;
   }
 
-  Future<TrackPeaksModel> fetchTrackPeaks(int id) async {
-    final waveformUrl = await _resolveWaveformUrl(id);
+  Future<TrackPeaksModel> fetchTrackPeaks(int id, {String? waveformUrl}) async {
+    waveformUrl ??= await _resolveWaveformUrl(id);
     if (waveformUrl == null || waveformUrl.trim().isEmpty) {
       throw Exception('Empty waveformUrl');
     }
