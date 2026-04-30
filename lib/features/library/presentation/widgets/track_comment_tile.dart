@@ -8,7 +8,6 @@ import '../../domain/entities/comment.dart';
 import '../notifiers/track_comment_notifier.dart';
 import 'comment_header.dart';
 import 'comment_replies_section.dart';
-import 'like_section.dart';
 import 'track_comment_avatar.dart';
 import 'track_comment_formatters.dart';
 import 'track_comment_options_sheet.dart';
@@ -153,7 +152,6 @@ class TrackCommentTile extends ConsumerWidget {
                   ],
                 ),
               ),
-              const LikeSection(count: '0'),
             ],
           ),
           CommentRepliesSection(comment: comment, trackId: trackId),

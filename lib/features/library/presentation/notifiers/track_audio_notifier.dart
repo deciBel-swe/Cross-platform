@@ -68,6 +68,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     debugPrint('[TrackAudioNotifier] _createPlayer() called');
 
     _player = audioPlayerFactory?.call() ?? AudioPlayer();
+    _player?.setVolume(_playerVolume);
 
     debugPrint('[TrackAudioNotifier] AudioPlayer created: ${_player != null}');
   }
@@ -1246,6 +1247,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
   Future<void> setVolume(double volume) async {
     debugPrint('[TrackAudioNotifier] setVolume() called | volume=$volume');
+    _playerVolume = volume;
 
     if (_isDisposed || _isStopping) {
       debugPrint(
