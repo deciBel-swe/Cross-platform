@@ -47,11 +47,6 @@ class LibraryScreen extends ConsumerWidget {
               actions: [
                 const GetProButton(),
                 IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.cast),
-                  tooltip: 'Cast to device',
-                ),
-                IconButton(
                   onPressed: goToSettings,
                   icon: const Icon(Icons.settings_outlined),
                   tooltip: 'Settings',

@@ -487,7 +487,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             onPressed: () => _showModerationSheet(context, user),
           ),
         Button(icon: Icons.share, onPressed: () {}),
-        Button(icon: Icons.cast, onPressed: () {}),
       ],
     );
   }

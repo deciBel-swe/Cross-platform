@@ -218,14 +218,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ),
                 actions: [
-                  Semantics(
-                    button: true,
-                    label: 'Cast media to device',
-                    child: IconButton(
-                      icon: const Icon(Icons.cast, color: Colors.white),
-                      onPressed: () {},
-                    ),
-                  ),
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.white),
                     color: AppColors.surface,
@@ -406,10 +398,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.cast, color: Colors.white),
-            onPressed: () {},
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.white),
