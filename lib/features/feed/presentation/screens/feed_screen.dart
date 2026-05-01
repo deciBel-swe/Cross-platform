@@ -467,7 +467,9 @@ library_track.Track _toLibraryTrack(FeedTrack track) {
       displayName: track.artistDisplayName,
       avatarUrl: track.artistAvatarUrl,
     ),
-    trackUrl: track.trackUrl ?? track.trackPreviewUrl,
+    trackUrl: track.access == 'PREVIEW'
+        ? (track.trackPreviewUrl ?? track.trackUrl)
+        : (track.trackUrl ?? track.trackPreviewUrl),
     coverUrl: track.coverUrl,
     waveformUrl: track.waveformUrl,
     genre: track.genre,

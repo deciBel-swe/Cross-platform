@@ -20,6 +20,7 @@ import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import 'active_comments_overlay.dart';
 import 'interactive_waveform.dart';
 import 'track_comments_bottom_sheet.dart';
@@ -193,7 +194,7 @@ class TrackPreviewContent extends ConsumerWidget {
                   );
                   break;
                 case TrackMoreOption.viewQueue:
-                  // Queue bottom sheet will be shown by the caller
+                  QueueBottomSheet.show(context);
                   break;
                 case TrackMoreOption.editTrack:
                   await context.push(RoutePaths.trackEdit(trackId));

@@ -4,6 +4,9 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -19,6 +22,7 @@ import '../../../library/presentation/widgets/track_more_options_menu.dart';
 import '../../../library_profile/presentation/providers/track_peaks_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
 import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
+import '../../../playlists/domain/entities/playlist.dart';
 import '../../domain/entities/feed_item_type.dart';
 import 'mobile_feed_track_card.dart';
 
@@ -1017,7 +1021,28 @@ class _PlaylistFeedCard extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                 onTap: () {
-                  // TODO: Navigate to playlist details
+                  final playlistId = playlistData?['id'] as int? ?? 0;
+                  final ownerId = owner?['id'] as int? ?? 0;
+
+                  final playlist = Playlist(
+                    id: playlistId,
+                    title: playlistTitle,
+                    type: 'PUBLIC',
+                    isPrivate: false,
+                    isLiked: playlistData?['isLiked'] as bool? ?? false,
+                    coverArt: coverUrl,
+                    owner: PlaylistOwner(
+                      id: ownerId,
+                      username: ownerUsername,
+                      displayName: ownerDisplayName,
+                      avatarUrl: ownerAvatarUrl,
+                    ),
+                    tracks: const [],
+                    totalDurationSeconds: 0,
+                    trackCount: trackCount,
+                  );
+
+                  context.push(RoutePaths.playlistTracks, extra: playlist);
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(AppDimensions.paddingMd),
