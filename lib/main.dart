@@ -22,9 +22,7 @@ void main() async {
 
   try {
     await Firebase.initializeApp();
-    debugPrint("Firebase connected to the backend!");
   } catch (e) {
-    debugPrint("Firebase failed to initialize. Details: $e");
   }
 
   var useMockServices = false;
@@ -70,7 +68,6 @@ void main() async {
       final selectedIcon = await appIconRepository.getSelectedIcon();
       await appIconRepository.applyIcon(selectedIcon);
     } catch (e) {
-      debugPrint("Failed to apply app icon: $e");
     }
   }
 
@@ -104,7 +101,6 @@ Future<void> _initializeStripeSafely() async {
     Stripe.publishableKey = StripeConstants.publishableKey;
     await Stripe.instance.applySettings().timeout(const Duration(seconds: 8));
   } catch (error) {
-    debugPrint('[Stripe] Initialization skipped: $error');
   }
 }
 

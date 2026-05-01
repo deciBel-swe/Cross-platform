@@ -230,10 +230,6 @@ class LibraryRemoteDatasource {
     if (peaksData == null) {
       throw Exception('Empty waveform payload');
     }
-    debugPrint(
-      'WaveformDebug blob raw payload type=${peaksData.runtimeType}: $peaksData',
-    );
-
     final normalizedPayload = _normalizeTrackPeaksPayload(
       trackId: id,
       payload: peaksData,
@@ -247,10 +243,6 @@ class LibraryRemoteDatasource {
     final normalizedCount = normalizedPeaks is List
         ? normalizedPeaks.length
         : 'unknown';
-    debugPrint(
-      'WaveformDebug blob normalized peaks (count=$normalizedCount): $normalizedPeaks',
-    );
-
     return TrackPeaksModel.fromJson(normalizedPayload);
   }
 

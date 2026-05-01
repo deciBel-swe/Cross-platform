@@ -186,13 +186,9 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
     result.fold(
       (failure) {
         state = currentState;
-        debugPrint(
-          '[WebProfilesNotifier] Failed to sync social links: $failure',
-        );
       },
       (syncedLinks) {
         state = syncedLinks;
-        debugPrint('[WebProfilesNotifier] Social links synced successfully.');
       },
     );
 

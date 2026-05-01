@@ -467,9 +467,6 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
         if (kDebugMode) {
-          debugPrint('=== OAUTH BACKEND PAYLOAD ===');
-          debugPrint(jsonEncode(dto.toApiJson()));
-          debugPrint('=============================');
         }
 
         final response = await _dioClient.post<dynamic>(
@@ -478,10 +475,6 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         );
 
         if (kDebugMode) {
-          debugPrint('=== OAUTH BACKEND RESPONSE ===');
-          debugPrint('Status: ${response.statusCode}');
-          debugPrint(jsonEncode(response.data));
-          debugPrint('==============================');
         }
 
         if (response.statusCode == 200 || response.statusCode == 201) {

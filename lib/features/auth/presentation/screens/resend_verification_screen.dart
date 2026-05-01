@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/auth_validators.dart';
+import '../notifiers/auth_notifier.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_primary_button.dart';
 

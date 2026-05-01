@@ -190,8 +190,6 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       );
 
       final data = response.data;
-      //debugPrint('RAW PLAYLIST JSON: $data');
-
       if (data == null) {
         return [];
       }
@@ -210,8 +208,6 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       }
       throw ServerException(error.message ?? 'Failed to fetch playlists');
     } catch (error, stackTrace) {
-      debugPrint('==========PARSING CRASH: $error');
-      debugPrint('==========STACKTRACE: $stackTrace');
       throw ServerException('Failed to parse playlists response: $error');
     }
   }

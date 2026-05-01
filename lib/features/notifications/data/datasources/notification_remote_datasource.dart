@@ -42,16 +42,11 @@ class NotificationRemoteDataSource implements INotificationRemoteDataSource {
           .map(activityNotificationModelFromApiJson)
           .toList();
     } on DioException catch (e) {
-      debugPrint('DioException in getNotifications: ${e.message}');
-      debugPrint('Response Data: ${e.response?.data}');
-
       if (e.response?.statusCode == 401) {
         throw const ServerException('Unauthorized');
       }
       throw const ServerException('Failed to fetch notifications');
     } catch (e, stackTrace) {
-      debugPrint('CRITICAL ERROR in getNotifications: $e');
-      debugPrint('StackTrace: $stackTrace');
       throw const ServerException('Unexpected error occurred');
     }
   }

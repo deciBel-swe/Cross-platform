@@ -23,9 +23,6 @@ class TrackPreviewNotifier
     final peaksResult = await repository.fetchTrackPeaksById(track.id);
 
     final trackPeaks = peaksResult.fold<TrackPeaks?>((failure) {
-      debugPrint(
-        'TrackPreviewNotifier: waveform fetch failed for track ${track.id}: ${failure.message}',
-      );
       return null;
     }, (value) => value);
 

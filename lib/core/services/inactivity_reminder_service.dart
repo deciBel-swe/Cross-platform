@@ -85,7 +85,6 @@ class InactivityReminderService {
           >()
           ?.requestPermissions(alert: true, badge: true, sound: true);
     } catch (error) {
-      debugPrint('[InactivityReminder] Permission request skipped: $error');
     }
   }
 }

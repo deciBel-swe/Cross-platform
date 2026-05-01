@@ -59,10 +59,6 @@ class AuthRepository implements IAuthRepository {
       return Left(AuthFailure(e.message));
     } catch (e, st) {
       if (kDebugMode) {
-        debugPrint(
-          '[AuthRepository] Unexpected error in loginWithEmailPassword: $e',
-        );
-        debugPrint('[AuthRepository] StackTrace: $st');
       }
       return Left(AuthFailure('An unexpected error occurred: $e'));
     }
@@ -102,10 +98,6 @@ class AuthRepository implements IAuthRepository {
       return Left(AuthFailure(e.message));
     } catch (e, st) {
       if (kDebugMode) {
-        debugPrint(
-          '[AuthRepository] Unexpected error in registerWithEmailPassword: $e',
-        );
-        debugPrint('[AuthRepository] StackTrace: $st');
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     }
@@ -148,7 +140,6 @@ class AuthRepository implements IAuthRepository {
         return const Left(AuthFailure('No tokens available for refresh'));
       }
 
-      debugPrint('[AuthRepository] Proactively refreshing token...');
       final responseModel = await _remoteDataSource.refreshToken(
         refreshToken: refreshToken,
         accessToken: accessToken,
@@ -193,8 +184,6 @@ class AuthRepository implements IAuthRepository {
       return Left(AuthFailure(e.message));
     } catch (e, st) {
       if (kDebugMode) {
-        debugPrint('[AuthRepository] Unexpected error in loginWithGoogle: $e');
-        debugPrint('[AuthRepository] StackTrace: $st');
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     }
@@ -255,8 +244,6 @@ class AuthRepository implements IAuthRepository {
       return Left(AuthFailure(e.message));
     } catch (e, st) {
       if (kDebugMode) {
-        debugPrint('[AuthRepository] Unexpected error in logout: $e');
-        debugPrint('[AuthRepository] StackTrace: $st');
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     } finally {
@@ -278,10 +265,6 @@ class AuthRepository implements IAuthRepository {
       return Left(AuthFailure(e.message));
     } catch (e, st) {
       if (kDebugMode) {
-        debugPrint(
-          '[AuthRepository] Unexpected error in resendVerificationCode: $e',
-        );
-        debugPrint('[AuthRepository] StackTrace: $st');
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     }

@@ -61,7 +61,6 @@ class TopTracksSection extends ConsumerWidget {
                         .playTrack(track: track, queue: topTracks);
                   },
                   onMorePressed: () {
-                    debugPrint('Options for: ${track.title}');
                     // TODO: Open bottom sheet
                   },
                 );

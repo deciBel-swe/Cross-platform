@@ -32,7 +32,6 @@ class PickerService implements IPickerService {
       return null;
     } catch (e) {
       // Print the error so you know exactly why it failed
-      debugPrint('Error picking audio file: $e');
       return null;
     } finally {
       _isAudioPickerActive = false;
@@ -65,7 +64,6 @@ class PickerService implements IPickerService {
       );
       return duration;
     } catch (e) {
-      debugPrint('Error getting audio duration: $e');
       return null;
     } finally {
       await player.dispose();

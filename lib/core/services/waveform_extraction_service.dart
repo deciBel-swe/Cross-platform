@@ -43,7 +43,6 @@ class WaveformExtractionService {
               noOfSamples: noOfSamples,
             );
           } catch (e) {
-            debugPrint('WaveformService mobile extractor error: $e');
           }
         }
 
@@ -66,7 +65,6 @@ class WaveformExtractionService {
           );
         }
       } catch (e, stack) {
-        debugPrint('WaveformService Failure: $e\n$stack');
         if (!completer.isCompleted) {
           completer.complete(const <double>[]);
         }
@@ -92,7 +90,6 @@ class WaveformExtractionService {
 
       return audioData.map((e) => e.abs().toDouble()).toList();
     } catch (e, stack) {
-      debugPrint('Windows SoLoud Error: $e\n$stack');
       return const [];
     }
   }
