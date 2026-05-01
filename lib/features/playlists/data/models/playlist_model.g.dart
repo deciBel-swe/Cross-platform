@@ -15,6 +15,7 @@ _$PlaylistModelImpl _$$PlaylistModelImplFromJson(
   type: json['type'] as String,
   isPrivate: json['isPrivate'] as bool? ?? false,
   isLiked: json['isLiked'] as bool? ?? false,
+  isReposted: json['isReposted'] as bool? ?? false,
   coverArt: json['coverArtUrl'] as String?,
   owner: json['owner'] == null
       ? null
@@ -43,6 +44,7 @@ Map<String, dynamic> _$$PlaylistModelImplToJson(
   'type': instance.type,
   'isPrivate': instance.isPrivate,
   'isLiked': instance.isLiked,
+  'isReposted': instance.isReposted,
   'coverArtUrl': instance.coverArt,
   'owner': instance.owner,
   'trackSummaryDto': const PlaylistTracksConverter().toJson(instance.tracks),

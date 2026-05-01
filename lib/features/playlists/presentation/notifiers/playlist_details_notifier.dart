@@ -116,6 +116,7 @@ class PlaylistDetailsNotifier
         description: updatedPlaylist.description,
         isPrivate: updatedPlaylist.isPrivate,
         isLiked: updatedPlaylist.isLiked,
+        isReposted: updatedPlaylist.isReposted,
         coverArt: updatedPlaylist.coverArt,
         owner: updatedPlaylist.owner ?? current.owner,
         tracks: updatedPlaylist.tracks.isNotEmpty

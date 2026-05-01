@@ -6,5 +6,6 @@ part 'playlist_social_data.freezed.dart';
 class PlaylistSocialData with _$PlaylistSocialData {
   const factory PlaylistSocialData({
     required bool isLiked,
+    required bool isReposted,
   }) = _PlaylistSocialData;
 }

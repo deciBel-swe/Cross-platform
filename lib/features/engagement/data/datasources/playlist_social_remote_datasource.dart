@@ -14,7 +14,10 @@ class PlaylistSocialRemoteDatasource {
   PlaylistSocialRemoteDatasource(this._dioClient);
   final DioClient _dioClient;
 
-  Future<bool> toggleLike(int playlistId, {required bool isCurrentlyLiked}) async {
+  Future<bool> toggleLike(
+    int playlistId, {
+    required bool isCurrentlyLiked,
+  }) async {
     try {
       if (isCurrentlyLiked) {
         await _dioClient.delete<dynamic>(
@@ -35,6 +38,33 @@ class PlaylistSocialRemoteDatasource {
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
+  }
+
+  Future<bool> toggleRepost(
+    int playlistId, {
+    required bool isCurrentlyReposted,
+  }) async {
+    try {
+      final endpoint = ApiConstants.togglePlaylistRepost(playlistId);
+
+      if (isCurrentlyReposted) {
+        final response = await _dioClient.delete<dynamic>(endpoint);
+        return _readRepostState(response.data, fallback: false);
+      }
+
+      final response = await _dioClient.post<dynamic>(endpoint);
+      return _readRepostState(response.data, fallback: true);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  bool _readRepostState(Object? data, {required bool fallback}) {
+    if (data is Map<String, dynamic>) {
+      return data['isReposted'] as bool? ?? fallback;
+    }
+
+    return fallback;
   }
 
   Future<List<PlaylistModel>> getLikedPlaylists(

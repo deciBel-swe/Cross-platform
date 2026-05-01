@@ -27,6 +27,7 @@ mixin _$PlaylistModel {
   String get type => throw _privateConstructorUsedError;
   bool get isPrivate => throw _privateConstructorUsedError;
   bool get isLiked => throw _privateConstructorUsedError;
+  bool get isReposted => throw _privateConstructorUsedError;
   @JsonKey(name: 'coverArtUrl')
   String? get coverArt => throw _privateConstructorUsedError;
   OwnerModel? get owner => throw _privateConstructorUsedError;
@@ -66,6 +67,7 @@ abstract class $PlaylistModelCopyWith<$Res> {
     String type,
     bool isPrivate,
     bool isLiked,
+    bool isReposted,
     @JsonKey(name: 'coverArtUrl') String? coverArt,
     OwnerModel? owner,
     @JsonKey(name: 'trackSummaryDto')
@@ -105,6 +107,7 @@ class _$PlaylistModelCopyWithImpl<$Res, $Val extends PlaylistModel>
     Object? type = null,
     Object? isPrivate = null,
     Object? isLiked = null,
+    Object? isReposted = null,
     Object? coverArt = freezed,
     Object? owner = freezed,
     Object? tracks = null,
@@ -142,6 +145,10 @@ class _$PlaylistModelCopyWithImpl<$Res, $Val extends PlaylistModel>
             isLiked: null == isLiked
                 ? _value.isLiked
                 : isLiked // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isReposted: null == isReposted
+                ? _value.isReposted
+                : isReposted // ignore: cast_nullable_to_non_nullable
                       as bool,
             coverArt: freezed == coverArt
                 ? _value.coverArt
@@ -223,6 +230,7 @@ abstract class _$$PlaylistModelImplCopyWith<$Res>
     String type,
     bool isPrivate,
     bool isLiked,
+    bool isReposted,
     @JsonKey(name: 'coverArtUrl') String? coverArt,
     OwnerModel? owner,
     @JsonKey(name: 'trackSummaryDto')
@@ -262,6 +270,7 @@ class __$$PlaylistModelImplCopyWithImpl<$Res>
     Object? type = null,
     Object? isPrivate = null,
     Object? isLiked = null,
+    Object? isReposted = null,
     Object? coverArt = freezed,
     Object? owner = freezed,
     Object? tracks = null,
@@ -299,6 +308,10 @@ class __$$PlaylistModelImplCopyWithImpl<$Res>
         isLiked: null == isLiked
             ? _value.isLiked
             : isLiked // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isReposted: null == isReposted
+            ? _value.isReposted
+            : isReposted // ignore: cast_nullable_to_non_nullable
                   as bool,
         coverArt: freezed == coverArt
             ? _value.coverArt
@@ -359,6 +372,7 @@ class _$PlaylistModelImpl implements _PlaylistModel {
     required this.type,
     this.isPrivate = false,
     this.isLiked = false,
+    this.isReposted = false,
     @JsonKey(name: 'coverArtUrl') this.coverArt,
     this.owner,
     @JsonKey(name: 'trackSummaryDto')
@@ -392,6 +406,9 @@ class _$PlaylistModelImpl implements _PlaylistModel {
   @override
   @JsonKey()
   final bool isLiked;
+  @override
+  @JsonKey()
+  final bool isReposted;
   @override
   @JsonKey(name: 'coverArtUrl')
   final String? coverArt;
@@ -436,7 +453,7 @@ class _$PlaylistModelImpl implements _PlaylistModel {
 
   @override
   String toString() {
-    return 'PlaylistModel(id: $id, title: $title, description: $description, type: $type, isPrivate: $isPrivate, isLiked: $isLiked, coverArt: $coverArt, owner: $owner, tracks: $tracks, totalDurationSeconds: $totalDurationSeconds, trackCount: $trackCount, playlistSlug: $playlistSlug, firstTrackWaveformUrl: $firstTrackWaveformUrl, secretToken: $secretToken, access: $access, genres: $genres, createdAt: $createdAt)';
+    return 'PlaylistModel(id: $id, title: $title, description: $description, type: $type, isPrivate: $isPrivate, isLiked: $isLiked, isReposted: $isReposted, coverArt: $coverArt, owner: $owner, tracks: $tracks, totalDurationSeconds: $totalDurationSeconds, trackCount: $trackCount, playlistSlug: $playlistSlug, firstTrackWaveformUrl: $firstTrackWaveformUrl, secretToken: $secretToken, access: $access, genres: $genres, createdAt: $createdAt)';
   }
 
   @override
@@ -452,6 +469,8 @@ class _$PlaylistModelImpl implements _PlaylistModel {
             (identical(other.isPrivate, isPrivate) ||
                 other.isPrivate == isPrivate) &&
             (identical(other.isLiked, isLiked) || other.isLiked == isLiked) &&
+            (identical(other.isReposted, isReposted) ||
+                other.isReposted == isReposted) &&
             (identical(other.coverArt, coverArt) ||
                 other.coverArt == coverArt) &&
             (identical(other.owner, owner) || other.owner == owner) &&
@@ -482,6 +501,7 @@ class _$PlaylistModelImpl implements _PlaylistModel {
     type,
     isPrivate,
     isLiked,
+    isReposted,
     coverArt,
     owner,
     const DeepCollectionEquality().hash(_tracks),
@@ -517,6 +537,7 @@ abstract class _PlaylistModel implements PlaylistModel {
     required final String type,
     final bool isPrivate,
     final bool isLiked,
+    final bool isReposted,
     @JsonKey(name: 'coverArtUrl') final String? coverArt,
     final OwnerModel? owner,
     @JsonKey(name: 'trackSummaryDto')
@@ -547,6 +568,8 @@ abstract class _PlaylistModel implements PlaylistModel {
   bool get isPrivate;
   @override
   bool get isLiked;
+  @override
+  bool get isReposted;
   @override
   @JsonKey(name: 'coverArtUrl')
   String? get coverArt;

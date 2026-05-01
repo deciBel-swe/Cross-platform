@@ -141,12 +141,21 @@ class ApiConstants {
   static String repostedTracksByUsername(String username) =>
       '/users/${Uri.encodeComponent(username)}/reposted-tracks';
 
+  /// Endpoint for mixed track and playlist repost history by username.
+  static String repostHistoryByUsername(String username) =>
+      '/users/repost-history/${Uri.encodeComponent(username)}';
+
   /// Endpoint for playlists liked by a public user.
   static String likedPlaylistsByUsername(String username) =>
       '/users/${Uri.encodeComponent(username)}/liked-playlists';
 
   /// Endpoint to toggle like on a playlist
-  static String togglePlaylistLike(int playlistId) => '/playlists/$playlistId/like';
+  static String togglePlaylistLike(int playlistId) =>
+      '/playlists/$playlistId/like';
+
+  /// Endpoint to toggle repost on a playlist.
+  static String togglePlaylistRepost(int playlistId) =>
+      '/playlists/$playlistId/repost';
 
   /// Endpoint for playlist's tracks reordering
   static String updateTracksOrder(int playlistId) =>

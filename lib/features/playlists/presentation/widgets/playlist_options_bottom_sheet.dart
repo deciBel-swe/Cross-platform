@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../engagement/presentation/providers/playlist_social_provider.dart';
 import '../../domain/entities/playlist.dart';
 import '../providers/playlist_details_provider.dart';
 import '../providers/user_playlists_provider.dart';
@@ -26,11 +27,9 @@ class PlaylistOptionsBottomSheet extends ConsumerWidget {
   final Playlist playlist;
   final BuildContext parentContext;
 
-  /// Helper to easily show this bottom sheet from any screen.
   static void show(BuildContext context, Playlist playlist) {
     final parentContext = context;
-    // ignore: inference_failure_on_function_invocation
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.transparent,
@@ -50,6 +49,11 @@ class PlaylistOptionsBottomSheet extends ConsumerWidget {
         .watch(playlistDetailsProvider(playlist.id))
         .valueOrNull;
     final currentPlaylist = playlistDetails ?? playlist;
+    final hasOwner = currentPlaylist.owner != null;
+    final socialData = ref
+        .watch(playlistSocialProvider(currentPlaylist.id))
+        .valueOrNull;
+    final isReposted = socialData?.isReposted ?? currentPlaylist.isReposted;
     final authState = ref.watch(authStateProvider).valueOrNull;
     final rawOwnerUsername = currentPlaylist.owner?.username;
     final ownerUsername = rawOwnerUsername?.trim().toLowerCase();
@@ -67,138 +71,193 @@ class PlaylistOptionsBottomSheet extends ConsumerWidget {
       snap: true,
       snapSizes: const [0.6, 0.85],
       builder: (context, scrollController) {
-        return Material(
-          color: AppColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          child: NotificationListener<DraggableScrollableNotification>(
-            onNotification: (notification) {
-              // Close the sheet when dragged to the minimum size
-              if (notification.extent <= notification.minExtent) {
-                Navigator.of(context).pop();
-              }
-              return true;
-            },
-            child: ListView(
-              controller: scrollController,
-              shrinkWrap: true,
-              children: [
-                // Drag handle
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.borderDark,
-                      borderRadius: BorderRadius.circular(2),
+        return Semantics(
+          container: true,
+          explicitChildNodes: true,
+          label: 'Playlist actions for ${currentPlaylist.title}',
+          child: Material(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: NotificationListener<DraggableScrollableNotification>(
+              onNotification: (notification) {
+                if (notification.extent <= notification.minExtent) {
+                  Navigator.of(context).pop();
+                }
+                return true;
+              },
+              child: ListView(
+                controller: scrollController,
+                shrinkWrap: true,
+                children: [
+                  Semantics(
+                    label: 'Drag handle',
+                    child: Center(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.borderDark,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
                   ),
-                ),
 
-                _Header(playlist: currentPlaylist),
-                const SizedBox(height: 24),
-                ShareOptionsRow(
-                  onCopyLinkTap: () async {
-                    return await ref
-                        .read(
-                          playlistDetailsProvider(currentPlaylist.id).notifier,
-                        )
-                        .fetchSecretLink();
-                  },
-                ),
-                const SizedBox(height: 16),
-                Divider(
-                  color: AppColors.borderDark.withValues(alpha: 0.5),
-                  height: 1,
-                ),
-                const SizedBox(height: 8),
-
-                if (isOwnPlaylist) ...[
-                  _ActionTile(
-                    icon: Icons.edit_outlined,
-                    title: 'Edit playlist',
-                    semanticHint: 'Open the playlist editor',
-                    onTap: () {
-                      context.pop();
-                      parentContext.push(
-                        RoutePaths.editPlaylist,
-                        extra: currentPlaylist,
-                      );
-                    },
+                  _Header(playlist: currentPlaylist),
+                  const SizedBox(height: 24),
+                  if (hasOwner) ...[
+                    ShareOptionsRow(
+                      onCopyLinkTap: () async {
+                        return await ref
+                            .read(
+                              playlistDetailsProvider(
+                                currentPlaylist.id,
+                              ).notifier,
+                            )
+                            .fetchSecretLink();
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  Divider(
+                    color: AppColors.borderDark.withValues(alpha: 0.5),
+                    height: 1,
                   ),
+                  const SizedBox(height: 8),
+
                   _ActionTile(
-                    icon: currentPlaylist.isPrivate
-                        ? Icons.lock_open
-                        : Icons.lock_outline,
-                    title: currentPlaylist.isPrivate
-                        ? 'Make public'
-                        : 'Make private',
-                    semanticHint: currentPlaylist.isPrivate
-                        ? 'Set this playlist visibility to public'
-                        : 'Set this playlist visibility to private',
+                    icon: Icons.repeat_rounded,
+                    title: isReposted ? 'Remove repost' : 'Repost playlist',
+                    semanticHint: isReposted
+                        ? 'Remove this playlist from your reposts'
+                        : 'Repost this playlist',
                     onTap: () async {
-                      final container = ProviderScope.containerOf(
-                        parentContext,
-                        listen: false,
+                      final messenger = ScaffoldMessenger.of(parentContext);
+                      final notifier = ref.read(
+                        playlistSocialProvider(currentPlaylist.id).notifier,
                       );
 
                       context.pop();
 
-                      final result = await container
-                          .read(userPlaylistsProvider.notifier)
-                          .togglePrivacy(currentPlaylist);
-
+                      final updatedIsReposted = await notifier.toggleRepost(
+                        currentIsLiked: currentPlaylist.isLiked,
+                        currentIsReposted: isReposted,
+                      );
                       if (!parentContext.mounted) {
                         return;
                       }
 
-                      result.fold(
-                        (failure) {
-                          ScaffoldMessenger.of(parentContext).showSnackBar(
-                            SnackBar(
-                              content: Text(failure.toString()),
-                              backgroundColor: AppColors.errors,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                        (updatedPlaylist) {
-                          container
-                              .read(
-                                playlistDetailsProvider(
-                                  updatedPlaylist.id,
-                                ).notifier,
-                              )
-                              .updatePlaylistLocally(updatedPlaylist);
-
-                          ScaffoldMessenger.of(parentContext).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                updatedPlaylist.isPrivate
-                                    ? 'Playlist is now private'
-                                    : 'Playlist is now public',
-                              ),
-                              backgroundColor: AppColors.success,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            updatedIsReposted == null
+                                ? isReposted
+                                      ? 'Remove repost is not supported by the server yet'
+                                      : 'Failed to update playlist repost'
+                                : updatedIsReposted
+                                ? 'Playlist reposted'
+                                : 'Playlist repost removed',
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: updatedIsReposted == null
+                              ? AppColors.errors
+                              : null,
+                        ),
                       );
                     },
                   ),
-                  _ActionTile(
-                    icon: Icons.delete_outline,
-                    title: 'Delete',
-                    semanticHint: 'Delete this playlist permanently',
-                    onTap: () {
-                      context.pop();
-                      DeletePlaylistDialog.show(parentContext, currentPlaylist);
-                    },
-                  ),
+
+                  if (isOwnPlaylist) ...[
+                    _ActionTile(
+                      icon: Icons.edit_outlined,
+                      title: 'Edit playlist',
+                      semanticHint: 'Open the playlist editor',
+                      onTap: () {
+                        context.pop();
+                        parentContext.push(
+                          RoutePaths.editPlaylist,
+                          extra: currentPlaylist,
+                        );
+                      },
+                    ),
+                    _ActionTile(
+                      icon: currentPlaylist.isPrivate
+                          ? Icons.lock_open
+                          : Icons.lock_outline,
+                      title: currentPlaylist.isPrivate
+                          ? 'Make public'
+                          : 'Make private',
+                      semanticHint: currentPlaylist.isPrivate
+                          ? 'Set this playlist visibility to public'
+                          : 'Set this playlist visibility to private',
+                      onTap: () async {
+                        final container = ProviderScope.containerOf(
+                          parentContext,
+                          listen: false,
+                        );
+
+                        context.pop();
+
+                        final result = await container
+                            .read(userPlaylistsProvider.notifier)
+                            .togglePrivacy(currentPlaylist);
+
+                        if (!parentContext.mounted) {
+                          return;
+                        }
+
+                        result.fold(
+                          (failure) {
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              SnackBar(
+                                content: Text(failure.toString()),
+                                backgroundColor: AppColors.errors,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                          (updatedPlaylist) {
+                            container
+                                .read(
+                                  playlistDetailsProvider(
+                                    updatedPlaylist.id,
+                                  ).notifier,
+                                )
+                                .updatePlaylistLocally(updatedPlaylist);
+
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  updatedPlaylist.isPrivate
+                                      ? 'Playlist is now private'
+                                      : 'Playlist is now public',
+                                ),
+                                backgroundColor: AppColors.success,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    _ActionTile(
+                      icon: Icons.delete_outline,
+                      title: 'Delete',
+                      semanticHint: 'Delete this playlist permanently',
+                      onTap: () {
+                        context.pop();
+                        DeletePlaylistDialog.show(
+                          parentContext,
+                          currentPlaylist,
+                        );
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  const SizedBox(height: 24),
                 ],
-                const SizedBox(height: 8),
-                const SizedBox(height: 24),
-              ],
+              ),
             ),
           ),
         );
@@ -215,64 +274,81 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coverArt = playlist.coverArt?.trim();
+    final ownerName = playlist.owner?.displayName?.trim().isNotEmpty == true
+        ? playlist.owner!.displayName!.trim()
+        : playlist.owner?.username.trim();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            clipBehavior: Clip.hardEdge,
-            child: coverArt != null && coverArt.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: _isRemote(coverArt)
-                        ? DecibelCachedImage(
-                            imageUrl: coverArt,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.file(File(coverArt), fit: BoxFit.cover),
-                  )
-                : const Icon(
-                    Icons.music_note,
-                    color: AppColors.textMuted,
-                    size: 32,
-                  ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  playlist.title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+    return Semantics(
+      container: true,
+      label: ownerName == null || ownerName.isEmpty
+          ? playlist.title
+          : '${playlist.title}, by $ownerName',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Row(
+          children: [
+            Semantics(
+              image: true,
+              label: 'Playlist cover art',
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  playlist.owner!.username,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                clipBehavior: Clip.hardEdge,
+                child: coverArt != null && coverArt.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: _isRemote(coverArt)
+                            ? DecibelCachedImage(
+                                imageUrl: coverArt,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.file(File(coverArt), fit: BoxFit.cover),
+                      )
+                    : const Icon(
+                        Icons.music_note,
+                        color: AppColors.textMuted,
+                        size: 32,
+                      ),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: ExcludeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      playlist.title,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (ownerName != null && ownerName.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        ownerName,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

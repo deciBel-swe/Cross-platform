@@ -5,6 +5,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/paginated_engagers.dart';
+import '../../domain/entities/repost_history.dart';
 import '../../domain/entities/track_engager.dart';
 import '../../domain/repositories/track_social_repository.dart';
 
@@ -99,6 +100,23 @@ class MockTrackSocialRepository implements ITrackSocialRepository {
     await Future<void>.delayed(_mockDelay);
     return PaginatedTracks(
       content: <Track>[],
+      pageNumber: page,
+      pageSize: size,
+      totalElements: 0,
+      totalPages: 0,
+      isLast: true,
+    );
+  }
+
+  @override
+  Future<PaginatedRepostHistory> getRepostHistory(
+    String username, {
+    int page = 0,
+    int size = 20,
+  }) async {
+    await Future<void>.delayed(_mockDelay);
+    return PaginatedRepostHistory(
+      content: const <RepostHistoryItem>[],
       pageNumber: page,
       pageSize: size,
       totalElements: 0,

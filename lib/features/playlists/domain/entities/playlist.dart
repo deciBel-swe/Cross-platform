@@ -24,6 +24,7 @@ class Playlist {
     required this.type,
     required this.isPrivate,
     required this.isLiked,
+    this.isReposted = false,
     this.coverArt,
     this.owner,
     required this.tracks,
@@ -42,6 +43,7 @@ class Playlist {
   final String type;
   final bool isPrivate;
   final bool isLiked;
+  final bool isReposted;
   final String? coverArt;
   final PlaylistOwner? owner;
   final List<Track> tracks;
@@ -60,6 +62,7 @@ class Playlist {
     String? type,
     bool? isPrivate,
     bool? isLiked,
+    bool? isReposted,
     String? coverArt,
     PlaylistOwner? owner,
     List<Track>? tracks,
@@ -78,13 +81,15 @@ class Playlist {
       type: type ?? this.type,
       isPrivate: isPrivate ?? this.isPrivate,
       isLiked: isLiked ?? this.isLiked,
+      isReposted: isReposted ?? this.isReposted,
       coverArt: coverArt ?? this.coverArt,
       owner: owner ?? this.owner,
       tracks: tracks ?? this.tracks,
       totalDurationSeconds: totalDurationSeconds ?? this.totalDurationSeconds,
       trackCount: trackCount ?? this.trackCount,
       playlistSlug: playlistSlug ?? this.playlistSlug,
-      firstTrackWaveformUrl: firstTrackWaveformUrl ?? this.firstTrackWaveformUrl,
+      firstTrackWaveformUrl:
+          firstTrackWaveformUrl ?? this.firstTrackWaveformUrl,
       secretToken: secretToken ?? this.secretToken,
       access: access ?? this.access,
       createdAt: createdAt ?? this.createdAt,

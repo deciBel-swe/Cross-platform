@@ -8,6 +8,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../library/data/models/paginated_tracks_model.dart';
 import '../models/paginated_engagers_model.dart';
+import '../models/repost_history_model.dart';
 
 @injectable
 class TrackSocialRemoteDatasource {
@@ -154,6 +155,34 @@ class TrackSocialRemoteDatasource {
     }
   }
 
+  Future<PaginatedRepostHistoryModel> getRepostHistory(
+    String username, {
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        ApiConstants.repostHistoryByUsername(username),
+        queryParams: {'page': page, 'size': size},
+      );
+
+      final data = response.data;
+      if (data == null) {
+        throw const ServerException('No data returned from server.');
+      }
+
+      final payload = data['data'] is Map<String, dynamic>
+          ? data['data'] as Map<String, dynamic>
+          : data;
+
+      return PaginatedRepostHistoryModel.fromJson(
+        _normalizePagination(payload),
+      );
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
   Future<PaginatedTracksModel> _fetchTrackCollection({
     required List<String> endpoints,
     required int page,
@@ -282,17 +311,12 @@ class TrackSocialRemoteDatasource {
     String? description,
   }) async {
     try {
-      final data = <String, dynamic>{
-        'reason': reason,
-      };
+      final data = <String, dynamic>{'reason': reason};
       if (description != null) {
         data['description'] = description;
       }
 
-      await _dioClient.post<dynamic>(
-        '/tracks/$trackId/report',
-        data: data,
-      );
+      await _dioClient.post<dynamic>('/tracks/$trackId/report', data: data);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
