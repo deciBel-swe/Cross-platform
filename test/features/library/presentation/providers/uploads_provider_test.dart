@@ -70,7 +70,7 @@ void main() {
           repostCount: 0,
           isLiked: false,
           isReposted: false,
-          createdAt: DateTime.now(),
+          trackDurationSeconds: 120, createdAt: DateTime.now(),
         ),
       ];
       final paginated = PaginatedTracks(
@@ -124,7 +124,7 @@ void main() {
         repostCount: 0,
         isLiked: false,
         isReposted: false,
-        createdAt: DateTime.now(),
+        trackDurationSeconds: 120, createdAt: DateTime.now(),
       );
 
       when(() => mockRepo.fetchMyTracks(page: 0, size: 20)).thenAnswer(
@@ -213,7 +213,7 @@ void main() {
             repostCount: 0,
             isLiked: false,
             isReposted: false,
-            createdAt: DateTime.now(),
+            trackDurationSeconds: 120, createdAt: DateTime.now(),
           ),
         ],
         pageNumber: 0,
@@ -239,7 +239,7 @@ void main() {
             repostCount: 0,
             isLiked: false,
             isReposted: false,
-            createdAt: DateTime.now(),
+            trackDurationSeconds: 120, createdAt: DateTime.now(),
           ),
         ],
         pageNumber: 1,
@@ -307,7 +307,7 @@ void main() {
         repostCount: 0,
         isLiked: false,
         isReposted: false,
-        createdAt: DateTime.now(),
+        trackDurationSeconds: 120, createdAt: DateTime.now(),
       );
 
       // Act
@@ -334,7 +334,7 @@ void main() {
         repostCount: 0,
         isLiked: false,
         isReposted: false,
-        createdAt: DateTime.now(),
+        trackDurationSeconds: 120, createdAt: DateTime.now(),
       );
       final secondTrack = Track(
         id: 2,
@@ -349,7 +349,7 @@ void main() {
         repostCount: 0,
         isLiked: false,
         isReposted: false,
-        createdAt: DateTime.now(),
+        trackDurationSeconds: 120, createdAt: DateTime.now(),
       );
 
       when(() => mockRepo.fetchMyTracks(page: 0, size: 20)).thenAnswer(

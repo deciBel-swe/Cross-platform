@@ -238,17 +238,17 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
           responseData['socialLinks'] as Map<String, dynamic>?;
 
       final Map<String, dynamic> normalizedResponse = <String, dynamic>{
-        'id': responseData['id'] ?? 0,
+        'id': responseData['id'] ?? profile['id'] ?? 0,
         'Role': 'USER',
         'email': '',
-        'username': responseData['username'] ?? '',
+        'username': responseData['username'] ?? profile['username'] ?? '',
         'displayName': _asNullableString(
           responseData['displayName'] ??
               profile['displayName'] ??
               profile['DisplayName'],
         ),
         'emailVerified': true,
-        'tier': responseData['tier'] ?? 'FREE',
+        'tier': responseData['tier'] ?? profile['tier'] ?? 'FREE',
         'profile': {
           'bio': profile['bio'],
           'city': profile['Location'] ?? profile['city'],
@@ -260,9 +260,15 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         'socialLinks': socialLinks,
         'privacySettings': {'isPrivate': false, 'showHistory': true},
         'stats': {
-          'followers': (stats['followersCount'] as num?)?.toInt() ?? 0,
-          'following': (stats['followingCount'] as num?)?.toInt() ?? 0,
-          'tracksCount': (stats['trackCount'] as num?)?.toInt() ?? 0,
+          'followers': (stats['followersCount'] as num?)?.toInt() ??
+              (profile['followerCount'] as num?)?.toInt() ??
+              0,
+          'following': (stats['followingCount'] as num?)?.toInt() ??
+              (profile['followingCount'] as num?)?.toInt() ??
+              0,
+          'tracksCount': (stats['trackCount'] as num?)?.toInt() ??
+              (profile['trackCount'] as num?)?.toInt() ??
+              0,
         },
       };
 

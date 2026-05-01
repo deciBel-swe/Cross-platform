@@ -40,7 +40,6 @@ class UploadsLibraryBody extends ConsumerWidget {
     final uploadSessions = ref.watch(uploadSessionsProvider);
 
     return uploadsAsync.when(
-      // UX fix: keeps list visible during refresh/loading.
       skipLoadingOnRefresh: true,
       data: (tracks) {
         final displayTracks = _mergeTracks(

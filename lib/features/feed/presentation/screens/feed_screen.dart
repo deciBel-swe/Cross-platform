@@ -19,10 +19,15 @@ import '../../../library/domain/entities/artist.dart';
 import '../../../library/domain/entities/track.dart' as library_track;
 import '../../../library/domain/entities/track_status.dart';
 import '../../../library/presentation/notifiers/track_audio_notifier.dart';
+import '../../../library_profile/domain/entities/user_profile.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../library_profile/presentation/widgets/track_details.dart';
 import '../../../offline/presentation/notifiers/track_download_notifier.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
+import '../../../upgrade/presentation/widgets/pro_promotion_bottom_sheet.dart';
+import '../../domain/entities/feed_item_type.dart';
 import '../../domain/entities/feed_track.dart';
 import '../notifiers/discover_feed_notifier.dart';
 import '../notifiers/feed_notifier.dart';
@@ -124,6 +129,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Future<void> _downloadTrack(library_track.Track track) async {
+    // Gate behind PRO tier — use the user profile (server-side source of truth).
+    final profileAsync = ref.read(userProfileProvider);
+    final profile = profileAsync.valueOrNull?.fold((_) => null, (p) => p);
+    final isPro =
+        profile?.tier == UserTier.pro || profile?.tier == UserTier.artistPro;
+
+    if (!isPro) {
+      ProPromotionBottomSheet.show(context);
+      return;
+    }
+
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
       SnackBar(
@@ -246,28 +262,54 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 final tracks = feedState.tracks.cast<FeedTrack>();
                 final playableQueue = tracks.map(_toLibraryTrack).toList();
                 if (tracks.isEmpty) {
-                  return _EmptyFeedView(
-                    isDesktop: isDesktop,
-                    tab: _selectedTab,
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      if (_selectedTab == FeedTab.following) {
+                        await _feedNotifier.refresh();
+                      } else {
+                        await _discoverFeedNotifier.refresh();
+                      }
+                    },
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: _EmptyFeedView(
+                              isDesktop: isDesktop,
+                              tab: _selectedTab,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   );
                 }
 
                 if (!isDesktop && _selectedTab == FeedTab.discover) {
-                  return _MobileDiscoverFeedPager(
-                    tracks: tracks,
-                    playableQueue: playableQueue,
-                    isLoadingMore: feedState.isLoadingMore,
-                    onLoadMore: () {
-                      if (!mounted) return;
-                      _discoverFeedNotifier.loadMore();
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      await _discoverFeedNotifier.refresh();
                     },
-                    onPlayTrack: (track, queue) async {
-                      if (!mounted) return;
-                      await _audioNotifier.playTrack(track: track, queue: queue);
-                    },
-                    onAddToPlaylist: (track) {
-                      context.push(RoutePaths.addToPlaylist, extra: track);
-                    },
+                    child: _MobileDiscoverFeedPager(
+                      tracks: tracks,
+                      playableQueue: playableQueue,
+                      isLoadingMore: feedState.isLoadingMore,
+                      onLoadMore: () {
+                        if (!mounted) return;
+                        _discoverFeedNotifier.loadMore();
+                      },
+                      onPlayTrack: (track, queue) async {
+                        if (!mounted) return;
+                        await _audioNotifier.playTrack(track: track, queue: queue);
+                      },
+                      onAddToPlaylist: (track) {
+                        context.push(RoutePaths.addToPlaylist, extra: track);
+                      },
+                    ),
                   );
                 }
                 return RefreshIndicator(
@@ -282,6 +324,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     controller: _scrollController,
                     child: ListView.builder(
                       controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
                       primary: false,
                       padding: EdgeInsets.fromLTRB(
                         isDesktop
@@ -333,6 +376,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                             waveformPeaks: _buildPeaks(seed: track.id),
                             commentTrack: playableTrack,
                             gradientColors: _colorsForTrack(track.id),
+                            feedItemType: FeedItemType.trackPosted,
                             onPlay: () {
                               if (!mounted) return;
                               _audioNotifier.playTrack(
@@ -394,6 +438,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                 TrackDetails.show(context, playableTrack, ref),
                               );
                             },
+                            onViewQueue: () {
+                              if (!mounted) return;
+                              unawaited(QueueBottomSheet.show(context));
+                            },
                           ),
                         );
                       },
@@ -432,6 +480,7 @@ library_track.Track _toLibraryTrack(FeedTrack track) {
     isLiked: track.isLiked,
     isReposted: track.isReposted,
     createdAt: track.uploadDate,
+    trackDurationSeconds: track.trackDurationSeconds,
   );
 }
 

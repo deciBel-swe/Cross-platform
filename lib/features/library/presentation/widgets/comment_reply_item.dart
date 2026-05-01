@@ -1,14 +1,20 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
 import '../../domain/entities/comment_reply.dart';
+import '../utils/track_comment_formatters.dart';
 
 class CommentReplyItem extends StatelessWidget {
   const CommentReplyItem({super.key, required this.reply});
   final CommentReply reply;
 
+  /// Builds a single reply row.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final timeAgo = reply.createdAt == null
+        ? 'Just now'
+        : TrackCommentFormatters.formatTimeAgo(reply.createdAt!);
 
     return Padding(
       padding: const EdgeInsets.only(left: 56, top: 12, bottom: 4),
@@ -45,7 +51,7 @@ class CommentReplyItem extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text('2w', style: theme.textTheme.bodySmall),
+                    Text(timeAgo, style: theme.textTheme.bodySmall),
                   ],
                 ),
                 const SizedBox(height: 4),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/domain/repositories/track_repository.dart';
 import '../../../library_profile/presentation/providers/track_repository_provider.dart';
 import '../../../library_profile/presentation/providers/user_profile_provider.dart';
@@ -14,34 +15,22 @@ import '../providers/track_social_provider.dart';
 class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
   late final ITrackSocialRepository _socialRepository;
   late final TrackRepository _trackRepository;
+  int _toggleGeneration = 0;
+  Future<void> _toggleQueue = Future<void>.value();
 
   @override
   FutureOr<TrackSocialData> build(int arg) async {
     _socialRepository = ref.read(trackSocialRepositoryProvider);
     _trackRepository = ref.read(trackRepositoryProvider);
 
-    // Background fetch to verify real data
-    final result = await _trackRepository.fetchTrackById(arg);
-
-    return result.fold(
-      (failure) {
-        // Fallback to empty state if fetch fails
-        return const TrackSocialData(
+    final data = await _fetchTrackSocialData(arg);
+    return data ??
+        const TrackSocialData(
           isLiked: false,
           likeCount: 0,
           isReposted: false,
           repostCount: 0,
         );
-      },
-      (track) {
-        return TrackSocialData(
-          isLiked: track.isLiked,
-          likeCount: track.likeCount,
-          isReposted: track.isReposted,
-          repostCount: track.repostCount,
-        );
-      },
-    );
   }
 
   /// Toggle Like/Repost with optimistic UI update.
@@ -56,22 +45,55 @@ class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
     final int previousCount = actionType == SocialActionType.like
         ? currentData.likeCount
         : currentData.repostCount;
-
+    final int optimisticCount = wasActive
+        ? _clampCount(previousCount - 1)
+        : previousCount + 1;
+    final int generation = ++_toggleGeneration;
     // 1. Optimistic Update
     final optimisticData = actionType == SocialActionType.like
-        ? currentData.copyWith(
-            isLiked: !wasActive,
-            likeCount: wasActive ? previousCount - 1 : previousCount + 1,
-          )
+        ? currentData.copyWith(isLiked: !wasActive, likeCount: optimisticCount)
         : currentData.copyWith(
             isReposted: !wasActive,
-            repostCount: wasActive ? previousCount - 1 : previousCount + 1,
+            repostCount: optimisticCount,
           );
 
     state = AsyncData(optimisticData);
 
+    final queued = _toggleQueue.then(
+      (_) => _performToggle(
+        actionType: actionType,
+        wasActive: wasActive,
+        currentData: currentData,
+        generation: generation,
+      ),
+    );
+    _toggleQueue = queued.catchError((_) {});
+    await queued;
+  }
+
+  TrackSocialData _mapTrackToSocialData(Track track) {
+    return TrackSocialData(
+      isLiked: track.isLiked,
+      likeCount: track.likeCount,
+      isReposted: track.isReposted,
+      repostCount: track.repostCount,
+    );
+  }
+
+  Future<TrackSocialData?> _fetchTrackSocialData(int trackId) async {
+    final result = await _trackRepository.fetchTrackById(trackId);
+    return result.fold((_) => null, _mapTrackToSocialData);
+  }
+
+  int _clampCount(int value) => value < 0 ? 0 : value;
+
+  Future<void> _performToggle({
+    required SocialActionType actionType,
+    required bool wasActive,
+    required TrackSocialData currentData,
+    required int generation,
+  }) async {
     try {
-      // 2. Call Repository
       if (actionType == SocialActionType.like) {
         wasActive
             ? await _socialRepository.unlikeTrack(arg)
@@ -82,14 +104,20 @@ class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
             : await _socialRepository.repostTrack(arg);
       }
 
-      // 3. Sync Collections & Profile stats
+      if (_toggleGeneration != generation) {
+        return;
+      }
+
       _syncCollections(actionType, wasActive: wasActive);
 
-      // 4. (Optional) We could re-fetch after success to be absolutely sure,
-      // but usually the result of toggle is predictable.
+      final refreshed = await _fetchTrackSocialData(arg);
+      if (refreshed != null && _toggleGeneration == generation) {
+        state = AsyncData(refreshed);
+      }
     } on AppException {
-      // Revert on error
-      state = AsyncData(currentData);
+      if (_toggleGeneration == generation) {
+        state = AsyncData(currentData);
+      }
     }
   }
 

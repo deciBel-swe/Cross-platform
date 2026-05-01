@@ -8,16 +8,26 @@ import 'package:decibel/features/auth/domain/entities/auth_state.dart';
 import 'package:decibel/features/auth/domain/entities/auth_user.dart';
 import 'package:decibel/features/auth/presentation/notifiers/auth_notifier.dart';
 import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
+import 'package:decibel/features/discovery/domain/entities/discovery_track.dart';
+import 'package:decibel/features/discovery/domain/entities/paginated_discovery_tracks.dart';
+import 'package:decibel/features/discovery/domain/repositories/discovery_repository.dart';
+import 'package:decibel/features/discovery/presentation/providers/discovery_provider.dart';
+import 'package:decibel/features/home/domain/entities/listening_history_page.dart';
+import 'package:decibel/features/home/domain/repositories/history_repository.dart';
+import 'package:decibel/features/home/presentation/providers/history_provider.dart';
 import 'package:decibel/features/library/domain/entities/paginated_tracks.dart';
 import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:decibel/features/library/domain/entities/track_edit_request.dart';
 import 'package:decibel/features/library/domain/entities/track_peaks.dart';
 import 'package:decibel/features/library_profile/domain/repositories/track_repository.dart';
 import 'package:decibel/features/library_profile/presentation/providers/track_repository_provider.dart';
+import 'package:decibel/features/notifications/domain/repositories/notification_repository.dart';
+import 'package:decibel/features/notifications/presentation/providers/notification_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockAuthNotifier extends AsyncNotifier<AuthState>
     implements AuthNotifier {
@@ -58,6 +68,91 @@ class MockAuthNotifier extends AsyncNotifier<AuthState>
 
   @override
   Future<void> refreshUser() async {}
+}
+
+class MockHistoryRepository extends Mock implements HistoryRepository {}
+
+class MockNotificationRepository extends Mock
+    implements INotificationRepository {}
+
+class MockDiscoveryRepository extends Mock implements DiscoveryRepository {}
+
+ProviderContainer createMockContainer({
+  required AuthState authState,
+  TrackRepository? trackRepository,
+}) {
+  final historyRepo = MockHistoryRepository();
+  final notificationRepo = MockNotificationRepository();
+  final discoveryRepo = MockDiscoveryRepository();
+
+  // Default mock behavior to prevent widget initialization crashes
+  when(
+    () => historyRepo.getListeningHistory(
+      page: any(named: 'page'),
+      size: any(named: 'size'),
+    ),
+  ).thenAnswer(
+    (_) async => const Right(
+      ListeningHistoryPage(
+        content: [],
+        pageNumber: 0,
+        pageSize: 20,
+        totalElements: 0,
+        totalPages: 0,
+        isLast: true,
+      ),
+    ),
+  );
+
+  when(
+    () => notificationRepo.getUnreadCount(),
+  ).thenAnswer((_) async => (null, 0));
+
+  when(() => discoveryRepo.getLikesStation()).thenAnswer(
+    (_) async =>
+        const Right(PaginatedDiscoveryTracks(content: <DiscoveryTrack>[])),
+  );
+
+  when(
+    () => discoveryRepo.getArtistStation(
+      page: any(named: 'page'),
+      size: any(named: 'size'),
+    ),
+  ).thenAnswer(
+    (_) async =>
+        const Right(PaginatedDiscoveryTracks(content: <DiscoveryTrack>[])),
+  );
+
+  when(
+    () => discoveryRepo.getGenreStation(
+      page: any(named: 'page'),
+      size: any(named: 'size'),
+    ),
+  ).thenAnswer(
+    (_) async =>
+        const Right(PaginatedDiscoveryTracks(content: <DiscoveryTrack>[])),
+  );
+
+  when(
+    () => discoveryRepo.getTrendingTracks(
+      page: any(named: 'page'),
+      size: any(named: 'size'),
+    ),
+  ).thenAnswer(
+    (_) async =>
+        const Right(PaginatedDiscoveryTracks(content: <DiscoveryTrack>[])),
+  );
+
+  return ProviderContainer(
+    overrides: [
+      authStateProvider.overrideWith(() => MockAuthNotifier(authState)),
+      if (trackRepository != null)
+        trackRepositoryProvider.overrideWithValue(trackRepository),
+      historyRepositoryProvider.overrideWithValue(historyRepo),
+      notificationRepositoryProvider.overrideWithValue(notificationRepo),
+      discoveryRepositoryProvider.overrideWithValue(discoveryRepo),
+    ],
+  );
 }
 
 class FakeTrackRepository implements TrackRepository {
@@ -108,7 +203,10 @@ class FakeTrackRepository implements TrackRepository {
   }
 
   @override
-  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id) {
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(
+    int id, {
+    String? waveformUrl,
+  }) {
     throw UnimplementedError();
   }
 
@@ -158,12 +256,8 @@ void main() {
       'should redirect to /start if unauthenticated and accessing /home',
       (tester) async {
         // Arrange: Force the AuthState to completely unauthenticated
-        final container = ProviderContainer(
-          overrides: [
-            authStateProvider.overrideWith(
-              () => MockAuthNotifier(const AuthUnauthenticated()),
-            ),
-          ],
+        final container = createMockContainer(
+          authState: const AuthUnauthenticated(),
         );
 
         await tester.pumpWidget(createTestApp(container));
@@ -185,16 +279,10 @@ void main() {
       tester,
     ) async {
       // Arrange: Force the AuthState to authenticated
-      final container = ProviderContainer(
-        overrides: [
-          authStateProvider.overrideWith(
-            () => MockAuthNotifier(
-              const AuthAuthenticated(
-                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
-              ),
-            ),
-          ),
-        ],
+      final container = createMockContainer(
+        authState: const AuthAuthenticated(
+          user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+        ),
       );
 
       await tester.pumpWidget(createTestApp(container));
@@ -215,16 +303,10 @@ void main() {
       'should kick authenticated users out of /login directly to /home',
       (tester) async {
         // Arrange: Force the AuthState to authenticated
-        final container = ProviderContainer(
-          overrides: [
-            authStateProvider.overrideWith(
-              () => MockAuthNotifier(
-                const AuthAuthenticated(
-                  user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
-                ),
-              ),
-            ),
-          ],
+        final container = createMockContainer(
+          authState: const AuthAuthenticated(
+            user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+          ),
         );
 
         await tester.pumpWidget(createTestApp(container));
@@ -245,17 +327,11 @@ void main() {
     testWidgets('should open deep-link profile for non-reserved username', (
       tester,
     ) async {
-      final container = ProviderContainer(
-        overrides: [
-          authStateProvider.overrideWith(
-            () => MockAuthNotifier(
-              const AuthAuthenticated(
-                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
-              ),
-            ),
-          ),
-          trackRepositoryProvider.overrideWithValue(FakeTrackRepository()),
-        ],
+      final container = createMockContainer(
+        authState: const AuthAuthenticated(
+          user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+        ),
+        trackRepository: FakeTrackRepository(),
       );
 
       await tester.pumpWidget(createTestApp(container));
@@ -272,17 +348,11 @@ void main() {
     testWidgets('should block reserved top-level deep-link segment', (
       tester,
     ) async {
-      final container = ProviderContainer(
-        overrides: [
-          authStateProvider.overrideWith(
-            () => MockAuthNotifier(
-              const AuthAuthenticated(
-                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
-              ),
-            ),
-          ),
-          trackRepositoryProvider.overrideWithValue(FakeTrackRepository()),
-        ],
+      final container = createMockContainer(
+        authState: const AuthAuthenticated(
+          user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+        ),
+        trackRepository: FakeTrackRepository(),
       );
 
       await tester.pumpWidget(createTestApp(container));
@@ -299,17 +369,11 @@ void main() {
     testWidgets('should resolve numeric deep-link track directly', (
       tester,
     ) async {
-      final container = ProviderContainer(
-        overrides: [
-          authStateProvider.overrideWith(
-            () => MockAuthNotifier(
-              const AuthAuthenticated(
-                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
-              ),
-            ),
-          ),
-          trackRepositoryProvider.overrideWithValue(FakeTrackRepository()),
-        ],
+      final container = createMockContainer(
+        authState: const AuthAuthenticated(
+          user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+        ),
+        trackRepository: FakeTrackRepository(),
       );
 
       await tester.pumpWidget(createTestApp(container));
@@ -326,23 +390,13 @@ void main() {
     testWidgets('should resolve slug deep-link track via repository', (
       tester,
     ) async {
-      final container = ProviderContainer(
-        overrides: [
-          authStateProvider.overrideWith(
-            () => MockAuthNotifier(
-              const AuthAuthenticated(
-                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
-              ),
-            ),
-          ),
-          trackRepositoryProvider.overrideWithValue(
-            FakeTrackRepository(
-              resolvedTracksByIdentifier: const <String, int>{
-                'my-cool-track': 77,
-              },
-            ),
-          ),
-        ],
+      final container = createMockContainer(
+        authState: const AuthAuthenticated(
+          user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+        ),
+        trackRepository: FakeTrackRepository(
+          resolvedTracksByIdentifier: const <String, int>{'my-cool-track': 77},
+        ),
       );
 
       await tester.pumpWidget(createTestApp(container));
@@ -359,17 +413,11 @@ void main() {
     testWidgets('should fall back to home when track slug cannot resolve', (
       tester,
     ) async {
-      final container = ProviderContainer(
-        overrides: [
-          authStateProvider.overrideWith(
-            () => MockAuthNotifier(
-              const AuthAuthenticated(
-                user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
-              ),
-            ),
-          ),
-          trackRepositoryProvider.overrideWithValue(FakeTrackRepository()),
-        ],
+      final container = createMockContainer(
+        authState: const AuthAuthenticated(
+          user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
+        ),
+        trackRepository: FakeTrackRepository(),
       );
 
       await tester.pumpWidget(createTestApp(container));

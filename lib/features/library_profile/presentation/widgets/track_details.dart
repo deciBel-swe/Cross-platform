@@ -10,12 +10,13 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../auth/domain/entities/auth_state.dart';
-// import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
+import '../../../upgrade/presentation/widgets/pro_promotion_bottom_sheet.dart';
 import '../../domain/entities/user_profile.dart';
 import '../providers/track_audio_provider.dart';
 import '../providers/track_preview_provider.dart';
@@ -82,23 +83,16 @@ class TrackDetails extends ConsumerWidget {
 
     String? artistIdentifier() {
       final username = track.artist.username.trim();
-      if (username.isNotEmpty) {
-        return username;
-      }
-
-      if (track.artist.id > 0) {
-        return track.artist.id.toString();
-      }
-
+      if (username.isNotEmpty) return username;
+      if (track.artist.id > 0) return track.artist.id.toString();
       return null;
     }
 
     void goToArtist() {
       Navigator.of(context).pop();
       Future.microtask(() {
-        if (!parentContext.mounted) {
-          return;
-        }
+        if (!parentContext.mounted) return;
+
         if (isOwnTrack) {
           parentContext.go(RoutePaths.profile);
         } else {
@@ -122,10 +116,10 @@ class TrackDetails extends ConsumerWidget {
       Navigator.of(context).pop();
       final link =
           'https://decibel.foo${RoutePaths.deepLinkTrack(track.artist.username, track.id.toString())}';
+
       await Clipboard.setData(ClipboardData(text: link));
-      if (!parentContext.mounted) {
-        return;
-      }
+
+      if (!parentContext.mounted) return;
 
       ScaffoldMessenger.of(parentContext).showSnackBar(
         SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
@@ -143,22 +137,21 @@ class TrackDetails extends ConsumerWidget {
       (_) => null,
       (profile) => profile,
     );
+
     final isPro =
         userProfile?.tier == UserTier.pro ||
         userProfile?.tier == UserTier.artistPro;
 
     Future<void> deleteTrack() async {
       final container = ProviderScope.containerOf(parentContext, listen: false);
+
       Navigator.of(context).pop();
       await Future<void>.delayed(Duration.zero);
-      if (!parentContext.mounted) {
-        return;
-      }
+
+      if (!parentContext.mounted) return;
 
       final confirmed = await _confirmDeleteTrack(parentContext);
-      if (!confirmed || !parentContext.mounted) {
-        return;
-      }
+      if (!confirmed || !parentContext.mounted) return;
 
       final messenger = ScaffoldMessenger.of(parentContext);
       messenger.showSnackBar(
@@ -171,22 +164,24 @@ class TrackDetails extends ConsumerWidget {
       final deleted = await container
           .read(uploadsProvider.notifier)
           .deleteTrack(track.id);
-      if (!parentContext.mounted) {
-        return;
-      }
+
+      if (!parentContext.mounted) return;
 
       messenger.hideCurrentSnackBar();
+
       if (deleted) {
         final audioState = container.read(trackAudioProvider);
         final audioNotifier = container.read(trackAudioProvider.notifier);
+
         if (audioState.preparedTrackId == track.id) {
           await audioNotifier.stop();
         }
+
         audioNotifier.removeFromQueue(track.id);
-        if (!parentContext.mounted) {
-          return;
-        }
         container.invalidate(trackPreviewProvider(track.id));
+
+        if (!parentContext.mounted) return;
+
         messenger.showSnackBar(
           SnackBar(
             content: Text('Deleted "${track.title}"'),
@@ -225,6 +220,21 @@ class TrackDetails extends ConsumerWidget {
       onAddToQueue: () {
         ref.read(trackAudioProvider.notifier).addToQueue(track);
         context.pop();
+
+        ScaffoldMessenger.of(parentContext).showSnackBar(
+          SnackBar(
+            content: Text('Added "${track.title}" to queue'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      onOpenQueue: () {
+        Navigator.of(context).pop();
+        Future.microtask(() {
+          if (parentContext.mounted) {
+            QueueBottomSheet.show(parentContext);
+          }
+        });
       },
       onGoToArtist: goToArtist,
       onEditTrack: () {
@@ -246,20 +256,18 @@ class TrackDetails extends ConsumerWidget {
       },
       onDownload: () {
         if (!isPro) {
-          ScaffoldMessenger.of(parentContext).showSnackBar(
-            const SnackBar(
-              content: Text('This feature is for Pro users only.'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          Navigator.of(context).pop();
+          ProPromotionBottomSheet.show(parentContext);
           return;
         }
 
         ref.read(trackDownloadProvider.notifier).downloadTrack(track).then((_) {
           if (!parentContext.mounted) return;
+
           final state = ProviderScope.containerOf(
             parentContext,
           ).read(trackDownloadProvider);
+
           if (state.hasError) {
             ScaffoldMessenger.of(parentContext).showSnackBar(
               SnackBar(
@@ -284,6 +292,7 @@ class TrackDetails extends ConsumerWidget {
             behavior: SnackBarBehavior.floating,
           ),
         );
+
         context.pop();
       },
       onDeleteTrack: deleteTrack,
@@ -334,6 +343,7 @@ class _SheetContent extends StatelessWidget {
     required this.showDeleteAction,
     required this.onAddToPlaylist,
     required this.onAddToQueue,
+    required this.onOpenQueue,
     required this.onEditTrack,
     required this.onGoToArtist,
     required this.onGoToAlbum,
@@ -349,6 +359,7 @@ class _SheetContent extends StatelessWidget {
   final bool showDeleteAction;
   final VoidCallback onAddToPlaylist;
   final VoidCallback onAddToQueue;
+  final VoidCallback onOpenQueue;
   final VoidCallback onEditTrack;
   final VoidCallback onGoToArtist;
   final VoidCallback onGoToAlbum;
@@ -393,119 +404,121 @@ class _SheetContent extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Drag handle ─────────────────────────────────────────────────
-          const _DragHandle(),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Drag handle ─────────────────────────────────────────────────
+            const _DragHandle(),
 
-          // ── Track header ────────────────────────────────────────────────
-          _TrackHeader(
-            track: track,
-            artistName: artistName,
-            duration: duration,
-            formatDuration: _formatDuration,
-            formatCount: _formatCount,
-          ),
-
-          const Divider(
-            color: AppColors.borderDark,
-            height: 1,
-            thickness: 1,
-            indent: 16,
-            endIndent: 16,
-          ),
-
-          // ── Engagement row — global LikeButton + RepostButton ───────────
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppConstants.spacingRegular,
-              vertical: AppConstants.spacingSmall,
+            // ── Track header ────────────────────────────────────────────────
+            _TrackHeader(
+              track: track,
+              artistName: artistName,
+              duration: duration,
+              formatDuration: _formatDuration,
+              formatCount: _formatCount,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                LikeButton(
-                  trackId: track.id,
-                  isLiked: track.isLiked,
-                  likeCount: track.likeCount,
-                  iconSize: 24,
-                  fontSize: AppConstants.fontSizeRegular,
-                ),
-                Container(width: 1, height: 28, color: AppColors.borderDark),
-                RepostButton(
-                  trackId: track.id,
-                  isReposted: track.isReposted,
-                  repostCount: track.repostCount,
-                  iconSize: 24,
-                  fontSize: AppConstants.fontSizeRegular,
-                ),
-              ],
+
+            const Divider(
+              color: AppColors.borderDark,
+              height: 1,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
             ),
-          ),
 
-          const Divider(
-            color: AppColors.borderDark,
-            height: 1,
-            thickness: 1,
-            indent: 16,
-            endIndent: 16,
-          ),
+            // ── Engagement row — global LikeButton + RepostButton ───────────
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.spacingRegular,
+                vertical: AppConstants.spacingSmall,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  LikeButton(
+                    trackId: track.id,
+                    isLiked: track.isLiked,
+                    likeCount: track.likeCount,
+                    iconSize: 24,
+                    fontSize: AppConstants.fontSizeRegular,
+                  ),
+                  Container(width: 1, height: 28, color: AppColors.borderDark),
+                  RepostButton(
+                    trackId: track.id,
+                    isReposted: track.isReposted,
+                    repostCount: track.repostCount,
+                    iconSize: 24,
+                    fontSize: AppConstants.fontSizeRegular,
+                  ),
+                ],
+              ),
+            ),
 
-          // ── Action list ─────────────────────────────────────────────────
-          _ActionTile(
-            icon: Icons.playlist_add_rounded,
-            label: 'Add to playlist',
-            onTap: onAddToPlaylist,
-          ),
-          _ActionTile(
-            icon: Icons.queue_music_rounded,
-            label: 'Add to queue',
-            onTap: onAddToQueue,
-          ),
-          if (showEditAction)
+            const Divider(
+              color: AppColors.borderDark,
+              height: 1,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
+            ),
+
+            // ── Action list ─────────────────────────────────────────────────
             _ActionTile(
-              icon: Icons.edit_outlined,
-              label: 'Edit track',
-              onTap: onEditTrack,
+              icon: Icons.playlist_add_rounded,
+              label: 'Add to playlist',
+              onTap: onAddToPlaylist,
             ),
-          _ActionTile(
-            icon: Icons.person_outline_rounded,
-            label: 'Go to artist',
-            onTap: onGoToArtist,
-          ),
-          _ActionTile(
-            icon: Icons.album_rounded,
-            label: 'Go to album',
-            onTap: onGoToAlbum,
-          ),
-          _ActionTile(
-            icon: Icons.share_outlined,
-            label: 'Share',
-            onTap: onShare,
-          ),
-          _ActionTile(
-            icon: Icons.link_rounded,
-            label: 'Copy link',
-            onTap: onCopyLink,
-          ),
-          _ActionTile(
-            icon: Icons.download_rounded,
-            label: 'Download',
-            onTap: onDownload,
-            enabled: isPro,
-            isDestructive: false,
-          ),
-          if (showDeleteAction)
             _ActionTile(
-              icon: Icons.delete_outline_rounded,
-              label: 'Delete track',
-              onTap: () => unawaited(onDeleteTrack()),
-              isDestructive: true,
+              icon: Icons.queue_music_rounded,
+              label: 'Add to queue',
+              onTap: onAddToQueue,
             ),
-          // Safe-area bottom padding
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-        ],
+            if (showEditAction)
+              _ActionTile(
+                icon: Icons.edit_outlined,
+                label: 'Edit track',
+                onTap: onEditTrack,
+              ),
+            _ActionTile(
+              icon: Icons.person_outline_rounded,
+              label: 'Go to artist',
+              onTap: onGoToArtist,
+            ),
+            _ActionTile(
+              icon: Icons.album_rounded,
+              label: 'Go to album',
+              onTap: onGoToAlbum,
+            ),
+            _ActionTile(
+              icon: Icons.share_outlined,
+              label: 'Share',
+              onTap: onShare,
+            ),
+            _ActionTile(
+              icon: Icons.link_rounded,
+              label: 'Copy link',
+              onTap: onCopyLink,
+            ),
+            _ActionTile(
+              icon: Icons.download_rounded,
+              label: 'Download',
+              onTap: onDownload,
+              enabled: isPro,
+              isDestructive: false,
+            ),
+            if (showDeleteAction)
+              _ActionTile(
+                icon: Icons.delete_outline_rounded,
+                label: 'Delete track',
+                onTap: () => unawaited(onDeleteTrack()),
+                isDestructive: true,
+              ),
+            // Safe-area bottom padding
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+          ],
+        ),
       ),
     );
   }
@@ -589,6 +602,7 @@ class _TrackHeader extends StatelessWidget {
           // Title + artist + meta
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -610,7 +624,9 @@ class _TrackHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Row(
+                Wrap(
+                  spacing: AppConstants.spacingSmall,
+                  runSpacing: AppConstants.spacingSmall,
                   children: [
                     _MetaChip(
                       icon: Icons.play_arrow_rounded,
@@ -711,7 +727,7 @@ class _ActionTile extends StatelessWidget {
         : AppColors.textSecondary;
 
     return InkWell(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spacingRegular,

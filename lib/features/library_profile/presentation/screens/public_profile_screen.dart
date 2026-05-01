@@ -233,7 +233,10 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     AsyncValue<PublicProfile> profileAsync,
     bool isBlocked,
   ) {
-    final username = profileAsync.valueOrNull?.username ?? '';
+    final profile = profileAsync.valueOrNull;
+    final displayTitle = (profile?.displayName?.isNotEmpty == true)
+        ? profile!.displayName!
+        : (profile?.username ?? '');
 
     return AppBar(
       backgroundColor: AppColors.background,
@@ -251,7 +254,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           milliseconds: AppConstants.appBarAnimationDurationMs,
         ),
         child: Text(
-          username,
+          displayTitle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -632,6 +635,11 @@ class _ProfileHeaderContent extends StatelessWidget {
     final bio = profile.profile?.bio?.trim() ?? '';
     final location = profile.profile?.location?.trim() ?? '';
 
+    final displayTitle =
+        (profile.displayName != null && profile.displayName!.trim().isNotEmpty)
+        ? profile.displayName!
+        : profile.username;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -639,7 +647,7 @@ class _ProfileHeaderContent extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                profile.displayName ?? profile.username,
+                displayTitle,
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.onPrimary,

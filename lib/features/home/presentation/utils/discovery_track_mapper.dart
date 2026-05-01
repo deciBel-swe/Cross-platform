@@ -28,6 +28,7 @@ Track discoveryTrackToLibraryTrack(DiscoveryTrack track) {
     isLiked: track.isLiked,
     isReposted: track.isReposted,
     createdAt: track.createdAt ?? track.releaseDate ?? now,
+    trackDurationSeconds: track.durationSeconds ?? 0,
   );
 }
 

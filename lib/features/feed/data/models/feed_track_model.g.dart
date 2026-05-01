@@ -39,6 +39,8 @@ _$FeedTrackModelImpl _$$FeedTrackModelImplFromJson(Map<String, dynamic> json) =>
       repostedByDisplayName: json['repostedByDisplayName'] as String?,
       repostedByAvatarUrl: json['repostedByAvatarUrl'] as String?,
       repostedAt: json['repostedAt'] as String?,
+      feedItemType: json['feedItemType'] as String? ?? 'track_posted',
+      playlistData: json['playlistData'] as Map<String, dynamic>?,
     );
 
 Map<String, dynamic> _$$FeedTrackModelImplToJson(
@@ -72,4 +74,6 @@ Map<String, dynamic> _$$FeedTrackModelImplToJson(
   'repostedByDisplayName': instance.repostedByDisplayName,
   'repostedByAvatarUrl': instance.repostedByAvatarUrl,
   'repostedAt': instance.repostedAt,
+  'feedItemType': instance.feedItemType,
+  'playlistData': instance.playlistData,
 };

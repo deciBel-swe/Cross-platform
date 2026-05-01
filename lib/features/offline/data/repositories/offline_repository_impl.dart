@@ -31,12 +31,100 @@ class OfflineRepositoryImpl implements IOfflineRepository {
   }
 
   @override
+  Future<Either<Failure, void>> downloadTracks(
+    List<Track> tracks, {
+    void Function(double progress)? onProgress,
+  }) async {
+    if (tracks.isEmpty) {
+      return const Right(null);
+    }
+
+    int completed = 0;
+    onProgress?.call(0.0);
+
+    for (final track in tracks) {
+      try {
+        await _localDataSource.downloadAndSave(track);
+      } catch (e) {
+        if (e is DioException && _isNetworkError(e)) {
+          return const Left(
+            NetworkFailure('Connection lost during download. Please retry.'),
+          );
+        }
+        // Non-fatal — skip individual track failures and continue.
+      }
+      completed++;
+      onProgress?.call(completed / tracks.length);
+    }
+
+    return const Right(null);
+  }
+
+  @override
   Future<Either<Failure, List<Track>>> getDownloadedTracks() async {
     try {
       final tracks = await _localDataSource.getOfflineTracks();
       return Right(tracks);
     } catch (e) {
       return Left(CacheFailure('Failed to load offline tracks: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveCollectionMetadata(
+    OfflineCollectionInfo info,
+  ) async {
+    try {
+      await _localDataSource.saveCollectionMetadata(info);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to save collection metadata: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<OfflineCollectionInfo>>>
+      getOfflineCollections() async {
+    try {
+      final collections = await _localDataSource.getOfflineCollections();
+      return Right(collections);
+    } catch (e) {
+      return Left(CacheFailure('Failed to load offline collections: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteCollectionMetadata(int id) async {
+    try {
+      await _localDataSource.deleteCollectionMetadata(id);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to delete collection metadata: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateCollectionMetadata(
+    OfflineCollectionInfo info,
+  ) async {
+    try {
+      await _localDataSource.updateCollectionMetadata(info);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to update collection metadata: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeTrackFromCollection(
+    int collectionId,
+    int trackId,
+  ) async {
+    try {
+      await _localDataSource.removeTrackFromCollection(collectionId, trackId);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to remove track from collection: $e'));
     }
   }
 

@@ -32,6 +32,7 @@ final List<Track> _mockTracks = [
     likeCount: 342,
     repostCount: 56,
     createdAt: DateTime(2020, 4, 20),
+    trackDurationSeconds: 120,
   ),
   Track(
     id: 102,
@@ -50,6 +51,7 @@ final List<Track> _mockTracks = [
     likeCount: 4500,
     repostCount: 890,
     createdAt: DateTime(2024, 1, 10),
+    trackDurationSeconds: 120,
   ),
   Track(
     id: 103,
@@ -68,6 +70,7 @@ final List<Track> _mockTracks = [
     likeCount: 12400,
     repostCount: 3100,
     createdAt: DateTime(2023, 11, 18),
+    trackDurationSeconds: 120,
   ),
 ];
 

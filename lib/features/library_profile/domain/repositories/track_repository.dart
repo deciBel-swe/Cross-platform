@@ -26,7 +26,10 @@ abstract class TrackRepository {
   /// used by uploads polling to reflect server-side waveform lifecycle.
   Future<Either<Failure, String>> fetchTrackStatusById(int id);
 
-  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id);
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(
+    int id, {
+    String? waveformUrl,
+  });
 
   Future<Either<Failure, Track>> updateTrackMetadata({
     required int trackId,

@@ -18,6 +18,8 @@ import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
 import '../../../library/presentation/widgets/track_more_options_menu.dart';
 import '../../../library_profile/presentation/providers/track_peaks_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
+import '../../domain/entities/feed_item_type.dart';
 import 'mobile_feed_track_card.dart';
 
 /// A single mocked entry in the activity feed.
@@ -43,6 +45,7 @@ class FeedItem extends StatelessWidget {
     this.onPlay,
     this.onAddToPlaylist,
     this.onAddToQueue,
+    this.onViewQueue,
     this.onEditTrack,
     this.onGoToArtist,
     this.onGoToAlbum,
@@ -54,6 +57,8 @@ class FeedItem extends StatelessWidget {
     this.userAvatarUrl,
     this.coverUrl,
     this.gradientColors,
+    this.feedItemType = FeedItemType.trackPosted,
+    this.playlistData,
   });
 
   final int trackId;
@@ -75,6 +80,7 @@ class FeedItem extends StatelessWidget {
   final VoidCallback? onPlay;
   final VoidCallback? onAddToPlaylist;
   final VoidCallback? onAddToQueue;
+  final VoidCallback? onViewQueue;
   final VoidCallback? onEditTrack;
   final VoidCallback? onGoToArtist;
   final VoidCallback? onGoToAlbum;
@@ -86,6 +92,8 @@ class FeedItem extends StatelessWidget {
   final String? userAvatarUrl;
   final String? coverUrl;
   final List<Color>? gradientColors;
+  final FeedItemType feedItemType;
+  final Map<String, dynamic>? playlistData;
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +101,19 @@ class FeedItem extends StatelessWidget {
         gradientColors ??
         const [AppColors.surfaceLight, AppColors.surfaceContainer];
     final isDesktop = ResponsiveUtils.isDesktop(context);
+
+    // Handle playlist posts separately
+    if (feedItemType == FeedItemType.playlistPosted) {
+      return _PlaylistFeedCard(
+        userName: userName,
+        userAvatarUrl: userAvatarUrl,
+        action: action,
+        timeAgo: timeAgo,
+        playlistData: playlistData,
+        coverUrl: coverUrl,
+        colors: colors,
+      );
+    }
 
     if (!isDesktop) {
       return _MobileFeedItem(
@@ -113,6 +134,7 @@ class FeedItem extends StatelessWidget {
         onPlay: onPlay,
         onAddToPlaylist: onAddToPlaylist,
         onMoreOptions: onMoreOptions,
+        onViewQueue: onViewQueue,
         coverUrl: coverUrl,
         gradientColors: colors,
       );
@@ -255,6 +277,7 @@ class _MobileFeedItem extends StatelessWidget {
     this.onPlay,
     this.onAddToPlaylist,
     this.onMoreOptions,
+    this.onViewQueue,
     this.coverUrl,
     required this.gradientColors,
   });
@@ -276,6 +299,7 @@ class _MobileFeedItem extends StatelessWidget {
   final VoidCallback? onPlay;
   final VoidCallback? onAddToPlaylist;
   final VoidCallback? onMoreOptions;
+  final VoidCallback? onViewQueue;
   final String? coverUrl;
   final List<Color> gradientColors;
 
@@ -318,14 +342,14 @@ class _MobileFeedItem extends StatelessWidget {
               onPlay: onPlay,
               onAddToPlaylist: onAddToPlaylist,
               onMoreOptions: onMoreOptions,
-              duration: duration,
+              gradientColors: gradientColors,
               likeCount: likeCount,
               repostCount: repostCount,
               isLiked: isLiked,
               isReposted: isReposted,
               commentCount: commentCount,
               commentTrack: commentTrack,
-              gradientColors: gradientColors,
+              duration: duration,
             ),
           ],
         ),
@@ -882,11 +906,15 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
               case TrackMoreOption.report:
                 await TrackReportBottomSheet.show(context, trackId);
                 break;
+
               case TrackMoreOption.addToPlaylist:
                 onAddToPlaylist?.call();
                 break;
               case TrackMoreOption.addToQueue:
                 onAddToQueue?.call();
+                break;
+              case TrackMoreOption.viewQueue:
+                QueueBottomSheet.show(context);
                 break;
               case TrackMoreOption.editTrack:
                 onEditTrack?.call();
@@ -918,6 +946,138 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Widget for displaying playlist posts in the feed.
+class _PlaylistFeedCard extends StatelessWidget {
+  const _PlaylistFeedCard({
+    required this.userName,
+    this.userAvatarUrl,
+    required this.action,
+    required this.timeAgo,
+    this.playlistData,
+    this.coverUrl,
+    required this.colors,
+  });
+
+  final String userName;
+  final String? userAvatarUrl;
+  final String action;
+  final String timeAgo;
+  final Map<String, dynamic>? playlistData;
+  final String? coverUrl;
+  final List<Color> colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final playlistTitle =
+        playlistData?['title'] as String? ?? 'Unknown Playlist';
+    final trackCount = playlistData?['trackCount'] as int? ?? 0;
+    final owner = playlistData?['owner'] as Map<String, dynamic>?;
+    final ownerUsername = owner?['username'] as String? ?? userName;
+    final ownerDisplayName = owner?['displayName'] as String?;
+    final ownerAvatarUrl = owner?['avatarUrl'] as String?;
+
+    return Semantics(
+      label: '$userName $action $timeAgo',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _MobileAvatar(
+                  imageUrl: ownerAvatarUrl ?? userAvatarUrl,
+                  userName: ownerDisplayName ?? ownerUsername,
+                  colors: colors,
+                ),
+                const SizedBox(width: AppDimensions.paddingSm),
+                Expanded(
+                  child: Text(
+                    '$ownerUsername $action · $timeAgo',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.headlineMedium.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.paddingMd),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                onTap: () {
+                  // TODO: Navigate to playlist details
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(AppDimensions.paddingMd),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
+                        child: coverUrl != null && coverUrl!.isNotEmpty
+                            ? DecibelCachedImage(
+                                imageUrl: coverUrl!,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                width: 80,
+                                height: 80,
+                                color: AppColors.surfaceVariant,
+                                child: const Icon(
+                                  Icons.queue_music_rounded,
+                                  color: AppColors.textMuted,
+                                  size: 32,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(width: AppDimensions.paddingMd),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              playlistTitle,
+                              style: AppTextStyles.titleMedium,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$trackCount track${trackCount == 1 ? '' : 's'}',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

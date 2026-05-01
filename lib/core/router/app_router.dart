@@ -72,11 +72,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authStateAsync = ref.read(authStateProvider);
 
-      debugPrint(
-        '[AppRouter] redirect run! matchedLocation: ${state.matchedLocation}',
-      );
-      debugPrint('[AppRouter] authStateAsync: $authStateAsync');
-
       final bool isAuthRoute =
           state.matchedLocation == RoutePaths.login ||
           state.matchedLocation == RoutePaths.register ||
@@ -89,29 +84,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final authState = authStateAsync.valueOrNull;
 
       if (authState is AuthUnauthenticated) {
-        debugPrint('[AppRouter] -> Handling as AuthUnauthenticated.');
         return isAuthRoute && state.matchedLocation != RoutePaths.splash
             ? null
             : RoutePaths.start;
       }
 
       if (authState is AuthAuthenticated) {
-        debugPrint('[AppRouter] -> Handling as AuthAuthenticated.');
         return isAuthRoute ? RoutePaths.home : null;
       }
 
       if (authStateAsync.hasError) {
-        debugPrint(
-          '[AppRouter] -> Error detected: ${authStateAsync.error}\nStackTrace: ${authStateAsync.stackTrace}',
-        );
         return isAuthRoute && state.matchedLocation != RoutePaths.splash
             ? null
             : RoutePaths.start;
       }
 
-      debugPrint(
-        '[AppRouter] -> State is Loading. Holding current auth route.',
-      );
       if (isAuthRoute) {
         return null;
       }
@@ -441,6 +428,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   if (userIdentifier == null || userIdentifier.isEmpty) {
                     return RoutePaths.home;
                   }
+
+                  final authState = ref.read(authStateProvider).valueOrNull;
+                  if (authState is AuthAuthenticated) {
+                    if (userIdentifier == authState.user.id.toString() ||
+                        userIdentifier == authState.user.username) {
+                      return RoutePaths.profile;
+                    }
+                  }
+
                   return null;
                 },
                 pageBuilder: (context, state) {

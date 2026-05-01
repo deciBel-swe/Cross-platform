@@ -41,7 +41,7 @@ class BehindTrackScreen extends ConsumerWidget {
         ),
         data: (data) => _BehindTrackContent(
           track: data.track,
-          duration: data.trackPeaks?.duration ?? 0,
+          duration: data.track.duration.inSeconds,
         ),
       ),
     );
@@ -134,7 +134,9 @@ class _TrackInfoSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final formattedDate = DateFormat('d MMM yyyy').format(track.releaseDate);
+    final formattedDate = DateFormat(
+      'd MMM yyyy',
+    ).format(track.releaseDate.toLocal());
     final minutes = duration ~/ 60;
     final seconds = duration % 60;
     final durationText = duration > 0
@@ -183,9 +185,9 @@ class _TrackInfoSection extends ConsumerWidget {
                 children: [
                   const Icon(Icons.play_arrow, color: Colors.white70, size: 16),
                   const SizedBox(width: 4),
-                  Expanded(
+                  Flexible(
                     child: Text(
-                      '$playsFormatted • $durationText • $formattedDate',
+                      '$playsFormatted • $durationText',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 13,
@@ -196,6 +198,20 @@ class _TrackInfoSection extends ConsumerWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 4),
+              Text(
+                'Released $formattedDate',
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              // const SizedBox(height: 4),
+              // Text(
+              //   'Uploaded $formattedUploadDate',
+              //   style: const TextStyle(color: Colors.white70, fontSize: 13),
+              //   maxLines: 1,
+              //   overflow: TextOverflow.ellipsis,
+              // ),
             ],
           ),
         ),
@@ -466,8 +482,7 @@ class _ArtistProfileSection extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: GestureDetector(
-            onTap: () =>
-                context.go(RoutePaths.publicProfile(artist.username)),
+            onTap: () => context.go(RoutePaths.publicProfile(artist.username)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

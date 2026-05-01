@@ -6,6 +6,7 @@ class TrackCommentAvatar extends StatelessWidget {
 
   final String? avatarUrl;
 
+  /// Builds a circular avatar with a fallback person icon.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

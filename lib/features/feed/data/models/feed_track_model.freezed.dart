@@ -50,7 +50,11 @@ mixin _$FeedTrackModel {
   String? get repostedByUsername => throw _privateConstructorUsedError;
   String? get repostedByDisplayName => throw _privateConstructorUsedError;
   String? get repostedByAvatarUrl => throw _privateConstructorUsedError;
-  String? get repostedAt => throw _privateConstructorUsedError;
+  String? get repostedAt =>
+      throw _privateConstructorUsedError; // Feed item type (stored as string to avoid enum issues in freezed)
+  String get feedItemType =>
+      throw _privateConstructorUsedError; // Playlist data for PLAYLIST_POSTED type
+  Map<String, dynamic>? get playlistData => throw _privateConstructorUsedError;
 
   /// Serializes this FeedTrackModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -98,6 +102,8 @@ abstract class $FeedTrackModelCopyWith<$Res> {
     String? repostedByDisplayName,
     String? repostedByAvatarUrl,
     String? repostedAt,
+    String feedItemType,
+    Map<String, dynamic>? playlistData,
   });
 }
 
@@ -144,6 +150,8 @@ class _$FeedTrackModelCopyWithImpl<$Res, $Val extends FeedTrackModel>
     Object? repostedByDisplayName = freezed,
     Object? repostedByAvatarUrl = freezed,
     Object? repostedAt = freezed,
+    Object? feedItemType = null,
+    Object? playlistData = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -259,6 +267,14 @@ class _$FeedTrackModelCopyWithImpl<$Res, $Val extends FeedTrackModel>
                 ? _value.repostedAt
                 : repostedAt // ignore: cast_nullable_to_non_nullable
                       as String?,
+            feedItemType: null == feedItemType
+                ? _value.feedItemType
+                : feedItemType // ignore: cast_nullable_to_non_nullable
+                      as String,
+            playlistData: freezed == playlistData
+                ? _value.playlistData
+                : playlistData // ignore: cast_nullable_to_non_nullable
+                      as Map<String, dynamic>?,
           )
           as $Val,
     );
@@ -303,6 +319,8 @@ abstract class _$$FeedTrackModelImplCopyWith<$Res>
     String? repostedByDisplayName,
     String? repostedByAvatarUrl,
     String? repostedAt,
+    String feedItemType,
+    Map<String, dynamic>? playlistData,
   });
 }
 
@@ -348,6 +366,8 @@ class __$$FeedTrackModelImplCopyWithImpl<$Res>
     Object? repostedByDisplayName = freezed,
     Object? repostedByAvatarUrl = freezed,
     Object? repostedAt = freezed,
+    Object? feedItemType = null,
+    Object? playlistData = freezed,
   }) {
     return _then(
       _$FeedTrackModelImpl(
@@ -463,6 +483,14 @@ class __$$FeedTrackModelImplCopyWithImpl<$Res>
             ? _value.repostedAt
             : repostedAt // ignore: cast_nullable_to_non_nullable
                   as String?,
+        feedItemType: null == feedItemType
+            ? _value.feedItemType
+            : feedItemType // ignore: cast_nullable_to_non_nullable
+                  as String,
+        playlistData: freezed == playlistData
+            ? _value._playlistData
+            : playlistData // ignore: cast_nullable_to_non_nullable
+                  as Map<String, dynamic>?,
       ),
     );
   }
@@ -501,8 +529,11 @@ class _$FeedTrackModelImpl extends _FeedTrackModel {
     this.repostedByDisplayName,
     this.repostedByAvatarUrl,
     this.repostedAt,
+    this.feedItemType = 'track_posted',
+    final Map<String, dynamic>? playlistData,
   }) : _artist = artist,
        _tags = tags,
+       _playlistData = playlistData,
        super._();
 
   factory _$FeedTrackModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -590,10 +621,25 @@ class _$FeedTrackModelImpl extends _FeedTrackModel {
   final String? repostedByAvatarUrl;
   @override
   final String? repostedAt;
+  // Feed item type (stored as string to avoid enum issues in freezed)
+  @override
+  @JsonKey()
+  final String feedItemType;
+  // Playlist data for PLAYLIST_POSTED type
+  final Map<String, dynamic>? _playlistData;
+  // Playlist data for PLAYLIST_POSTED type
+  @override
+  Map<String, dynamic>? get playlistData {
+    final value = _playlistData;
+    if (value == null) return null;
+    if (_playlistData is EqualUnmodifiableMapView) return _playlistData;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
 
   @override
   String toString() {
-    return 'FeedTrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, slug: $slug, access: $access, isReposted: $isReposted, isLiked: $isLiked, tags: $tags, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, completedPlayCount: $completedPlayCount, repostCount: $repostCount, commentCount: $commentCount, uploadDate: $uploadDate, description: $description, secretToken: $secretToken, trackDurationSeconds: $trackDurationSeconds, isARepost: $isARepost, repostedByUsername: $repostedByUsername, repostedByDisplayName: $repostedByDisplayName, repostedByAvatarUrl: $repostedByAvatarUrl, repostedAt: $repostedAt)';
+    return 'FeedTrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, slug: $slug, access: $access, isReposted: $isReposted, isLiked: $isLiked, tags: $tags, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, completedPlayCount: $completedPlayCount, repostCount: $repostCount, commentCount: $commentCount, uploadDate: $uploadDate, description: $description, secretToken: $secretToken, trackDurationSeconds: $trackDurationSeconds, isARepost: $isARepost, repostedByUsername: $repostedByUsername, repostedByDisplayName: $repostedByDisplayName, repostedByAvatarUrl: $repostedByAvatarUrl, repostedAt: $repostedAt, feedItemType: $feedItemType, playlistData: $playlistData)';
   }
 
   @override
@@ -648,7 +694,13 @@ class _$FeedTrackModelImpl extends _FeedTrackModel {
             (identical(other.repostedByAvatarUrl, repostedByAvatarUrl) ||
                 other.repostedByAvatarUrl == repostedByAvatarUrl) &&
             (identical(other.repostedAt, repostedAt) ||
-                other.repostedAt == repostedAt));
+                other.repostedAt == repostedAt) &&
+            (identical(other.feedItemType, feedItemType) ||
+                other.feedItemType == feedItemType) &&
+            const DeepCollectionEquality().equals(
+              other._playlistData,
+              _playlistData,
+            ));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -683,6 +735,8 @@ class _$FeedTrackModelImpl extends _FeedTrackModel {
     repostedByDisplayName,
     repostedByAvatarUrl,
     repostedAt,
+    feedItemType,
+    const DeepCollectionEquality().hash(_playlistData),
   ]);
 
   /// Create a copy of FeedTrackModel
@@ -732,6 +786,8 @@ abstract class _FeedTrackModel extends FeedTrackModel {
     final String? repostedByDisplayName,
     final String? repostedByAvatarUrl,
     final String? repostedAt,
+    final String feedItemType,
+    final Map<String, dynamic>? playlistData,
   }) = _$FeedTrackModelImpl;
   const _FeedTrackModel._() : super._();
 
@@ -794,7 +850,11 @@ abstract class _FeedTrackModel extends FeedTrackModel {
   @override
   String? get repostedByAvatarUrl;
   @override
-  String? get repostedAt;
+  String? get repostedAt; // Feed item type (stored as string to avoid enum issues in freezed)
+  @override
+  String get feedItemType; // Playlist data for PLAYLIST_POSTED type
+  @override
+  Map<String, dynamic>? get playlistData;
 
   /// Create a copy of FeedTrackModel
   /// with the given fields replaced by the non-null parameter values.

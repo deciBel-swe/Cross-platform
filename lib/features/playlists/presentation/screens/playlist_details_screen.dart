@@ -12,6 +12,7 @@ import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/widgets/track_details.dart';
 import '../../../library_profile/presentation/widgets/track_tile.dart';
+import '../../../offline/presentation/widgets/collection_download_button.dart';
 import '../../domain/entities/playlist.dart';
 import '../providers/playlist_details_provider.dart';
 import '../widgets/playlist_options_bottom_sheet.dart';
@@ -47,12 +48,7 @@ class PlaylistDetailsScreen extends ConsumerWidget {
           ),
         ),
         centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.cast, color: AppColors.textPrimary),
-            onPressed: () {},
-          ),
-        ],
+        actions: const [],
       ),
       body: CustomScrollView(
         slivers: [
@@ -276,22 +272,42 @@ class _PlaylistActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Resolve the full track list from the detail provider if already loaded.
+    final fullTracksAsync = ref.watch(playlistDetailsProvider(playlist.id));
+    final tracks = fullTracksAsync.valueOrNull?.tracks ?? playlist.tracks;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            PlaylistLikeButton(playlist: playlist),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                PlaylistOptionsBottomSheet.show(context, playlist);
-              },
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+            Row(
+              children: [
+                PlaylistLikeButton(playlist: playlist),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: AppColors.textSecondary,
+                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    PlaylistOptionsBottomSheet.show(context, playlist);
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
+            // Download all tracks in this playlist
+            if (tracks.isNotEmpty)
+              CollectionDownloadButton(
+                collectionId: playlist.id,
+                collectionTitle: playlist.title,
+                coverUrl: playlist.coverArt,
+                tracks: tracks,
+                iconColor: AppColors.textSecondary,
+              ),
           ],
         ),
         Row(

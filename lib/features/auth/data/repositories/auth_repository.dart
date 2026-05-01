@@ -11,6 +11,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/storage/shared_prefs_service.dart';
+import '../../../offline/data/datasources/offline_local_data_source.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
@@ -25,11 +26,13 @@ class AuthRepository implements IAuthRepository {
     this._remoteDataSource,
     this._secureStorageService,
     this._sharedPrefsService,
+    this._offlineLocalDataSource,
   );
 
   final IAuthRemoteDataSource _remoteDataSource;
   final SecureStorageService _secureStorageService;
   final SharedPrefsService _sharedPrefsService;
+  final OfflineLocalDataSource _offlineLocalDataSource;
 
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
@@ -57,12 +60,9 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e, st) {
+    } catch (e) {
       if (kDebugMode) {
-        debugPrint(
-          '[AuthRepository] Unexpected error in loginWithEmailPassword: $e',
-        );
-        debugPrint('[AuthRepository] StackTrace: $st');
+        // Ignore wrapper exception
       }
       return Left(AuthFailure('An unexpected error occurred: $e'));
     }
@@ -100,12 +100,9 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e, st) {
+    } catch (e) {
       if (kDebugMode) {
-        debugPrint(
-          '[AuthRepository] Unexpected error in registerWithEmailPassword: $e',
-        );
-        debugPrint('[AuthRepository] StackTrace: $st');
+        // Ignore wrapper exception
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     }
@@ -120,11 +117,10 @@ class AuthRepository implements IAuthRepository {
 
       if (isExpired && hasRefreshToken) {
         final refreshResult = await refreshToken();
-        return refreshResult.fold(
-          (failure) =>
-              const Right(null), // If refresh fails, user must log in again
-          (user) => Right(user),
-        );
+        return refreshResult.fold((failure) {
+          _offlineLocalDataSource.clearAll();
+          return const Right(null); // If refresh fails, user must log in again
+        }, (user) => Right(user));
       }
 
       if (isExpired) {
@@ -148,7 +144,6 @@ class AuthRepository implements IAuthRepository {
         return const Left(AuthFailure('No tokens available for refresh'));
       }
 
-      debugPrint('[AuthRepository] Proactively refreshing token...');
       final responseModel = await _remoteDataSource.refreshToken(
         refreshToken: refreshToken,
         accessToken: accessToken,
@@ -191,10 +186,9 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e, st) {
+    } catch (e) {
       if (kDebugMode) {
-        debugPrint('[AuthRepository] Unexpected error in loginWithGoogle: $e');
-        debugPrint('[AuthRepository] StackTrace: $st');
+        // Ignore wrapper exception
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     }
@@ -253,13 +247,13 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e, st) {
+    } catch (e) {
       if (kDebugMode) {
-        debugPrint('[AuthRepository] Unexpected error in logout: $e');
-        debugPrint('[AuthRepository] StackTrace: $st');
+        // Ignore wrapper exception
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     } finally {
+      await _offlineLocalDataSource.clearAll();
       await _secureStorageService.clearAll();
       await _sharedPrefsService.clearAll();
     }
@@ -276,12 +270,9 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e, st) {
+    } catch (e) {
       if (kDebugMode) {
-        debugPrint(
-          '[AuthRepository] Unexpected error in resendVerificationCode: $e',
-        );
-        debugPrint('[AuthRepository] StackTrace: $st');
+        // Ignore wrapper exception
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     }

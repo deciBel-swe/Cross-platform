@@ -10,6 +10,7 @@ import '../../../discovery/presentation/providers/discovery_provider.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/widgets/track_tile.dart';
+import '../../../offline/presentation/widgets/collection_download_button.dart';
 import '../../domain/entities/station_playlist.dart';
 import '../utils/discovery_track_mapper.dart';
 import '../widgets/station_playlist_cover.dart';
@@ -56,6 +57,7 @@ class StationPlaylistScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(AppDimensions.paddingMd),
                   child: _StationHeader(
                     playlist: playlist,
+                    queue: queue,
                     onPlay: () => _playFirst(ref, queue),
                   ),
                 ),
@@ -70,7 +72,9 @@ class StationPlaylistScreen extends ConsumerWidget {
                     key: ValueKey('station_${kind.name}_${track.id}'),
                     track: playableTrack,
                     onTap: () {
-                      ref.read(trackAudioProvider.notifier).playTrack(
+                      ref
+                          .read(trackAudioProvider.notifier)
+                          .playTrack(
                             track: playableTrack,
                             queue: queue,
                             autoPlay: true,
@@ -121,18 +125,21 @@ class StationPlaylistScreen extends ConsumerWidget {
       return;
     }
 
-    ref.read(trackAudioProvider.notifier).playTrack(
-          track: firstPlayable,
-          queue: queue,
-          autoPlay: true,
-        );
+    ref
+        .read(trackAudioProvider.notifier)
+        .playTrack(track: firstPlayable, queue: queue, autoPlay: true);
   }
 }
 
 class _StationHeader extends StatelessWidget {
-  const _StationHeader({required this.playlist, required this.onPlay});
+  const _StationHeader({
+    required this.playlist,
+    required this.queue,
+    required this.onPlay,
+  });
 
   final StationPlaylist playlist;
+  final List<Track> queue;
   final VoidCallback onPlay;
 
   @override
@@ -169,10 +176,25 @@ class _StationHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppDimensions.paddingMd),
-              FilledButton.icon(
-                onPressed: onPlay,
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('Play'),
+              Row(
+                children: [
+                  FilledButton.icon(
+                    onPressed: onPlay,
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: const Text('Play'),
+                  ),
+                  const SizedBox(width: 35),
+                  // Download all station tracks for offline use
+                  if (queue.isNotEmpty)
+                    CollectionDownloadButton(
+                      // Use a stable ID derived from the station kind.
+                      collectionId: playlist.kind.index + 9000,
+                      collectionTitle: playlist.title,
+                      isStation: true,
+                      tracks: queue,
+                      iconColor: AppColors.textSecondary,
+                    ),
+                ],
               ),
             ],
           ),

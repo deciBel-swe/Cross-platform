@@ -1,4 +1,4 @@
-import 'dart:io';
+
 
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
@@ -6,6 +6,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/network/dio_error_handler.dart';
 import '../models/listening_history_response.dart';
 
 /// Remote datasource for the current user's listening history.
@@ -46,11 +47,9 @@ class HistoryRemoteDatasource {
 
       return ListeningHistoryResponse.fromJson(Map<String, dynamic>.from(data));
     } on DioException catch (error) {
-      if (_isNetworkError(error)) {
-        throw const NetworkException('No internet connection');
-      }
-      throw ServerException(
-        error.message ?? 'Listening history request failed',
+      throw DioErrorHandler.handle(
+        error,
+        fallback: 'Listening history request failed',
       );
     } on ServerException {
       rethrow;
@@ -65,19 +64,10 @@ class HistoryRemoteDatasource {
     try {
       await _dioClient.post<dynamic>(path, data: const <String, dynamic>{});
     } on DioException catch (error) {
-      if (_isNetworkError(error)) {
-        throw const NetworkException('No internet connection');
-      }
-      throw ServerException(error.message ?? 'Track listen event failed');
+      throw DioErrorHandler.handle(
+        error,
+        fallback: 'Track listen event failed',
+      );
     }
-  }
-
-  bool _isNetworkError(DioException error) {
-    return error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        (error.type == DioExceptionType.unknown &&
-            error.error is SocketException);
   }
 }

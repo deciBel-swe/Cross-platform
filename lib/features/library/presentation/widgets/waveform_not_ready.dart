@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class WaveformNotReady extends StatelessWidget {
   const WaveformNotReady({super.key});
 
+  /// Builds the fallback waveform status text.
   @override
   Widget build(BuildContext context) {
     return Padding(

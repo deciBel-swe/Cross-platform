@@ -38,6 +38,7 @@ mixin _$TrackModel {
   bool get isReposted => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
+  int get trackDurationSeconds => throw _privateConstructorUsedError;
 
   /// Serializes this TrackModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -74,6 +75,7 @@ abstract class $TrackModelCopyWith<$Res> {
     bool isReposted,
     DateTime createdAt,
     String? description,
+    int trackDurationSeconds,
   });
 
   $ArtistModelCopyWith<$Res> get artist;
@@ -111,6 +113,7 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
     Object? isReposted = null,
     Object? createdAt = null,
     Object? description = freezed,
+    Object? trackDurationSeconds = null,
   }) {
     return _then(
       _value.copyWith(
@@ -182,6 +185,10 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
                 ? _value.description
                 : description // ignore: cast_nullable_to_non_nullable
                       as String?,
+            trackDurationSeconds: null == trackDurationSeconds
+                ? _value.trackDurationSeconds
+                : trackDurationSeconds // ignore: cast_nullable_to_non_nullable
+                      as int,
           )
           as $Val,
     );
@@ -225,6 +232,7 @@ abstract class _$$TrackModelImplCopyWith<$Res>
     bool isReposted,
     DateTime createdAt,
     String? description,
+    int trackDurationSeconds,
   });
 
   @override
@@ -262,6 +270,7 @@ class __$$TrackModelImplCopyWithImpl<$Res>
     Object? isReposted = null,
     Object? createdAt = null,
     Object? description = freezed,
+    Object? trackDurationSeconds = null,
   }) {
     return _then(
       _$TrackModelImpl(
@@ -333,6 +342,10 @@ class __$$TrackModelImplCopyWithImpl<$Res>
             ? _value.description
             : description // ignore: cast_nullable_to_non_nullable
                   as String?,
+        trackDurationSeconds: null == trackDurationSeconds
+            ? _value.trackDurationSeconds
+            : trackDurationSeconds // ignore: cast_nullable_to_non_nullable
+                  as int,
       ),
     );
   }
@@ -359,6 +372,7 @@ class _$TrackModelImpl implements _TrackModel {
     this.isReposted = false,
     required this.createdAt,
     this.description,
+    this.trackDurationSeconds = 0,
   }) : _tags = tags;
 
   factory _$TrackModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -411,10 +425,13 @@ class _$TrackModelImpl implements _TrackModel {
   final DateTime createdAt;
   @override
   final String? description;
+  @override
+  @JsonKey()
+  final int trackDurationSeconds;
 
   @override
   String toString() {
-    return 'TrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, tags: $tags, state: $state, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, isLiked: $isLiked, isReposted: $isReposted, createdAt: $createdAt, description: $description)';
+    return 'TrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, tags: $tags, state: $state, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, isLiked: $isLiked, isReposted: $isReposted, createdAt: $createdAt, description: $description, trackDurationSeconds: $trackDurationSeconds)';
   }
 
   @override
@@ -448,7 +465,9 @@ class _$TrackModelImpl implements _TrackModel {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.description, description) ||
-                other.description == description));
+                other.description == description) &&
+            (identical(other.trackDurationSeconds, trackDurationSeconds) ||
+                other.trackDurationSeconds == trackDurationSeconds));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -472,6 +491,7 @@ class _$TrackModelImpl implements _TrackModel {
     isReposted,
     createdAt,
     description,
+    trackDurationSeconds,
   );
 
   /// Create a copy of TrackModel
@@ -507,6 +527,7 @@ abstract class _TrackModel implements TrackModel {
     final bool isReposted,
     required final DateTime createdAt,
     final String? description,
+    final int trackDurationSeconds,
   }) = _$TrackModelImpl;
 
   factory _TrackModel.fromJson(Map<String, dynamic> json) =
@@ -546,6 +567,8 @@ abstract class _TrackModel implements TrackModel {
   DateTime get createdAt;
   @override
   String? get description;
+  @override
+  int get trackDurationSeconds;
 
   /// Create a copy of TrackModel
   /// with the given fields replaced by the non-null parameter values.

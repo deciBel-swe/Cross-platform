@@ -10,6 +10,7 @@ import 'package:decibel/features/auth/data/models/login_response_model.dart';
 import 'package:decibel/features/auth/data/models/refresh_token_response_model.dart';
 import 'package:decibel/features/auth/data/repositories/auth_repository.dart';
 import 'package:decibel/features/auth/domain/entities/auth_user.dart';
+import 'package:decibel/features/offline/data/datasources/offline_local_data_source.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -19,20 +20,25 @@ class MockSecureStorageService extends Mock implements SecureStorageService {}
 
 class MockSharedPrefsService extends Mock implements SharedPrefsService {}
 
+class MockOfflineLocalDataSource extends Mock implements OfflineLocalDataSource {}
+
 void main() {
   late AuthRepository repository;
   late MockAuthRemoteDataSource mockRemoteDataSource;
   late MockSecureStorageService mockSecureStorageService;
   late MockSharedPrefsService mockSharedPrefsService;
+  late MockOfflineLocalDataSource mockOfflineLocalDataSource;
 
   setUp(() {
     mockRemoteDataSource = MockAuthRemoteDataSource();
     mockSecureStorageService = MockSecureStorageService();
     mockSharedPrefsService = MockSharedPrefsService();
+    mockOfflineLocalDataSource = MockOfflineLocalDataSource();
     repository = AuthRepository(
       mockRemoteDataSource,
       mockSecureStorageService,
       mockSharedPrefsService,
+      mockOfflineLocalDataSource,
     );
 
     registerFallbackValue(
@@ -121,6 +127,9 @@ void main() {
         when(
           () => mockSecureStorageService.getUser(),
         ).thenAnswer((_) async => tLoginResponseModel.user);
+        when(
+          () => mockOfflineLocalDataSource.clearAll(),
+        ).thenAnswer((_) async => {});
 
         // Act
         final result = await repository.getCurrentUser();
@@ -228,6 +237,9 @@ void main() {
         when(
           () => mockSharedPrefsService.clearAll(),
         ).thenAnswer((_) async => {});
+        when(
+          () => mockOfflineLocalDataSource.clearAll(),
+        ).thenAnswer((_) async => {});
 
         // Act
         final result = await repository.logout();
@@ -237,6 +249,7 @@ void main() {
         verify(() => mockRemoteDataSource.logout()).called(1);
         verify(() => mockSecureStorageService.clearAll()).called(1);
         verify(() => mockSharedPrefsService.clearAll()).called(1);
+        verify(() => mockOfflineLocalDataSource.clearAll()).called(1);
       },
     );
 
@@ -253,6 +266,9 @@ void main() {
         when(
           () => mockSharedPrefsService.clearAll(),
         ).thenAnswer((_) async => {});
+        when(
+          () => mockOfflineLocalDataSource.clearAll(),
+        ).thenAnswer((_) async => {});
 
         // Act
         final result = await repository.logout();
@@ -265,6 +281,7 @@ void main() {
         verify(() => mockRemoteDataSource.logout()).called(1);
         verify(() => mockSecureStorageService.clearAll()).called(1);
         verify(() => mockSharedPrefsService.clearAll()).called(1);
+        verify(() => mockOfflineLocalDataSource.clearAll()).called(1);
       },
     );
   });

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -209,10 +208,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
             await localServer?.close(force: true);
 
             try {
-              final model = await exchangeCodeWithBackend(
-                authCode,
-                deviceInfo,
-              );
+              final model = await exchangeCodeWithBackend(authCode, deviceInfo);
               if (!completer.isCompleted) {
                 completer.complete(model);
               }
@@ -267,9 +263,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         await localServer.close(force: true);
         if (!completer.isCompleted) {
           completer.completeError(
-            const AuthException(
-              'Could not launch browser for Google Sign In.',
-            ),
+            const AuthException('Could not launch browser for Google Sign In.'),
           );
         }
       }
@@ -466,23 +460,14 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
-        if (kDebugMode) {
-          debugPrint('=== OAUTH BACKEND PAYLOAD ===');
-          debugPrint(jsonEncode(dto.toApiJson()));
-          debugPrint('=============================');
-        }
+        if (kDebugMode) {}
 
         final response = await _dioClient.post<dynamic>(
           ApiConstants.googleTokenExchangeEndpoint,
           data: dto.toApiJson(),
         );
 
-        if (kDebugMode) {
-          debugPrint('=== OAUTH BACKEND RESPONSE ===');
-          debugPrint('Status: ${response.statusCode}');
-          debugPrint(jsonEncode(response.data));
-          debugPrint('==============================');
-        }
+        if (kDebugMode) {}
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           return _parseLoginResponse(response);

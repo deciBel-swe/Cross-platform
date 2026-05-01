@@ -20,6 +20,7 @@ class Track {
     required this.isReposted,
     required this.createdAt,
     this.description,
+    required this.trackDurationSeconds,
   });
 
   final int id;
@@ -39,6 +40,9 @@ class Track {
   final bool isReposted;
   final DateTime createdAt;
   final String? description;
+  final int trackDurationSeconds;
+
+  Duration get duration => Duration(seconds: trackDurationSeconds);
 
   String? get normalizedTrackUrl {
     final value = trackUrl?.trim();
@@ -74,6 +78,7 @@ class Track {
     bool? isReposted,
     DateTime? createdAt,
     String? description,
+    int? trackDurationSeconds,
   }) {
     return Track(
       id: id ?? this.id,
@@ -93,6 +98,7 @@ class Track {
       isReposted: isReposted ?? this.isReposted,
       createdAt: createdAt ?? this.createdAt,
       description: description ?? this.description,
+      trackDurationSeconds: trackDurationSeconds ?? this.trackDurationSeconds,
     );
   }
 }

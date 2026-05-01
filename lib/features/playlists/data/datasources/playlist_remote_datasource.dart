@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart'; // Required for kDebugMode and debugPrint
 import 'package:injectable/injectable.dart';
 import 'package:path/path.dart' as path;
 
@@ -58,7 +58,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
 
       // check lowercase "secretLink" just in case your backend uses standard JSON camelCase.
       final secretLink =
-          responseData['SecretLink'] ?? responseData['secretLink'];
+          responseData['secretUrl'] ?? responseData['secretLink'];
 
       if (secretLink != null) {
         return secretLink as String;
@@ -85,7 +85,6 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
   Future<PlaylistModel> getPlaylistDetails(int playlistId) async {
     try {
       final response = await _dioClient.get<dynamic>(
-        //'${ApiConstants.myPlaylists}/$playlistId',
         '${ApiConstants.playlists}/$playlistId',
       );
 
@@ -138,23 +137,14 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     File? coverImage,
   ) async {
     try {
-      final dataMap = request.toJson();
-      final formData = FormData.fromMap(dataMap);
-
-      if (coverImage != null) {
-        final imageName = path.basename(coverImage.path);
-        formData.files.add(
-          MapEntry(
-            'CoverArt',
-            await MultipartFile.fromFile(coverImage.path, filename: imageName),
-          ),
-        );
-      }
+      final formData = await _buildPlaylistPayload(request, coverImage);
 
       final response = await _dioClient.post<dynamic>(
         ApiConstants.playlists,
         data: formData,
-        options: Options(contentType: Headers.multipartFormDataContentType),
+        options: Options(
+          contentType: Headers.multipartFormDataContentType, // FORCES MULTIPART
+        ),
       );
       final responseData = _extractObjectPayload(response.data);
       return PlaylistModel.fromJson(responseData);
@@ -191,8 +181,6 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       );
 
       final data = response.data;
-      //debugPrint('RAW PLAYLIST JSON: $data');
-
       if (data == null) {
         return [];
       }
@@ -210,9 +198,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         );
       }
       throw ServerException(error.message ?? 'Failed to fetch playlists');
-    } catch (error, stackTrace) {
-      debugPrint('==========PARSING CRASH: $error');
-      debugPrint('==========STACKTRACE: $stackTrace');
+    } catch (error) {
       throw ServerException('Failed to parse playlists response: $error');
     }
   }
@@ -224,13 +210,14 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     File? coverImage,
   ) async {
     try {
-      // 1. Use your helper method here too!
       final formData = await _buildPlaylistPayload(request, coverImage);
 
       final response = await _dioClient.patch<dynamic>(
         '${ApiConstants.playlists}/$playListId',
         data: formData,
-        options: Options(contentType: Headers.multipartFormDataContentType),
+        options: Options(
+          contentType: Headers.multipartFormDataContentType, // FORCES MULTIPART
+        ),
       );
       final responseData = _extractObjectPayload(response.data);
       return PlaylistModel.fromJson(responseData);
@@ -318,16 +305,33 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     File? coverImage,
   ) async {
     final dataMap = request.toJson();
+
+    // Convert boolean to string for better backend compatibility in multipart
+    if (dataMap.containsKey('isPrivate')) {
+      dataMap['isPrivate'] = (dataMap['isPrivate'] == true) ? '1' : '0';
+    }
+
     final formData = FormData.fromMap(dataMap);
 
     if (coverImage != null) {
       final imageName = path.basename(coverImage.path);
       formData.files.add(
         MapEntry(
-          'CoverArt',
+          'coverArt', // CHANGED TO coverArt TO MATCH BACKEND
           await MultipartFile.fromFile(coverImage.path, filename: imageName),
         ),
       );
+    }
+
+    if (kDebugMode) {
+      debugPrint('--- Playlist FormData Content ---');
+      for (var element in formData.fields) {
+        debugPrint('Field: ${element.key} = ${element.value}');
+      }
+      for (var element in formData.files) {
+        debugPrint('File: ${element.key} = ${element.value.filename}');
+      }
+      debugPrint('---------------------------------');
     }
 
     return formData;

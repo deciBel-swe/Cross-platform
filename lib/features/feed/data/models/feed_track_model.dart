@@ -38,6 +38,10 @@ class FeedTrackModel with _$FeedTrackModel {
     String? repostedByDisplayName,
     String? repostedByAvatarUrl,
     String? repostedAt,
+    // Feed item type (stored as string to avoid enum issues in freezed)
+    @Default('track_posted') String feedItemType,
+    // Playlist data for PLAYLIST_POSTED type
+    Map<String, dynamic>? playlistData,
   }) = _FeedTrackModel;
 
   const FeedTrackModel._();
@@ -46,6 +50,29 @@ class FeedTrackModel with _$FeedTrackModel {
       _$FeedTrackModelFromJson(_normalize(json));
 
   static Map<String, dynamic> _normalize(Map<String, dynamic> json) {
+    // Check if this is a playlist post
+    final type = json['type'] as String?;
+    final isPlaylistPost = type == 'PLAYLIST_POSTED';
+
+    if (isPlaylistPost) {
+      // Handle playlist post - extract playlist data
+      final resource = json['resource'] as Map<String, dynamic>?;
+      final playlist = resource != null ? resource['playlist'] as Map<String, dynamic>? : null;
+      
+      if (playlist != null) {
+        return {
+          'id': playlist['id'] as int? ?? 0,
+          'title': playlist['title'] as String? ?? '',
+          'artist': <String, dynamic>{'id': 0, 'username': 'Unknown'},
+          'feedItemType': 'playlist_posted',
+          'playlistData': playlist,
+          'coverUrl': playlist['coverArtUrl'] as String?,
+          'isLiked': playlist['isLiked'] as bool? ?? false,
+          'trackCount': playlist['trackCount'] as int? ?? 0,
+        };
+      }
+    }
+
     // Feed responses wrap tracks in resource.track; station responses may use
     // either track or a raw track object.
     final resource = json['resource'];
@@ -73,6 +100,9 @@ class FeedTrackModel with _$FeedTrackModel {
       flatMap['repostedByDisplayName'] = repostedBy['displayName'];
       flatMap['repostedByAvatarUrl'] = repostedBy['avatarUrl'];
       flatMap['repostedAt'] = json['repostedAt'];
+      flatMap['feedItemType'] = 'repost';
+    } else {
+      flatMap['feedItemType'] = 'track_posted';
     }
 
     // Guarantee required int id is never null (generated code does hard cast)

@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
@@ -54,9 +53,6 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
       );
 
       final data = response.data;
-      debugPrint('=== RAW API RESPONSE FOR POST COMMENT ===');
-      debugPrint(data.toString());
-
       if (data == null) {
         throw Exception('Empty response');
       }
@@ -85,9 +81,6 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
       );
 
       final data = response.data;
-      debugPrint('=== RAW API RESPONSE FOR POST REPLY ===');
-      debugPrint(data.toString());
-
       if (data == null) {
         throw Exception('Empty response');
       }
@@ -117,9 +110,6 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
       );
 
       final data = response.data;
-      debugPrint('=== RAW API RESPONSE FOR GET COMMENTS ===');
-      debugPrint(data.toString());
-
       if (data == null) {
         throw Exception('Empty response');
       }
@@ -151,9 +141,6 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
       );
 
       final data = response.data;
-      debugPrint('=== RAW API RESPONSE FOR GET REPLIES ===');
-      debugPrint(data.toString());
-
       if (data == null) {
         throw Exception('Empty response');
       }
@@ -176,9 +163,6 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
       final response = await _dioClient.delete<dynamic>(
         '${ApiConstants.comments}/$commentId',
       );
-
-      debugPrint('=== RAW API RESPONSE FOR DELETE COMMENT ===');
-      debugPrint(response.statusCode.toString());
 
       if (response.statusCode == 204 || response.statusCode == 200) {
         return;

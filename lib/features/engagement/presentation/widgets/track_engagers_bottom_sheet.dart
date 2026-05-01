@@ -232,7 +232,7 @@ class _EngagerTile extends ConsumerWidget {
 
     return Semantics(
       identifier: 'engager_tile_${user.id}',
-      label: 'User ${user.username}',
+      label: 'User ${user.displayName ?? user.username}',
       container: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -240,7 +240,7 @@ class _EngagerTile extends ConsumerWidget {
           children: [
             Semantics(
               identifier: 'engager_avatar_${user.id}',
-              label: '${user.username}\'s avatar',
+              label: '${user.displayName ?? user.username}\'s avatar',
               button: true,
               child: GestureDetector(
                 onTap: () {
@@ -263,7 +263,7 @@ class _EngagerTile extends ConsumerWidget {
             Expanded(
               child: Semantics(
                 identifier: 'engager_name_${user.id}',
-                label: user.username,
+                label: user.displayName ?? user.username,
                 button: true,
                 child: GestureDetector(
                   onTap: () {
@@ -278,7 +278,9 @@ class _EngagerTile extends ConsumerWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              user.username,
+                              (user.displayName?.isNotEmpty == true)
+                                  ? user.displayName!
+                                  : user.username,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,

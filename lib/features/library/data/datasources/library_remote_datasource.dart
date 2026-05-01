@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
@@ -219,8 +218,8 @@ class LibraryRemoteDatasource {
     return normalized;
   }
 
-  Future<TrackPeaksModel> fetchTrackPeaks(int id) async {
-    final waveformUrl = await _resolveWaveformUrl(id);
+  Future<TrackPeaksModel> fetchTrackPeaks(int id, {String? waveformUrl}) async {
+    waveformUrl ??= await _resolveWaveformUrl(id);
     if (waveformUrl == null || waveformUrl.trim().isEmpty) {
       throw Exception('Empty waveformUrl');
     }
@@ -230,10 +229,6 @@ class LibraryRemoteDatasource {
     if (peaksData == null) {
       throw Exception('Empty waveform payload');
     }
-    debugPrint(
-      'WaveformDebug blob raw payload type=${peaksData.runtimeType}: $peaksData',
-    );
-
     final normalizedPayload = _normalizeTrackPeaksPayload(
       trackId: id,
       payload: peaksData,
@@ -242,14 +237,6 @@ class LibraryRemoteDatasource {
     if (normalizedPayload == null) {
       throw Exception('Invalid waveform payload');
     }
-
-    final normalizedPeaks = normalizedPayload['peaks'];
-    final normalizedCount = normalizedPeaks is List
-        ? normalizedPeaks.length
-        : 'unknown';
-    debugPrint(
-      'WaveformDebug blob normalized peaks (count=$normalizedCount): $normalizedPeaks',
-    );
 
     return TrackPeaksModel.fromJson(normalizedPayload);
   }
@@ -272,7 +259,9 @@ class LibraryRemoteDatasource {
       if (fallback != null && fallback.trim().isNotEmpty) {
         return fallback;
       }
-    } catch (_) {}
+    } catch (_) {
+      // Ignore wrapper exception
+    }
 
     return null;
   }
