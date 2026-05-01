@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../playlists/presentation/providers/playlist_details_provider.dart';
+import '../../../playlists/presentation/providers/user_playlists_provider.dart';
 import '../../domain/models/playlist_social_data.dart';
 import '../../domain/repositories/playlist_social_repository.dart';
 import '../providers/playlist_social_provider.dart';
@@ -16,7 +17,7 @@ class PlaylistSocialNotifier
     _socialRepository = ref.read(playlistSocialRepositoryProvider);
 
     // Initial state from the playlist details if available
-    final playlist = await ref.watch(playlistDetailsProvider(arg).future);
+    final playlist = await ref.read(playlistDetailsProvider(arg).future);
 
     return PlaylistSocialData(isLiked: playlist.isLiked);
   }
@@ -52,6 +53,13 @@ class PlaylistSocialNotifier
               .updatePlaylistLocally(
                 playlistDetails.copyWith(isLiked: isLiked),
               );
+        }
+
+        // Sync with liked playlists collection
+        if (!isLiked) {
+          if (ref.exists(userLikedPlaylistsProvider)) {
+            ref.read(userLikedPlaylistsProvider.notifier).removePlaylistLocal(arg);
+          }
         }
       },
     );

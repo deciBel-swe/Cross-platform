@@ -14,7 +14,7 @@ class BottomBarWidget extends ConsumerWidget {
     required this.isReposted,
     required this.commentCount,
     required this.onCommentPressed,
-    required this.onQueuePressed,
+    required this.onAddToPlaylistPressed,
     required this.onMoreOptionsPressed,
   });
 
@@ -25,7 +25,7 @@ class BottomBarWidget extends ConsumerWidget {
   final bool isReposted;
   final int commentCount;
   final VoidCallback onCommentPressed;
-  final VoidCallback onQueuePressed;
+  final VoidCallback onAddToPlaylistPressed;
   final ValueChanged<BuildContext> onMoreOptionsPressed;
 
   @override
@@ -65,8 +65,8 @@ class BottomBarWidget extends ConsumerWidget {
           ),
           Expanded(
             child: _buildSimpleIconButton(
-              icon: Icons.queue_music,
-              onTap: onQueuePressed,
+              icon: Icons.playlist_add,
+              onTap: onAddToPlaylistPressed,
             ),
           ),
           Expanded(

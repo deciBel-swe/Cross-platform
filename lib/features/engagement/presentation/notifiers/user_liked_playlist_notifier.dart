@@ -33,4 +33,12 @@ class UserLikedPlaylistsNotifier
     }
     return [];
   }
+
+  void removePlaylistLocal(int playlistId) {
+    final currentList = state.valueOrNull;
+    if (currentList == null) return;
+
+    final updatedList = currentList.where((p) => p.id != playlistId).toList();
+    state = AsyncData(updatedList);
+  }
 }
