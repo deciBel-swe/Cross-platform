@@ -115,23 +115,31 @@ class _StatButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingTiny),
-        child: RichText(
-          text: TextSpan(
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
-            children: [
-              TextSpan(
-                text: '$count ',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+    return Semantics(
+      button: true,
+      label: '$count $label',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppConstants.spacingTiny,
+          ),
+          child: ExcludeSemantics(
+            child: RichText(
+              text: TextSpan(
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+                children: [
+                  TextSpan(
+                    text: '$count ',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(text: label),
+                ],
               ),
-              TextSpan(text: label),
-            ],
+            ),
           ),
         ),
       ),

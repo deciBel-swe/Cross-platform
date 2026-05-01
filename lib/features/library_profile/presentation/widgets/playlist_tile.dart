@@ -3,22 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
-import '../../../engagement/domain/models/track_action_data.dart';
-import '../../../engagement/presentation/providers/track_social_provider.dart';
-import '../../../library/domain/entities/track.dart';
-import 'track_details.dart';
+import '../../../engagement/presentation/providers/playlist_social_provider.dart';
+import '../../../playlists/domain/entities/playlist.dart';
+import '../../../playlists/presentation/widgets/playlist_options_bottom_sheet.dart';
 
-class TrackTile extends ConsumerWidget {
-  const TrackTile({
+class PlaylistTile extends ConsumerWidget {
+  const PlaylistTile({
     super.key,
-    required this.track,
+    required this.playlist,
     this.onTap,
     this.onMorePressed,
     this.onLikePressed,
   });
-  final Track track;
+
+  final Playlist playlist;
   final VoidCallback? onTap;
   final VoidCallback? onMorePressed;
   final VoidCallback? onLikePressed;
@@ -29,13 +28,13 @@ class TrackTile extends ConsumerWidget {
     final textTheme = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
 
+    // --- Custom Colors ---
     const activeLikeColor = Color(0xffff3f00);
-
     final titleColor = isDark ? Colors.white : Colors.black87;
     final subtitleColor = isDark ? Colors.white54 : Colors.black54;
 
-    final trackSocial = ref.watch(trackSocialProvider(track.id));
-    final isLiked = trackSocial.valueOrNull?.isLiked ?? track.isLiked;
+    final playlistSocial = ref.watch(playlistSocialProvider(playlist.id));
+    final isLiked = playlistSocial.valueOrNull?.isLiked ?? playlist.isLiked;
 
     return InkWell(
       onTap: onTap,
@@ -47,20 +46,21 @@ class TrackTile extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // --- 1. Cover Image ---
             ClipRRect(
               borderRadius: BorderRadius.circular(AppConstants.buttonRadius),
               child: Container(
                 width: 72,
                 height: 72,
                 color: AppColors.surface,
-                child: track.coverUrl != null && track.coverUrl!.isNotEmpty
+                child: playlist.coverArt != null && playlist.coverArt!.isNotEmpty
                     ? DecibelCachedImage(
-                        imageUrl: track.coverUrl!,
+                        imageUrl: playlist.coverArt!,
                         width: 72,
                         height: 72,
                         fit: BoxFit.cover,
-                        placeholderIcon: Icons.music_note_rounded,
-                        errorIcon: Icons.music_note_rounded,
+                        placeholderIcon: Icons.playlist_play_rounded,
+                        errorIcon: Icons.playlist_play_rounded,
                         iconSize: 32,
                         iconColor: Colors.grey,
                       )
@@ -69,12 +69,14 @@ class TrackTile extends ConsumerWidget {
             ),
             const SizedBox(width: AppConstants.spacingMedium),
 
+            // --- 2. Playlist Info ---
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Title
                   Text(
-                    "${track.artist.displayName ?? track.artist.username} - ${track.title}",
+                    playlist.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.titleMedium?.copyWith(
@@ -84,52 +86,63 @@ class TrackTile extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
 
+                  // "Playlist · Owner" Subtitle
                   Text(
-                    track.artist.displayName ?? track.artist.username,
+                    "Playlist · ${playlist.owner?.displayName ?? playlist.owner?.username ?? 'System'}",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodyMedium?.copyWith(color: subtitleColor),
                   ),
                   const SizedBox(height: 10),
 
+                  // Stats Row (Tracks · Duration · Like)
                   Row(
                     children: [
+                      // Playlist Icon
                       Icon(
-                        Icons.play_arrow_rounded,
+                        Icons.playlist_play_rounded,
                         size: 18,
                         color: subtitleColor,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        Formatters.formatCount(track.playCount),
+                        '${playlist.trackCount} ${playlist.trackCount == 1 ? 'track' : 'tracks'}',
                         style: textTheme.bodySmall?.copyWith(
                           color: subtitleColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
 
+                      // Separator
                       _buildDotSeparator(subtitleColor),
 
+                      // Duration
                       Text(
-                        Formatters.formatDuration(_displayDuration(track, ref)),
+                        _formatDuration(Duration(seconds: playlist.totalDurationSeconds)),
                         style: textTheme.bodySmall?.copyWith(
                           color: subtitleColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
 
+                      // Separator
                       _buildDotSeparator(subtitleColor),
 
                       // Interactive Like Heart
                       Semantics(
                         button: true,
-                        label: isLiked ? 'Unlike track' : 'Like track',
+                        label: isLiked ? 'Unlike playlist' : 'Like playlist',
                         child: GestureDetector(
-                          onTap: () => ref
-                              .read(trackSocialProvider(track.id).notifier)
-                              .toggleAction(SocialActionType.like),
-                          behavior: HitTestBehavior
-                              .opaque, // Ensures the padding is clickable
+                          onTap: () {
+                            if (onLikePressed != null) {
+                              onLikePressed!();
+                            } else {
+                              ref
+                                  .read(playlistSocialProvider(playlist.id).notifier)
+                                  .toggleLike();
+                            }
+                          },
+                          behavior: HitTestBehavior.opaque,
                           child: Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: Icon(
@@ -148,10 +161,12 @@ class TrackTile extends ConsumerWidget {
               ),
             ),
 
+            // --- 3. Trailing Menu Button ---
             IconButton(
               icon: const Icon(Icons.more_vert),
-              tooltip: 'More track options',
-              onPressed: () => TrackDetails.show(context, track, ref),
+              tooltip: 'More playlist options',
+              onPressed: onMorePressed ??
+                  () => PlaylistOptionsBottomSheet.show(context, playlist),
               color: subtitleColor,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
@@ -163,7 +178,7 @@ class TrackTile extends ConsumerWidget {
   }
 
   Widget _buildPlaceholderIcon() {
-    return const Icon(Icons.music_note_rounded, color: Colors.grey, size: 32);
+    return const Icon(Icons.playlist_play_rounded, color: Colors.grey, size: 32);
   }
 
   Widget _buildDotSeparator(Color color) {
@@ -176,7 +191,15 @@ class TrackTile extends ConsumerWidget {
     );
   }
 
-  Duration _displayDuration(Track track, WidgetRef ref) {
-    return track.duration;
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+
+    if (duration.inHours > 0) {
+      return "${duration.inHours}:$twoDigitMinutes:$twoDigitSeconds";
+    } else {
+      return "${duration.inMinutes.remainder(60)}:$twoDigitSeconds";
+    }
   }
 }

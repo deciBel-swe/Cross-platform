@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
+import '../../../engagement/presentation/widgets/playlist_like_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/widgets/track_details.dart';
@@ -25,6 +27,8 @@ class PlaylistDetailsScreen extends ConsumerWidget {
     final playlistAsync = ref.watch(
       playlistDetailsProvider(playlistSummary.id),
     );
+
+    final currentPlaylist = playlistAsync.valueOrNull ?? playlistSummary;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -55,9 +59,9 @@ class PlaylistDetailsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _PlaylistHeader(playlist: playlistSummary),
+                  _PlaylistHeader(playlist: currentPlaylist),
                   const SizedBox(height: 16),
-                  _PlaylistActions(playlist: playlistSummary),
+                  _PlaylistActions(playlist: currentPlaylist),
                   const SizedBox(height: 8),
                 ],
               ),
@@ -250,10 +254,8 @@ class _PlaylistCoverImage extends StatelessWidget {
         : Image.file(
             File(coverArt),
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => const Icon(
-              Icons.broken_image,
-              color: AppColors.textMuted,
-            ),
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.broken_image, color: AppColors.textMuted),
           );
   }
 }
@@ -279,13 +281,23 @@ class _PlaylistActions extends ConsumerWidget {
       children: [
         Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-              onPressed: () {
-                PlaylistOptionsBottomSheet.show(context, playlist);
-              },
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+            Row(
+              children: [
+                PlaylistLikeButton(playlist: playlist),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: AppColors.textSecondary,
+                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    PlaylistOptionsBottomSheet.show(context, playlist);
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
             // Download all tracks in this playlist
             if (tracks.isNotEmpty)
@@ -302,11 +314,15 @@ class _PlaylistActions extends ConsumerWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.shuffle, color: AppColors.textSecondary),
-              onPressed: () {},
+              onPressed: () {
+                HapticFeedback.lightImpact();
+              },
             ),
             const SizedBox(width: 8),
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                HapticFeedback.lightImpact();
+              },
               child: Container(
                 width: 56,
                 height: 56,

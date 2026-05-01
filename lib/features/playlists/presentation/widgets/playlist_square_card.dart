@@ -68,6 +68,7 @@ class PlaylistSquareCard extends StatelessWidget {
                     child: IconButton(
                       padding: EdgeInsets.zero,
                       onPressed: onMore,
+                      tooltip: 'More playlist options',
                       icon: Icon(
                         onMore == null
                             ? Icons.playlist_play_rounded

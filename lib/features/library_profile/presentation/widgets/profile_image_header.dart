@@ -142,61 +142,65 @@ class ProfileImageHeader extends StatelessWidget {
           Positioned(
             bottom: 0,
             left: 16,
-            child: GestureDetector(
-              // --- UPDATED: Call the new bottom sheet logic ---
-              onTap: () {
-                final activePath =
-                    localProfilePic?.path ?? user.profileDetails.profilePic;
-                _showProfileOptions(context, activePath);
-              },
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: AppColors.background,
-                    child: CircleAvatar(
-                      radius: 46,
-                      backgroundColor: AppColors.surface,
-                      child: ClipOval(
-                        child: SizedBox(
-                          width: 92,
-                          height: 92,
-                          child: localProfilePic != null
-                              ? Image.file(localProfilePic!, fit: BoxFit.cover)
-                              : (user.profileDetails.profilePic != null
-                                    ? _buildRemoteOrLocalImage(
-                                        imagePath:
-                                            user.profileDetails.profilePic!,
-                                        fit: BoxFit.cover,
-                                        fallback: const Icon(
+            child: Semantics(
+              button: true,
+              label: 'Profile picture options',
+              child: GestureDetector(
+                // --- UPDATED: Call the new bottom sheet logic ---
+                onTap: () {
+                  final activePath =
+                      localProfilePic?.path ?? user.profileDetails.profilePic;
+                  _showProfileOptions(context, activePath);
+                },
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppColors.background,
+                      child: CircleAvatar(
+                        radius: 46,
+                        backgroundColor: AppColors.surface,
+                        child: ClipOval(
+                          child: SizedBox(
+                            width: 92,
+                            height: 92,
+                            child: localProfilePic != null
+                                ? Image.file(localProfilePic!, fit: BoxFit.cover)
+                                : (user.profileDetails.profilePic != null
+                                      ? _buildRemoteOrLocalImage(
+                                          imagePath:
+                                              user.profileDetails.profilePic!,
+                                          fit: BoxFit.cover,
+                                          fallback: const Icon(
+                                            Icons.person,
+                                            size: 40,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        )
+                                      : const Icon(
                                           Icons.person,
                                           size: 40,
                                           color: AppColors.textSecondary,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.person,
-                                        size: 40,
-                                        color: AppColors.textSecondary,
-                                      )),
+                                        )),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: AppColors.background,
-                      shape: BoxShape.circle,
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: AppColors.background,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -207,18 +211,22 @@ class ProfileImageHeader extends StatelessWidget {
             right: 16,
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () => onPickImage(false),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: AppColors.background,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    color: Colors.white,
-                    size: 20,
+              child: Semantics(
+                button: true,
+                label: 'Change cover photo',
+                child: GestureDetector(
+                  onTap: () => onPickImage(false),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: AppColors.background,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ),

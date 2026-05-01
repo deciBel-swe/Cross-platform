@@ -32,16 +32,24 @@ import '../../features/discovery/domain/repositories/discovery_repository.dart'
     as _i949;
 import '../../features/engagement/data/datasources/follow_remote_data_source.dart'
     as _i485;
+import '../../features/engagement/data/datasources/playlist_social_remote_datasource.dart'
+    as _i127;
 import '../../features/engagement/data/datasources/track_social_remote_datasource.dart'
     as _i459;
 import '../../features/engagement/data/repositories/follow_repository_impl.dart'
     as _i666;
+import '../../features/engagement/data/repositories/mock_playlist_social_repository_impl.dart'
+    as _i773;
 import '../../features/engagement/data/repositories/mock_track_social_repository_impl.dart'
     as _i872;
+import '../../features/engagement/data/repositories/playlist_social_repository_impl.dart'
+    as _i565;
 import '../../features/engagement/data/repositories/track_social_repository_impl.dart'
     as _i529;
 import '../../features/engagement/domain/repositories/follow_repository.dart'
     as _i557;
+import '../../features/engagement/domain/repositories/playlist_social_repository.dart'
+    as _i914;
 import '../../features/engagement/domain/repositories/track_social_repository.dart'
     as _i590;
 import '../../features/feed/data/datasources/feed_data_datasource.dart'
@@ -160,6 +168,7 @@ import 'register_module.dart' as _i291;
 
 const String _mock = 'mock';
 const String _prod = 'prod';
+const String _dev = 'dev';
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -182,6 +191,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i949.DiscoveryRepository>(
       () => const _i614.MockDiscoveryRepository(),
+      registerFor: {_mock},
+    );
+    gh.lazySingleton<_i914.IPlaylistSocialRepository>(
+      () => _i773.MockPlaylistSocialRepositoryImpl(),
       registerFor: {_mock},
     );
     gh.lazySingleton<_i667.DioClient>(
@@ -208,6 +221,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i459.TrackSocialRemoteDatasource>(
       () => _i459.TrackSocialRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.factory<_i127.PlaylistSocialRemoteDatasource>(
+      () => _i127.PlaylistSocialRemoteDatasource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
@@ -287,6 +303,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i121.ImageRepository>(
       () => _i423.ImageRepositoryImpl(gh<_i183.ImagePicker>()),
+    );
+    gh.lazySingleton<_i914.IPlaylistSocialRepository>(
+      () => _i565.PlaylistSocialRepositoryImpl(
+        gh<_i127.PlaylistSocialRemoteDatasource>(),
+      ),
+      registerFor: {_prod, _dev},
     );
     gh.lazySingleton<_i346.ChangeEmailRepository>(
       () => _i225.ChangeEmailRepositoryImpl(

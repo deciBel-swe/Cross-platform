@@ -45,18 +45,24 @@ class _ExpandableBioState extends State<ExpandableBio> {
             if (isOverflow)
               Align(
                 alignment: Alignment.centerLeft,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: () => setState(() => _expanded = !_expanded),
-                  child: Text(
-                    _expanded ? AppConstants.showLess : AppConstants.showMore,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: AppColors.google),
+                child: Semantics(
+                  button: true,
+                  label: _expanded
+                      ? 'Show less biography'
+                      : 'Show more biography',
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () => setState(() => _expanded = !_expanded),
+                    child: Text(
+                      _expanded ? AppConstants.showLess : AppConstants.showMore,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: AppColors.google),
+                    ),
                   ),
                 ),
               ),
