@@ -241,6 +241,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       surfaceTintColor: AppColors.transparent,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_rounded, color: AppColors.onPrimary),
+        tooltip: 'Back',
         onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
       ),
       centerTitle: true,
@@ -262,10 +263,12 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       actions: [
         IconButton(
           icon: const Icon(Icons.share_outlined, color: AppColors.onPrimary),
+          tooltip: 'Share profile',
           onPressed: () {},
         ),
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: AppColors.onPrimary),
+          tooltip: 'More options',
           color: AppColors.surface,
           onSelected: (_) {
             _handleModerationAction(
@@ -314,11 +317,19 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                _CoverPhoto(imageUrl: profile.profile?.coverPhotoUrl),
+                Semantics(
+                  image: true,
+                  label: 'Cover photo',
+                  child: _CoverPhoto(imageUrl: profile.profile?.coverPhotoUrl),
+                ),
                 Positioned(
                   bottom: -40,
                   left: AppConstants.spacingMedium,
-                  child: _Avatar(imageUrl: profile.profile?.avatarUrl),
+                  child: Semantics(
+                    image: true,
+                    label: 'Profile picture',
+                    child: _Avatar(imageUrl: profile.profile?.avatarUrl),
+                  ),
                 ),
               ],
             ),
@@ -701,21 +712,27 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: RichText(
-        text: TextSpan(
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
-          children: [
-            TextSpan(
-              text: '$count ',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+    return Semantics(
+      button: true,
+      label: '$count $label',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: ExcludeSemantics(
+          child: RichText(
+            text: TextSpan(
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+              children: [
+                TextSpan(
+                  text: '$count ',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: label),
+              ],
             ),
-            TextSpan(text: label),
-          ],
+          ),
         ),
       ),
     );

@@ -129,25 +129,29 @@ class PlaylistTile extends ConsumerWidget {
                       _buildDotSeparator(subtitleColor),
 
                       // Interactive Like Heart
-                      GestureDetector(
-                        onTap: () {
-                          if (onLikePressed != null) {
-                            onLikePressed!();
-                          } else {
-                            ref
-                                .read(playlistSocialProvider(playlist.id).notifier)
-                                .toggleLike();
-                          }
-                        },
-                        behavior: HitTestBehavior.opaque,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: Icon(
-                            isLiked
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            size: 16,
-                            color: isLiked ? activeLikeColor : subtitleColor,
+                      Semantics(
+                        button: true,
+                        label: isLiked ? 'Unlike playlist' : 'Like playlist',
+                        child: GestureDetector(
+                          onTap: () {
+                            if (onLikePressed != null) {
+                              onLikePressed!();
+                            } else {
+                              ref
+                                  .read(playlistSocialProvider(playlist.id).notifier)
+                                  .toggleLike();
+                            }
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: Icon(
+                              isLiked
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              size: 16,
+                              color: isLiked ? activeLikeColor : subtitleColor,
+                            ),
                           ),
                         ),
                       ),
@@ -160,6 +164,7 @@ class PlaylistTile extends ConsumerWidget {
             // --- 3. Trailing Menu Button ---
             IconButton(
               icon: const Icon(Icons.more_vert),
+              tooltip: 'More playlist options',
               onPressed: onMorePressed ??
                   () => PlaylistOptionsBottomSheet.show(context, playlist),
               color: subtitleColor,

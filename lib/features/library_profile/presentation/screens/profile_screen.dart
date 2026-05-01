@@ -365,8 +365,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      _ProfileCoverPhoto(
-                        imageUrl: user.profileDetails.coverPic,
+                      Semantics(
+                        image: true,
+                        label: 'Profile cover photo',
+                        child: _ProfileCoverPhoto(
+                          imageUrl: user.profileDetails.coverPic,
+                        ),
                       ),
 
                       const Positioned(
@@ -434,6 +438,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       backgroundColor: AppColors.background,
       leading: Button(
         icon: Icons.arrow_back_rounded,
+        semanticLabel: 'Back',
         onPressed: () =>
             context.canPop() ? context.pop() : context.go(RoutePaths.library),
       ),
@@ -448,6 +453,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       leadingWidth: AppConstants.appBarLeadingWidth,
       leading: Button(
         icon: Icons.arrow_back_rounded,
+        semanticLabel: 'Back',
         onPressed: () =>
             context.canPop() ? context.pop() : context.go(RoutePaths.library),
       ),
@@ -484,10 +490,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         if (_isPublicProfile)
           IconButton(
             icon: const Icon(Icons.more_vert),
+            tooltip: 'More options',
             onPressed: () => _showModerationSheet(context, user),
           ),
-        Button(icon: Icons.share, onPressed: () {}),
-        Button(icon: Icons.cast, onPressed: () {}),
+        Button(
+          icon: Icons.share,
+          semanticLabel: 'Share profile',
+          onPressed: () {},
+        ),
+        Button(
+          icon: Icons.cast,
+          semanticLabel: 'Cast to device',
+          onPressed: () {},
+        ),
       ],
     );
   }

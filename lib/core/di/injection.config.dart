@@ -167,8 +167,8 @@ import '../storage/shared_prefs_service.dart' as _i573;
 import 'register_module.dart' as _i291;
 
 const String _mock = 'mock';
-const String _dev = 'dev';
 const String _prod = 'prod';
+const String _dev = 'dev';
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -193,6 +193,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => const _i614.MockDiscoveryRepository(),
       registerFor: {_mock},
     );
+    gh.lazySingleton<_i914.IPlaylistSocialRepository>(
+      () => _i773.MockPlaylistSocialRepositoryImpl(),
+      registerFor: {_mock},
+    );
     gh.lazySingleton<_i667.DioClient>(
       () => _i667.DioClient(
         gh<_i361.Dio>(),
@@ -211,10 +215,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i238.TrackCommentsMockRepository(),
       registerFor: {_mock},
-    );
-    gh.lazySingleton<_i914.IPlaylistSocialRepository>(
-      () => _i773.MockPlaylistSocialRepositoryImpl(),
-      registerFor: {_dev},
     );
     gh.lazySingleton<_i271.IGenreRemoteDataSource>(
       () => _i271.GenreRemoteDataSource(gh<_i667.DioClient>()),
@@ -304,11 +304,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i121.ImageRepository>(
       () => _i423.ImageRepositoryImpl(gh<_i183.ImagePicker>()),
     );
-    gh.factory<_i914.IPlaylistSocialRepository>(
-      () => _i565.PlaylistSocialRepositoryImpl(
-        gh<_i127.PlaylistSocialRemoteDatasource>(),
-      ),
-    );
     gh.lazySingleton<_i589.IAuthRepository>(
       () => _i573.AuthRepository(
         gh<_i107.IAuthRemoteDataSource>(),
@@ -316,6 +311,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i573.SharedPrefsService>(),
       ),
       registerFor: {_prod},
+    );
+    gh.lazySingleton<_i914.IPlaylistSocialRepository>(
+      () => _i565.PlaylistSocialRepositoryImpl(
+        gh<_i127.PlaylistSocialRemoteDatasource>(),
+      ),
+      registerFor: {_prod, _dev},
     );
     gh.lazySingleton<_i346.ChangeEmailRepository>(
       () => _i225.ChangeEmailRepositoryImpl(

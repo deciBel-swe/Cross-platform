@@ -132,20 +132,24 @@ class TrackTile extends ConsumerWidget {
                       _buildDotSeparator(subtitleColor),
 
                       // Interactive Like Heart
-                      GestureDetector(
-                        onTap: () => ref
-                            .read(trackSocialProvider(track.id).notifier)
-                            .toggleAction(SocialActionType.like),
-                        behavior: HitTestBehavior
-                            .opaque, // Ensures the padding is clickable
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: Icon(
-                            isLiked
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            size: 16,
-                            color: isLiked ? activeLikeColor : subtitleColor,
+                      Semantics(
+                        button: true,
+                        label: isLiked ? 'Unlike track' : 'Like track',
+                        child: GestureDetector(
+                          onTap: () => ref
+                              .read(trackSocialProvider(track.id).notifier)
+                              .toggleAction(SocialActionType.like),
+                          behavior: HitTestBehavior
+                              .opaque, // Ensures the padding is clickable
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: Icon(
+                              isLiked
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              size: 16,
+                              color: isLiked ? activeLikeColor : subtitleColor,
+                            ),
                           ),
                         ),
                       ),
@@ -158,6 +162,7 @@ class TrackTile extends ConsumerWidget {
             // --- 3. Trailing Menu Button ---
             IconButton(
               icon: const Icon(Icons.more_vert),
+              tooltip: 'More track options',
               onPressed: () => TrackDetails.show(context, track, ref),
               color: subtitleColor,
               padding: EdgeInsets.zero,

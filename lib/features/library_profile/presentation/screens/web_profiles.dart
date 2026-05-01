@@ -240,10 +240,14 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _addLink,
-              icon: const Icon(Icons.add),
-              label: const Text('Add link'),
+            child: Semantics(
+              button: true,
+              label: 'Add web link',
+              child: OutlinedButton.icon(
+                onPressed: _addLink,
+                icon: const Icon(Icons.add),
+                label: const Text('Add link'),
+              ),
             ),
           ),
           const SizedBox(height: 20),
