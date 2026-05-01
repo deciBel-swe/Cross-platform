@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -134,16 +133,9 @@ class TrackTile extends ConsumerWidget {
 
                       // Interactive Like Heart
                       GestureDetector(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          if (onLikePressed != null) {
-                            onLikePressed!();
-                          } else {
-                            ref
-                                .read(trackSocialProvider(track.id).notifier)
-                                .toggleAction(SocialActionType.like);
-                          }
-                        },
+                        onTap: () => ref
+                            .read(trackSocialProvider(track.id).notifier)
+                            .toggleAction(SocialActionType.like),
                         behavior: HitTestBehavior
                             .opaque, // Ensures the padding is clickable
                         child: Padding(

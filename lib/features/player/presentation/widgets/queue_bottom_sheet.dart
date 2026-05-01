@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../../core/widgets/right_side_panel.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 
@@ -100,7 +98,6 @@ class QueueBottomSheet extends ConsumerWidget {
                   )
                 : ReorderableListView.builder(
                     buildDefaultDragHandles: false,
-                    onReorderStart: (_) => HapticFeedback.lightImpact(),
                     onReorder: notifier.reorderQueue,
                     padding: const EdgeInsets.only(bottom: 12),
                     itemCount: queue.length,
@@ -127,30 +124,14 @@ class QueueBottomSheet extends ConsumerWidget {
                         child: ListTile(
                           dense: true,
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
+                            horizontal: 8,
+                            vertical: 2,
                           ),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: track.coverUrl != null &&
-                                      track.coverUrl!.isNotEmpty
-                                  ? DecibelCachedImage(
-                                      imageUrl: track.coverUrl!,
-                                      width: 48,
-                                      height: 48,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      color: Colors.white10,
-                                      child: const Icon(
-                                        Icons.music_note,
-                                        color: Colors.white54,
-                                        size: 24,
-                                      ),
-                                    ),
+                          leading: ReorderableDragStartListener(
+                            index: index,
+                            child: const Icon(
+                              Icons.drag_handle,
+                              color: Colors.white54,
                             ),
                           ),
                           title: Text(
@@ -161,7 +142,6 @@ class QueueBottomSheet extends ConsumerWidget {
                               fontWeight: isCurrent
                                   ? FontWeight.w700
                                   : FontWeight.w500,
-                              color: isCurrent ? Colors.white : Colors.white,
                             ),
                           ),
                           subtitle: Text(
@@ -172,29 +152,10 @@ class QueueBottomSheet extends ConsumerWidget {
                               color: Colors.white60,
                             ),
                           ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (isCurrent)
-                                const Padding(
-                                  padding: EdgeInsets.only(right: 12),
-                                  child: Icon(
-                                    Icons.equalizer,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ReorderableDragStartListener(
-                                index: index,
-                                child: const Icon(
-                                  Icons.drag_handle,
-                                  color: Colors.white54,
-                                ),
-                              ),
-                            ],
-                          ),
+                          trailing: isCurrent
+                              ? const Icon(Icons.equalizer, color: Colors.white)
+                              : null,
                           onTap: () async {
-                            HapticFeedback.lightImpact();
                             await notifier.playFromQueueIndex(index);
                           },
                         ),
