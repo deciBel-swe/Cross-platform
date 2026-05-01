@@ -60,6 +60,7 @@ class FeedItem extends StatelessWidget {
     this.gradientColors,
     this.feedItemType = FeedItemType.trackPosted,
     this.playlistData,
+    this.onTapPlaylist,
     this.isBlocked = false,
   });
 
@@ -96,6 +97,7 @@ class FeedItem extends StatelessWidget {
   final List<Color>? gradientColors;
   final FeedItemType feedItemType;
   final Map<String, dynamic>? playlistData;
+  final VoidCallback? onTapPlaylist;
   final bool isBlocked;
 
   @override
@@ -113,6 +115,7 @@ class FeedItem extends StatelessWidget {
         action: action,
         timeAgo: timeAgo,
         playlistData: playlistData,
+        onTap: onTapPlaylist,
         coverUrl: coverUrl,
         colors: colors,
       );
@@ -344,6 +347,7 @@ class _PlaylistFeedCard extends StatelessWidget {
     required this.action,
     required this.timeAgo,
     this.playlistData,
+    this.onTap,
     this.coverUrl,
     required this.colors,
   });
@@ -353,6 +357,7 @@ class _PlaylistFeedCard extends StatelessWidget {
   final String action;
   final String timeAgo;
   final Map<String, dynamic>? playlistData;
+  final VoidCallback? onTap;
   final String? coverUrl;
   final List<Color> colors;
 
@@ -389,9 +394,7 @@ class _PlaylistFeedCard extends StatelessWidget {
               ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                onTap: () {
-                  // TODO: Navigate to playlist details
-                },
+                onTap: onTap,
                 child: Padding(
                   padding: const EdgeInsets.all(AppDimensions.paddingMd),
                   child: Row(

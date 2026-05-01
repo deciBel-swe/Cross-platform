@@ -26,6 +26,8 @@ import '../../../library_profile/presentation/widgets/track_details.dart';
 import '../../../offline/presentation/notifiers/track_download_notifier.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
 import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
+import '../../../playlists/data/models/playlist_mapper.dart';
+import '../../../playlists/data/models/playlist_model.dart';
 import '../../../upgrade/presentation/widgets/pro_promotion_bottom_sheet.dart';
 import '../../domain/entities/feed_item_type.dart';
 import '../../domain/entities/feed_track.dart';
@@ -472,6 +474,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                               if (!mounted) return;
                               unawaited(QueueBottomSheet.show(context));
                             },
+                            onTapPlaylist: () {
+                              if (track.playlistData != null) {
+                                final playlist = PlaylistModel.fromJson(
+                                  track.playlistData!,
+                                ).toEntity();
+                                context.push(
+                                  RoutePaths.playlistTracks,
+                                  extra: playlist,
+                                );
+                              }
+                            },
                           ),
                         );
                       },
@@ -665,8 +678,9 @@ class _MobileDiscoverFeedPagerState
     List<library_track.Track> queue,
   ) async {
     final authState = ref.read(authStateProvider).valueOrNull;
-    final currentUserId =
-        authState is AuthAuthenticated ? authState.user.id : null;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
     final isOwner = currentUserId != null && currentUserId == track.artist.id;
 
     if (track.isBlocked && !isOwner) {
