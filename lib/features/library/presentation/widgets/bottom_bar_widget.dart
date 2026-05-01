@@ -114,21 +114,26 @@ class BottomBarWidget extends ConsumerWidget {
         highlightColor: Colors.transparent,
         borderRadius: BorderRadius.circular(8.0),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 24, color: activeColor),
-              const SizedBox(width: 6.0),
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: activeColor,
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 24, color: activeColor),
+                const SizedBox(width: 4.0),
+                Text(
+                  text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: activeColor,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

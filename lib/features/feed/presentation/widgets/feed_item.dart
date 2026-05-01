@@ -17,6 +17,7 @@ import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
 import '../../../library/presentation/widgets/track_more_options_menu.dart';
 import '../../../library_profile/presentation/providers/track_peaks_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import 'mobile_feed_track_card.dart';
 
 /// A single mocked entry in the activity feed.
@@ -874,6 +875,10 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
             }
 
             switch (option) {
+              case TrackMoreOption.openQueue:
+                QueueBottomSheet.show(context);
+                break;
+
               case TrackMoreOption.addToPlaylist:
                 onAddToPlaylist?.call();
                 break;

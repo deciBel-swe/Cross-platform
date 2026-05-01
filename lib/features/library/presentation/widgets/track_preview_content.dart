@@ -19,6 +19,7 @@ import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
 import '../../../library_profile/presentation/widgets/track_preview_top_bar.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import 'active_comments_overlay.dart';
 import 'interactive_waveform.dart';
 import 'track_comments_bottom_sheet.dart';
@@ -167,6 +168,7 @@ class TrackPreviewContent extends ConsumerWidget {
               case TrackMoreOption.addToPlaylist:
                 context.push(RoutePaths.addToPlaylist, extra: track);
                 break;
+
               case TrackMoreOption.addToQueue:
                 audioNotifier.addToQueue(track);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -176,9 +178,15 @@ class TrackPreviewContent extends ConsumerWidget {
                   ),
                 );
                 break;
+
+              case TrackMoreOption.openQueue:
+                await QueueBottomSheet.show(context);
+                break;
+
               case TrackMoreOption.editTrack:
                 await context.push(RoutePaths.trackEdit(trackId));
                 break;
+
               case TrackMoreOption.goToArtist:
                 if (isOwner) {
                   context.go(RoutePaths.profile);
@@ -186,12 +194,14 @@ class TrackPreviewContent extends ConsumerWidget {
                   context.push(RoutePaths.publicProfile(track.artist.username));
                 }
                 break;
+
               case TrackMoreOption.goToAlbum:
                 _showUnavailableSnackBar(
                   context,
                   'Album pages are not available yet',
                 );
                 break;
+
               case TrackMoreOption.share:
                 await _copyTrackLink(
                   context: context,
@@ -199,12 +209,15 @@ class TrackPreviewContent extends ConsumerWidget {
                   message: 'Track link copied to share',
                 );
                 break;
+
               case TrackMoreOption.copyLink:
                 await _copyTrackLink(context: context, track: track);
                 break;
+
               case TrackMoreOption.download:
                 await _downloadTrack(context: context, ref: ref, track: track);
                 break;
+
               case TrackMoreOption.deleteTrack:
                 await _deleteTrack(context: context, ref: ref, track: track);
                 break;
@@ -220,10 +233,8 @@ class TrackPreviewContent extends ConsumerWidget {
     required Track track,
     String message = 'Track link copied',
   }) async {
-    final link = 'https://decibel.foo${RoutePaths.deepLinkTrack(
-      track.artist.username,
-      track.id.toString(),
-    )}';
+    final link =
+        'https://decibel.foo${RoutePaths.deepLinkTrack(track.artist.username, track.id.toString())}';
     await Clipboard.setData(ClipboardData(text: link));
     if (!context.mounted) {
       return;
@@ -377,5 +388,4 @@ class TrackPreviewContent extends ConsumerWidget {
         ) ??
         false;
   }
-
 }

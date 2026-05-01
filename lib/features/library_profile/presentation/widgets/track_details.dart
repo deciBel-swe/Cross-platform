@@ -16,6 +16,7 @@ import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import '../../domain/entities/user_profile.dart';
 import '../providers/track_audio_provider.dart';
 import '../providers/track_preview_provider.dart';
@@ -82,23 +83,16 @@ class TrackDetails extends ConsumerWidget {
 
     String? artistIdentifier() {
       final username = track.artist.username.trim();
-      if (username.isNotEmpty) {
-        return username;
-      }
-
-      if (track.artist.id > 0) {
-        return track.artist.id.toString();
-      }
-
+      if (username.isNotEmpty) return username;
+      if (track.artist.id > 0) return track.artist.id.toString();
       return null;
     }
 
     void goToArtist() {
       Navigator.of(context).pop();
       Future.microtask(() {
-        if (!parentContext.mounted) {
-          return;
-        }
+        if (!parentContext.mounted) return;
+
         if (isOwnTrack) {
           parentContext.go(RoutePaths.profile);
         } else {
@@ -122,10 +116,10 @@ class TrackDetails extends ConsumerWidget {
       Navigator.of(context).pop();
       final link =
           'https://decibel.foo${RoutePaths.deepLinkTrack(track.artist.username, track.id.toString())}';
+
       await Clipboard.setData(ClipboardData(text: link));
-      if (!parentContext.mounted) {
-        return;
-      }
+
+      if (!parentContext.mounted) return;
 
       ScaffoldMessenger.of(parentContext).showSnackBar(
         SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
@@ -143,22 +137,21 @@ class TrackDetails extends ConsumerWidget {
       (_) => null,
       (profile) => profile,
     );
+
     final isPro =
         userProfile?.tier == UserTier.pro ||
         userProfile?.tier == UserTier.artistPro;
 
     Future<void> deleteTrack() async {
       final container = ProviderScope.containerOf(parentContext, listen: false);
+
       Navigator.of(context).pop();
       await Future<void>.delayed(Duration.zero);
-      if (!parentContext.mounted) {
-        return;
-      }
+
+      if (!parentContext.mounted) return;
 
       final confirmed = await _confirmDeleteTrack(parentContext);
-      if (!confirmed || !parentContext.mounted) {
-        return;
-      }
+      if (!confirmed || !parentContext.mounted) return;
 
       final messenger = ScaffoldMessenger.of(parentContext);
       messenger.showSnackBar(
@@ -171,22 +164,24 @@ class TrackDetails extends ConsumerWidget {
       final deleted = await container
           .read(uploadsProvider.notifier)
           .deleteTrack(track.id);
-      if (!parentContext.mounted) {
-        return;
-      }
+
+      if (!parentContext.mounted) return;
 
       messenger.hideCurrentSnackBar();
+
       if (deleted) {
         final audioState = container.read(trackAudioProvider);
         final audioNotifier = container.read(trackAudioProvider.notifier);
+
         if (audioState.preparedTrackId == track.id) {
           await audioNotifier.stop();
         }
+
         audioNotifier.removeFromQueue(track.id);
-        if (!parentContext.mounted) {
-          return;
-        }
         container.invalidate(trackPreviewProvider(track.id));
+
+        if (!parentContext.mounted) return;
+
         messenger.showSnackBar(
           SnackBar(
             content: Text('Deleted "${track.title}"'),
@@ -225,6 +220,21 @@ class TrackDetails extends ConsumerWidget {
       onAddToQueue: () {
         ref.read(trackAudioProvider.notifier).addToQueue(track);
         context.pop();
+
+        ScaffoldMessenger.of(parentContext).showSnackBar(
+          SnackBar(
+            content: Text('Added "${track.title}" to queue'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      onOpenQueue: () {
+        Navigator.of(context).pop();
+        Future.microtask(() {
+          if (parentContext.mounted) {
+            QueueBottomSheet.show(parentContext);
+          }
+        });
       },
       onGoToArtist: goToArtist,
       onEditTrack: () {
@@ -257,9 +267,11 @@ class TrackDetails extends ConsumerWidget {
 
         ref.read(trackDownloadProvider.notifier).downloadTrack(track).then((_) {
           if (!parentContext.mounted) return;
+
           final state = ProviderScope.containerOf(
             parentContext,
           ).read(trackDownloadProvider);
+
           if (state.hasError) {
             ScaffoldMessenger.of(parentContext).showSnackBar(
               SnackBar(
@@ -284,6 +296,7 @@ class TrackDetails extends ConsumerWidget {
             behavior: SnackBarBehavior.floating,
           ),
         );
+
         context.pop();
       },
       onDeleteTrack: deleteTrack,
@@ -334,6 +347,7 @@ class _SheetContent extends StatelessWidget {
     required this.showDeleteAction,
     required this.onAddToPlaylist,
     required this.onAddToQueue,
+    required this.onOpenQueue,
     required this.onEditTrack,
     required this.onGoToArtist,
     required this.onGoToAlbum,
@@ -349,6 +363,7 @@ class _SheetContent extends StatelessWidget {
   final bool showDeleteAction;
   final VoidCallback onAddToPlaylist;
   final VoidCallback onAddToQueue;
+  final VoidCallback onOpenQueue;
   final VoidCallback onEditTrack;
   final VoidCallback onGoToArtist;
   final VoidCallback onGoToAlbum;
@@ -407,7 +422,6 @@ class _SheetContent extends StatelessWidget {
             formatDuration: _formatDuration,
             formatCount: _formatCount,
           ),
-
           const Divider(
             color: AppColors.borderDark,
             height: 1,
@@ -443,7 +457,6 @@ class _SheetContent extends StatelessWidget {
               ],
             ),
           ),
-
           const Divider(
             color: AppColors.borderDark,
             height: 1,
@@ -462,6 +475,11 @@ class _SheetContent extends StatelessWidget {
             icon: Icons.queue_music_rounded,
             label: 'Add to queue',
             onTap: onAddToQueue,
+          ),
+          _ActionTile(
+            icon: Icons.queue_music_outlined,
+            label: 'Open queue',
+            onTap: onOpenQueue,
           ),
           if (showEditAction)
             _ActionTile(
@@ -494,7 +512,6 @@ class _SheetContent extends StatelessWidget {
             label: 'Download',
             onTap: onDownload,
             enabled: isPro,
-            isDestructive: false,
           ),
           if (showDeleteAction)
             _ActionTile(
@@ -711,7 +728,7 @@ class _ActionTile extends StatelessWidget {
         : AppColors.textSecondary;
 
     return InkWell(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spacingRegular,
