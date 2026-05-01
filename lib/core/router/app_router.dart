@@ -223,7 +223,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'behind-track/:trackId',
-                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
                       final trackIdStr = state.pathParameters['trackId']!;
                       final trackId = int.parse(trackIdStr);
@@ -236,7 +235,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'playlists/edit',
-                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
                       final playlist = state.extra as Playlist;
                       return EditPlaylistScreen(playlist: playlist);
@@ -244,7 +242,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'playlists/playlist-tracks',
-                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
                       final playlist = state.extra as Playlist;
 
