@@ -78,6 +78,8 @@ import '../../features/library_profile/data/datasources/genre_data_source_remote
     as _i271;
 import '../../features/library_profile/data/datasources/moderation_remote_data_source.dart'
     as _i269;
+import '../../features/library_profile/data/datasources/profile_local_data_source.dart'
+    as _i1;
 import '../../features/library_profile/data/datasources/profile_remote_data_source.dart'
     as _i364;
 import '../../features/library_profile/data/datasources/track_remote_data_source.dart'
@@ -282,9 +284,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i993.AppIconRepository>(
       () => _i781.AppIconRepositoryImpl(gh<_i573.SharedPrefsService>()),
     );
-    gh.lazySingleton<_i106.ProfileRepository>(
-      () => _i997.ProfileRepositoryImpl(gh<_i364.IProfileRemoteDataSource>()),
-    );
     gh.lazySingleton<_i695.IFeedRepository>(
       () => _i452.FeedRepositoryImpl(gh<_i684.IFeedRemoteDatasource>()),
       registerFor: {_prod},
@@ -345,8 +344,8 @@ extension GetItInjectableX on _i174.GetIt {
         remoteDataSource: gh<_i271.IGenreRemoteDataSource>(),
       ),
     );
-    gh.lazySingleton<_i728.UpdateProfileImagesUseCase>(
-      () => _i728.UpdateProfileImagesUseCase(gh<_i106.ProfileRepository>()),
+    gh.lazySingleton<_i1.IProfileLocalDataSource>(
+      () => _i1.ProfileLocalDataSource(gh<_i666.SecureStorageService>()),
     );
     gh.lazySingleton<_i688.ITrackCommentsRemoteDataSource>(
       () => _i688.TrackCommentsRemoteDataSource(gh<_i667.DioClient>()),
@@ -386,6 +385,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i753.IOfflineRepository>(
       () => _i720.OfflineRepositoryImpl(gh<_i776.OfflineLocalDataSource>()),
     );
+    gh.lazySingleton<_i106.ProfileRepository>(
+      () => _i997.ProfileRepositoryImpl(
+        gh<_i364.IProfileRemoteDataSource>(),
+        gh<_i1.IProfileLocalDataSource>(),
+        gh<_i666.SecureStorageService>(),
+      ),
+    );
     gh.lazySingleton<_i226.ITrackCommentsRepository>(
       () => _i229.TrackCommentsRepository(
         gh<_i688.ITrackCommentsRemoteDataSource>(),
@@ -397,6 +403,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i212.GetOfflineTracksUseCase>(
       () => _i212.GetOfflineTracksUseCase(gh<_i753.IOfflineRepository>()),
+    );
+    gh.lazySingleton<_i728.UpdateProfileImagesUseCase>(
+      () => _i728.UpdateProfileImagesUseCase(gh<_i106.ProfileRepository>()),
     );
     gh.factory<_i464.UploadRemoteDatasource>(
       () => _i464.UploadRemoteDatasource(

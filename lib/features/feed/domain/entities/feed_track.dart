@@ -69,4 +69,6 @@ class FeedTrack with _$FeedTrack {
 
   /// Duration from [trackDurationSeconds].
   Duration get duration => Duration(seconds: trackDurationSeconds);
+
+  bool get isBlocked => access.toUpperCase() == 'BLOCKED';
 }

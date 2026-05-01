@@ -42,57 +42,59 @@ class MobileDiscoverTrackPage extends StatelessWidget {
     return Semantics(
       label:
           'Discover track: ${track.title} by ${track.displayArtistName}',
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          GestureDetector(
-            onTap: play,
-            child: _FullBleedTrackImage(
-              coverUrl: track.coverUrl,
-              gradientColors: gradientColors,
-            ),
-          ),
-          const _DiscoverScrim(),
-          Positioned.fill(
-            child: SafeArea(
-              top: false,
-              child: Stack(
-                children: [
-
-                  Positioned(
-                    right: AppDimensions.paddingMd,
-                    bottom: 112,
-                    child: _DiscoverActionRail(
-                      track: track,
-                      onComment: () {
-                        TrackCommentsBottomSheet.show(
-                          context,
-                          trackId: track.id,
-                          track: playableTrack,
-                        );
-                      },
-                      onAddToPlaylist: () => onAddToPlaylist(playableTrack),
-                    ),
-                  ),
-                  Positioned(
-                    left: AppDimensions.paddingMd,
-                    right: 92,
-                    bottom: AppDimensions.paddingLg,
-                    child: _DiscoverTrackInfo(track: track),
-                  ),
-                  Positioned(
-                    right: AppDimensions.paddingMd,
-                    bottom: AppDimensions.paddingLg,
-                    child: _DiscoverPlayButton(
-                      onPressed: play,
-                      trackId: track.id,
-                    ),
-                  ),
-                ],
+      child: Opacity(
+        opacity: track.isBlocked ? 0.5 : 1.0,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            GestureDetector(
+              onTap: play,
+              child: _FullBleedTrackImage(
+                coverUrl: track.coverUrl,
+                gradientColors: gradientColors,
               ),
             ),
-          ),
-        ],
+            const _DiscoverScrim(),
+            Positioned.fill(
+              child: SafeArea(
+                top: false,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      right: AppDimensions.paddingMd,
+                      bottom: 112,
+                      child: _DiscoverActionRail(
+                        track: track,
+                        onComment: () {
+                          TrackCommentsBottomSheet.show(
+                            context,
+                            trackId: track.id,
+                            track: playableTrack,
+                          );
+                        },
+                        onAddToPlaylist: () => onAddToPlaylist(playableTrack),
+                      ),
+                    ),
+                    Positioned(
+                      left: AppDimensions.paddingMd,
+                      right: 92,
+                      bottom: AppDimensions.paddingLg,
+                      child: _DiscoverTrackInfo(track: track),
+                    ),
+                    Positioned(
+                      right: AppDimensions.paddingMd,
+                      bottom: AppDimensions.paddingLg,
+                      child: _DiscoverPlayButton(
+                        onPressed: play,
+                        trackId: track.id,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

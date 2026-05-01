@@ -26,3 +26,9 @@ class AuthException extends AppException {
 class NotFoundException extends AppException {
   const NotFoundException([super.message = 'Requested resource not found']);
 }
+
+class ServiceUnavailableException extends AppException {
+  const ServiceUnavailableException([
+    super.message = 'Service temporarily unavailable. Please try again later',
+  ]);
+}

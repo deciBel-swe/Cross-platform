@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/ref_pro_check_extension.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/auto_scrolling_text.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
@@ -16,9 +17,7 @@ import '../../../engagement/presentation/widgets/track_report_bottom_sheet.dart'
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
 import '../../../library/presentation/widgets/track_more_options_menu.dart';
-import '../../../library_profile/domain/entities/user_profile.dart';
 import '../../../library_profile/presentation/providers/track_peaks_provider.dart';
-import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
 import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import '../../domain/entities/feed_item_type.dart';
@@ -61,6 +60,7 @@ class FeedItem extends StatelessWidget {
     this.gradientColors,
     this.feedItemType = FeedItemType.trackPosted,
     this.playlistData,
+    this.isBlocked = false,
   });
 
   final int trackId;
@@ -96,6 +96,7 @@ class FeedItem extends StatelessWidget {
   final List<Color>? gradientColors;
   final FeedItemType feedItemType;
   final Map<String, dynamic>? playlistData;
+  final bool isBlocked;
 
   @override
   Widget build(BuildContext context) {
@@ -139,15 +140,18 @@ class FeedItem extends StatelessWidget {
         onViewQueue: onViewQueue,
         coverUrl: coverUrl,
         gradientColors: colors,
+        isBlocked: isBlocked,
       );
     }
 
     return Semantics(
       label: 'Feed item: $trackTitle by $trackArtist',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Opacity(
+        opacity: isBlocked ? 0.5 : 1.0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _FeedHeaderRow(
               userName: userName,
@@ -236,6 +240,7 @@ class FeedItem extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -262,6 +267,7 @@ class _MobileFeedItem extends StatelessWidget {
     this.onViewQueue,
     this.coverUrl,
     required this.gradientColors,
+    this.isBlocked = false,
   });
 
   final int trackId;
@@ -284,15 +290,18 @@ class _MobileFeedItem extends StatelessWidget {
   final VoidCallback? onViewQueue;
   final String? coverUrl;
   final List<Color> gradientColors;
+  final bool isBlocked;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       label: '$userName $action $timeAgo',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Opacity(
+        opacity: isBlocked ? 0.5 : 1.0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _FeedHeaderRow(
               userName: userName,
@@ -323,6 +332,7 @@ class _MobileFeedItem extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -1007,13 +1017,7 @@ class _DesktopMoreOptionsButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(userProfileProvider);
-    final isPro =
-        profileAsync.valueOrNull?.fold(
-          (_) => false,
-          (p) => p.tier == UserTier.pro || p.tier == UserTier.artistPro,
-        ) ??
-        false;
+    final isPro = ref.isPro;
 
     return Builder(
       builder: (buttonContext) {

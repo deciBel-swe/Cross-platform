@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/ref_pro_check_extension.dart';
 import '../../../library/domain/entities/track.dart';
-import '../../../library_profile/domain/entities/user_profile.dart';
-import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../upgrade/presentation/widgets/pro_promotion_bottom_sheet.dart';
 import '../../data/datasources/offline_local_data_source.dart';
 import '../notifiers/collection_download_notifier.dart';
@@ -36,16 +35,7 @@ class CollectionDownloadButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dlState = ref.watch(collectionDownloadProvider(collectionId));
 
-    // Keep userProfileProvider alive so ref.read in _onTap never hits a
-    // disposed autoDispose provider and incorrectly returns null (which
-    // causes the pro-gate to fire even for pro users).
-    final profileAsync = ref.watch(userProfileProvider);
-    final isPro =
-        profileAsync.valueOrNull?.fold(
-          (_) => false,
-          (p) => p.tier == UserTier.pro || p.tier == UserTier.artistPro,
-        ) ??
-        false;
+    final isPro = ref.isPro;
 
     ref.listen(collectionDownloadProvider(collectionId), (
       CollectionDownloadState? previous,

@@ -40,7 +40,6 @@ mixin _$DiscoveryTrackModel {
   int get commentCount => throw _privateConstructorUsedError;
   DateTime? get releaseDate => throw _privateConstructorUsedError;
   DateTime? get createdAt => throw _privateConstructorUsedError;
-  int? get durationSeconds => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   String? get secretToken => throw _privateConstructorUsedError;
 
@@ -81,7 +80,6 @@ abstract class $DiscoveryTrackModelCopyWith<$Res> {
     int commentCount,
     DateTime? releaseDate,
     DateTime? createdAt,
-    int? durationSeconds,
     String? description,
     String? secretToken,
   });
@@ -123,7 +121,6 @@ class _$DiscoveryTrackModelCopyWithImpl<$Res, $Val extends DiscoveryTrackModel>
     Object? commentCount = null,
     Object? releaseDate = freezed,
     Object? createdAt = freezed,
-    Object? durationSeconds = freezed,
     Object? description = freezed,
     Object? secretToken = freezed,
   }) {
@@ -205,10 +202,6 @@ class _$DiscoveryTrackModelCopyWithImpl<$Res, $Val extends DiscoveryTrackModel>
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
-            durationSeconds: freezed == durationSeconds
-                ? _value.durationSeconds
-                : durationSeconds // ignore: cast_nullable_to_non_nullable
-                      as int?,
             description: freezed == description
                 ? _value.description
                 : description // ignore: cast_nullable_to_non_nullable
@@ -262,7 +255,6 @@ abstract class _$$DiscoveryTrackModelImplCopyWith<$Res>
     int commentCount,
     DateTime? releaseDate,
     DateTime? createdAt,
-    int? durationSeconds,
     String? description,
     String? secretToken,
   });
@@ -304,7 +296,6 @@ class __$$DiscoveryTrackModelImplCopyWithImpl<$Res>
     Object? commentCount = null,
     Object? releaseDate = freezed,
     Object? createdAt = freezed,
-    Object? durationSeconds = freezed,
     Object? description = freezed,
     Object? secretToken = freezed,
   }) {
@@ -386,10 +377,6 @@ class __$$DiscoveryTrackModelImplCopyWithImpl<$Res>
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
-        durationSeconds: freezed == durationSeconds
-            ? _value.durationSeconds
-            : durationSeconds // ignore: cast_nullable_to_non_nullable
-                  as int?,
         description: freezed == description
             ? _value.description
             : description // ignore: cast_nullable_to_non_nullable
@@ -426,7 +413,6 @@ class _$DiscoveryTrackModelImpl implements _DiscoveryTrackModel {
     this.commentCount = 0,
     this.releaseDate,
     this.createdAt,
-    this.durationSeconds,
     this.description,
     this.secretToken,
   }) : _tags = tags;
@@ -486,15 +472,13 @@ class _$DiscoveryTrackModelImpl implements _DiscoveryTrackModel {
   @override
   final DateTime? createdAt;
   @override
-  final int? durationSeconds;
-  @override
   final String? description;
   @override
   final String? secretToken;
 
   @override
   String toString() {
-    return 'DiscoveryTrackModel(id: $id, title: $title, artist: $artist, slug: $slug, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, tags: $tags, availability: $availability, isLiked: $isLiked, isReposted: $isReposted, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, commentCount: $commentCount, releaseDate: $releaseDate, createdAt: $createdAt, durationSeconds: $durationSeconds, description: $description, secretToken: $secretToken)';
+    return 'DiscoveryTrackModel(id: $id, title: $title, artist: $artist, slug: $slug, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, tags: $tags, availability: $availability, isLiked: $isLiked, isReposted: $isReposted, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, commentCount: $commentCount, releaseDate: $releaseDate, createdAt: $createdAt, description: $description, secretToken: $secretToken)';
   }
 
   @override
@@ -533,8 +517,6 @@ class _$DiscoveryTrackModelImpl implements _DiscoveryTrackModel {
                 other.releaseDate == releaseDate) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
-            (identical(other.durationSeconds, durationSeconds) ||
-                other.durationSeconds == durationSeconds) &&
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.secretToken, secretToken) ||
@@ -564,7 +546,6 @@ class _$DiscoveryTrackModelImpl implements _DiscoveryTrackModel {
     commentCount,
     releaseDate,
     createdAt,
-    durationSeconds,
     description,
     secretToken,
   ]);
@@ -607,7 +588,6 @@ abstract class _DiscoveryTrackModel implements DiscoveryTrackModel {
     final int commentCount,
     final DateTime? releaseDate,
     final DateTime? createdAt,
-    final int? durationSeconds,
     final String? description,
     final String? secretToken,
   }) = _$DiscoveryTrackModelImpl;
@@ -653,8 +633,6 @@ abstract class _DiscoveryTrackModel implements DiscoveryTrackModel {
   DateTime? get releaseDate;
   @override
   DateTime? get createdAt;
-  @override
-  int? get durationSeconds;
   @override
   String? get description;
   @override

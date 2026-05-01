@@ -5,18 +5,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/ref_pro_check_extension.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/widgets/track_report_bottom_sheet.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/providers/track_comment_provider.dart';
 import '../../../library/presentation/widgets/bottom_bar_widget.dart';
-import '../../../library_profile/domain/entities/user_profile.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/track_preview_derived_providers.dart';
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
-import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../library_profile/presentation/widgets/track_preview_background.dart';
 import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
@@ -45,6 +44,7 @@ class TrackPreviewContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final track = data.track;
     final trackPeaks = data.trackPeaks;
+    final isPro = ref.isPro;
 
     final audioState = ref.watch(trackAudioProvider);
     final audioNotifier = ref.read(trackAudioProvider.notifier);
@@ -168,19 +168,12 @@ class TrackPreviewContent extends ConsumerWidget {
               }
             },
             onMoreOptionsPressed: (anchorContext) async {
-              final profileAsync = ref.watch(userProfileProvider);
-              final isProUser = profileAsync.valueOrNull?.fold(
-                    (_) => false,
-                    (p) => p.tier == UserTier.pro || p.tier == UserTier.artistPro,
-                  ) ??
-                  false;
-
               final action = await showTrackMoreOptionsMenu(
                 context: context,
                 anchorContext: anchorContext,
                 includeEdit: isOwner,
                 includeDelete: isOwner,
-                isPro: isProUser,
+                isPro: isPro,
               );
 
               if (action == null || !context.mounted) {

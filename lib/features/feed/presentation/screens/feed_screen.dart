@@ -358,6 +358,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                         final isOwnTrack =
                             currentUserId != null &&
                             currentUserId == track.artistId;
+                        final isBlocked = playableTrack.isBlocked;
                         return Padding(
                           padding: const EdgeInsets.only(
                             bottom: AppDimensions.paddingSm,
@@ -391,8 +392,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                 _parseFeedItemType(track.feedItemType) ??
                                 FeedItemType.trackPosted,
                             playlistData: track.playlistData,
+                            isBlocked: isBlocked,
                             onPlay: () {
                               if (!mounted) return;
+                              if (isBlocked && !isOwnTrack) {
+                                _showFeedSnackBar(
+                                  '${playableTrack.title} is blocked and cannot be played.',
+                                );
+                                return;
+                              }
                               if (!playableTrack.isPlayable) {
                                 _showFeedSnackBar(
                                   'This track is not playable (missing audio URL).',
@@ -656,6 +664,23 @@ class _MobileDiscoverFeedPagerState
     library_track.Track track,
     List<library_track.Track> queue,
   ) async {
+    final authState = ref.read(authStateProvider).valueOrNull;
+    final currentUserId =
+        authState is AuthAuthenticated ? authState.user.id : null;
+    final isOwner = currentUserId != null && currentUserId == track.artist.id;
+
+    if (track.isBlocked && !isOwner) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${track.title} is blocked and cannot be played.'),
+          backgroundColor: AppColors.errors,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     // Discover mode: No queue, only play the single selected track
     await widget.onPlayTrack(track, [track]);
   }
