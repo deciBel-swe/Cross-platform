@@ -24,6 +24,7 @@ import '../providers/block_provider.dart';
 import '../providers/public_profile_provider.dart';
 import '../providers/track_audio_provider.dart';
 import '../widgets/expandable_bio.dart';
+import '../widgets/playlist_tile.dart';
 import '../widgets/pro_badge.dart';
 import '../widgets/social_links_widget.dart';
 import '../widgets/track_tile.dart';
@@ -360,13 +361,18 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                     errorLabel: 'Failed to load playlists.',
                   ),
                   const SizedBox(height: AppConstants.spacingLarge),
-                  _PublicTrackCollectionSection(
+                  _PublicLikesCollectionSection(
                     title: 'Likes',
                     tracksAsync: _shouldWatchSections
                         ? ref.watch(
                             publicLikedTracksProvider(collectionUsername),
                           )
                         : const AsyncData(<Track>[]),
+                    playlistsAsync: _shouldWatchSections
+                        ? ref.watch(
+                            publicLikedPlaylistsProvider(collectionUsername),
+                          )
+                        : const AsyncData(<Playlist>[]),
                     emptyLabel: 'No likes yet',
                     errorLabel: 'Could not load likes',
                   ),
@@ -1152,6 +1158,176 @@ class _PublicPlaylistCollectionSectionState
               label: 'See more ${widget.title}',
               child: TextButton.icon(
                 onPressed: () => _showMore(playlists.length),
+                icon: const Icon(Icons.expand_more_rounded),
+                label: const Text('See more'),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _PublicLikesCollectionSection extends ConsumerStatefulWidget {
+  const _PublicLikesCollectionSection({
+    required this.title,
+    required this.tracksAsync,
+    required this.playlistsAsync,
+    required this.emptyLabel,
+    required this.errorLabel,
+  });
+
+  final String title;
+  final AsyncValue<List<Track>> tracksAsync;
+  final AsyncValue<List<Playlist>> playlistsAsync;
+  final String emptyLabel;
+  final String errorLabel;
+
+  @override
+  ConsumerState<_PublicLikesCollectionSection> createState() =>
+      _PublicLikesCollectionSectionState();
+}
+
+class _PublicLikesCollectionSectionState
+    extends ConsumerState<_PublicLikesCollectionSection> {
+  static const int _pageSize = 3;
+  int _visibleCount = _pageSize;
+
+  @override
+  void didUpdateWidget(covariant _PublicLikesCollectionSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldTracks = oldWidget.tracksAsync.valueOrNull;
+    final newTracks = widget.tracksAsync.valueOrNull;
+    final oldPlaylists = oldWidget.playlistsAsync.valueOrNull;
+    final newPlaylists = widget.playlistsAsync.valueOrNull;
+
+    if (oldWidget.title != widget.title ||
+        !identical(oldTracks, newTracks) ||
+        !identical(oldPlaylists, newPlaylists)) {
+      _visibleCount = _pageSize;
+    }
+  }
+
+  void _showMore(int totalCount) {
+    setState(() {
+      _visibleCount = math.min(_visibleCount + _pageSize, totalCount);
+    });
+  }
+
+  void _showAll(int totalCount) {
+    setState(() => _visibleCount = totalCount);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tracks = widget.tracksAsync.valueOrNull ?? const <Track>[];
+    final playlists = widget.playlistsAsync.valueOrNull ?? const <Playlist>[];
+    final combined = [...tracks, ...playlists];
+
+    final canShowAll =
+        combined.length > _pageSize && _visibleCount < combined.length;
+
+    return Semantics(
+      label: '${widget.title} section',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeader(
+            title: widget.title,
+            canShowAll: canShowAll,
+            onShowAll: () => _showAll(combined.length),
+          ),
+          const SizedBox(height: AppConstants.spacingSmall),
+          if (widget.tracksAsync.isLoading || widget.playlistsAsync.isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: AppConstants.spacingMedium,
+              ),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (widget.tracksAsync.hasError || widget.playlistsAsync.hasError)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppConstants.spacingSmall,
+              ),
+              child: Text(
+                widget.errorLabel,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            )
+          else
+            _buildCombinedList(combined),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCombinedList(List<Object> items) {
+    if (items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppConstants.spacingSmall,
+        ),
+        child: Text(
+          widget.emptyLabel,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    final visibleCount = math.min(_visibleCount, items.length);
+    final visibleItems = items.take(visibleCount).toList(growable: false);
+    final canShowMore = visibleCount < items.length;
+
+    return Column(
+      children: [
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: visibleItems.length,
+          itemBuilder: (context, index) {
+            final item = visibleItems[index];
+            if (item is Track) {
+              return Semantics(
+                button: true,
+                label: 'Play ${item.title} by ${item.artist.username}',
+                child: TrackTile(
+                  track: item,
+                  onTap: () {
+                    final allTracks = items.whereType<Track>().toList();
+                    ref
+                        .read(trackAudioProvider.notifier)
+                        .playTrack(track: item, queue: allTracks);
+                  },
+                ),
+              );
+            } else if (item is Playlist) {
+              return Semantics(
+                button: true,
+                label: 'Open playlist ${item.title}',
+                child: PlaylistTile(
+                  playlist: item,
+                  onTap: () {
+                    context.push(RoutePaths.playlistTracks, extra: item);
+                  },
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        if (canShowMore)
+          Align(
+            alignment: Alignment.center,
+            child: Semantics(
+              button: true,
+              label: 'See more ${widget.title}',
+              child: TextButton.icon(
+                onPressed: () => _showMore(items.length),
                 icon: const Icon(Icons.expand_more_rounded),
                 label: const Text('See more'),
               ),

@@ -77,26 +77,7 @@ class PlaylistDetailsNotifier
       final newTracks = p.tracks
           .where((t) => !_pendingDeletions.any((d) => d.id == t.id))
           .toList();
-      state = AsyncData(
-        Playlist(
-          id: p.id,
-          title: p.title,
-          description: p.description,
-          type: p.type,
-          isPrivate: p.isPrivate,
-          isLiked: p.isLiked,
-          coverArt: p.coverArt,
-          owner: p.owner,
-          tracks: newTracks,
-          totalDurationSeconds: p.totalDurationSeconds,
-          trackCount: p.trackCount,
-          playlistSlug: p.playlistSlug,
-          firstTrackWaveformUrl: p.firstTrackWaveformUrl,
-          secretToken: p.secretToken,
-          access: p.access,
-          createdAt: p.createdAt,
-        ),
-      );
+      state = AsyncData(p.copyWith(tracks: newTracks));
     }
 
     // Start the 5-second countdown
@@ -130,11 +111,9 @@ class PlaylistDetailsNotifier
     }
 
     state = AsyncData(
-      Playlist(
-        id: updatedPlaylist.id,
+      current.copyWith(
         title: updatedPlaylist.title,
         description: updatedPlaylist.description,
-        type: updatedPlaylist.type,
         isPrivate: updatedPlaylist.isPrivate,
         isLiked: updatedPlaylist.isLiked,
         coverArt: updatedPlaylist.coverArt,

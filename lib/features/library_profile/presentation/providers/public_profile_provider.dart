@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
+import '../../../engagement/presentation/providers/playlist_social_provider.dart';
 import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../playlists/domain/entities/playlist.dart';
@@ -74,6 +75,21 @@ final publicPlaylistsProvider = FutureProvider.autoDispose
         page: 0,
         size: 100,
         username: username,
+      );
+
+      return result.fold(
+        (failure) => const <Playlist>[],
+        (playlists) => playlists.where((p) => !p.isPrivate).toList(),
+      );
+    });
+
+final publicLikedPlaylistsProvider = FutureProvider.autoDispose
+    .family<List<Playlist>, String>((ref, username) async {
+      final repository = ref.read(playlistSocialRepositoryProvider);
+      final result = await repository.getLikedPlaylists(
+        username,
+        page: 0,
+        size: 100,
       );
 
       return result.fold(

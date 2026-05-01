@@ -65,7 +65,7 @@ class BottomBarWidget extends ConsumerWidget {
           ),
           Expanded(
             child: _buildSimpleIconButton(
-              icon: Icons.playlist_add_outlined,
+              icon: Icons.playlist_add,
               onTap: onAddToPlaylistPressed,
             ),
           ),
