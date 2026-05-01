@@ -15,6 +15,8 @@ import '../providers/track_social_provider.dart';
 class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
   late final ITrackSocialRepository _socialRepository;
   late final TrackRepository _trackRepository;
+  int _toggleGeneration = 0;
+  Future<void> _toggleQueue = Future<void>.value();
 
   @override
   FutureOr<TrackSocialData> build(int arg) async {
@@ -40,36 +42,33 @@ class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
     final bool wasActive = actionType == SocialActionType.like
         ? currentData.isLiked
         : currentData.isReposted;
+    final int previousCount = actionType == SocialActionType.like
+        ? currentData.likeCount
+        : currentData.repostCount;
+    final int optimisticCount = wasActive
+        ? _clampCount(previousCount - 1)
+        : previousCount + 1;
+    final int generation = ++_toggleGeneration;
     // 1. Optimistic Update
     final optimisticData = actionType == SocialActionType.like
-        ? currentData.copyWith(isLiked: !wasActive)
-        : currentData.copyWith(isReposted: !wasActive);
+        ? currentData.copyWith(isLiked: !wasActive, likeCount: optimisticCount)
+        : currentData.copyWith(
+            isReposted: !wasActive,
+            repostCount: optimisticCount,
+          );
 
     state = AsyncData(optimisticData);
 
-    try {
-      // 2. Call Repository
-      if (actionType == SocialActionType.like) {
-        wasActive
-            ? await _socialRepository.unlikeTrack(arg)
-            : await _socialRepository.likeTrack(arg);
-      } else {
-        wasActive
-            ? await _socialRepository.unrepostTrack(arg)
-            : await _socialRepository.repostTrack(arg);
-      }
-
-      // 3. Sync Collections & Profile stats
-      _syncCollections(actionType, wasActive: wasActive);
-
-      final refreshed = await _fetchTrackSocialData(arg);
-      if (refreshed != null) {
-        state = AsyncData(refreshed);
-      }
-    } on AppException {
-      // Revert on error
-      state = AsyncData(currentData);
-    }
+    final queued = _toggleQueue.then(
+      (_) => _performToggle(
+        actionType: actionType,
+        wasActive: wasActive,
+        currentData: currentData,
+        generation: generation,
+      ),
+    );
+    _toggleQueue = queued.catchError((_) {});
+    await queued;
   }
 
   TrackSocialData _mapTrackToSocialData(Track track) {
@@ -84,6 +83,42 @@ class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
   Future<TrackSocialData?> _fetchTrackSocialData(int trackId) async {
     final result = await _trackRepository.fetchTrackById(trackId);
     return result.fold((_) => null, _mapTrackToSocialData);
+  }
+
+  int _clampCount(int value) => value < 0 ? 0 : value;
+
+  Future<void> _performToggle({
+    required SocialActionType actionType,
+    required bool wasActive,
+    required TrackSocialData currentData,
+    required int generation,
+  }) async {
+    try {
+      if (actionType == SocialActionType.like) {
+        wasActive
+            ? await _socialRepository.unlikeTrack(arg)
+            : await _socialRepository.likeTrack(arg);
+      } else {
+        wasActive
+            ? await _socialRepository.unrepostTrack(arg)
+            : await _socialRepository.repostTrack(arg);
+      }
+
+      if (_toggleGeneration != generation) {
+        return;
+      }
+
+      _syncCollections(actionType, wasActive: wasActive);
+
+      final refreshed = await _fetchTrackSocialData(arg);
+      if (refreshed != null && _toggleGeneration == generation) {
+        state = AsyncData(refreshed);
+      }
+    } on AppException {
+      if (_toggleGeneration == generation) {
+        state = AsyncData(currentData);
+      }
+    }
   }
 
   void _syncCollections(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/exceptions.dart';
 import 'package:decibel/features/engagement/domain/models/track_action_data.dart';
@@ -103,6 +105,176 @@ void main() {
     expect(state.value?.likeCount, 12);
     verify(() => mockSocialRepo.likeTrack(10)).called(1);
     verify(() => mockTrackRepo.fetchTrackById(10)).called(2);
+  });
+
+  test('toggleAction applies optimistic counts before refresh', () async {
+    final initialTrack = MockTrack();
+    when(() => initialTrack.isLiked).thenReturn(false);
+    when(() => initialTrack.likeCount).thenReturn(0);
+    when(() => initialTrack.isReposted).thenReturn(false);
+    when(() => initialTrack.repostCount).thenReturn(0);
+
+    final syncedTrack = MockTrack();
+    when(() => syncedTrack.isLiked).thenReturn(true);
+    when(() => syncedTrack.likeCount).thenReturn(5);
+    when(() => syncedTrack.isReposted).thenReturn(false);
+    when(() => syncedTrack.repostCount).thenReturn(0);
+
+    var fetchCount = 0;
+    when(() => mockTrackRepo.fetchTrackById(20)).thenAnswer((_) async {
+      fetchCount += 1;
+      return Right(fetchCount == 1 ? initialTrack : syncedTrack);
+    });
+
+    final completer = Completer<void>();
+    when(
+      () => mockSocialRepo.likeTrack(20),
+    ).thenAnswer((_) => completer.future);
+
+    final container = ProviderContainer(
+      overrides: [
+        trackSocialRepositoryProvider.overrideWithValue(mockSocialRepo),
+        trackRepositoryProvider.overrideWithValue(mockTrackRepo),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(trackSocialProvider(20).future);
+
+    final toggleFuture = container
+        .read(trackSocialProvider(20).notifier)
+        .toggleAction(SocialActionType.like);
+
+    final optimisticState = container.read(trackSocialProvider(20));
+    expect(optimisticState.value?.isLiked, isTrue);
+    expect(optimisticState.value?.likeCount, 1);
+
+    completer.complete();
+    await toggleFuture;
+
+    final refreshedState = container.read(trackSocialProvider(20));
+    expect(refreshedState.value?.likeCount, 5);
+  });
+
+  test('toggleAction queues rapid toggles in order', () async {
+    final initialTrack = MockTrack();
+    when(() => initialTrack.isLiked).thenReturn(false);
+    when(() => initialTrack.likeCount).thenReturn(0);
+    when(() => initialTrack.isReposted).thenReturn(false);
+    when(() => initialTrack.repostCount).thenReturn(0);
+
+    final unlikedTrack = MockTrack();
+    when(() => unlikedTrack.isLiked).thenReturn(false);
+    when(() => unlikedTrack.likeCount).thenReturn(0);
+    when(() => unlikedTrack.isReposted).thenReturn(false);
+    when(() => unlikedTrack.repostCount).thenReturn(0);
+
+    final likedTrack = MockTrack();
+    when(() => likedTrack.isLiked).thenReturn(true);
+    when(() => likedTrack.likeCount).thenReturn(1);
+    when(() => likedTrack.isReposted).thenReturn(false);
+    when(() => likedTrack.repostCount).thenReturn(0);
+
+    var fetchCount = 0;
+    when(() => mockTrackRepo.fetchTrackById(30)).thenAnswer((_) async {
+      fetchCount += 1;
+      if (fetchCount == 1) {
+        return Right(initialTrack);
+      }
+      return Right(fetchCount == 2 ? unlikedTrack : likedTrack);
+    });
+
+    final likeCompleter = Completer<void>();
+    final unlikeCompleter = Completer<void>();
+    when(
+      () => mockSocialRepo.likeTrack(30),
+    ).thenAnswer((_) => likeCompleter.future);
+    when(
+      () => mockSocialRepo.unlikeTrack(30),
+    ).thenAnswer((_) => unlikeCompleter.future);
+
+    final container = ProviderContainer(
+      overrides: [
+        trackSocialRepositoryProvider.overrideWithValue(mockSocialRepo),
+        trackRepositoryProvider.overrideWithValue(mockTrackRepo),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(trackSocialProvider(30).future);
+
+    final notifier = container.read(trackSocialProvider(30).notifier);
+    final firstToggle = notifier.toggleAction(SocialActionType.like);
+    final secondToggle = notifier.toggleAction(SocialActionType.like);
+
+    await Future<void>.delayed(Duration.zero);
+    verify(() => mockSocialRepo.likeTrack(30)).called(1);
+    verifyNever(() => mockSocialRepo.unlikeTrack(30));
+
+    likeCompleter.complete();
+    await Future<void>.delayed(Duration.zero);
+    verify(() => mockSocialRepo.unlikeTrack(30)).called(1);
+
+    unlikeCompleter.complete();
+    await secondToggle;
+
+    await firstToggle;
+
+    final state = container.read(trackSocialProvider(30));
+    expect(state.value?.isLiked, isFalse);
+    expect(state.value?.likeCount, 0);
+  });
+
+  test('toggleAction keeps repost false after rapid toggles', () async {
+    final initialTrack = MockTrack();
+    when(() => initialTrack.isLiked).thenReturn(false);
+    when(() => initialTrack.likeCount).thenReturn(0);
+    when(() => initialTrack.isReposted).thenReturn(false);
+    when(() => initialTrack.repostCount).thenReturn(0);
+
+    final repostedTrack = MockTrack();
+    when(() => repostedTrack.isLiked).thenReturn(false);
+    when(() => repostedTrack.likeCount).thenReturn(0);
+    when(() => repostedTrack.isReposted).thenReturn(true);
+    when(() => repostedTrack.repostCount).thenReturn(1);
+
+    final unrepostedTrack = MockTrack();
+    when(() => unrepostedTrack.isLiked).thenReturn(false);
+    when(() => unrepostedTrack.likeCount).thenReturn(0);
+    when(() => unrepostedTrack.isReposted).thenReturn(false);
+    when(() => unrepostedTrack.repostCount).thenReturn(0);
+
+    var fetchCount = 0;
+    when(() => mockTrackRepo.fetchTrackById(40)).thenAnswer((_) async {
+      fetchCount += 1;
+      if (fetchCount == 1) {
+        return Right(initialTrack);
+      }
+      return Right(fetchCount.isEven ? repostedTrack : unrepostedTrack);
+    });
+
+    when(() => mockSocialRepo.repostTrack(40)).thenAnswer((_) async {});
+    when(() => mockSocialRepo.unrepostTrack(40)).thenAnswer((_) async {});
+
+    final container = ProviderContainer(
+      overrides: [
+        trackSocialRepositoryProvider.overrideWithValue(mockSocialRepo),
+        trackRepositoryProvider.overrideWithValue(mockTrackRepo),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(trackSocialProvider(40).future);
+
+    final notifier = container.read(trackSocialProvider(40).notifier);
+    await notifier.toggleAction(SocialActionType.repost);
+    await notifier.toggleAction(SocialActionType.repost);
+    await notifier.toggleAction(SocialActionType.repost);
+    await notifier.toggleAction(SocialActionType.repost);
+
+    final state = container.read(trackSocialProvider(40));
+    expect(state.value?.isReposted, isFalse);
+    expect(state.value?.repostCount, 0);
   });
 
   test('toggleAction(repost) syncs backend counts', () async {

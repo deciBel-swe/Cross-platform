@@ -137,23 +137,11 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     File? coverImage,
   ) async {
     try {
-      final dataMap = request.toJson();
-      final formData = FormData.fromMap(dataMap);
-
-      if (coverImage != null) {
-        final imageName = path.basename(coverImage.path);
-        formData.files.add(
-          MapEntry(
-            'CoverArt',
-            await MultipartFile.fromFile(coverImage.path, filename: imageName),
-          ),
-        );
-      }
+      final formData = await _buildPlaylistPayload(request, coverImage);
 
       final response = await _dioClient.post<dynamic>(
         ApiConstants.playlists,
         data: formData,
-        options: Options(contentType: Headers.multipartFormDataContentType),
       );
       final responseData = _extractObjectPayload(response.data);
       return PlaylistModel.fromJson(responseData);
@@ -219,13 +207,15 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     File? coverImage,
   ) async {
     try {
-      // 1. Use your helper method here too!
       final formData = await _buildPlaylistPayload(request, coverImage);
 
-      final response = await _dioClient.patch<dynamic>(
+      // Use POST with _method spoofing because many backends (e.g. Laravel)
+      // do not support multipart/form-data with the PATCH method.
+      formData.fields.add(const MapEntry('_method', 'PATCH'));
+
+      final response = await _dioClient.post<dynamic>(
         '${ApiConstants.playlists}/$playListId',
         data: formData,
-        options: Options(contentType: Headers.multipartFormDataContentType),
       );
       final responseData = _extractObjectPayload(response.data);
       return PlaylistModel.fromJson(responseData);
@@ -313,6 +303,13 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
     File? coverImage,
   ) async {
     final dataMap = request.toJson();
+
+    // Explicitly convert boolean to string representation ('1' or '0')
+    // because some backends fail to parse raw booleans in multipart/form-data.
+    if (dataMap.containsKey('isPrivate')) {
+      dataMap['isPrivate'] = (dataMap['isPrivate'] == true) ? '1' : '0';
+    }
+
     final formData = FormData.fromMap(dataMap);
 
     if (coverImage != null) {
