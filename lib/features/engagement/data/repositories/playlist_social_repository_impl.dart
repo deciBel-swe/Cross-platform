@@ -8,7 +8,7 @@ import '../../../playlists/domain/entities/playlist.dart';
 import '../../domain/repositories/playlist_social_repository.dart';
 import '../datasources/playlist_social_remote_datasource.dart';
 
-@LazySingleton(as: IPlaylistSocialRepository)
+@LazySingleton(as: IPlaylistSocialRepository, env: [Environment.prod, 'dev'])
 class PlaylistSocialRepositoryImpl implements IPlaylistSocialRepository {
   PlaylistSocialRepositoryImpl(this._remoteDataSource);
   final PlaylistSocialRemoteDatasource _remoteDataSource;
