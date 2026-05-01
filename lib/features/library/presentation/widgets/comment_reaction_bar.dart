@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'reaction_button.dart';
 import 'track_comment_avatar.dart';
 
 class CommentReactionBar extends StatelessWidget {
@@ -19,6 +21,7 @@ class CommentReactionBar extends StatelessWidget {
   final ValueChanged<String>? onSendTap;
   final ValueChanged<String>? onReactionTap;
 
+  /// Builds the compact comment input and quick reactions row.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -72,17 +75,17 @@ class CommentReactionBar extends StatelessWidget {
                           ),
                         ),
                       ] else if (!hasText) ...[
-                        _ReactionButton(
+                        ReactionButton(
                           emoji: '🔥',
                           onTap: () => onReactionTap?.call('🔥'),
                         ),
                         const SizedBox(width: 12),
-                        _ReactionButton(
+                        ReactionButton(
                           emoji: '👏',
                           onTap: () => onReactionTap?.call('👏'),
                         ),
                         const SizedBox(width: 12),
-                        _ReactionButton(
+                        ReactionButton(
                           emoji: '🥺',
                           onTap: () => onReactionTap?.call('🥺'),
                         ),
@@ -118,22 +121,6 @@ class CommentReactionBar extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _ReactionButton extends StatelessWidget {
-  const _ReactionButton({required this.emoji, this.onTap});
-
-  final String emoji;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Text(emoji, style: const TextStyle(fontSize: 18)),
     );
   }
 }

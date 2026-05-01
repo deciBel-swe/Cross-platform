@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import '../../constants/api_constants.dart';
 import '../../storage/secure_storage_service.dart';
@@ -172,12 +171,6 @@ class AuthInterceptor extends Interceptor {
       final cookieHeader =
           'refreshToken=$refreshToken; accessToken=$oldAccessToken';
 
-      debugPrint('[AuthInterceptor] Refreshing Token: POST /auth/refreshtoken');
-      debugPrint('[AuthInterceptor] Request Headers: {Cookie: $cookieHeader}');
-      debugPrint(
-        '[AuthInterceptor] Request Body: {refreshToken: $refreshToken}',
-      );
-
       final response = await _refreshDio.post<Map<String, dynamic>>(
         '/auth/refreshtoken',
         data: {
@@ -185,10 +178,6 @@ class AuthInterceptor extends Interceptor {
         }, // Keep payload for backward compatibility
         options: Options(headers: {'Cookie': cookieHeader}),
       );
-
-      debugPrint('[AuthInterceptor] Response Status: ${response.statusCode}');
-      debugPrint('[AuthInterceptor] Response Headers: ${response.headers.map}');
-      debugPrint('[AuthInterceptor] Response Body: ${response.data}');
 
       final responseBody = response.data;
       final dataPayload =
@@ -224,7 +213,6 @@ class AuthInterceptor extends Interceptor {
 
       completer.complete();
     } catch (e) {
-      debugPrint('[AuthInterceptor] Refresh Error: $e');
       completer.completeError(e);
       rethrow;
     } finally {

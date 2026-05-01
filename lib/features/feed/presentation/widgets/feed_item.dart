@@ -18,6 +18,7 @@ import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
 import '../../../library/presentation/widgets/track_more_options_menu.dart';
 import '../../../library_profile/presentation/providers/track_peaks_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import '../../domain/entities/feed_item_type.dart';
 import 'mobile_feed_track_card.dart';
 
@@ -905,6 +906,7 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
               case TrackMoreOption.report:
                 await TrackReportBottomSheet.show(context, trackId);
                 break;
+
               case TrackMoreOption.addToPlaylist:
                 onAddToPlaylist?.call();
                 break;
@@ -912,7 +914,7 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
                 onAddToQueue?.call();
                 break;
               case TrackMoreOption.viewQueue:
-                // Queue bottom sheet will be shown by the caller
+                QueueBottomSheet.show(context);
                 break;
               case TrackMoreOption.editTrack:
                 onEditTrack?.call();
@@ -970,7 +972,8 @@ class _PlaylistFeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final playlistTitle = playlistData?['title'] as String? ?? 'Unknown Playlist';
+    final playlistTitle =
+        playlistData?['title'] as String? ?? 'Unknown Playlist';
     final trackCount = playlistData?['trackCount'] as int? ?? 0;
     final owner = playlistData?['owner'] as Map<String, dynamic>?;
     final ownerUsername = owner?['username'] as String? ?? userName;
@@ -1021,7 +1024,9 @@ class _PlaylistFeedCard extends StatelessWidget {
                   child: Row(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
                         child: coverUrl != null && coverUrl!.isNotEmpty
                             ? DecibelCachedImage(
                                 imageUrl: coverUrl!,

@@ -155,8 +155,8 @@ class OfflineLocalDataSource {
             tracks.add(trackModel.toEntity());
           }
         } catch (e) {
-          debugPrint('Failed to load JSON for $entity: $e');
-        }
+      // Ignore wrapper exception
+    }
       }
     }
 

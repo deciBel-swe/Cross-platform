@@ -20,33 +20,24 @@ class AppResetNotifier extends Notifier<Key> {
   Key build() => const ValueKey('initial_app_key');
 
   Future<void> reset() async {
-    debugPrint('[AppResetNotifier] STARTING TOTAL PURIFICATION...');
-
     // 1. Clear Image Caches (RAM)
-    debugPrint('[AppResetNotifier] Clearing PaintingBinding ImageCache...');
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
 
     // 2. Clear Image Caches (Disk)
-    debugPrint('[AppResetNotifier] Clearing DefaultCacheManager (Disk)...');
     try {
       await DefaultCacheManager().emptyCache();
-    } catch (e) {
-      debugPrint('[AppResetNotifier] Failed to clear disk cache: $e');
+    } catch (_) {
+      // Cache clear is best-effort; ignore errors on reset.
     }
 
     // 3. Reset GetIt (DI)
-    debugPrint('[AppResetNotifier] Resetting GetIt Container...');
     await GetIt.instance.reset();
 
     // 4. Re-initialize DI
-    debugPrint(
-      '[AppResetNotifier] Re-initializing DI (useMockServices: $_useMockServices)...',
-    );
     configureDependencies(useMockServices: _useMockServices);
 
     // 5. Trigger Riverpod Reset (Destroys the keyed ProviderScope)
-    debugPrint('[AppResetNotifier] Triggering Riverpod Key change...');
     state = UniqueKey();
   }
 }

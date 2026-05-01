@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -32,7 +31,6 @@ class PickerService implements IPickerService {
       return null;
     } catch (e) {
       // Print the error so you know exactly why it failed
-      debugPrint('Error picking audio file: $e');
       return null;
     } finally {
       _isAudioPickerActive = false;
@@ -59,7 +57,6 @@ class PickerService implements IPickerService {
       );
       return _AudioDurationParser(bytes.takeBytes()).parse();
     } catch (e) {
-      debugPrint('Error getting audio duration: $e');
       return null;
     }
   }

@@ -27,6 +27,8 @@ void main() {
 
     when(() => mockSocialRepo.likeTrack(any())).thenAnswer((_) async {});
     when(() => mockSocialRepo.unlikeTrack(any())).thenAnswer((_) async {});
+    when(() => mockSocialRepo.repostTrack(any())).thenAnswer((_) async {});
+    when(() => mockSocialRepo.unrepostTrack(any())).thenAnswer((_) async {});
 
     // Default fetch behavior
     final mockTrack = MockTrack();
@@ -68,9 +70,17 @@ void main() {
     when(() => initialTrack.likeCount).thenReturn(4);
     when(() => initialTrack.isReposted).thenReturn(false);
     when(() => initialTrack.repostCount).thenReturn(0);
-    when(
-      () => mockTrackRepo.fetchTrackById(10),
-    ).thenAnswer((_) async => Right(initialTrack));
+    final syncedTrack = MockTrack();
+    when(() => syncedTrack.isLiked).thenReturn(true);
+    when(() => syncedTrack.likeCount).thenReturn(12);
+    when(() => syncedTrack.isReposted).thenReturn(false);
+    when(() => syncedTrack.repostCount).thenReturn(0);
+
+    var fetchCount = 0;
+    when(() => mockTrackRepo.fetchTrackById(10)).thenAnswer((_) async {
+      fetchCount += 1;
+      return Right(fetchCount == 1 ? initialTrack : syncedTrack);
+    });
 
     final container = ProviderContainer(
       overrides: [
@@ -90,8 +100,49 @@ void main() {
 
     final state = container.read(trackSocialProvider(10));
     expect(state.value?.isLiked, isTrue);
-    expect(state.value?.likeCount, 5);
+    expect(state.value?.likeCount, 12);
     verify(() => mockSocialRepo.likeTrack(10)).called(1);
+    verify(() => mockTrackRepo.fetchTrackById(10)).called(2);
+  });
+
+  test('toggleAction(repost) syncs backend counts', () async {
+    final initialTrack = MockTrack();
+    when(() => initialTrack.isLiked).thenReturn(false);
+    when(() => initialTrack.likeCount).thenReturn(3);
+    when(() => initialTrack.isReposted).thenReturn(false);
+    when(() => initialTrack.repostCount).thenReturn(0);
+
+    final syncedTrack = MockTrack();
+    when(() => syncedTrack.isLiked).thenReturn(false);
+    when(() => syncedTrack.likeCount).thenReturn(3);
+    when(() => syncedTrack.isReposted).thenReturn(true);
+    when(() => syncedTrack.repostCount).thenReturn(7);
+
+    var fetchCount = 0;
+    when(() => mockTrackRepo.fetchTrackById(12)).thenAnswer((_) async {
+      fetchCount += 1;
+      return Right(fetchCount == 1 ? initialTrack : syncedTrack);
+    });
+
+    final container = ProviderContainer(
+      overrides: [
+        trackSocialRepositoryProvider.overrideWithValue(mockSocialRepo),
+        trackRepositoryProvider.overrideWithValue(mockTrackRepo),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(trackSocialProvider(12).future);
+
+    await container
+        .read(trackSocialProvider(12).notifier)
+        .toggleAction(SocialActionType.repost);
+
+    final state = container.read(trackSocialProvider(12));
+    expect(state.value?.isReposted, isTrue);
+    expect(state.value?.repostCount, 7);
+    verify(() => mockSocialRepo.repostTrack(12)).called(1);
+    verify(() => mockTrackRepo.fetchTrackById(12)).called(2);
   });
 
   test('toggleAction rolls back when repository throws AppException', () async {

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:path/path.dart' as path;
 
@@ -58,7 +57,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
 
       // check lowercase "secretLink" just in case your backend uses standard JSON camelCase.
       final secretLink =
-          responseData['SecretLink'] ?? responseData['secretLink'];
+          responseData['secretUrl'] ?? responseData['secretLink'];
 
       if (secretLink != null) {
         return secretLink as String;
@@ -191,8 +190,6 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
       );
 
       final data = response.data;
-      //debugPrint('RAW PLAYLIST JSON: $data');
-
       if (data == null) {
         return [];
       }
@@ -210,9 +207,7 @@ class PlaylistRemoteDatasource implements IPlaylistRemoteDataSource {
         );
       }
       throw ServerException(error.message ?? 'Failed to fetch playlists');
-    } catch (error, stackTrace) {
-      debugPrint('==========PARSING CRASH: $error');
-      debugPrint('==========STACKTRACE: $stackTrace');
+    } catch (error) {
       throw ServerException('Failed to parse playlists response: $error');
     }
   }

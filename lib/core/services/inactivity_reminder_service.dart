@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as timezone_data;
 import 'package:timezone/timezone.dart' as timezone;
@@ -85,7 +84,7 @@ class InactivityReminderService {
           >()
           ?.requestPermissions(alert: true, badge: true, sound: true);
     } catch (error) {
-      debugPrint('[InactivityReminder] Permission request skipped: $error');
+      // Ignore wrapper exception
     }
-  }
+  } // Ignore error
 }

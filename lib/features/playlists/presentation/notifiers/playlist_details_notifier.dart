@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../../core/errors/failures.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
 import '../providers/user_playlists_provider.dart';
@@ -172,11 +172,18 @@ class PlaylistDetailsNotifier
   Future<Either<Failure, String>> fetchSecretLink() async {
     final repository = ref.read(playlistRepositoryProvider);
 
-    return await repository.getPlaylistSecretLink(arg);
-  }
-}
+    final result = await repository.getPlaylistSecretLink(arg);
 
-final playlistDetailsProvider = AsyncNotifierProvider.autoDispose
-    .family<PlaylistDetailsNotifier, Playlist, int>(
-      PlaylistDetailsNotifier.new,
-    );
+    return result.fold((failure) => Left(failure), (token) {
+      final fullLink =
+          'https://decibel.foo${RoutePaths.deepLinkSecretPlaylist(token)}';
+
+      return Right(fullLink);
+    });
+  }
+
+  final playlistDetailsProvider = AsyncNotifierProvider.autoDispose
+      .family<PlaylistDetailsNotifier, Playlist, int>(
+        PlaylistDetailsNotifier.new,
+      );
+}

@@ -30,9 +30,6 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   FutureOr<AuthState> build() async {
     // Listen for forced logouts from interceptors or other backend-driven events
     final logoutSub = AuthEventBus().logoutStream.listen((_) {
-      debugPrint(
-        '[AuthNotifier] Received forced logout event from AuthEventBus',
-      );
       logout();
     });
 
@@ -56,8 +53,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         }
         return const AuthUnauthenticated();
       });
-    } catch (e, st) {
-      debugPrint('[AuthNotifier] build() failed: $e\n$st');
+    } catch (e) {
       return const AuthUnauthenticated();
     }
   }
@@ -68,7 +64,9 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       final repo = ref.read(authRepositoryProvider);
       final userEither = await repo.getCurrentUser();
       userEither.fold(
-        (failure) {}, // ignore failure
+        (failure) {
+          // Ignore wrapper exception
+        }, // ignore failure
         (user) {
           if (user != null) {
             state = AsyncData(AuthAuthenticated(user: user));
@@ -79,35 +77,27 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   Future<void> loginWithGoogle() async {
-    debugPrint('[AuthNotifier] loginWithGoogle() started.');
     state = const AsyncLoading();
     String? failureMessage;
 
     try {
       final repo = ref.read(authRepositoryProvider);
 
-      debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
       final userEither = await repo.loginWithGoogle();
 
       userEither.fold(
         (failure) {
-          debugPrint('[AuthNotifier] Failure: ${failure.message}');
           failureMessage = failure.message;
           state = const AsyncData(AuthUnauthenticated());
         },
         (user) {
-          debugPrint(
-            '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
-          );
           state = AsyncData(AuthAuthenticated(user: user));
         },
       );
     } on AppException catch (e) {
-      debugPrint('[AuthNotifier] AppException: ${e.message}');
       state = const AsyncData(AuthUnauthenticated());
       throw Exception(e.message);
-    } catch (e, st) {
-      debugPrint('[AuthNotifier] Unexpected Exception: $e\n$st');
+    } catch (e) {
       state = const AsyncData(AuthUnauthenticated());
       throw Exception(e.toString());
     }
@@ -115,8 +105,6 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     if (failureMessage != null) {
       throw Exception(failureMessage);
     }
-
-    debugPrint('[AuthNotifier] State is now: $state');
   }
 
   Future<void> loginWithEmailPassword({
@@ -183,12 +171,10 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         (failure) =>
             debugPrint('[AuthNotifier] logout failed: ${failure.message}'),
         (_) async {
-          debugPrint('[AuthNotifier] logout succeeded.');
           await _invalidateUserCaches();
         },
       );
-    } catch (e, st) {
-      debugPrint('[AuthNotifier] Unexpected Exception during logout: $e\n$st');
+    } catch (e) {
       await _invalidateUserCaches();
     } finally {
       state = const AsyncData(AuthUnauthenticated());
@@ -196,7 +182,6 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   Future<void> _invalidateUserCaches() async {
-    debugPrint('[AuthNotifier] Triggering global state reset...');
     // Forces a total destruction and recreation of the ProviderScope.
     await ref.read(appResetProvider.notifier).reset();
   }

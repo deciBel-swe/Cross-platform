@@ -137,9 +137,6 @@ class _TrackInfoSection extends ConsumerWidget {
     final formattedDate = DateFormat(
       'd MMM yyyy',
     ).format(track.releaseDate.toLocal());
-    final formattedUploadDate = DateFormat(
-      'd MMM yyyy',
-    ).format(track.createdAt.toLocal());
     final minutes = duration ~/ 60;
     final seconds = duration % 60;
     final durationText = duration > 0

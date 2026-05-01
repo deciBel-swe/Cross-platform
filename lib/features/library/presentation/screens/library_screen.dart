@@ -17,6 +17,7 @@ import '../../../library_profile/presentation/providers/user_profile_provider.da
 import '../../../library_profile/presentation/widgets/track_details.dart';
 import '../../../upgrade/presentation/widgets/get_pro_button.dart';
 import '../../domain/entities/track.dart';
+import '../utils/comment_formatters.dart';
 
 class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key});
@@ -79,9 +80,7 @@ class _LibraryTab extends ConsumerWidget {
         userProfile?.tier == UserTier.pro ||
         userProfile?.tier == UserTier.artistPro;
 
-    // final isPro=true;
     return ListView(
-      // Make padding responsive to match Home and Search screens
       padding: EdgeInsets.fromLTRB(
         isDesktop ? AppDimensions.paddingXl : AppDimensions.paddingMd,
         isDesktop ? AppDimensions.paddingXl : AppDimensions.paddingSm,
@@ -403,7 +402,7 @@ class _HistoryLibraryRow extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${_formatCount(track.playCount)} plays',
+                        '${CommentFormatters.formatCount(track.playCount)} plays',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.bodySmall.copyWith(
@@ -630,6 +629,7 @@ class _NavigationRow extends StatelessWidget {
   }
 }
 
+/// Starts playback for a track from the history rail.
 Future<void> _playHistoryTrack(
   BuildContext context,
   WidgetRef ref,
@@ -651,18 +651,9 @@ Future<void> _playHistoryTrack(
       .playTrack(track: track, queue: queue, autoPlay: true);
 }
 
+/// Returns the best display name for a track artist.
 String _artistName(Track track) {
   return track.artist.displayName?.trim().isNotEmpty == true
       ? track.artist.displayName!
       : track.artist.username;
-}
-
-String _formatCount(int value) {
-  if (value >= 1000000) {
-    return '${(value / 1000000).toStringAsFixed(1)}M';
-  }
-  if (value >= 1000) {
-    return '${(value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1)}K';
-  }
-  return value.toString();
 }

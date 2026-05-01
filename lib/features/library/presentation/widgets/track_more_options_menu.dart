@@ -19,6 +19,7 @@ enum TrackMoreOption {
   report,
 }
 
+/// Shows the responsive track more-options menu.
 Future<TrackMoreOption?> showTrackMoreOptionsMenu({
   required BuildContext context,
   BuildContext? anchorContext,
@@ -192,6 +193,7 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
   );
 }
 
+/// Calculates the desktop menu position from the anchor context.
 RelativeRect _menuPosition({
   required BuildContext context,
   required BuildContext? anchorContext,
@@ -214,6 +216,7 @@ RelativeRect _menuPosition({
   );
 }
 
+/// Builds a desktop popup menu item for a track action.
 PopupMenuItem<TrackMoreOption> _desktopTrackOptionItem({
   required TrackMoreOption value,
   required IconData icon,
@@ -248,6 +251,7 @@ PopupMenuItem<TrackMoreOption> _desktopTrackOptionItem({
   );
 }
 
+/// Builds a mobile bottom-sheet option for a track action.
 Widget _mobileTrackOptionItem(
   BuildContext context, {
   required TrackMoreOption value,

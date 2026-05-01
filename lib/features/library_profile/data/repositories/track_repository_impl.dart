@@ -69,7 +69,9 @@ class TrackRepositoryImpl implements TrackRepository {
           if (offlineTrack != null) {
             return Right(offlineTrack);
           }
-        } catch (_) {}
+        } catch (_) {
+      // Ignore wrapper exception
+    }
       }
       return Left(failure);
     }

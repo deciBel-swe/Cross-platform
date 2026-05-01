@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
@@ -31,9 +30,6 @@ final syncDeviceTokenProvider = FutureProvider<void>((ref) async {
 
   final hasPermission = await firebaseService.requestPermission();
   if (!hasPermission) {
-    debugPrint(
-      '[PushNotifications] Cannot sync token: User denied permissions.',
-    );
     return;
   }
 
@@ -60,15 +56,12 @@ Future<void> _syncDeviceToken({
   required String source,
 }) async {
   if (token == null || token.isEmpty) {
-    debugPrint('[PushNotifications] $source sync skipped: FCM token was null.');
     return;
   }
 
   final failure = await repository.registerDeviceToken(token);
   if (failure != null) {
-    debugPrint('[PushNotifications] $source sync failed: ${failure.message}');
     return;
   }
 
-  debugPrint('[PushNotifications] $source sync succeeded.');
 }

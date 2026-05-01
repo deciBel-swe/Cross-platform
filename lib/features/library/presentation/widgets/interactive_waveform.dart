@@ -18,6 +18,7 @@ class InteractiveWaveform extends StatefulWidget {
   final TrackAudioState audioState;
   final TrackAudioNotifier audioNotifier;
 
+  /// Builds a draggable waveform bound to the audio notifier.
   @override
   State<InteractiveWaveform> createState() => _InteractiveWaveformState();
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
@@ -6,9 +5,10 @@ import '../../../library_profile/presentation/providers/track_repository_provide
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_peaks.dart';
 
-// This notifier fetches both the track details and its peaks (if available) for a given track ID.
+/// Loads the track preview details and waveform peaks.
 class TrackPreviewNotifier
     extends AutoDisposeFamilyAsyncNotifier<TrackPreviewData, int> {
+  /// Builds the preview data for [trackId].
   @override
   Future<TrackPreviewData> build(int trackId) async {
     final repository = ref.read(trackRepositoryProvider);
@@ -23,9 +23,6 @@ class TrackPreviewNotifier
     final peaksResult = await repository.fetchTrackPeaksById(track.id);
 
     final trackPeaks = peaksResult.fold<TrackPeaks?>((failure) {
-      debugPrint(
-        'TrackPreviewNotifier: waveform fetch failed for track ${track.id}: ${failure.message}',
-      );
       return null;
     }, (value) => value);
 

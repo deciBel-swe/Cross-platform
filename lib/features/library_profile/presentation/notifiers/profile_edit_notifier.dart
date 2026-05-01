@@ -171,7 +171,9 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
           await ref.read(userProfileProvider.future);
           try {
             await ref.read(authStateProvider.notifier).refreshUser();
-          } catch (_) {}
+          } catch (_) {
+      // Ignore wrapper exception
+    }
 
           state = const AsyncData(null);
           return true;

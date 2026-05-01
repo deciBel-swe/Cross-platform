@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/domain/repositories/track_repository.dart';
 import '../../../library_profile/presentation/providers/track_repository_provider.dart';
 import '../../../library_profile/presentation/providers/user_profile_provider.dart';
@@ -20,28 +21,14 @@ class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
     _socialRepository = ref.read(trackSocialRepositoryProvider);
     _trackRepository = ref.read(trackRepositoryProvider);
 
-    // Background fetch to verify real data
-    final result = await _trackRepository.fetchTrackById(arg);
-
-    return result.fold(
-      (failure) {
-        // Fallback to empty state if fetch fails
-        return const TrackSocialData(
+    final data = await _fetchTrackSocialData(arg);
+    return data ??
+        const TrackSocialData(
           isLiked: false,
           likeCount: 0,
           isReposted: false,
           repostCount: 0,
         );
-      },
-      (track) {
-        return TrackSocialData(
-          isLiked: track.isLiked,
-          likeCount: track.likeCount,
-          isReposted: track.isReposted,
-          repostCount: track.repostCount,
-        );
-      },
-    );
   }
 
   /// Toggle Like/Repost with optimistic UI update.
@@ -53,20 +40,10 @@ class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
     final bool wasActive = actionType == SocialActionType.like
         ? currentData.isLiked
         : currentData.isReposted;
-    final int previousCount = actionType == SocialActionType.like
-        ? currentData.likeCount
-        : currentData.repostCount;
-
     // 1. Optimistic Update
     final optimisticData = actionType == SocialActionType.like
-        ? currentData.copyWith(
-            isLiked: !wasActive,
-            likeCount: wasActive ? previousCount - 1 : previousCount + 1,
-          )
-        : currentData.copyWith(
-            isReposted: !wasActive,
-            repostCount: wasActive ? previousCount - 1 : previousCount + 1,
-          );
+        ? currentData.copyWith(isLiked: !wasActive)
+        : currentData.copyWith(isReposted: !wasActive);
 
     state = AsyncData(optimisticData);
 
@@ -85,12 +62,28 @@ class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
       // 3. Sync Collections & Profile stats
       _syncCollections(actionType, wasActive: wasActive);
 
-      // 4. (Optional) We could re-fetch after success to be absolutely sure,
-      // but usually the result of toggle is predictable.
+      final refreshed = await _fetchTrackSocialData(arg);
+      if (refreshed != null) {
+        state = AsyncData(refreshed);
+      }
     } on AppException {
       // Revert on error
       state = AsyncData(currentData);
     }
+  }
+
+  TrackSocialData _mapTrackToSocialData(Track track) {
+    return TrackSocialData(
+      isLiked: track.isLiked,
+      likeCount: track.likeCount,
+      isReposted: track.isReposted,
+      repostCount: track.repostCount,
+    );
+  }
+
+  Future<TrackSocialData?> _fetchTrackSocialData(int trackId) async {
+    final result = await _trackRepository.fetchTrackById(trackId);
+    return result.fold((_) => null, _mapTrackToSocialData);
   }
 
   void _syncCollections(

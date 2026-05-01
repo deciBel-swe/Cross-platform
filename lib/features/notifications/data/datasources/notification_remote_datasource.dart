@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/api_constants.dart';
@@ -42,16 +41,11 @@ class NotificationRemoteDataSource implements INotificationRemoteDataSource {
           .map(activityNotificationModelFromApiJson)
           .toList();
     } on DioException catch (e) {
-      debugPrint('DioException in getNotifications: ${e.message}');
-      debugPrint('Response Data: ${e.response?.data}');
-
       if (e.response?.statusCode == 401) {
         throw const ServerException('Unauthorized');
       }
       throw const ServerException('Failed to fetch notifications');
-    } catch (e, stackTrace) {
-      debugPrint('CRITICAL ERROR in getNotifications: $e');
-      debugPrint('StackTrace: $stackTrace');
+    } catch (e) {
       throw const ServerException('Unexpected error occurred');
     }
   }

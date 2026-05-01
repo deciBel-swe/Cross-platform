@@ -99,14 +99,10 @@ class MockUploadRepository implements IUploadRepository {
           LibraryMockFixtures.trackMetaDataById[id]!['state'] = 'FINISHED';
         }
         if (kDebugMode) {
-          debugPrint('[MockUploadRepository] Finished processing track id=$id');
         }
       });
 
       if (kDebugMode) {
-        debugPrint(
-          '[MockUploadRepository] inserted track id=$id, allTracks=${LibraryMockFixtures.allTracks.length}',
-        );
       }
 
       final peaks = _peaksFromWaveFormData(model.waveFormData);
@@ -121,17 +117,14 @@ class MockUploadRepository implements IUploadRepository {
       }
 
       if (kDebugMode) {
-        debugPrint(
-          '[MockUploadRepository] stored peaks for trackId=$id, peaks=${peaks.length}',
-        );
       }
 
       final trackModel = TrackModel.fromJson(trackJson);
       return Right(trackModel.toEntity());
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[MockUploadRepository] error: $e');
-      }
+      // Ignore wrapper exception
+    }
       return const Left(
         ServerFailure('An unexpected error occurred during file upload'),
       );
@@ -158,7 +151,6 @@ class MockUploadRepository implements IUploadRepository {
   void cancelUploadStatusSubscription(String uploadId) {
     // No-op for the mock
     if (kDebugMode) {
-      debugPrint('[MockUploadRepository] WebSocket progress cancelled');
     }
   }
 }
