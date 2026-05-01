@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:path_provider/path_provider.dart';
 
-
 import '../../../../core/network/dio_client.dart';
 import '../../../library/data/datasources/library_remote_datasource.dart';
 import '../../../library/data/models/track_model.dart';
@@ -29,8 +28,9 @@ class OfflineCollectionInfo {
       id: json['id'] as int,
       title: json['title'] as String,
       coverUrl: json['coverUrl'] as String?,
-      trackIds:
-          (json['trackIds'] as List<dynamic>).map((e) => e as int).toList(),
+      trackIds: (json['trackIds'] as List<dynamic>)
+          .map((e) => e as int)
+          .toList(),
       isStation: json['isStation'] as bool? ?? false,
     );
   }
@@ -42,12 +42,12 @@ class OfflineCollectionInfo {
   final bool isStation;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'coverUrl': coverUrl,
-        'trackIds': trackIds,
-        'isStation': isStation,
-      };
+    'id': id,
+    'title': title,
+    'coverUrl': coverUrl,
+    'trackIds': trackIds,
+    'isStation': isStation,
+  };
 
   OfflineCollectionInfo copyWith({
     int? id,
@@ -97,7 +97,9 @@ class OfflineLocalDataSource {
     final metaFile = File(metaPath);
     if (!await metaFile.exists()) {
       // Modify URL of saved metadata so that `TrackModel` points to the local path.
-      final localizedModel = TrackModelX.fromEntity(track).copyWith(trackUrl: savePath);
+      final localizedModel = TrackModelX.fromEntity(
+        track,
+      ).copyWith(trackUrl: savePath);
       await metaFile.writeAsString(jsonEncode(localizedModel.toJson()));
     }
 
@@ -145,7 +147,9 @@ class OfflineLocalDataSource {
     final entities = tracksDir.listSync();
 
     for (var entity in entities) {
-      if (entity is File && entity.path.endsWith('.json') && !entity.path.contains('peaks_')) {
+      if (entity is File &&
+          entity.path.endsWith('.json') &&
+          !entity.path.contains('peaks_')) {
         try {
           final content = await entity.readAsString();
           final trackModel = TrackModel.fromJsonString(content);
@@ -155,8 +159,8 @@ class OfflineLocalDataSource {
             tracks.add(trackModel.toEntity());
           }
         } catch (e) {
-      // Ignore wrapper exception
-    }
+          // Ignore wrapper exception
+        }
       }
     }
 
@@ -169,12 +173,12 @@ class OfflineLocalDataSource {
     final directory = await getApplicationDocumentsDirectory();
     final metaPath = '${directory.path}/tracks/track_$id.json';
     final metaFile = File(metaPath);
-    
+
     if (await metaFile.exists()) {
       try {
         final content = await metaFile.readAsString();
         final trackModel = TrackModel.fromJsonString(content);
-        
+
         final dataFile = File(metaPath.replaceAll('.json', '.dat'));
         if (await dataFile.exists()) {
           return trackModel.toEntity();
@@ -190,11 +194,12 @@ class OfflineLocalDataSource {
     final directory = await getApplicationDocumentsDirectory();
     final peaksPath = '${directory.path}/tracks/peaks_$id.json';
     final peaksFile = File(peaksPath);
-    
+
     if (await peaksFile.exists()) {
       try {
         final content = await peaksFile.readAsString();
-        final Map<String, dynamic> jsonMap = jsonDecode(content) as Map<String, dynamic>;
+        final Map<String, dynamic> jsonMap =
+            jsonDecode(content) as Map<String, dynamic>;
         final peaksModel = TrackPeaksModel.fromJson(jsonMap);
         return peaksModel.toEntity();
       } catch (e) {
@@ -202,6 +207,15 @@ class OfflineLocalDataSource {
       }
     }
     return null;
+  }
+
+  Future<void> saveTrackPeaks(TrackPeaksModel peaksModel) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final peaksPath =
+        '${directory.path}/tracks/peaks_${peaksModel.trackId}.json';
+    final peaksFile = File(peaksPath);
+    await peaksFile.parent.create(recursive: true);
+    await peaksFile.writeAsString(jsonEncode(peaksModel.toJson()));
   }
 
   // ── Collection (playlist / station) metadata ─────────────────────────────
@@ -230,13 +244,14 @@ class OfflineLocalDataSource {
     for (final entity in Directory(dir).listSync()) {
       if (entity is File && entity.path.endsWith('.json')) {
         try {
-          final raw = jsonDecode(await entity.readAsString())
-              as Map<String, dynamic>;
+          final raw =
+              jsonDecode(await entity.readAsString()) as Map<String, dynamic>;
           final info = OfflineCollectionInfo.fromJson(raw);
 
           // Keep only collections that have at least one downloaded track.
-          final hasAnyTrack = info.trackIds.any((id) =>
-              File('${docsDir.path}/tracks/track_$id.dat').existsSync());
+          final hasAnyTrack = info.trackIds.any(
+            (id) => File('${docsDir.path}/tracks/track_$id.dat').existsSync(),
+          );
           if (hasAnyTrack) {
             results.add(info);
           }
@@ -274,7 +289,9 @@ class OfflineLocalDataSource {
       final content = await file.readAsString();
       final jsonMap = jsonDecode(content) as Map<String, dynamic>;
       final info = OfflineCollectionInfo.fromJson(jsonMap);
-      final updatedTrackIds = info.trackIds.where((id) => id != trackId).toList();
+      final updatedTrackIds = info.trackIds
+          .where((id) => id != trackId)
+          .toList();
       final updatedInfo = info.copyWith(trackIds: updatedTrackIds);
       await file.writeAsString(jsonEncode(updatedInfo.toJson()));
     }

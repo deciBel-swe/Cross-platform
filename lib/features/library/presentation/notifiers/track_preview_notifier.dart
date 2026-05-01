@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../library_profile/domain/repositories/track_repository.dart';
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 import '../../../library_profile/presentation/providers/track_repository_provider.dart';
 import '../../domain/entities/track.dart';
@@ -20,12 +23,26 @@ class TrackPreviewNotifier
       (value) => value,
     );
 
-    final peaksResult = await repository.fetchTrackPeaksById(track.id);
+    unawaited(_loadTrackPeaks(repository, track));
 
-    final trackPeaks = peaksResult.fold<TrackPeaks?>((failure) {
-      return null;
-    }, (value) => value);
+    return (track: track, trackPeaks: null);
+  }
 
-    return (track: track, trackPeaks: trackPeaks);
+  Future<void> _loadTrackPeaks(TrackRepository repository, Track track) async {
+    final peaksResult = await repository.fetchTrackPeaksById(
+      track.id,
+      waveformUrl: track.waveformUrl,
+    );
+
+    final trackPeaks = peaksResult.fold<TrackPeaks?>(
+      (failure) => null,
+      (value) => value,
+    );
+
+    if (trackPeaks == null) {
+      return;
+    }
+
+    state = AsyncData((track: track, trackPeaks: trackPeaks));
   }
 }

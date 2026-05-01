@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/library/domain/entities/artist.dart';
@@ -13,19 +15,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('trackPreviewProvider returns track and peaks', () async {
+  test('trackPreviewProvider returns track before peaks', () async {
+    final peaksCompleter = Completer<Either<Failure, TrackPeaks>>();
     final repository = FakeTrackRepository(
       trackResult: Right(_track(id: 1)),
-      peaksResult: const Right(
-        TrackPeaks(trackId: 1, duration: 120, peaks: [1, 2, 3]),
-      ),
+      peaksFuture: peaksCompleter.future,
     );
     final container = _container(repository);
 
     final data = await container.read(trackPreviewProvider(1).future);
 
     expect(data.track.id, 1);
-    expect(data.trackPeaks?.peaks, [1, 2, 3]);
+    expect(data.trackPeaks, isNull);
+
+    peaksCompleter.complete(
+      const Right(TrackPeaks(trackId: 1, duration: 120, peaks: [1, 2, 3])),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    final updated = container.read(trackPreviewProvider(1));
+    expect(updated.value?.trackPeaks?.peaks, [1, 2, 3]);
   });
 
   test('trackPreviewProvider returns null peaks when peaks fail', () async {
@@ -39,6 +48,10 @@ void main() {
 
     expect(data.track.id, 1);
     expect(data.trackPeaks, isNull);
+
+    await Future<void>.delayed(Duration.zero);
+    final updated = container.read(trackPreviewProvider(1));
+    expect(updated.value?.trackPeaks, isNull);
   });
 
   test('trackPreviewProvider throws when track load fails', () async {
@@ -66,17 +79,26 @@ class FakeTrackRepository implements TrackRepository {
   FakeTrackRepository({
     required this.trackResult,
     this.peaksResult = const Left(ServerFailure('no peaks')),
+    this.peaksFuture,
   });
 
   final Either<Failure, Track> trackResult;
   final Either<Failure, TrackPeaks> peaksResult;
+  final Future<Either<Failure, TrackPeaks>>? peaksFuture;
 
   @override
   Future<Either<Failure, Track>> fetchTrackById(int id) async => trackResult;
 
   @override
-  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id) async =>
-      peaksResult;
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(
+    int id, {
+    String? waveformUrl,
+  }) async {
+    if (peaksFuture != null) {
+      return peaksFuture!;
+    }
+    return peaksResult;
+  }
 
   @override
   Future<Either<Failure, bool>> deleteTrack(int trackId) async =>

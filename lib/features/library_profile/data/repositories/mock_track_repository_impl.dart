@@ -64,7 +64,10 @@ class MockTrackRepository implements TrackRepository {
   }
 
   @override
-  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id) async {
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(
+    int id, {
+    String? waveformUrl,
+  }) async {
     final peaksModel = await const LibraryMockDatasource().fetchTrackPeaks(id);
 
     return Right(peaksModel.toEntity());

@@ -86,10 +86,12 @@ ProviderContainer createMockContainer({
   final discoveryRepo = MockDiscoveryRepository();
 
   // Default mock behavior to prevent widget initialization crashes
-  when(() => historyRepo.getListeningHistory(
-        page: any(named: 'page'),
-        size: any(named: 'size'),
-      )).thenAnswer(
+  when(
+    () => historyRepo.getListeningHistory(
+      page: any(named: 'page'),
+      size: any(named: 'size'),
+    ),
+  ).thenAnswer(
     (_) async => const Right(
       ListeningHistoryPage(
         content: [],
@@ -102,47 +104,48 @@ ProviderContainer createMockContainer({
     ),
   );
 
-  when(() => notificationRepo.getUnreadCount())
-      .thenAnswer((_) async => (null, 0));
+  when(
+    () => notificationRepo.getUnreadCount(),
+  ).thenAnswer((_) async => (null, 0));
 
   when(() => discoveryRepo.getLikesStation()).thenAnswer(
-    (_) async => const Right(
-      PaginatedDiscoveryTracks(content: <DiscoveryTrack>[]),
-    ),
+    (_) async =>
+        const Right(PaginatedDiscoveryTracks(content: <DiscoveryTrack>[])),
   );
 
-  when(() => discoveryRepo.getArtistStation(
-        page: any(named: 'page'),
-        size: any(named: 'size'),
-      )).thenAnswer(
-    (_) async => const Right(
-      PaginatedDiscoveryTracks(content: <DiscoveryTrack>[]),
+  when(
+    () => discoveryRepo.getArtistStation(
+      page: any(named: 'page'),
+      size: any(named: 'size'),
     ),
+  ).thenAnswer(
+    (_) async =>
+        const Right(PaginatedDiscoveryTracks(content: <DiscoveryTrack>[])),
   );
 
-  when(() => discoveryRepo.getGenreStation(
-        page: any(named: 'page'),
-        size: any(named: 'size'),
-      )).thenAnswer(
-    (_) async => const Right(
-      PaginatedDiscoveryTracks(content: <DiscoveryTrack>[]),
+  when(
+    () => discoveryRepo.getGenreStation(
+      page: any(named: 'page'),
+      size: any(named: 'size'),
     ),
+  ).thenAnswer(
+    (_) async =>
+        const Right(PaginatedDiscoveryTracks(content: <DiscoveryTrack>[])),
   );
 
-  when(() => discoveryRepo.getTrendingTracks(
-        page: any(named: 'page'),
-        size: any(named: 'size'),
-      )).thenAnswer(
-    (_) async => const Right(
-      PaginatedDiscoveryTracks(content: <DiscoveryTrack>[]),
+  when(
+    () => discoveryRepo.getTrendingTracks(
+      page: any(named: 'page'),
+      size: any(named: 'size'),
     ),
+  ).thenAnswer(
+    (_) async =>
+        const Right(PaginatedDiscoveryTracks(content: <DiscoveryTrack>[])),
   );
 
   return ProviderContainer(
     overrides: [
-      authStateProvider.overrideWith(
-        () => MockAuthNotifier(authState),
-      ),
+      authStateProvider.overrideWith(() => MockAuthNotifier(authState)),
       if (trackRepository != null)
         trackRepositoryProvider.overrideWithValue(trackRepository),
       historyRepositoryProvider.overrideWithValue(historyRepo),
@@ -200,7 +203,10 @@ class FakeTrackRepository implements TrackRepository {
   }
 
   @override
-  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id) {
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(
+    int id, {
+    String? waveformUrl,
+  }) {
     throw UnimplementedError();
   }
 
@@ -389,9 +395,7 @@ void main() {
           user: AuthUser(id: 1, username: 'test', tier: UserTier.free),
         ),
         trackRepository: FakeTrackRepository(
-          resolvedTracksByIdentifier: const <String, int>{
-            'my-cool-track': 77,
-          },
+          resolvedTracksByIdentifier: const <String, int>{'my-cool-track': 77},
         ),
       );
 

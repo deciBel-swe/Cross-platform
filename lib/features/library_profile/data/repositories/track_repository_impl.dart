@@ -70,8 +70,8 @@ class TrackRepositoryImpl implements TrackRepository {
             return Right(offlineTrack);
           }
         } catch (_) {
-      // Ignore wrapper exception
-    }
+          // Ignore wrapper exception
+        }
       }
       return Left(failure);
     }
@@ -101,17 +101,32 @@ class TrackRepositoryImpl implements TrackRepository {
   }
 
   @override
-  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id) async {
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(
+    int id, {
+    String? waveformUrl,
+  }) async {
+    final cachedPeaks = await _offlineLocalDataSource.getOfflineTrackPeaksById(
+      id,
+    );
+    if (cachedPeaks != null) {
+      return Right(cachedPeaks);
+    }
+
     try {
-      final model = await _remote.fetchTrackPeaks(id);
+      final model = await _remote.fetchTrackPeaks(id, waveformUrl: waveformUrl);
+      try {
+        await _offlineLocalDataSource.saveTrackPeaks(model);
+      } catch (_) {
+        // Best-effort cache; do not fail waveform fetch on cache errors.
+      }
       return Right(model.toEntity());
     } catch (e) {
-      // Always attempt to fetch offline peaks if remote fetch fails for any reason
-      final offlinePeaks = await _offlineLocalDataSource.getOfflineTrackPeaksById(id);
+      final offlinePeaks = await _offlineLocalDataSource
+          .getOfflineTrackPeaksById(id);
       if (offlinePeaks != null) {
         return Right(offlinePeaks);
       }
-      
+
       return Left(_toFailure(e));
     }
   }
