@@ -26,6 +26,7 @@ import 'track_comments_bottom_sheet.dart';
 import 'track_more_options_menu.dart';
 import 'track_preview_input_section.dart';
 import 'waveform_not_ready.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 
 class TrackPreviewContent extends ConsumerWidget {
   const TrackPreviewContent({
@@ -142,11 +143,9 @@ class TrackPreviewContent extends ConsumerWidget {
               track: track,
             );
           },
-          onAddToPlaylistPressed: () async {
-            await Future<void>.delayed(Duration.zero);
-            if (context.mounted) {
-              context.push(RoutePaths.addToPlaylist, extra: track);
-            }
+          onQueuePressed: () {
+            // context.pop();
+            QueueBottomSheet.show(context);
           },
           onMoreOptionsPressed: (anchorContext) async {
             final action = await showTrackMoreOptionsMenu(
