@@ -177,25 +177,13 @@ class MockPlaylistRepository implements IPlaylistRepository {
 
     final existingPlaylist = _mockPlaylists[index];
 
-    final updatedPlaylist = Playlist(
-      id: existingPlaylist.id,
+    final updatedPlaylist = existingPlaylist.copyWith(
       title: metadata.title.isNotEmpty
           ? metadata.title
           : existingPlaylist.title,
       description: metadata.description,
-      type: existingPlaylist.type,
       isPrivate: metadata.isPrivate,
       coverArt: metadata.coverImage?.path ?? existingPlaylist.coverArt,
-      isLiked: existingPlaylist.isLiked,
-      owner: existingPlaylist.owner,
-      tracks: existingPlaylist.tracks,
-      totalDurationSeconds: existingPlaylist.totalDurationSeconds,
-      trackCount: existingPlaylist.trackCount,
-      playlistSlug: existingPlaylist.playlistSlug,
-      firstTrackWaveformUrl: existingPlaylist.firstTrackWaveformUrl,
-      secretToken: existingPlaylist.secretToken,
-      access: existingPlaylist.access,
-      createdAt: existingPlaylist.createdAt,
     );
 
     _mockPlaylists[index] = updatedPlaylist;
@@ -228,23 +216,9 @@ class MockPlaylistRepository implements IPlaylistRepository {
       );
     }
 
-    final updatedPlaylist = Playlist(
-      id: playlist.id,
-      title: playlist.title,
-      description: playlist.description,
-      type: playlist.type,
-      isPrivate: playlist.isPrivate,
-      coverArt: playlist.coverArt,
-      isLiked: playlist.isLiked,
-      owner: playlist.owner,
+    final updatedPlaylist = playlist.copyWith(
       tracks: reorderedTracks,
-      totalDurationSeconds: playlist.totalDurationSeconds,
       trackCount: reorderedTracks.length,
-      playlistSlug: playlist.playlistSlug,
-      firstTrackWaveformUrl: playlist.firstTrackWaveformUrl,
-      secretToken: playlist.secretToken,
-      access: playlist.access,
-      createdAt: playlist.createdAt,
     );
 
     _mockPlaylists[index] = updatedPlaylist;
@@ -271,23 +245,9 @@ class MockPlaylistRepository implements IPlaylistRepository {
       if (!playlist.tracks.any((t) => t.id == trackId)) {
         playlist.tracks.add(track);
       }
-      _mockPlaylists[index] = Playlist(
-        id: playlist.id,
-        title: playlist.title,
-        description: playlist.description,
-        type: playlist.type,
-        isPrivate: playlist.isPrivate,
-        isLiked: playlist.isLiked,
-        coverArt: playlist.coverArt,
-        owner: playlist.owner,
+      _mockPlaylists[index] = playlist.copyWith(
         tracks: playlist.tracks,
-        totalDurationSeconds: playlist.totalDurationSeconds,
         trackCount: playlist.tracks.length,
-        playlistSlug: playlist.playlistSlug,
-        firstTrackWaveformUrl: playlist.firstTrackWaveformUrl,
-        secretToken: playlist.secretToken,
-        access: playlist.access,
-        createdAt: playlist.createdAt,
       );
       return const Right(null);
     } catch (e) {
@@ -308,23 +268,9 @@ class MockPlaylistRepository implements IPlaylistRepository {
         .where((t) => t.id != trackId)
         .toList();
 
-    _mockPlaylists[index] = Playlist(
-      id: playlist.id,
-      title: playlist.title,
-      description: playlist.description,
-      type: playlist.type,
-      isPrivate: playlist.isPrivate,
-      isLiked: playlist.isLiked,
-      coverArt: playlist.coverArt,
-      owner: playlist.owner,
+    _mockPlaylists[index] = playlist.copyWith(
       tracks: updatedTracks,
-      totalDurationSeconds: playlist.totalDurationSeconds,
       trackCount: updatedTracks.length,
-      playlistSlug: playlist.playlistSlug,
-      firstTrackWaveformUrl: playlist.firstTrackWaveformUrl,
-      secretToken: playlist.secretToken,
-      access: playlist.access,
-      createdAt: playlist.createdAt,
     );
 
     return const Right(null);

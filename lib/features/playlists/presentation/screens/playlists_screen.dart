@@ -14,7 +14,7 @@ class PlaylistsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playlistsAsync = ref.watch(userPlaylistsProvider);
+    final playlistsAsync = ref.watch(combinedPlaylistsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -67,7 +67,6 @@ class PlaylistsScreen extends ConsumerWidget {
                     itemCount: playlists.length,
                     itemBuilder: (context, index) {
                       final playlist = playlists[index];
-                      // Added ValueKey for dynamic lists
                       return InkWell(
                         key: ValueKey(playlist.id),
                         onTap: () {

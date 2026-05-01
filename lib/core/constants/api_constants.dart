@@ -147,6 +147,9 @@ class ApiConstants {
   static String likedPlaylistsByUsername(String username) =>
       '/users/${Uri.encodeComponent(username)}/liked-playlists';
 
+  /// Endpoint to toggle like on a playlist
+  static String togglePlaylistLike(int playlistId) => '/playlists/$playlistId/like';
+
   /// Endpoint for playlist's tracks reordering
   static String updateTracksOrder(int playlistId) =>
       '/playlists/$playlistId/tracks/reorder';

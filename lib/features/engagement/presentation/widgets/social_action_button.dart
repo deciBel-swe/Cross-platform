@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -6,7 +7,7 @@ class SocialActionButton extends StatefulWidget {
   const SocialActionButton({
     super.key,
     required this.isActive,
-    required this.count,
+    this.count,
     required this.isLoading,
     required this.activeIcon,
     required this.inactiveIcon,
@@ -19,7 +20,7 @@ class SocialActionButton extends StatefulWidget {
     this.isVertical = false,
   });
   final bool isActive;
-  final int count;
+  final int? count;
   final bool isLoading;
   final IconData activeIcon;
   final IconData inactiveIcon;
@@ -61,6 +62,7 @@ class _SocialActionButtonState extends State<SocialActionButton>
   }
 
   void _handleTap() {
+    HapticFeedback.lightImpact();
     _controller.forward(from: 0.0);
     widget.onToggle();
   }
@@ -93,37 +95,39 @@ class _SocialActionButtonState extends State<SocialActionButton>
           ),
         ),
       ),
-      widget.isVertical
-          ? const SizedBox(height: 4)
-          : const SizedBox(width: AppConstants.spacingSmall),
-      Flexible(
-        child: Semantics(
-          identifier: '${widget.identifier}_count',
-          label: '${widget.count}',
-          button: widget.onCountTap != null,
-          child: GestureDetector(
-            onTap: widget.onCountTap,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Text(
-                  '${widget.count}',
-                  key: ValueKey<int>(widget.count),
-                  style: TextStyle(
-                    color: AppColors.onPrimary,
-                    fontSize: widget.fontSize,
-                    fontWeight: FontWeight.bold,
+      if (widget.count != null) ...[
+        widget.isVertical
+            ? const SizedBox(height: 4)
+            : const SizedBox(width: AppConstants.spacingSmall),
+        Flexible(
+          child: Semantics(
+            identifier: '${widget.identifier}_count',
+            label: '${widget.count}',
+            button: widget.onCountTap != null,
+            child: GestureDetector(
+              onTap: widget.onCountTap,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Text(
+                    '${widget.count}',
+                    key: ValueKey<int?>(widget.count),
+                    style: TextStyle(
+                      color: AppColors.onPrimary,
+                      fontSize: widget.fontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
                 ),
               ),
             ),
           ),
         ),
-      ),
+      ],
     ];
 
     return widget.isVertical

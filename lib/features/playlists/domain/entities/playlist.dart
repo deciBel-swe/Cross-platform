@@ -52,4 +52,42 @@ class Playlist {
   final String? secretToken;
   final String? access;
   final DateTime? createdAt;
+
+  Playlist copyWith({
+    int? id,
+    String? title,
+    String? description,
+    String? type,
+    bool? isPrivate,
+    bool? isLiked,
+    String? coverArt,
+    PlaylistOwner? owner,
+    List<Track>? tracks,
+    int? totalDurationSeconds,
+    int? trackCount,
+    String? playlistSlug,
+    String? firstTrackWaveformUrl,
+    String? secretToken,
+    String? access,
+    DateTime? createdAt,
+  }) {
+    return Playlist(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      isPrivate: isPrivate ?? this.isPrivate,
+      isLiked: isLiked ?? this.isLiked,
+      coverArt: coverArt ?? this.coverArt,
+      owner: owner ?? this.owner,
+      tracks: tracks ?? this.tracks,
+      totalDurationSeconds: totalDurationSeconds ?? this.totalDurationSeconds,
+      trackCount: trackCount ?? this.trackCount,
+      playlistSlug: playlistSlug ?? this.playlistSlug,
+      firstTrackWaveformUrl: firstTrackWaveformUrl ?? this.firstTrackWaveformUrl,
+      secretToken: secretToken ?? this.secretToken,
+      access: access ?? this.access,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
