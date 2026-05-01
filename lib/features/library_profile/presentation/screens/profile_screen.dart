@@ -366,6 +366,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     clipBehavior: Clip.none,
                     children: [
                       Semantics(
+                        identifier: 'profile_cover_photo',
                         image: true,
                         label: 'Profile cover photo',
                         child: _ProfileCoverPhoto(

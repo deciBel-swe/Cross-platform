@@ -318,6 +318,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
               clipBehavior: Clip.none,
               children: [
                 Semantics(
+                  identifier: 'public_profile_cover_photo',
                   image: true,
                   label: 'Cover photo',
                   child: _CoverPhoto(imageUrl: profile.profile?.coverPhotoUrl),
@@ -326,6 +327,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   bottom: -40,
                   left: AppConstants.spacingMedium,
                   child: Semantics(
+                    identifier: 'public_profile_avatar',
                     image: true,
                     label: 'Profile picture',
                     child: _Avatar(imageUrl: profile.profile?.avatarUrl),
@@ -713,6 +715,7 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      identifier: 'profile_stat_${label.toLowerCase()}',
       button: true,
       label: '$count $label',
       child: GestureDetector(
@@ -880,6 +883,7 @@ class _SectionHeader extends StatelessWidget {
         ),
         if (canShowAll)
           Semantics(
+            identifier: 'profile_section_see_all_${title.toLowerCase().replaceAll(' ', '_')}',
             button: true,
             label: 'See all $title',
             child: TextButton(
@@ -944,6 +948,7 @@ class _PublicTrackCollectionSectionState
         tracks.length > _pageSize && _visibleCount < tracks.length;
 
     return Semantics(
+      identifier: 'profile_section_${widget.title.toLowerCase().replaceAll(' ', '_')}',
       label: '${widget.title} section',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1007,6 +1012,7 @@ class _PublicTrackCollectionSectionState
           itemBuilder: (context, index) {
             final track = visibleTracks[index];
             return Semantics(
+              identifier: 'profile_track_tile_${track.id}',
               button: true,
               label: 'Play ${track.title} by ${track.artist.username}',
               child: TrackTile(
@@ -1022,6 +1028,7 @@ class _PublicTrackCollectionSectionState
           Align(
             alignment: Alignment.center,
             child: Semantics(
+              identifier: 'profile_section_see_more_${widget.title.toLowerCase().replaceAll(' ', '_')}',
               button: true,
               label: 'See more ${widget.title}',
               child: TextButton.icon(
@@ -1087,6 +1094,7 @@ class _PublicPlaylistCollectionSectionState
         playlists.length > _pageSize && _visibleCount < playlists.length;
 
     return Semantics(
+      identifier: 'profile_section_${widget.title.toLowerCase().replaceAll(' ', '_')}',
       label: '${widget.title} section',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1155,6 +1163,7 @@ class _PublicPlaylistCollectionSectionState
             itemBuilder: (context, index) {
               final playlist = visiblePlaylists[index];
               return Semantics(
+                identifier: 'profile_playlist_card_${playlist.id}',
                 button: true,
                 label: 'Open playlist ${playlist.title}',
                 child: PlaylistSquareCard(
@@ -1171,6 +1180,7 @@ class _PublicPlaylistCollectionSectionState
           Align(
             alignment: Alignment.center,
             child: Semantics(
+              identifier: 'profile_section_see_more_${widget.title.toLowerCase().replaceAll(' ', '_')}',
               button: true,
               label: 'See more ${widget.title}',
               child: TextButton.icon(
@@ -1245,6 +1255,7 @@ class _PublicLikesCollectionSectionState
         combined.length > _pageSize && _visibleCount < combined.length;
 
     return Semantics(
+      identifier: 'profile_section_${widget.title.toLowerCase().replaceAll(' ', '_')}',
       label: '${widget.title} section',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1310,6 +1321,7 @@ class _PublicLikesCollectionSectionState
             final item = visibleItems[index];
             if (item is Track) {
               return Semantics(
+                identifier: 'profile_track_tile_${item.id}',
                 button: true,
                 label: 'Play ${item.title} by ${item.artist.username}',
                 child: TrackTile(
@@ -1324,6 +1336,7 @@ class _PublicLikesCollectionSectionState
               );
             } else if (item is Playlist) {
               return Semantics(
+                identifier: 'profile_playlist_tile_${item.id}',
                 button: true,
                 label: 'Open playlist ${item.title}',
                 child: PlaylistTile(
@@ -1341,6 +1354,7 @@ class _PublicLikesCollectionSectionState
           Align(
             alignment: Alignment.center,
             child: Semantics(
+              identifier: 'profile_section_see_more_${widget.title.toLowerCase().replaceAll(' ', '_')}',
               button: true,
               label: 'See more ${widget.title}',
               child: TextButton.icon(

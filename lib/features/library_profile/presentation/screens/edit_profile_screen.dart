@@ -186,6 +186,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             )
           else
             Semantics(
+              identifier: 'save_profile_button',
               button: true,
               label: 'Save profile changes',
               child: TextButton(
@@ -260,6 +261,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
                     // Country → State → City picker
                     Semantics(
+                      identifier: 'location_picker',
                       label: 'Location picker',
                       child: CSCPickerPlus(
                         layout: Layout.vertical,

@@ -40,11 +40,14 @@ class SocialLinksWidget extends StatelessWidget {
         Wrap(
           children: [
             for (final platform in visiblePlatforms)
-              IconButton(
-                icon: WebProfilePlatformUtils.iconForPlatform(platform),
-                tooltip: 'Open $platform link',
-                onPressed: () =>
-                    _openLink(socialLinks.valueForPlatform(platform)!),
+              Semantics(
+                identifier: 'social_link_$platform',
+                child: IconButton(
+                  icon: WebProfilePlatformUtils.iconForPlatform(platform),
+                  tooltip: 'Open $platform link',
+                  onPressed: () =>
+                      _openLink(socialLinks.valueForPlatform(platform)!),
+                ),
               ),
           ],
         ),
