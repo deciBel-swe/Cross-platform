@@ -30,4 +30,15 @@ abstract class IOfflineRepository {
 
   /// Deletes persisted metadata for a collection [id].
   Future<Either<Failure, void>> deleteCollectionMetadata(int id);
+
+  /// Updates persisted metadata for a collection with [info].
+  Future<Either<Failure, void>> updateCollectionMetadata(
+    OfflineCollectionInfo info,
+  );
+
+  /// Removes a track with [trackId] from the collection with [collectionId].
+  Future<Either<Failure, void>> removeTrackFromCollection(
+    int collectionId,
+    int trackId,
+  );
 }

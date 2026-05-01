@@ -43,6 +43,7 @@ class FeedItem extends StatelessWidget {
     this.onPlay,
     this.onAddToPlaylist,
     this.onAddToQueue,
+    this.onViewQueue,
     this.onEditTrack,
     this.onGoToArtist,
     this.onGoToAlbum,
@@ -75,6 +76,7 @@ class FeedItem extends StatelessWidget {
   final VoidCallback? onPlay;
   final VoidCallback? onAddToPlaylist;
   final VoidCallback? onAddToQueue;
+  final VoidCallback? onViewQueue;
   final VoidCallback? onEditTrack;
   final VoidCallback? onGoToArtist;
   final VoidCallback? onGoToAlbum;
@@ -113,6 +115,7 @@ class FeedItem extends StatelessWidget {
         onPlay: onPlay,
         onAddToPlaylist: onAddToPlaylist,
         onMoreOptions: onMoreOptions,
+        onViewQueue: onViewQueue,
         coverUrl: coverUrl,
         gradientColors: colors,
       );
@@ -255,6 +258,7 @@ class _MobileFeedItem extends StatelessWidget {
     this.onPlay,
     this.onAddToPlaylist,
     this.onMoreOptions,
+    this.onViewQueue,
     this.coverUrl,
     required this.gradientColors,
   });
@@ -276,6 +280,7 @@ class _MobileFeedItem extends StatelessWidget {
   final VoidCallback? onPlay;
   final VoidCallback? onAddToPlaylist;
   final VoidCallback? onMoreOptions;
+  final VoidCallback? onViewQueue;
   final String? coverUrl;
   final List<Color> gradientColors;
 
@@ -318,14 +323,14 @@ class _MobileFeedItem extends StatelessWidget {
               onPlay: onPlay,
               onAddToPlaylist: onAddToPlaylist,
               onMoreOptions: onMoreOptions,
-              duration: duration,
+              onViewQueue: onViewQueue,
+              gradientColors: gradientColors,
               likeCount: likeCount,
               repostCount: repostCount,
               isLiked: isLiked,
               isReposted: isReposted,
               commentCount: commentCount,
               commentTrack: commentTrack,
-              gradientColors: gradientColors,
             ),
           ],
         ),
@@ -887,6 +892,9 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
                 break;
               case TrackMoreOption.addToQueue:
                 onAddToQueue?.call();
+                break;
+              case TrackMoreOption.viewQueue:
+                // Queue bottom sheet will be shown by the caller
                 break;
               case TrackMoreOption.editTrack:
                 onEditTrack?.call();

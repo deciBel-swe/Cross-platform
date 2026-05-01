@@ -12,6 +12,7 @@ import '../../../library_profile/presentation/widgets/track_tile.dart';
 import '../../../offline/data/datasources/offline_local_data_source.dart';
 import '../../../offline/domain/repositories/i_offline_repository.dart';
 import '../../../offline/presentation/providers/offline_tracks_provider.dart';
+import '../../../offline/presentation/screens/offline_playlist_details_screen.dart';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 
@@ -171,7 +172,7 @@ class _CollectionCard extends ConsumerWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        onTap: () => _playAll(ref),
+        onTap: () => _openDetails(context),
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.paddingMd),
           child: Row(
@@ -235,6 +236,15 @@ class _CollectionCard extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _openDetails(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OfflinePlaylistDetailsScreen(collection: collection),
       ),
     );
   }

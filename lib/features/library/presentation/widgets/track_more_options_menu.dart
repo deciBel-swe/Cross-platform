@@ -8,6 +8,7 @@ import '../../../../core/utils/responsive_utils.dart';
 enum TrackMoreOption {
   addToPlaylist,
   addToQueue,
+  viewQueue,
   editTrack,
   goToArtist,
   goToAlbum,
@@ -41,6 +42,11 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
           value: TrackMoreOption.addToQueue,
           icon: Icons.queue_music_rounded,
           label: 'Add to queue',
+        ),
+        _desktopTrackOptionItem(
+          value: TrackMoreOption.viewQueue,
+          icon: Icons.list_rounded,
+          label: 'View queue',
         ),
         if (includeEdit)
           _desktopTrackOptionItem(
@@ -118,6 +124,12 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
                   value: TrackMoreOption.addToQueue,
                   icon: Icons.queue_music_rounded,
                   label: 'Add to queue',
+                ),
+                _mobileTrackOptionItem(
+                  sheetContext,
+                  value: TrackMoreOption.viewQueue,
+                  icon: Icons.list_rounded,
+                  label: 'View queue',
                 ),
                 if (includeEdit)
                   _mobileTrackOptionItem(

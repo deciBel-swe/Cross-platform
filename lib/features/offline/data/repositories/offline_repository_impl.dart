@@ -103,6 +103,31 @@ class OfflineRepositoryImpl implements IOfflineRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, void>> updateCollectionMetadata(
+    OfflineCollectionInfo info,
+  ) async {
+    try {
+      await _localDataSource.updateCollectionMetadata(info);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to update collection metadata: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeTrackFromCollection(
+    int collectionId,
+    int trackId,
+  ) async {
+    try {
+      await _localDataSource.removeTrackFromCollection(collectionId, trackId);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to remove track from collection: $e'));
+    }
+  }
+
   bool _isNetworkError(DioException error) {
     return error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout ||

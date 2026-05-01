@@ -24,6 +24,7 @@ import '../../../library_profile/presentation/providers/track_audio_provider.dar
 import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../library_profile/presentation/widgets/track_details.dart';
 import '../../../offline/presentation/notifiers/track_download_notifier.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
 import '../../../upgrade/presentation/widgets/pro_promotion_bottom_sheet.dart';
 import '../../domain/entities/feed_track.dart';
@@ -434,6 +435,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                               unawaited(
                                 TrackDetails.show(context, playableTrack, ref),
                               );
+                            },
+                            onViewQueue: () {
+                              if (!mounted) return;
+                              unawaited(QueueBottomSheet.show(context));
                             },
                           ),
                         );

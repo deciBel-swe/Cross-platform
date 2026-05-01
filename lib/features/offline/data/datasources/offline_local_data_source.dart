@@ -48,6 +48,22 @@ class OfflineCollectionInfo {
         'trackIds': trackIds,
         'isStation': isStation,
       };
+
+  OfflineCollectionInfo copyWith({
+    int? id,
+    String? title,
+    String? coverUrl,
+    List<int>? trackIds,
+    bool? isStation,
+  }) {
+    return OfflineCollectionInfo(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      coverUrl: coverUrl ?? this.coverUrl,
+      trackIds: trackIds ?? this.trackIds,
+      isStation: isStation ?? this.isStation,
+    );
+  }
 }
 
 @lazySingleton
@@ -240,6 +256,27 @@ class OfflineLocalDataSource {
     final file = File('$dir/collection_$id.json');
     if (await file.exists()) {
       await file.delete();
+    }
+  }
+
+  /// Updates the collection metadata for [id] with new [info].
+  Future<void> updateCollectionMetadata(OfflineCollectionInfo info) async {
+    final dir = await _collectionsDir();
+    final file = File('$dir/collection_${info.id}.json');
+    await file.writeAsString(jsonEncode(info.toJson()));
+  }
+
+  /// Removes a track with [trackId] from the collection with [collectionId].
+  Future<void> removeTrackFromCollection(int collectionId, int trackId) async {
+    final dir = await _collectionsDir();
+    final file = File('$dir/collection_$collectionId.json');
+    if (await file.exists()) {
+      final content = await file.readAsString();
+      final jsonMap = jsonDecode(content) as Map<String, dynamic>;
+      final info = OfflineCollectionInfo.fromJson(jsonMap);
+      final updatedTrackIds = info.trackIds.where((id) => id != trackId).toList();
+      final updatedInfo = info.copyWith(trackIds: updatedTrackIds);
+      await file.writeAsString(jsonEncode(updatedInfo.toJson()));
     }
   }
 

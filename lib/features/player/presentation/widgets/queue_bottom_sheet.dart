@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../../core/widgets/right_side_panel.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 
@@ -9,6 +13,8 @@ import '../../../library_profile/presentation/providers/track_audio_provider.dar
 /// - Drag to reorder
 /// - Swipe to remove
 /// - Tap to play
+/// - Track cover art images
+/// - Slide-in animations
 class QueueBottomSheet extends ConsumerWidget {
   const QueueBottomSheet({super.key, this.asSidePanel = false});
 
@@ -81,6 +87,21 @@ class QueueBottomSheet extends ConsumerWidget {
                     color: Colors.white70,
                   ),
                 ),
+                if (queue.isNotEmpty) ...[
+                  const SizedBox(width: AppDimensions.paddingSm),
+                  IconButton(
+                    icon: const Icon(Icons.shuffle, size: 20),
+                    tooltip: 'Shuffle queue',
+                    onPressed: () => notifier.shuffleQueue(),
+                    color: AppColors.textSecondary,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.clear_all, size: 20),
+                    tooltip: 'Clear queue',
+                    onPressed: () => notifier.clearQueue(),
+                    color: AppColors.textSecondary,
+                  ),
+                ],
               ],
             ),
           ),
@@ -106,58 +127,110 @@ class QueueBottomSheet extends ConsumerWidget {
                       final isCurrent =
                           currentId != null && track.id == currentId;
 
-                      return Dismissible(
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
                         key: ValueKey('queue_${track.id}'),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 16),
-                          color: theme.colorScheme.error.withValues(
-                            alpha: 0.25,
-                          ),
-                          child: Icon(
-                            Icons.delete_outline,
-                            color: theme.colorScheme.error,
-                          ),
-                        ),
-                        onDismissed: (_) => notifier.removeFromQueue(track.id),
-                        child: ListTile(
-                          dense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          leading: ReorderableDragStartListener(
-                            index: index,
-                            child: const Icon(
-                              Icons.drag_handle,
-                              color: Colors.white54,
+                        child: Dismissible(
+                          key: ValueKey('queue_${track.id}'),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 16),
+                            color: theme.colorScheme.error.withValues(
+                              alpha: 0.25,
+                            ),
+                            child: Icon(
+                              Icons.delete_outline,
+                              color: theme.colorScheme.error,
                             ),
                           ),
-                          title: Text(
-                            track.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: isCurrent
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
+                          onDismissed: (_) => notifier.removeFromQueue(track.id),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isCurrent
+                                  ? AppColors.primary.withValues(alpha: 0.1)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: ListTile(
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              leading: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ReorderableDragStartListener(
+                                    index: index,
+                                    child: const Icon(
+                                      Icons.drag_handle,
+                                      color: Colors.white54,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: track.coverUrl != null &&
+                                            track.coverUrl!.isNotEmpty
+                                        ? DecibelCachedImage(
+                                            imageUrl: track.coverUrl!,
+                                            width: 40,
+                                            height: 40,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Container(
+                                            width: 40,
+                                            height: 40,
+                                            color: AppColors.surfaceVariant,
+                                            child: Icon(
+                                              Icons.music_note,
+                                              size: 20,
+                                              color: AppColors.textMuted,
+                                            ),
+                                          ),
+                                  ),
+                                ],
+                              ),
+                              title: Text(
+                                track.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: isCurrent
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isCurrent
+                                      ? AppColors.primary
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              subtitle: Text(
+                                track.artist.displayName ?? track.artist.username,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: Colors.white60,
+                                ),
+                              ),
+                              trailing: isCurrent
+                                  ? const Icon(
+                                      Icons.equalizer,
+                                      color: AppColors.primary,
+                                      size: 20,
+                                    )
+                                  : null,
+                              onTap: () async {
+                                await notifier.playFromQueueIndex(index);
+                              },
                             ),
                           ),
-                          subtitle: Text(
-                            track.artist.displayName ?? track.artist.username,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.white60,
-                            ),
-                          ),
-                          trailing: isCurrent
-                              ? const Icon(Icons.equalizer, color: Colors.white)
-                              : null,
-                          onTap: () async {
-                            await notifier.playFromQueueIndex(index);
-                          },
                         ),
                       );
                     },
