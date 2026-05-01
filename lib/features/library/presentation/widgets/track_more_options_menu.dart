@@ -102,8 +102,7 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
             color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: ListView(
             children: [
               const SizedBox(height: AppDimensions.paddingSm),
               _mobileTrackOptionItem(
