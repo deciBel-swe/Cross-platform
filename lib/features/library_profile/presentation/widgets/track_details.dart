@@ -10,12 +10,12 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../auth/domain/entities/auth_state.dart';
-// import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
+import '../../../upgrade/presentation/widgets/pro_promotion_bottom_sheet.dart';
 import '../../domain/entities/user_profile.dart';
 import '../providers/track_audio_provider.dart';
 import '../providers/track_preview_provider.dart';
@@ -246,12 +246,8 @@ class TrackDetails extends ConsumerWidget {
       },
       onDownload: () {
         if (!isPro) {
-          ScaffoldMessenger.of(parentContext).showSnackBar(
-            const SnackBar(
-              content: Text('This feature is for Pro users only.'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          Navigator.of(context).pop();
+          ProPromotionBottomSheet.show(parentContext);
           return;
         }
 
@@ -393,119 +389,121 @@ class _SheetContent extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Drag handle ─────────────────────────────────────────────────
-          const _DragHandle(),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Drag handle ─────────────────────────────────────────────────
+            const _DragHandle(),
 
-          // ── Track header ────────────────────────────────────────────────
-          _TrackHeader(
-            track: track,
-            artistName: artistName,
-            duration: duration,
-            formatDuration: _formatDuration,
-            formatCount: _formatCount,
-          ),
-
-          const Divider(
-            color: AppColors.borderDark,
-            height: 1,
-            thickness: 1,
-            indent: 16,
-            endIndent: 16,
-          ),
-
-          // ── Engagement row — global LikeButton + RepostButton ───────────
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppConstants.spacingRegular,
-              vertical: AppConstants.spacingSmall,
+            // ── Track header ────────────────────────────────────────────────
+            _TrackHeader(
+              track: track,
+              artistName: artistName,
+              duration: duration,
+              formatDuration: _formatDuration,
+              formatCount: _formatCount,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                LikeButton(
-                  trackId: track.id,
-                  isLiked: track.isLiked,
-                  likeCount: track.likeCount,
-                  iconSize: 24,
-                  fontSize: AppConstants.fontSizeRegular,
-                ),
-                Container(width: 1, height: 28, color: AppColors.borderDark),
-                RepostButton(
-                  trackId: track.id,
-                  isReposted: track.isReposted,
-                  repostCount: track.repostCount,
-                  iconSize: 24,
-                  fontSize: AppConstants.fontSizeRegular,
-                ),
-              ],
+
+            const Divider(
+              color: AppColors.borderDark,
+              height: 1,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
             ),
-          ),
 
-          const Divider(
-            color: AppColors.borderDark,
-            height: 1,
-            thickness: 1,
-            indent: 16,
-            endIndent: 16,
-          ),
+            // ── Engagement row — global LikeButton + RepostButton ───────────
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.spacingRegular,
+                vertical: AppConstants.spacingSmall,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  LikeButton(
+                    trackId: track.id,
+                    isLiked: track.isLiked,
+                    likeCount: track.likeCount,
+                    iconSize: 24,
+                    fontSize: AppConstants.fontSizeRegular,
+                  ),
+                  Container(width: 1, height: 28, color: AppColors.borderDark),
+                  RepostButton(
+                    trackId: track.id,
+                    isReposted: track.isReposted,
+                    repostCount: track.repostCount,
+                    iconSize: 24,
+                    fontSize: AppConstants.fontSizeRegular,
+                  ),
+                ],
+              ),
+            ),
 
-          // ── Action list ─────────────────────────────────────────────────
-          _ActionTile(
-            icon: Icons.playlist_add_rounded,
-            label: 'Add to playlist',
-            onTap: onAddToPlaylist,
-          ),
-          _ActionTile(
-            icon: Icons.queue_music_rounded,
-            label: 'Add to queue',
-            onTap: onAddToQueue,
-          ),
-          if (showEditAction)
+            const Divider(
+              color: AppColors.borderDark,
+              height: 1,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
+            ),
+
+            // ── Action list ─────────────────────────────────────────────────
             _ActionTile(
-              icon: Icons.edit_outlined,
-              label: 'Edit track',
-              onTap: onEditTrack,
+              icon: Icons.playlist_add_rounded,
+              label: 'Add to playlist',
+              onTap: onAddToPlaylist,
             ),
-          _ActionTile(
-            icon: Icons.person_outline_rounded,
-            label: 'Go to artist',
-            onTap: onGoToArtist,
-          ),
-          _ActionTile(
-            icon: Icons.album_rounded,
-            label: 'Go to album',
-            onTap: onGoToAlbum,
-          ),
-          _ActionTile(
-            icon: Icons.share_outlined,
-            label: 'Share',
-            onTap: onShare,
-          ),
-          _ActionTile(
-            icon: Icons.link_rounded,
-            label: 'Copy link',
-            onTap: onCopyLink,
-          ),
-          _ActionTile(
-            icon: Icons.download_rounded,
-            label: 'Download',
-            onTap: onDownload,
-            enabled: isPro,
-            isDestructive: false,
-          ),
-          if (showDeleteAction)
             _ActionTile(
-              icon: Icons.delete_outline_rounded,
-              label: 'Delete track',
-              onTap: () => unawaited(onDeleteTrack()),
-              isDestructive: true,
+              icon: Icons.queue_music_rounded,
+              label: 'Add to queue',
+              onTap: onAddToQueue,
             ),
-          // Safe-area bottom padding
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-        ],
+            if (showEditAction)
+              _ActionTile(
+                icon: Icons.edit_outlined,
+                label: 'Edit track',
+                onTap: onEditTrack,
+              ),
+            _ActionTile(
+              icon: Icons.person_outline_rounded,
+              label: 'Go to artist',
+              onTap: onGoToArtist,
+            ),
+            _ActionTile(
+              icon: Icons.album_rounded,
+              label: 'Go to album',
+              onTap: onGoToAlbum,
+            ),
+            _ActionTile(
+              icon: Icons.share_outlined,
+              label: 'Share',
+              onTap: onShare,
+            ),
+            _ActionTile(
+              icon: Icons.link_rounded,
+              label: 'Copy link',
+              onTap: onCopyLink,
+            ),
+            _ActionTile(
+              icon: Icons.download_rounded,
+              label: 'Download',
+              onTap: onDownload,
+              enabled: isPro,
+              isDestructive: false,
+            ),
+            if (showDeleteAction)
+              _ActionTile(
+                icon: Icons.delete_outline_rounded,
+                label: 'Delete track',
+                onTap: () => unawaited(onDeleteTrack()),
+                isDestructive: true,
+              ),
+            // Safe-area bottom padding
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+          ],
+        ),
       ),
     );
   }
@@ -589,6 +587,7 @@ class _TrackHeader extends StatelessWidget {
           // Title + artist + meta
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -610,7 +609,9 @@ class _TrackHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Row(
+                Wrap(
+                  spacing: AppConstants.spacingSmall,
+                  runSpacing: AppConstants.spacingSmall,
                   children: [
                     _MetaChip(
                       icon: Icons.play_arrow_rounded,

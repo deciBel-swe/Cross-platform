@@ -1,9 +1,7 @@
-
-
-import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:decibel/core/errors/exceptions.dart';
 import 'package:decibel/core/network/dio_error_handler.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('DioErrorHandler', () {

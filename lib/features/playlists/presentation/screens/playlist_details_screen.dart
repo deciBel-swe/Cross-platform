@@ -10,6 +10,7 @@ import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/widgets/track_details.dart';
 import '../../../library_profile/presentation/widgets/track_tile.dart';
+import '../../../offline/presentation/widgets/collection_download_button.dart';
 import '../../domain/entities/playlist.dart';
 import '../providers/playlist_details_provider.dart';
 import '../widgets/playlist_options_bottom_sheet.dart';
@@ -43,8 +44,7 @@ class PlaylistDetailsScreen extends ConsumerWidget {
           ),
         ),
         centerTitle: false,
-        actions: [
-        ],
+        actions: const [],
       ),
       body: CustomScrollView(
         slivers: [
@@ -263,23 +263,40 @@ bool _isRemote(String path) {
   return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
 }
 
-class _PlaylistActions extends StatelessWidget {
+class _PlaylistActions extends ConsumerWidget {
   const _PlaylistActions({required this.playlist});
 
   final Playlist playlist;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Resolve the full track list from the detail provider if already loaded.
+    final fullTracksAsync = ref.watch(playlistDetailsProvider(playlist.id));
+    final tracks = fullTracksAsync.valueOrNull?.tracks ?? playlist.tracks;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        IconButton(
-          icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-          onPressed: () {
-            PlaylistOptionsBottomSheet.show(context, playlist);
-          },
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+              onPressed: () {
+                PlaylistOptionsBottomSheet.show(context, playlist);
+              },
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            // Download all tracks in this playlist
+            if (tracks.isNotEmpty)
+              CollectionDownloadButton(
+                collectionId: playlist.id,
+                collectionTitle: playlist.title,
+                coverUrl: playlist.coverArt,
+                tracks: tracks,
+                iconColor: AppColors.textSecondary,
+              ),
+          ],
         ),
         Row(
           children: [

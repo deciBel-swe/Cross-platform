@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:decibel/core/errors/exceptions.dart';
 import 'package:decibel/core/widgets/app_error_widget.dart';
 import 'package:decibel/features/offline/presentation/widgets/offline_indicator.dart';
-import 'package:decibel/core/errors/exceptions.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Widget buildTestableWidget(Widget widget) {

@@ -14,6 +14,42 @@ import '../../../library/data/models/track_peaks_model.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/domain/entities/track_peaks.dart';
 
+/// Lightweight metadata saved alongside a downloaded playlist or station.
+class OfflineCollectionInfo {
+  const OfflineCollectionInfo({
+    required this.id,
+    required this.title,
+    required this.coverUrl,
+    required this.trackIds,
+    this.isStation = false,
+  });
+
+  factory OfflineCollectionInfo.fromJson(Map<String, dynamic> json) {
+    return OfflineCollectionInfo(
+      id: json['id'] as int,
+      title: json['title'] as String,
+      coverUrl: json['coverUrl'] as String?,
+      trackIds:
+          (json['trackIds'] as List<dynamic>).map((e) => e as int).toList(),
+      isStation: json['isStation'] as bool? ?? false,
+    );
+  }
+
+  final int id;
+  final String title;
+  final String? coverUrl;
+  final List<int> trackIds;
+  final bool isStation;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'coverUrl': coverUrl,
+        'trackIds': trackIds,
+        'isStation': isStation,
+      };
+}
+
 @lazySingleton
 class OfflineLocalDataSource {
   OfflineLocalDataSource(this._dioClient, this._libraryRemoteDatasource);
@@ -152,11 +188,70 @@ class OfflineLocalDataSource {
     return null;
   }
 
+  // ── Collection (playlist / station) metadata ─────────────────────────────
+
+  Future<String> _collectionsDir() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final path = '${dir.path}/collections';
+    await Directory(path).create(recursive: true);
+    return path;
+  }
+
+  /// Persists [info] so the Downloads screen can reconstruct the playlist view.
+  Future<void> saveCollectionMetadata(OfflineCollectionInfo info) async {
+    final dir = await _collectionsDir();
+    final file = File('$dir/collection_${info.id}.json');
+    await file.writeAsString(jsonEncode(info.toJson()));
+  }
+
+  /// Returns all saved [OfflineCollectionInfo] objects, only including those
+  /// whose track IDs have at least one corresponding downloaded `.dat` file.
+  Future<List<OfflineCollectionInfo>> getOfflineCollections() async {
+    final dir = await _collectionsDir();
+    final docsDir = await getApplicationDocumentsDirectory();
+    final results = <OfflineCollectionInfo>[];
+
+    for (final entity in Directory(dir).listSync()) {
+      if (entity is File && entity.path.endsWith('.json')) {
+        try {
+          final raw = jsonDecode(await entity.readAsString())
+              as Map<String, dynamic>;
+          final info = OfflineCollectionInfo.fromJson(raw);
+
+          // Keep only collections that have at least one downloaded track.
+          final hasAnyTrack = info.trackIds.any((id) =>
+              File('${docsDir.path}/tracks/track_$id.dat').existsSync());
+          if (hasAnyTrack) {
+            results.add(info);
+          }
+        } catch (e) {
+          debugPrint('Failed to read collection metadata ${entity.path}: $e');
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /// Deletes the collection metadata for [id]. Individual track files are
+  /// not removed — call [clearAll] or delete tracks individually.
+  Future<void> deleteCollectionMetadata(int id) async {
+    final dir = await _collectionsDir();
+    final file = File('$dir/collection_$id.json');
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
+
   Future<void> clearAll() async {
     final directory = await getApplicationDocumentsDirectory();
     final tracksDir = Directory('${directory.path}/tracks');
     if (await tracksDir.exists()) {
       await tracksDir.delete(recursive: true);
+    }
+    final collectionsDir = Directory('${directory.path}/collections');
+    if (await collectionsDir.exists()) {
+      await collectionsDir.delete(recursive: true);
     }
   }
 }

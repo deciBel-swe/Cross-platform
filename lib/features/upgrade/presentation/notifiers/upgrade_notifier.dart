@@ -57,12 +57,29 @@ class UpgradeNotifier extends AutoDisposeAsyncNotifier<UpgradeViewState> {
         .read(upgradeRepositoryProvider)
         .getSubscriptionStatus();
 
-    return result.fold((failure) {
+    return result.fold((failure) async {
       if (failure is NetworkFailure) {
-        return fallbackViewState;
+        return _buildOfflineFallback();
       }
       throw Exception(failure.message);
     }, (subscription) => UpgradeViewState(subscription: subscription));
+  }
+
+  /// Reads the cached [AuthUser] tier from secure storage and uses it as a
+  /// fallback when the device is offline. Ensures PRO users retain access.
+  Future<UpgradeViewState> _buildOfflineFallback() async {
+    final secureStorage = ref.read(secureStorageServiceProvider);
+    final cachedUser = await secureStorage.getUser();
+    final cachedTier = cachedUser?.tier ?? 'FREE';
+
+    return UpgradeViewState(
+      subscription: SubscriptionStatus(
+        status: cachedTier == 'FREE' ? 'INACTIVE' : 'ACTIVE',
+        plan: cachedTier,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+      ),
+    );
   }
 
   Future<Either<Failure, String>> startCheckout({
@@ -143,11 +160,11 @@ class UpgradeNotifier extends AutoDisposeAsyncNotifier<UpgradeViewState> {
         .read(upgradeRepositoryProvider)
         .getSubscriptionStatus();
 
-    result.fold(
-      (failure) {
+    await result.fold(
+      (failure) async {
         if (failure is NetworkFailure) {
           if (current == null) {
-            state = const AsyncData(fallbackViewState);
+            state = AsyncData(await _buildOfflineFallback());
           }
           return;
         }
@@ -157,7 +174,7 @@ class UpgradeNotifier extends AutoDisposeAsyncNotifier<UpgradeViewState> {
         }
         // If current != null, silently ignore — keep stale state visible.
       },
-      (subscription) {
+      (subscription) async {
         if (current == null) {
           state = AsyncData(UpgradeViewState(subscription: subscription));
           return;
