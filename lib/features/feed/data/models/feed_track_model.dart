@@ -1,7 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/entities/feed_track.dart';
-import '../entities/feed_item_type.dart';
 
 part 'feed_track_model.freezed.dart';
 part 'feed_track_model.g.dart';
@@ -39,8 +38,8 @@ class FeedTrackModel with _$FeedTrackModel {
     String? repostedByDisplayName,
     String? repostedByAvatarUrl,
     String? repostedAt,
-    // Feed item type
-    @Default(FeedItemType.trackPosted) FeedItemType feedItemType,
+    // Feed item type (stored as string to avoid enum issues in freezed)
+    @Default('track_posted') String feedItemType,
     // Playlist data for PLAYLIST_POSTED type
     Map<String, dynamic>? playlistData,
   }) = _FeedTrackModel;
@@ -65,7 +64,7 @@ class FeedTrackModel with _$FeedTrackModel {
           'id': playlist['id'] as int? ?? 0,
           'title': playlist['title'] as String? ?? '',
           'artist': <String, dynamic>{'id': 0, 'username': 'Unknown'},
-          'feedItemType': FeedItemType.playlistPosted,
+          'feedItemType': 'playlist_posted',
           'playlistData': playlist,
           'coverUrl': playlist['coverArtUrl'] as String?,
           'isLiked': playlist['isLiked'] as bool? ?? false,
@@ -101,9 +100,9 @@ class FeedTrackModel with _$FeedTrackModel {
       flatMap['repostedByDisplayName'] = repostedBy['displayName'];
       flatMap['repostedByAvatarUrl'] = repostedBy['avatarUrl'];
       flatMap['repostedAt'] = json['repostedAt'];
-      flatMap['feedItemType'] = FeedItemType.repost;
+      flatMap['feedItemType'] = 'repost';
     } else {
-      flatMap['feedItemType'] = FeedItemType.trackPosted;
+      flatMap['feedItemType'] = 'track_posted';
     }
 
     // Guarantee required int id is never null (generated code does hard cast)

@@ -58,56 +58,61 @@ class TrackPreviewContent extends ConsumerWidget {
         ? ref.watch(trackPreviewNormalizedPeaksProvider(trackId))
         : null;
 
-    final mainArea = Stack(
-      children: [
-        TrackPreviewBackground(
-          imageUrl: track.coverUrl,
-          isBlurred: isReady ? playbackUi.shouldBlurBackground : true,
-        ),
-        SafeArea(
-          bottom: false,
-          child: CustomScrollView(
-            physics: const ClampingScrollPhysics(),
-            slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    const TrackPreviewTopBar(),
-                    const SizedBox(height: 16),
-                    TrackPreviewInfo(
-                      title: track.title,
-                      artistName: track.artist.username,
-                      tagLabel: 'Behind this track',
-                      onTagTap: () {
-                        context.push(RoutePaths.behindTrack(trackId));
-                      },
-                    ),
-                    const Spacer(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: ActiveCommentsOverlay(trackId: trackId),
-                    ),
-                    const SizedBox(height: 12),
-                    if (isReady)
-                      InteractiveWaveform(
-                        peaks: peaks!,
-                        audioState: audioState,
-                        audioNotifier: audioNotifier,
-                      )
-                    else
-                      const WaveformNotReady(),
-                    const SizedBox(height: 16),
-                    TrackPreviewInputSection(trackId: trackId),
-                  ],
-                ),
-              ),
-            ],
+    final mainArea = Semantics(
+      container: true,
+      label:
+          'Track preview content for ${track.title} by ${track.artist.username}',
+      child: Stack(
+        children: [
+          TrackPreviewBackground(
+            imageUrl: track.coverUrl,
+            isBlurred: isReady ? playbackUi.shouldBlurBackground : true,
           ),
-        ),
-      ],
+          SafeArea(
+            bottom: false,
+            child: CustomScrollView(
+              physics: const ClampingScrollPhysics(),
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      const TrackPreviewTopBar(),
+                      const SizedBox(height: 16),
+                      TrackPreviewInfo(
+                        title: track.title,
+                        artistName: track.artist.username,
+                        tagLabel: 'Behind this track',
+                        onTagTap: () {
+                          context.push(RoutePaths.behindTrack(trackId));
+                        },
+                      ),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: ActiveCommentsOverlay(trackId: trackId),
+                      ),
+                      const SizedBox(height: 12),
+                      if (isReady)
+                        InteractiveWaveform(
+                          peaks: peaks!,
+                          audioState: audioState,
+                          audioNotifier: audioNotifier,
+                        )
+                      else
+                        const WaveformNotReady(),
+                      const SizedBox(height: 16),
+                      TrackPreviewInputSection(trackId: trackId),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
 
     return Column(
@@ -128,88 +133,99 @@ class TrackPreviewContent extends ConsumerWidget {
                 )
               : mainArea,
         ),
-        BottomBarWidget(
-          trackId: trackId,
-          initialLikeCount: track.likeCount,
-          initialRepostCount: track.repostCount,
-          isLiked: track.isLiked,
-          isReposted: track.isReposted,
-          commentCount: commentsState.comments.length,
-          onCommentPressed: () {
-            TrackCommentsBottomSheet.show(
-              context,
-              trackId: trackId,
-              track: track,
-            );
-          },
-          onAddToPlaylistPressed: () async {
-            await Future<void>.delayed(Duration.zero);
-            if (context.mounted) {
-              context.push(RoutePaths.addToPlaylist, extra: track);
-            }
-          },
-          onMoreOptionsPressed: (anchorContext) async {
-            final action = await showTrackMoreOptionsMenu(
-              context: context,
-              anchorContext: anchorContext,
-              includeEdit: isOwner,
-              includeDelete: isOwner,
-            );
-
-            if (action == null || !context.mounted) {
-              return;
-            }
-
-            switch (action) {
-              case TrackMoreOption.report:
-                await TrackReportBottomSheet.show(context, trackId);
-                break;
-              case TrackMoreOption.addToPlaylist:
+        Semantics(
+          container: true,
+          label: 'Track actions for ${track.title}',
+          child: BottomBarWidget(
+            trackId: trackId,
+            initialLikeCount: track.likeCount,
+            initialRepostCount: track.repostCount,
+            isLiked: track.isLiked,
+            isReposted: track.isReposted,
+            commentCount: commentsState.comments.length,
+            onCommentPressed: () {
+              TrackCommentsBottomSheet.show(
+                context,
+                trackId: trackId,
+                track: track,
+              );
+            },
+            onAddToPlaylistPressed: () async {
+              await Future<void>.delayed(Duration.zero);
+              if (context.mounted) {
                 context.push(RoutePaths.addToPlaylist, extra: track);
-                break;
-              case TrackMoreOption.addToQueue:
-                audioNotifier.addToQueue(track);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Added "${track.title}" to queue'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-                break;
-              case TrackMoreOption.editTrack:
-                await context.push(RoutePaths.trackEdit(trackId));
-                break;
-              case TrackMoreOption.goToArtist:
-                if (isOwner) {
-                  context.go(RoutePaths.profile);
-                } else {
-                  context.go(RoutePaths.publicProfile(track.artist.username));
-                }
-                break;
-              case TrackMoreOption.goToAlbum:
-                _showUnavailableSnackBar(
-                  context,
-                  'Album pages are not available yet',
-                );
-                break;
-              case TrackMoreOption.share:
-                await _copyTrackLink(
-                  context: context,
-                  track: track,
-                  message: 'Track link copied to share',
-                );
-                break;
-              case TrackMoreOption.copyLink:
-                await _copyTrackLink(context: context, track: track);
-                break;
-              case TrackMoreOption.download:
-                await _downloadTrack(context: context, ref: ref, track: track);
-                break;
-              case TrackMoreOption.deleteTrack:
-                await _deleteTrack(context: context, ref: ref, track: track);
-                break;
-            }
-          },
+              }
+            },
+            onMoreOptionsPressed: (anchorContext) async {
+              final action = await showTrackMoreOptionsMenu(
+                context: context,
+                anchorContext: anchorContext,
+                includeEdit: isOwner,
+                includeDelete: isOwner,
+              );
+
+              if (action == null || !context.mounted) {
+                return;
+              }
+
+              switch (action) {
+                case TrackMoreOption.report:
+                  await TrackReportBottomSheet.show(context, trackId);
+                  break;
+                case TrackMoreOption.addToPlaylist:
+                  context.push(RoutePaths.addToPlaylist, extra: track);
+                  break;
+                case TrackMoreOption.addToQueue:
+                  audioNotifier.addToQueue(track);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Added "${track.title}" to queue'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  break;
+                case TrackMoreOption.viewQueue:
+                  // Queue bottom sheet will be shown by the caller
+                  break;
+                case TrackMoreOption.editTrack:
+                  await context.push(RoutePaths.trackEdit(trackId));
+                  break;
+                case TrackMoreOption.goToArtist:
+                  if (isOwner) {
+                    context.go(RoutePaths.profile);
+                  } else {
+                    context.go(RoutePaths.publicProfile(track.artist.username));
+                  }
+                  break;
+                case TrackMoreOption.goToAlbum:
+                  _showUnavailableSnackBar(
+                    context,
+                    'Album pages are not available yet',
+                  );
+                  break;
+                case TrackMoreOption.share:
+                  await _copyTrackLink(
+                    context: context,
+                    track: track,
+                    message: 'Track link copied to share',
+                  );
+                  break;
+                case TrackMoreOption.copyLink:
+                  await _copyTrackLink(context: context, track: track);
+                  break;
+                case TrackMoreOption.download:
+                  await _downloadTrack(
+                    context: context,
+                    ref: ref,
+                    track: track,
+                  );
+                  break;
+                case TrackMoreOption.deleteTrack:
+                  await _deleteTrack(context: context, ref: ref, track: track);
+                  break;
+              }
+            },
+          ),
         ),
       ],
     );

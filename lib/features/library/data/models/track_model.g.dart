@@ -27,6 +27,8 @@ _$TrackModelImpl _$$TrackModelImplFromJson(Map<String, dynamic> json) =>
       isReposted: json['isReposted'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       description: json['description'] as String?,
+      trackDurationSeconds:
+          (json['trackDurationSeconds'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
@@ -48,6 +50,7 @@ Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
       'isReposted': instance.isReposted,
       'createdAt': instance.createdAt.toIso8601String(),
       'description': instance.description,
+      'trackDurationSeconds': instance.trackDurationSeconds,
     };
 
 const _$TrackStatusModelEnumMap = {

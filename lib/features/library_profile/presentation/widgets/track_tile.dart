@@ -8,7 +8,6 @@ import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/domain/models/track_action_data.dart';
 import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../library/domain/entities/track.dart';
-import '../providers/track_audio_provider.dart';
 import 'track_details.dart';
 
 class TrackTile extends ConsumerWidget {
@@ -171,10 +170,6 @@ class TrackTile extends ConsumerWidget {
   }
 
   Duration _displayDuration(Track track, WidgetRef ref) {
-    if (ref.read(trackAudioProvider).preparedTrackId == track.id) {
-      return ref.read(trackAudioProvider).duration;
-    }
-
-    return Duration.zero;
+    return track.duration;
   }
 }

@@ -24,9 +24,10 @@ import '../../../library_profile/presentation/providers/track_audio_provider.dar
 import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../library_profile/presentation/widgets/track_details.dart';
 import '../../../offline/presentation/notifiers/track_download_notifier.dart';
-import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import '../../../offline/presentation/providers/track_download_provider.dart';
+import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
 import '../../../upgrade/presentation/widgets/pro_promotion_bottom_sheet.dart';
+import '../../domain/entities/feed_item_type.dart';
 import '../../domain/entities/feed_track.dart';
 import '../notifiers/discover_feed_notifier.dart';
 import '../notifiers/feed_notifier.dart';
@@ -375,6 +376,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                             waveformPeaks: _buildPeaks(seed: track.id),
                             commentTrack: playableTrack,
                             gradientColors: _colorsForTrack(track.id),
+                            feedItemType: FeedItemType.trackPosted,
                             onPlay: () {
                               if (!mounted) return;
                               _audioNotifier.playTrack(
@@ -478,6 +480,7 @@ library_track.Track _toLibraryTrack(FeedTrack track) {
     isLiked: track.isLiked,
     isReposted: track.isReposted,
     createdAt: track.uploadDate,
+    trackDurationSeconds: track.trackDurationSeconds,
   );
 }
 

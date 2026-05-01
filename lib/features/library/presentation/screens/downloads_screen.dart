@@ -59,7 +59,7 @@ class DownloadsScreen extends ConsumerWidget {
                 _DownloadsList(allTracks: allTracks, collections: collections),
             loading: () =>
                 _DownloadsList(allTracks: allTracks, collections: const []),
-            error: (_, __) =>
+            error: (_, _) =>
                 _DownloadsList(allTracks: allTracks, collections: const []),
           );
         },
@@ -241,9 +241,9 @@ class _CollectionCard extends ConsumerWidget {
   }
 
   void _openDetails(BuildContext context) {
-    Navigator.push(
+    Navigator.push<void>(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => OfflinePlaylistDetailsScreen(collection: collection),
       ),
     );

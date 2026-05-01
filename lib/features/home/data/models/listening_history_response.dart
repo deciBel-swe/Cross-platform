@@ -87,6 +87,7 @@ class ListeningHistoryResponse {
       isLiked: _asBool(json['isLiked']),
       isReposted: _asBool(json['isReposted']),
       createdAt: releaseDate,
+      trackDurationSeconds: _asInt(json['trackDurationSeconds']),
     );
   }
 

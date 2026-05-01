@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../../core/widgets/right_side_panel.dart';
@@ -87,21 +86,6 @@ class QueueBottomSheet extends ConsumerWidget {
                     color: Colors.white70,
                   ),
                 ),
-                if (queue.isNotEmpty) ...[
-                  const SizedBox(width: AppDimensions.paddingSm),
-                  IconButton(
-                    icon: const Icon(Icons.shuffle, size: 20),
-                    tooltip: 'Shuffle queue',
-                    onPressed: () => notifier.shuffleQueue(),
-                    color: AppColors.textSecondary,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.clear_all, size: 20),
-                    tooltip: 'Clear queue',
-                    onPressed: () => notifier.clearQueue(),
-                    color: AppColors.textSecondary,
-                  ),
-                ],
               ],
             ),
           ),
@@ -189,7 +173,7 @@ class QueueBottomSheet extends ConsumerWidget {
                                             width: 40,
                                             height: 40,
                                             color: AppColors.surfaceVariant,
-                                            child: Icon(
+                                            child: const Icon(
                                               Icons.music_note,
                                               size: 20,
                                               color: AppColors.textMuted,

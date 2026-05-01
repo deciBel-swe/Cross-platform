@@ -29,6 +29,7 @@ class TrackModel with _$TrackModel {
     @Default(false) bool isReposted,
     required DateTime createdAt,
     String? description,
+    @Default(0) int trackDurationSeconds,
   }) = _TrackModel;
 
   factory TrackModel.fromJson(Map<String, dynamic> json) =>
@@ -99,6 +100,7 @@ extension TrackModelX on TrackModel {
       isReposted: isReposted,
       createdAt: createdAt,
       description: description,
+      trackDurationSeconds: trackDurationSeconds,
     );
   }
 
@@ -121,6 +123,7 @@ extension TrackModelX on TrackModel {
       isReposted: track.isReposted,
       createdAt: track.createdAt,
       description: track.description,
+      trackDurationSeconds: track.trackDurationSeconds,
     );
   }
 }
