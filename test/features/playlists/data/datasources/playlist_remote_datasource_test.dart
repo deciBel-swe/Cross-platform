@@ -92,7 +92,7 @@ void main() {
               ).captured.single
               as FormData;
 
-      expect(captured.files.map((entry) => entry.key), contains('CoverArt'));
+      expect(captured.files.map((entry) => entry.key), contains('coverArt'));
     });
 
     test('updatePlaylist sends cover image as multipart CoverArt', () async {
@@ -132,7 +132,7 @@ void main() {
               ).captured.single
               as FormData;
 
-      expect(captured.files.map((entry) => entry.key), contains('CoverArt'));
+      expect(captured.files.map((entry) => entry.key), contains('coverArt'));
     });
   });
 }

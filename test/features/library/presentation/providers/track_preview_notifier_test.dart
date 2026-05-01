@@ -23,6 +23,8 @@ void main() {
     );
     final container = _container(repository);
 
+    container.listen(trackPreviewProvider(1), (_, _) {});
+
     final data = await container.read(trackPreviewProvider(1).future);
 
     expect(data.track.id, 1);
@@ -43,6 +45,8 @@ void main() {
       peaksResult: const Left(ServerFailure('no peaks')),
     );
     final container = _container(repository);
+
+    container.listen(trackPreviewProvider(1), (_, _) {});
 
     final data = await container.read(trackPreviewProvider(1).future);
 
