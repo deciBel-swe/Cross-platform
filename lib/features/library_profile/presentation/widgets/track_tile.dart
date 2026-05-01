@@ -5,6 +5,8 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/domain/models/track_action_data.dart';
 import '../../../engagement/presentation/providers/track_social_provider.dart';
 import '../../../library/domain/entities/track.dart';
@@ -37,16 +39,22 @@ class TrackTile extends ConsumerWidget {
     final trackSocial = ref.watch(trackSocialProvider(track.id));
     final isLiked = trackSocial.valueOrNull?.isLiked ?? track.isLiked;
 
+    final authState = ref.watch(authStateProvider).valueOrNull;
+    final currentUserId = authState is AuthAuthenticated ? authState.user.id : null;
+    final isOwner = currentUserId != null && currentUserId == track.artist.id;
+
     return InkWell(
-      onTap: onTap,
+      onTap: () => _handleTap(context, isOwner: isOwner),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spacingMedium,
           vertical: AppConstants.spacingSmall,
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: Opacity(
+          opacity: track.isBlocked ? 0.5 : 1.0,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(AppConstants.buttonRadius),
               child: Container(
@@ -159,7 +167,23 @@ class TrackTile extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
+}
+
+  void _handleTap(BuildContext context, {required bool isOwner}) {
+    if (track.isBlocked && !isOwner) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${track.title} is blocked and cannot be played.'),
+          backgroundColor: AppColors.errors,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    onTap?.call();
   }
 
   Widget _buildPlaceholderIcon() {

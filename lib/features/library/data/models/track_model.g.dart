@@ -12,9 +12,11 @@ _$TrackModelImpl _$$TrackModelImplFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String,
       artist: ArtistModel.fromJson(json['artist'] as Map<String, dynamic>),
       trackUrl: json['trackUrl'] as String?,
+      trackPreviewUrl: json['trackPreviewUrl'] as String?,
       coverUrl: json['coverUrl'] as String?,
       waveformUrl: json['waveformUrl'] as String?,
       genre: json['genre'] as String? ?? '',
+      access: json['access'] as String? ?? 'PLAYABLE',
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           const <String>[],
@@ -29,6 +31,7 @@ _$TrackModelImpl _$$TrackModelImplFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String?,
       trackDurationSeconds:
           (json['trackDurationSeconds'] as num?)?.toInt() ?? 0,
+      isPrivate: json['isPrivate'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
@@ -37,9 +40,11 @@ Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
       'title': instance.title,
       'artist': instance.artist,
       'trackUrl': instance.trackUrl,
+      'trackPreviewUrl': instance.trackPreviewUrl,
       'coverUrl': instance.coverUrl,
       'waveformUrl': instance.waveformUrl,
       'genre': instance.genre,
+      'access': instance.access,
       'tags': instance.tags,
       'state': _$TrackStatusModelEnumMap[instance.state]!,
       'releaseDate': instance.releaseDate.toIso8601String(),
@@ -51,6 +56,7 @@ Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'description': instance.description,
       'trackDurationSeconds': instance.trackDurationSeconds,
+      'isPrivate': instance.isPrivate,
     };
 
 const _$TrackStatusModelEnumMap = {

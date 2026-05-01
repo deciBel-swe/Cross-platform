@@ -473,7 +473,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
     final trackUrl = track.normalizedTrackUrl;
 
-    if (!track.isPlayable || trackUrl == null) {
+    if (!track.isPlayable || trackUrl == null || track.isBlocked) {
       return;
     }
 

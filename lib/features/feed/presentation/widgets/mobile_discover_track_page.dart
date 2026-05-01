@@ -19,10 +19,7 @@ class MobileDiscoverTrackPage extends StatelessWidget {
     required this.track,
     required this.playableTrack,
     required this.playableQueue,
-    required this.duration,
     required this.gradientColors,
-    required this.isMuted,
-    required this.onToggleMute,
     required this.onPlayTrack,
     required this.onAddToPlaylist,
   });
@@ -30,10 +27,7 @@ class MobileDiscoverTrackPage extends StatelessWidget {
   final FeedTrack track;
   final library_track.Track playableTrack;
   final List<library_track.Track> playableQueue;
-  final String duration;
   final List<Color> gradientColors;
-  final bool isMuted;
-  final VoidCallback onToggleMute;
   final Future<void> Function(
     library_track.Track track,
     List<library_track.Track> queue,
@@ -47,7 +41,7 @@ class MobileDiscoverTrackPage extends StatelessWidget {
 
     return Semantics(
       label:
-          'Discover track: ${track.title} by ${track.displayArtistName}, duration $duration',
+          'Discover track: ${track.title} by ${track.displayArtistName}',
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -64,16 +58,7 @@ class MobileDiscoverTrackPage extends StatelessWidget {
               top: false,
               child: Stack(
                 children: [
-                  Positioned(
-                    top:
-                        MediaQuery.paddingOf(context).top +
-                        AppDimensions.paddingMd,
-                    right: AppDimensions.paddingMd,
-                    child: _DiscoverMuteButton(
-                      isMuted: isMuted,
-                      onPressed: onToggleMute,
-                    ),
-                  ),
+
                   Positioned(
                     right: AppDimensions.paddingMd,
                     bottom: 112,
@@ -93,7 +78,7 @@ class MobileDiscoverTrackPage extends StatelessWidget {
                     left: AppDimensions.paddingMd,
                     right: 92,
                     bottom: AppDimensions.paddingLg,
-                    child: _DiscoverTrackInfo(track: track, duration: duration),
+                    child: _DiscoverTrackInfo(track: track),
                   ),
                   Positioned(
                     right: AppDimensions.paddingMd,
@@ -183,16 +168,14 @@ class _DiscoverScrim extends StatelessWidget {
 }
 
 class _DiscoverTrackInfo extends StatelessWidget {
-  const _DiscoverTrackInfo({required this.track, required this.duration});
+  const _DiscoverTrackInfo({required this.track});
 
   final FeedTrack track;
-  final String duration;
 
   @override
   Widget build(BuildContext context) {
     final metaParts = <String>[
       if (track.genre.trim().isNotEmpty) track.genre,
-      duration,
     ];
 
     return Column(
@@ -400,38 +383,7 @@ class _DiscoverPlayButton extends ConsumerWidget {
   }
 }
 
-class _DiscoverMuteButton extends StatelessWidget {
-  const _DiscoverMuteButton({required this.isMuted, required this.onPressed});
 
-  final bool isMuted;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: isMuted ? 'Unmute discover playback' : 'Mute discover playback',
-      child: GestureDetector(
-        onTap: onPressed,
-        behavior: HitTestBehavior.opaque,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.42),
-            shape: BoxShape.circle,
-          ),
-          child: SizedBox.square(
-            dimension: 44,
-            child: Icon(
-              isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-              color: AppColors.textPrimary,
-              size: 25,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 String _formatCompactCount(int number) {
   if (number >= 1000000) {

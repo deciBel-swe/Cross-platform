@@ -36,19 +36,30 @@ class CollectionDownloadButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dlState = ref.watch(collectionDownloadProvider(collectionId));
 
-    ref.listen(
-      collectionDownloadProvider(collectionId),
-      (CollectionDownloadState? previous, CollectionDownloadState next) {
-        if (next.error != null && previous?.error != next.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(next.error!),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      },
-    );
+    // Keep userProfileProvider alive so ref.read in _onTap never hits a
+    // disposed autoDispose provider and incorrectly returns null (which
+    // causes the pro-gate to fire even for pro users).
+    final profileAsync = ref.watch(userProfileProvider);
+    final isPro =
+        profileAsync.valueOrNull?.fold(
+          (_) => false,
+          (p) => p.tier == UserTier.pro || p.tier == UserTier.artistPro,
+        ) ??
+        false;
+
+    ref.listen(collectionDownloadProvider(collectionId), (
+      CollectionDownloadState? previous,
+      CollectionDownloadState next,
+    ) {
+      if (next.error != null && previous?.error != next.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
 
     final color = iconColor ?? Theme.of(context).iconTheme.color;
 
@@ -77,19 +88,12 @@ class CollectionDownloadButton extends ConsumerWidget {
       child: IconButton(
         icon: Icon(Icons.download_outlined, color: color),
         tooltip: 'Download for offline',
-        onPressed: () => _onTap(context, ref),
+        onPressed: () => _onTap(context, ref, isPro: isPro),
       ),
     );
   }
 
-  void _onTap(BuildContext context, WidgetRef ref) {
-    final profile = ref.read(userProfileProvider).valueOrNull?.fold(
-          (_) => null,
-          (p) => p,
-        );
-    final isPro =
-        profile?.tier == UserTier.pro || profile?.tier == UserTier.artistPro;
-
+  void _onTap(BuildContext context, WidgetRef ref, {required bool isPro}) {
     if (isPro) {
       final info = OfflineCollectionInfo(
         id: collectionId,

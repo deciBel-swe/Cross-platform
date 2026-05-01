@@ -54,11 +54,7 @@ class ListeningHistoryResponse {
     final artistJson = _asStringMap(json['artist']);
     final access = _asString(json['access']).toUpperCase();
     final now = DateTime.now();
-    final playableUrl = _playableUrlForAccess(
-      access: access,
-      trackUrl: _asNullableString(json['trackUrl']),
-      trackPreviewUrl: _asNullableString(json['trackPreviewUrl']),
-    );
+
 
     final releaseDate =
         DateTime.tryParse(_asString(json['releaseDate'])) ??
@@ -74,10 +70,12 @@ class ListeningHistoryResponse {
         displayName: _asNullableString(artistJson['displayName']),
         avatarUrl: _asNullableString(artistJson['avatarUrl']),
       ),
-      trackUrl: playableUrl,
+      trackUrl: _asNullableString(json['trackUrl']),
+      trackPreviewUrl: _asNullableString(json['trackPreviewUrl']),
       coverUrl: _asNullableString(json['coverUrl']),
       waveformUrl: null,
       genre: '',
+      access: access,
       tags: const [],
       state: _parseTrackStatus(access),
       releaseDate: releaseDate,
@@ -88,6 +86,7 @@ class ListeningHistoryResponse {
       isReposted: _asBool(json['isReposted']),
       createdAt: releaseDate,
       trackDurationSeconds: _asInt(json['trackDurationSeconds']),
+      isPrivate: _asBool(json['isPrivate']) || _asBool(json['is_private']),
     );
   }
 
@@ -134,19 +133,5 @@ class ListeningHistoryResponse {
     return false;
   }
 
-  static String? _playableUrlForAccess({
-    required String access,
-    required String? trackUrl,
-    required String? trackPreviewUrl,
-  }) {
-    switch (access) {
-      case 'BLOCKED':
-        return null;
-      case 'PREVIEW':
-        return trackPreviewUrl ?? trackUrl;
-      case 'PLAYABLE':
-      default:
-        return trackUrl ?? trackPreviewUrl;
-    }
-  }
+
 }

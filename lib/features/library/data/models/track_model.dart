@@ -16,9 +16,11 @@ class TrackModel with _$TrackModel {
     required String title,
     required ArtistModel artist,
     String? trackUrl,
+    String? trackPreviewUrl,
     String? coverUrl,
     String? waveformUrl,
     @Default('') String genre,
+    @Default('PLAYABLE') String access,
     @Default(<String>[]) List<String> tags,
     required TrackStatusModel state,
     required DateTime releaseDate,
@@ -30,6 +32,7 @@ class TrackModel with _$TrackModel {
     required DateTime createdAt,
     String? description,
     @Default(0) int trackDurationSeconds,
+    @Default(false) bool isPrivate,
   }) = _TrackModel;
 
   factory TrackModel.fromJson(Map<String, dynamic> json) =>
@@ -76,6 +79,19 @@ class TrackModel with _$TrackModel {
             : 'FINISHED',
     };
 
+    // Normalize access level
+    map['access'] = (map['access'] ?? 'PLAYABLE').toString().toUpperCase();
+
+    // Normalize isPrivate
+    if (map['isPrivate'] == null) {
+      map['isPrivate'] = map['is_private'] ?? false;
+    }
+
+    // Normalize trackPreviewUrl
+    if (map['trackPreviewUrl'] == null) {
+      map['trackPreviewUrl'] = map['previewUrl'] ?? map['preview_url'];
+    }
+
     return map;
   }
 }
@@ -87,9 +103,11 @@ extension TrackModelX on TrackModel {
       title: title,
       artist: artist.toEntity(),
       trackUrl: trackUrl,
+      trackPreviewUrl: trackPreviewUrl,
       coverUrl: coverUrl,
       waveformUrl: waveformUrl,
       genre: genre,
+      access: access,
       tags: tags,
       state: state.toEntity(),
       releaseDate: releaseDate,
@@ -101,6 +119,7 @@ extension TrackModelX on TrackModel {
       createdAt: createdAt,
       description: description,
       trackDurationSeconds: trackDurationSeconds,
+      isPrivate: isPrivate,
     );
   }
 
@@ -110,9 +129,11 @@ extension TrackModelX on TrackModel {
       title: track.title,
       artist: ArtistModelX.fromEntity(track.artist),
       trackUrl: track.trackUrl,
+      trackPreviewUrl: track.trackPreviewUrl,
       coverUrl: track.coverUrl,
       waveformUrl: track.waveformUrl,
       genre: track.genre,
+      access: track.access,
       tags: track.tags,
       state: TrackStatusModelX.fromEntity(track.state),
       releaseDate: track.releaseDate,
@@ -124,6 +145,7 @@ extension TrackModelX on TrackModel {
       createdAt: track.createdAt,
       description: track.description,
       trackDurationSeconds: track.trackDurationSeconds,
+      isPrivate: track.isPrivate,
     );
   }
 }

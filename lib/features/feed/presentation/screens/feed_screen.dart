@@ -36,6 +36,8 @@ import '../widgets/mobile_discover_track_page.dart';
 
 enum FeedTab { following, discover }
 
+final _discoveryFeedIndexProvider = StateProvider<int>((ref) => 0);
+
 /// Activity feed showing recent tracks from followed users or discovered tracks.
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -213,9 +215,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final currentUserId = authState is AuthAuthenticated
         ? authState.user.id
         : null;
+    // FIX 1: Watch BOTH providers so they are not disposed when switching tabs
+    final followingAsync = ref.watch(feedProvider);
+    final discoverAsync = ref.watch(discoverFeedProvider);
+
     final feedAsync = _selectedTab == FeedTab.following
-        ? ref.watch(feedProvider)
-        : ref.watch(discoverFeedProvider);
+        ? followingAsync
+        : discoverAsync;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -304,7 +310,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       },
                       onPlayTrack: (track, queue) async {
                         if (!mounted) return;
-                        await _audioNotifier.playTrack(track: track, queue: queue);
+                        await _audioNotifier.playTrack(
+                          track: track,
+                          queue: queue,
+                        );
                       },
                       onAddToPlaylist: (track) {
                         context.push(RoutePaths.addToPlaylist, extra: track);
@@ -372,16 +381,29 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                             isReposted: track.isARepost,
                             plays: _formatCount(track.playCount),
                             commentCount: track.commentCount,
-                            duration: _formatDuration(track.duration),
+                            duration: _selectedTab == FeedTab.discover
+                                ? ''
+                                : _formatDuration(track.duration),
                             waveformPeaks: _buildPeaks(seed: track.id),
                             commentTrack: playableTrack,
                             gradientColors: _colorsForTrack(track.id),
-                            feedItemType: FeedItemType.trackPosted,
+                            feedItemType:
+                                _parseFeedItemType(track.feedItemType) ??
+                                FeedItemType.trackPosted,
+                            playlistData: track.playlistData,
                             onPlay: () {
                               if (!mounted) return;
+                              if (!playableTrack.isPlayable) {
+                                _showFeedSnackBar(
+                                  'This track is not playable (missing audio URL).',
+                                );
+                                return;
+                              }
                               _audioNotifier.playTrack(
                                 track: playableTrack,
-                                queue: playableQueue,
+                                queue: _selectedTab == FeedTab.discover
+                                    ? [playableTrack]
+                                    : playableQueue,
                               );
                             },
                             onAddToPlaylist: () {
@@ -467,12 +489,12 @@ library_track.Track _toLibraryTrack(FeedTrack track) {
       displayName: track.artistDisplayName,
       avatarUrl: track.artistAvatarUrl,
     ),
-    trackUrl: track.access == 'PREVIEW'
-        ? (track.trackPreviewUrl ?? track.trackUrl)
-        : (track.trackUrl ?? track.trackPreviewUrl),
+    trackUrl: track.trackUrl,
+    trackPreviewUrl: track.trackPreviewUrl,
     coverUrl: track.coverUrl,
     waveformUrl: track.waveformUrl,
     genre: track.genre,
+    access: track.access,
     tags: track.tags,
     state: TrackStatus.finished,
     releaseDate: track.releaseDate,
@@ -483,10 +505,25 @@ library_track.Track _toLibraryTrack(FeedTrack track) {
     isReposted: track.isReposted,
     createdAt: track.uploadDate,
     trackDurationSeconds: track.trackDurationSeconds,
+    isPrivate: track.isPrivate,
   );
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+FeedItemType? _parseFeedItemType(String? typeStr) {
+  if (typeStr == null) return null;
+  switch (typeStr) {
+    case 'track_posted':
+      return FeedItemType.trackPosted;
+    case 'playlist_posted':
+      return FeedItemType.playlistPosted;
+    case 'repost':
+      return FeedItemType.repost;
+    default:
+      return null;
+  }
+}
 
 class _MobileDiscoverFeedPager extends ConsumerStatefulWidget {
   const _MobileDiscoverFeedPager({
@@ -516,11 +553,10 @@ class _MobileDiscoverFeedPager extends ConsumerStatefulWidget {
 
 class _MobileDiscoverFeedPagerState
     extends ConsumerState<_MobileDiscoverFeedPager> {
+  int _autoplayRequestId = 0;
+  late final PageController _pageController;
   int _currentIndex = 0;
   int? _lastPlayedTrackId;
-  bool _isMuted = false;
-  int _autoplayRequestId = 0;
-  late final TrackAudioNotifier _audioNotifier;
 
   int get _visibleTrackCount {
     final trackCount = widget.tracks.length;
@@ -531,7 +567,8 @@ class _MobileDiscoverFeedPagerState
   @override
   void initState() {
     super.initState();
-    _audioNotifier = ref.read(trackAudioProvider.notifier);
+    _currentIndex = ref.read(_discoveryFeedIndexProvider);
+    _pageController = PageController(initialPage: _currentIndex);
     _scheduleAutoplay();
   }
 
@@ -553,6 +590,16 @@ class _MobileDiscoverFeedPagerState
 
     if (_currentIndex >= _visibleTrackCount) {
       _currentIndex = 0;
+
+      // FIX 3: Actually move the PageView and update the global provider
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(0);
+      }
+      Future.microtask(() {
+        if (mounted) {
+          ref.read(_discoveryFeedIndexProvider.notifier).state = 0;
+        }
+      });
     }
 
     final currentTrackId = widget.playableQueue[_currentIndex].id;
@@ -566,9 +613,7 @@ class _MobileDiscoverFeedPagerState
   @override
   void dispose() {
     _autoplayRequestId += 1;
-    if (_isMuted) {
-      Future.microtask(() => _audioNotifier.setVolume(1));
-    }
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -607,11 +652,12 @@ class _MobileDiscoverFeedPagerState
     return false;
   }
 
-  Future<void> _playTrack(library_track.Track track, List<library_track.Track> queue) async {
-    unawaited(_audioNotifier.setVolume(_isMuted ? 0 : 1));
-    await widget.onPlayTrack(track, queue);
-    if (!mounted) return;
-    unawaited(_audioNotifier.setVolume(_isMuted ? 0 : 1));
+  Future<void> _playTrack(
+    library_track.Track track,
+    List<library_track.Track> queue,
+  ) async {
+    // Discover mode: No queue, only play the single selected track
+    await widget.onPlayTrack(track, [track]);
   }
 
   void _playIndex(int index) {
@@ -620,20 +666,19 @@ class _MobileDiscoverFeedPagerState
     }
 
     final track = widget.playableQueue[index];
-    if (_lastPlayedTrackId == track.id) {
+
+    // FIX 2: Check if this track is ALREADY playing globally to prevent restarting from 0:00
+    final currentAudioState = ref.read(trackAudioProvider);
+    final isAlreadyPlayingGlobally =
+        currentAudioState.currentTrack?.id == track.id;
+
+    if (_lastPlayedTrackId == track.id || isAlreadyPlayingGlobally) {
+      _lastPlayedTrackId = track.id; // Keep local state in sync
       return;
     }
 
     _lastPlayedTrackId = track.id;
-    unawaited(_playTrack(track, widget.playableQueue));
-  }
-
-  void _toggleMute() {
-    final nextMuted = !_isMuted;
-    setState(() => _isMuted = nextMuted);
-    unawaited(
-      ref.read(trackAudioProvider.notifier).setVolume(nextMuted ? 0 : 1),
-    );
+    unawaited(_playTrack(track, [track]));
   }
 
   @override
@@ -652,11 +697,13 @@ class _MobileDiscoverFeedPagerState
     }
 
     return PageView.builder(
+      controller: _pageController,
       scrollDirection: Axis.vertical,
       itemCount: visibleTrackCount + (showPaginationLoader ? 1 : 0),
       onPageChanged: (index) {
         if (index < visibleTrackCount) {
           _currentIndex = index;
+          ref.read(_discoveryFeedIndexProvider.notifier).state = index;
           _playIndex(index);
         }
 
@@ -672,14 +719,12 @@ class _MobileDiscoverFeedPagerState
         }
 
         final track = widget.tracks[index];
+        final libTrack = widget.playableQueue[index];
         return MobileDiscoverTrackPage(
           track: track,
-          playableTrack: widget.playableQueue[index],
-          playableQueue: widget.playableQueue,
-          duration: _formatDuration(track.duration),
+          playableTrack: libTrack,
+          playableQueue: [libTrack], // Discover mode: single-item queue
           gradientColors: _colorsForTrack(track.id),
-          isMuted: _isMuted,
-          onToggleMute: _toggleMute,
           onPlayTrack: _playTrack,
           onAddToPlaylist: widget.onAddToPlaylist,
         );

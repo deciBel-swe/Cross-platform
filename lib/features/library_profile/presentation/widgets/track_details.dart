@@ -57,6 +57,8 @@ class TrackDetails extends ConsumerWidget {
     // Wait a short duration to let the mini player slide down before the bottom sheet covers the screen
     await Future<void>.delayed(const Duration(milliseconds: 150));
 
+    if (!context.mounted) return;
+
     try {
       await showModalBottomSheet<void>(
         context: context,

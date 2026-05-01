@@ -40,6 +40,8 @@ class FeedTrack with _$FeedTrack {
     String? repostedByDisplayName,
     String? repostedByAvatarUrl,
     DateTime? repostedAt,
+    String? feedItemType,
+    Map<String, dynamic>? playlistData,
   }) = _FeedTrack;
 
   const FeedTrack._();
@@ -55,8 +57,12 @@ class FeedTrack with _$FeedTrack {
           ? (repostedByDisplayName ?? repostedByUsername ?? artistUsername)
           : displayArtistName;
 
-  /// "reposted" / "posted a track".
-  String get feedAction => isARepost ? 'reposted' : 'posted a track';
+  /// "reposted" / "posted a track" / "posted a playlist".
+  String get feedAction {
+    if (isARepost) return 'reposted';
+    if (feedItemType == 'playlist_posted') return 'posted a playlist';
+    return 'posted a track';
+  }
 
   /// Timestamp relevant to the feed card (repost time or upload time).
   DateTime get feedTimestamp => isARepost ? (repostedAt ?? uploadDate) : uploadDate;

@@ -11,10 +11,12 @@ import '../../../engagement/presentation/widgets/track_report_bottom_sheet.dart'
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/providers/track_comment_provider.dart';
 import '../../../library/presentation/widgets/bottom_bar_widget.dart';
+import '../../../library_profile/domain/entities/user_profile.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/track_preview_derived_providers.dart';
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
+import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../library_profile/presentation/widgets/track_preview_background.dart';
 import '../../../library_profile/presentation/widgets/track_preview_info.dart';
 import '../../../library_profile/presentation/widgets/track_preview_playback_overlay.dart';
@@ -166,11 +168,19 @@ class TrackPreviewContent extends ConsumerWidget {
               }
             },
             onMoreOptionsPressed: (anchorContext) async {
+              final profileAsync = ref.watch(userProfileProvider);
+              final isProUser = profileAsync.valueOrNull?.fold(
+                    (_) => false,
+                    (p) => p.tier == UserTier.pro || p.tier == UserTier.artistPro,
+                  ) ??
+                  false;
+
               final action = await showTrackMoreOptionsMenu(
                 context: context,
                 anchorContext: anchorContext,
                 includeEdit: isOwner,
                 includeDelete: isOwner,
+                isPro: isProUser,
               );
 
               if (action == null || !context.mounted) {

@@ -38,18 +38,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveUtils.isDesktop(context);
-
+    final stationPageSize = isDesktop ? 12 : 8;
     final likesStationAsync = ref.watch(likesStationProvider);
     final artistStationAsync = ref.watch(
-      artistStationProvider((page: 0, size: 40)),
+      artistStationProvider((page: 0, size: stationPageSize)),
     );
     final genreStationAsync = ref.watch(
-      genreStationProvider((page: 0, size: 40)),
+      genreStationProvider((page: 0, size: stationPageSize)),
     );
     final popularTracksAsync = ref.watch(
       popularTracksProvider((page: 0, size: isDesktop ? 8 : 6)),
     );
-
     final horizontalPadding = isDesktop
         ? AppDimensions.paddingXl
         : AppDimensions.paddingMd;
@@ -65,10 +64,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               backgroundColor: AppColors.background,
               title: const Text('Home'),
               actions: <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () => context.go(RoutePaths.search),
-                ),
                 const GetProButton(),
                 IconButton(
                   icon: const Icon(Icons.inbox),
@@ -87,104 +82,115 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(likesStationProvider);
-          ref.invalidate(artistStationProvider((page: 0, size: 40)));
-          ref.invalidate(genreStationProvider((page: 0, size: 40)));
-          ref.invalidate(popularTracksProvider((page: 0, size: isDesktop ? 8 : 6)));
+          ref.invalidate(
+            artistStationProvider((page: 0, size: stationPageSize)),
+          );
+          ref.invalidate(
+            genreStationProvider((page: 0, size: stationPageSize)),
+          );
+          ref.invalidate(
+            popularTracksProvider((page: 0, size: isDesktop ? 8 : 6)),
+          );
           // Delay briefly to show the spinner
           await Future<void>.delayed(const Duration(milliseconds: 500));
         },
         child: ListView(
-          padding: EdgeInsets.fromLTRB(0, topPadding, 0, AppDimensions.paddingXl),
+          padding: EdgeInsets.fromLTRB(
+            0,
+            topPadding,
+            0,
+            AppDimensions.paddingXl,
+          ),
           children: <Widget>[
-          if (isDesktop)
+            if (isDesktop)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Text('Home', style: AppTextStyles.sectionTitle),
+                    const SizedBox(height: AppDimensions.paddingSm),
+                    Text(
+                      'Popular tracks and discovery stations.',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingLg),
+                  ],
+                ),
+              ),
+
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop
+                    ? AppDimensions.paddingLg
+                    : AppDimensions.paddingSm,
+              ),
+              child: const LikedTracksShortcut(),
+            ),
+
             Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  const Text('Home', style: AppTextStyles.sectionTitle),
-                  const SizedBox(height: AppDimensions.paddingSm),
-                  Text(
-                    'Popular tracks and discovery stations.',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                  const SizedBox(height: AppDimensions.paddingXl),
+                  const RecentlyPlayedSection(),
+                  const SizedBox(height: AppDimensions.paddingXl),
+                  const SectionHeader(title: 'Stations'),
+                  const SizedBox(height: AppDimensions.paddingMd),
+                  _StationsRailSection(
+                    entries: [
+                      _StationRailEntry(
+                        asyncTracks: likesStationAsync,
+                        kind: StationPlaylistKind.likes,
+                        routePath: RoutePaths.homeLikesStation,
+                        emptyMessage:
+                            'Like a few tracks to kick-start your station.',
+                      ),
+                      _StationRailEntry(
+                        asyncTracks: artistStationAsync,
+                        kind: StationPlaylistKind.artist,
+                        routePath: RoutePaths.homeArtistStation,
+                        emptyMessage:
+                            'Artist recommendations will show up after more listening.',
+                      ),
+                      _StationRailEntry(
+                        asyncTracks: genreStationAsync,
+                        kind: StationPlaylistKind.genre,
+                        routePath: RoutePaths.homeGenreStation,
+                        emptyMessage:
+                            'Genre recommendations are quiet right now.',
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: AppDimensions.paddingLg),
+                  const SizedBox(height: AppDimensions.paddingXl),
+                  _HotForYouSection(
+                    asyncTrackSources: [
+                      popularTracksAsync,
+                      likesStationAsync,
+                      artistStationAsync,
+                      genreStationAsync,
+                    ],
+                  ),
+                  const SizedBox(height: AppDimensions.paddingXl),
+                  SectionHeader(
+                    title: 'Popular tracks',
+                    onSeeAll: () =>
+                        context.push(RoutePaths.homePopularCollection),
+                  ),
+                  const SizedBox(height: AppDimensions.paddingMd),
+                  _TrackRailSection(
+                    asyncTracks: popularTracksAsync,
+                    emptyMessage:
+                        'Popular tracks will show up here once discovery loads.',
+                  ),
                 ],
               ),
             ),
-
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isDesktop
-                  ? AppDimensions.paddingLg
-                  : AppDimensions.paddingSm,
-            ),
-            child: const LikedTracksShortcut(),
-          ),
-
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                const SizedBox(height: AppDimensions.paddingXl),
-                const RecentlyPlayedSection(),
-                const SizedBox(height: AppDimensions.paddingXl),
-                const SectionHeader(title: 'Stations'),
-                const SizedBox(height: AppDimensions.paddingMd),
-                _StationsRailSection(
-                  entries: [
-                    _StationRailEntry(
-                      asyncTracks: likesStationAsync,
-                      kind: StationPlaylistKind.likes,
-                      routePath: RoutePaths.homeLikesStation,
-                      emptyMessage:
-                          'Like a few tracks to kick-start your station.',
-                    ),
-                    _StationRailEntry(
-                      asyncTracks: artistStationAsync,
-                      kind: StationPlaylistKind.artist,
-                      routePath: RoutePaths.homeArtistStation,
-                      emptyMessage:
-                          'Artist recommendations will show up after more listening.',
-                    ),
-                    _StationRailEntry(
-                      asyncTracks: genreStationAsync,
-                      kind: StationPlaylistKind.genre,
-                      routePath: RoutePaths.homeGenreStation,
-                      emptyMessage:
-                          'Genre recommendations are quiet right now.',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppDimensions.paddingXl),
-                _HotForYouSection(
-                  asyncTrackSources: [
-                    popularTracksAsync,
-                    likesStationAsync,
-                    artistStationAsync,
-                    genreStationAsync,
-                  ],
-                ),
-                const SizedBox(height: AppDimensions.paddingXl),
-                SectionHeader(
-                  title: 'Popular tracks',
-                  onSeeAll: () =>
-                      context.push(RoutePaths.homePopularCollection),
-                ),
-                const SizedBox(height: AppDimensions.paddingMd),
-                _TrackRailSection(
-                  asyncTracks: popularTracksAsync,
-                  emptyMessage:
-                      'Popular tracks will show up here once discovery loads.',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
