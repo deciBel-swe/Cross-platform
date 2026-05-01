@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../providers/upload_progress_provider.dart';
+import '../providers/upload_sessions_provider.dart';
 
 class UploadProgressIndicator extends ConsumerWidget {
   const UploadProgressIndicator({
@@ -17,7 +17,7 @@ class UploadProgressIndicator extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final session = ref.watch(uploadProgressProvider(trackId));
+    final session = ref.watch(uploadSessionByTrackIdProvider(trackId));
     final progress = session?.progressPercentage ?? 0;
     final normalizedProgress = progress.clamp(0, 100) / 100.0;
     final stepName = session?.stepName;

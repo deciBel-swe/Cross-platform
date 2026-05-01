@@ -6,6 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+
 abstract class IPickerService {
   Future<File?> pickAudioFile();
   Future<File?> pickCoverImage();
@@ -27,7 +30,23 @@ class PickerService implements IPickerService {
         allowedExtensions: ['mp3', 'wav'],
       );
       if (result != null && result.files.single.path != null) {
-        return File(result.files.single.path!);
+        final originalFile = File(result.files.single.path!);
+
+        
+        final originalName = result.files.single.name;
+
+        final safeFileName = originalName
+            .replaceAll('#', '_')
+            .replaceAll('?', '_')
+            .replaceAll('%', '_');
+
+        final tempDir = await getTemporaryDirectory();
+
+        final safePath = p.join(tempDir.path, safeFileName);
+
+        final safeFile = await originalFile.copy(safePath);
+
+        return safeFile;
       }
       return null;
     } catch (e) {
