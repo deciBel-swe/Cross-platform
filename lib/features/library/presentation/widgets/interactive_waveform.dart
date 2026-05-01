@@ -16,6 +16,7 @@ class InteractiveWaveform extends StatelessWidget {
   final TrackAudioState audioState;
   final TrackAudioNotifier audioNotifier;
 
+  /// Builds a draggable waveform bound to the audio notifier.
   @override
   Widget build(BuildContext context) {
     return Padding(

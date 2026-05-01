@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../domain/entities/comment.dart';
 import '../notifiers/track_comment_notifier.dart';
+import '../providers/track_comment_provider.dart';
+import '../utils/track_comment_formatters.dart';
 import 'comment_header.dart';
 import 'comment_replies_section.dart';
 import 'like_section.dart';
 import 'track_comment_avatar.dart';
-import 'track_comment_formatters.dart';
 import 'track_comment_options_sheet.dart';
 
 class TrackCommentTile extends ConsumerWidget {
@@ -23,14 +22,13 @@ class TrackCommentTile extends ConsumerWidget {
   final Comment comment;
   final int trackId;
 
+  /// Builds a single top-level timed comment row.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final authState = ref.watch(authStateProvider).value;
-
-    final isOwner =
-        authState is AuthAuthenticated && authState.user.id == comment.user.id;
-
+    ref.watch(authStateProvider);
+    final notifier = ref.read(trackCommentsProvider(trackId).notifier);
+    final isOwner = notifier.canManageComment(comment);
     final timeFormatted = TrackCommentFormatters.formatTimeAgo(
       comment.createdAt,
     );
@@ -38,7 +36,6 @@ class TrackCommentTile extends ConsumerWidget {
     final timestampFormatted = TrackCommentFormatters.formatTimestamp(
       timestampSeconds,
     );
-    const undoDuration = Duration(seconds: 4);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -58,11 +55,7 @@ class TrackCommentTile extends ConsumerWidget {
                       username: comment.user.username,
                       timestamp: timestampFormatted,
                       timeAgo: timeFormatted,
-                      onTimestampTap: () {
-                        ref
-                            .read(trackAudioProvider.notifier)
-                            .seek(Duration(seconds: timestampSeconds));
-                      },
+                      onTimestampTap: () => notifier.seekToComment(comment),
                     ),
                     const SizedBox(height: 6),
                     Text(comment.body, style: theme.textTheme.bodyMedium),
@@ -71,9 +64,7 @@ class TrackCommentTile extends ConsumerWidget {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => ref
-                              .read(trackCommentsProvider(trackId).notifier)
-                              .setReplyingTo(comment),
+                          onTap: () => notifier.setReplyingTo(comment),
                           child: Text(
                             'Reply',
                             style: theme.textTheme.labelLarge?.copyWith(
@@ -85,62 +76,11 @@ class TrackCommentTile extends ConsumerWidget {
                         if (isOwner) ...[
                           const SizedBox(width: 12),
                           GestureDetector(
-                            onTap: () async {
-                              final messenger = ScaffoldMessenger.of(context);
-
-                              final shouldDelete =
-                                  await showTrackCommentOptionsSheet(
-                                    context,
-                                    theme,
-                                  );
-
-                              if (shouldDelete == true) {
-                                await Future<void>.delayed(
-                                  const Duration(milliseconds: 250),
-                                );
-
-                                if (!context.mounted) return;
-
-                                final notifier = ref.read(
-                                  trackCommentsProvider(trackId).notifier,
-                                );
-                                final deletedComment = comment;
-
-                                notifier.requestDeletion(
-                                  deletedComment,
-                                  undoDuration,
-                                );
-
-                                messenger.clearSnackBars();
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: const Text(
-                                      'Comment deleted',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    backgroundColor:
-                                        theme.colorScheme.secondary,
-                                    behavior: SnackBarBehavior.floating,
-                                    duration: undoDuration,
-                                    margin: const EdgeInsets.only(
-                                      bottom: 16,
-                                      left: 16,
-                                      right: 16,
-                                    ),
-                                    action: SnackBarAction(
-                                      label: 'UNDO',
-                                      textColor: Colors.white,
-                                      onPressed: () {
-                                        notifier.undoDeletion(deletedComment);
-                                        messenger.clearSnackBars();
-                                      },
-                                    ),
-                                  ),
-                                );
-                                await Future<void>.delayed(undoDuration);
-                                messenger.clearSnackBars();
-                              }
-                            },
+                            onTap: () => _handleDeleteTap(
+                              context: context,
+                              theme: theme,
+                              notifier: notifier,
+                            ),
                             child: const Icon(
                               Icons.more_vert,
                               size: 18,
@@ -160,5 +100,65 @@ class TrackCommentTile extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Handles delete confirmation and starts the undo window.
+  Future<void> _handleDeleteTap({
+    required BuildContext context,
+    required ThemeData theme,
+    required TrackCommentNotifier notifier,
+  }) async {
+    final shouldDelete = await showTrackCommentOptionsSheet(context, theme);
+
+    if (shouldDelete != true) {
+      return;
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (!context.mounted) {
+      return;
+    }
+
+    notifier.requestDeletion(comment, TrackCommentNotifier.deleteUndoDelay);
+    await _showUndoSnackBar(
+      context: context,
+      theme: theme,
+      notifier: notifier,
+      deletedComment: comment,
+    );
+  }
+
+  /// Shows the undo snackbar for an optimistically deleted comment.
+  Future<void> _showUndoSnackBar({
+    required BuildContext context,
+    required ThemeData theme,
+    required TrackCommentNotifier notifier,
+    required Comment deletedComment,
+  }) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    messenger.clearSnackBars();
+    messenger.showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Comment deleted',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: theme.colorScheme.secondary,
+        behavior: SnackBarBehavior.floating,
+        duration: TrackCommentNotifier.deleteUndoDelay,
+        margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+        action: SnackBarAction(
+          label: 'UNDO',
+          textColor: Colors.white,
+          onPressed: () {
+            notifier.undoDeletion(deletedComment);
+            messenger.clearSnackBars();
+          },
+        ),
+      ),
+    );
+    await Future<void>.delayed(TrackCommentNotifier.deleteUndoDelay);
+    messenger.clearSnackBars();
   }
 }

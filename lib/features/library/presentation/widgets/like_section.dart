@@ -4,6 +4,7 @@ class LikeSection extends StatelessWidget {
   const LikeSection({super.key, required this.count});
   final String count;
 
+  /// Builds the like icon and count stack.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

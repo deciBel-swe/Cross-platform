@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/comment.dart';
-import '../notifiers/track_comment_notifier.dart';
+import '../providers/track_comment_provider.dart';
 import 'comment_reply_item.dart';
 
 class CommentRepliesSection extends ConsumerWidget {
@@ -15,38 +15,28 @@ class CommentRepliesSection extends ConsumerWidget {
   final Comment comment;
   final int trackId;
 
+  /// Builds the reply list and pagination controls for a comment.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(trackCommentsProvider(trackId));
-    final isExpanded = state.expandedCommentIds.contains(comment.commentid);
-    final paginatedData = state.repliesByCommentId[comment.commentid];
-    final replies = paginatedData?.content ?? [];
-
-    final isThisCommentLoading = state.loadingReplyIds.contains(
-      comment.commentid,
-    );
-
-    final isInitialLoading =
-        isThisCommentLoading && isExpanded && replies.isEmpty;
-    final isPaginating =
-        isThisCommentLoading && isExpanded && replies.isNotEmpty;
-
-    final hasRepliesToFetch = comment.replycount > 0 || replies.isNotEmpty;
+    ref.watch(trackCommentsProvider(trackId));
+    final notifier = ref.read(trackCommentsProvider(trackId).notifier);
+    final isExpanded = notifier.isRepliesExpanded(comment);
+    final paginatedData = notifier.paginatedRepliesFor(comment);
+    final replies = notifier.repliesFor(comment);
+    final isInitialLoading = notifier.isInitialRepliesLoading(comment);
+    final isPaginating = notifier.isPaginatingReplies(comment);
+    final hasRepliesToFetch = notifier.hasRepliesToFetch(comment);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Initial State: Only show "Show replies" if not expanded and we expect data
         if (!isExpanded && hasRepliesToFetch)
           _buildActionButton(
-            onTap: () => ref
-                .read(trackCommentsProvider(trackId).notifier)
-                .loadReplies(comment.commentid, page: 0),
+            onTap: () => notifier.loadReplies(comment.commentid, page: 0),
             label: 'Show replies',
             showLine: true,
           ),
 
-        // Loader during initial fetch
         if (isInitialLoading)
           const Padding(
             padding: EdgeInsets.only(left: 72, top: 12, bottom: 12),
@@ -60,7 +50,6 @@ class CommentRepliesSection extends ConsumerWidget {
             ),
           ),
 
-        // 2. Expanded State: Show the list ONLY if there is data
         if (isExpanded && replies.isNotEmpty) ...[
           ListView.builder(
             padding: EdgeInsets.zero,
@@ -71,7 +60,6 @@ class CommentRepliesSection extends ConsumerWidget {
                 CommentReplyItem(reply: replies[index]),
           ),
 
-          // Pagination: Show More if not the last page
           if (paginatedData != null && !(paginatedData.isLast ?? true))
             isPaginating
                 ? const Padding(
@@ -87,20 +75,15 @@ class CommentRepliesSection extends ConsumerWidget {
                   )
                 : _buildActionButton(
                     onTap: () {
-                      final nextPage = (paginatedData.pageNumber ?? 0) + 1;
-                      ref
-                          .read(trackCommentsProvider(trackId).notifier)
-                          .loadReplies(comment.commentid, page: nextPage);
+                      final nextPage = notifier.nextRepliesPage(comment);
+                      notifier.loadReplies(comment.commentid, page: nextPage);
                     },
                     label: 'Show more replies',
                     showLine: true,
                   ),
 
-          // 3. Hide Button: Only appears if there is data actually shown
           _buildActionButton(
-            onTap: () => ref
-                .read(trackCommentsProvider(trackId).notifier)
-                .collapseReplies(comment.commentid),
+            onTap: () => notifier.collapseReplies(comment.commentid),
             label: 'Hide replies',
             showLine: false,
           ),
@@ -109,6 +92,7 @@ class CommentRepliesSection extends ConsumerWidget {
     );
   }
 
+  /// Builds a reply section action row.
   Widget _buildActionButton({
     required VoidCallback onTap,
     required String label,

@@ -29,13 +29,19 @@ final currentActiveCommentsProvider = Provider.family<List<Comment>, int>((
   final currentSecond = (audioState.duration.inSeconds * audioState.progress)
       .round();
 
-  final commentsState = ref.watch(trackCommentsProvider(trackId));
+  ref.watch(trackCommentsProvider(trackId));
+  return ref
+      .read(trackCommentsProvider(trackId).notifier)
+      .activeCommentsForSecond(currentSecond);
+});
 
-  final activeComments =
-      commentsState.comments
-          .where((c) => c.timestampSeconds == currentSecond)
-          .toList()
-        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-  return activeComments;
+/// Derives the single comment currently shown over the preview waveform.
+///
+/// This keeps the "first active comment wins" rule out of the widget tree.
+final currentActiveCommentProvider = Provider.family<Comment?, int>((
+  ref,
+  trackId,
+) {
+  final activeComments = ref.watch(currentActiveCommentsProvider(trackId));
+  return activeComments.isEmpty ? null : activeComments.first;
 });

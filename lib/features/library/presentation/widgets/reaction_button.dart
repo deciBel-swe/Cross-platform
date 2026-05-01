@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 class ReactionButton extends StatelessWidget {
-  const ReactionButton({required this.emoji, this.onTap});
+  const ReactionButton({super.key, required this.emoji, this.onTap});
 
   final String emoji;
   final VoidCallback? onTap;
 
+  /// Builds a tappable quick reaction label.
   @override
   Widget build(BuildContext context) {
     return GestureDetector(

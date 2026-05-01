@@ -9,6 +9,7 @@ class TrackCommentsContextTile extends StatelessWidget {
 
   final Track track;
 
+  /// Builds the track context row above comments.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

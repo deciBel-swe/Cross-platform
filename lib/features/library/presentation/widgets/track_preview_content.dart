@@ -8,7 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../library/domain/entities/track.dart';
-import '../../../library/presentation/notifiers/track_comment_notifier.dart';
+import '../../../library/presentation/providers/track_comment_provider.dart';
 import '../../../library/presentation/widgets/bottom_bar_widget.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/track_preview_derived_providers.dart';
@@ -37,6 +37,7 @@ class TrackPreviewContent extends ConsumerWidget {
   final int trackId;
   final TrackPreviewData data;
 
+  /// Builds the full track preview, playback area, comments, and action bar.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final track = data.track;
@@ -228,6 +229,7 @@ class TrackPreviewContent extends ConsumerWidget {
     );
   }
 
+  /// Copies the track deep link and reports success to the user.
   Future<void> _copyTrackLink({
     required BuildContext context,
     required Track track,
@@ -245,6 +247,7 @@ class TrackPreviewContent extends ConsumerWidget {
     );
   }
 
+  /// Downloads [track] and reports the result to the user.
   Future<void> _downloadTrack({
     required BuildContext context,
     required WidgetRef ref,
@@ -284,12 +287,14 @@ class TrackPreviewContent extends ConsumerWidget {
     );
   }
 
+  /// Shows a short snackbar for an unavailable action.
   void _showUnavailableSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
+  /// Confirms and deletes [track].
   Future<void> _deleteTrack({
     required BuildContext context,
     required WidgetRef ref,
@@ -353,6 +358,7 @@ class TrackPreviewContent extends ConsumerWidget {
     }
   }
 
+  /// Shows the destructive confirmation dialog for [track].
   Future<bool> _confirmDeleteTrack({
     required BuildContext context,
     required Track track,

@@ -1,14 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-
-import 'package:decibel/features/library/presentation/widgets/comment_actions.dart';
 import 'package:decibel/features/library/presentation/widgets/comment_header.dart';
 import 'package:decibel/features/library/presentation/widgets/comment_reaction_bar.dart';
 import 'package:decibel/features/library/presentation/widgets/like_section.dart';
 import 'package:decibel/features/library/presentation/widgets/reaction_button.dart';
 import 'package:decibel/features/library/presentation/widgets/track_comment_avatar.dart';
-import 'package:decibel/features/library/presentation/widgets/user_avatar.dart';
 import 'package:decibel/features/library/presentation/widgets/waveform_not_ready.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Widget buildTestWidget(Widget child) {
@@ -17,15 +14,6 @@ void main() {
       home: Scaffold(body: Center(child: child)),
     );
   }
-
-  group('CommentActions', () {
-    testWidgets('renders reply text and more icon', (tester) async {
-      await tester.pumpWidget(buildTestWidget(const CommentActions()));
-
-      expect(find.text('Reply'), findsOneWidget);
-      expect(find.byIcon(Icons.more_vert), findsOneWidget);
-    });
-  });
 
   group('CommentHeader', () {
     testWidgets('renders username, timestamp, and time ago', (tester) async {
@@ -110,22 +98,6 @@ void main() {
 
       expect(find.byType(CircleAvatar), findsOneWidget);
       expect(find.byIcon(Icons.person), findsNothing);
-    });
-  });
-
-  group('UserAvatar', () {
-    testWidgets('renders fallback icon when imageUrl is null', (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(const UserAvatar(imageUrl: null)),
-      );
-
-      expect(find.byIcon(Icons.person), findsOneWidget);
-    });
-
-    testWidgets('renders fallback icon when imageUrl is empty', (tester) async {
-      await tester.pumpWidget(buildTestWidget(const UserAvatar(imageUrl: '')));
-
-      expect(find.byIcon(Icons.person), findsOneWidget);
     });
   });
 

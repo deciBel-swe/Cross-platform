@@ -6,8 +6,8 @@ import 'package:decibel/features/library/domain/entities/comment_user.dart';
 import 'package:decibel/features/library/domain/entities/paginated_comment_reply.dart';
 import 'package:decibel/features/library/domain/entities/paginated_comments.dart';
 import 'package:decibel/features/library/domain/repositories/i_track_comments_repository.dart';
-import 'package:decibel/features/library/presentation/notifiers/track_comment_notifier.dart';
 import 'package:decibel/features/library/presentation/providers/comments_repository_provider.dart';
+import 'package:decibel/features/library/presentation/providers/track_comment_provider.dart';
 import 'package:decibel/features/library/presentation/state/track_comment_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -118,20 +118,28 @@ void main() {
       expect(state.replyPrefillText, isNull);
     });
 
-    test('handleInputChanged does nothing when input is not empty', () {
+    test(
+      'clearReplyModeIfInputIsEmpty keeps reply mode for nonempty input',
+      () {
+        final container = buildContainer();
+        final notifier = container.read(trackCommentsProvider(1).notifier);
+
+        notifier.setReplyingTo(_comment(id: 10, timestampSeconds: 5));
+        notifier.clearReplyModeIfInputIsEmpty('reply body');
+
+        expect(
+          container.read(trackCommentsProvider(1)).activeReplyCommentId,
+          10,
+        );
+      },
+    );
+
+    test('clearReplyModeIfInputIsEmpty clears reply mode for empty input', () {
       final container = buildContainer();
       final notifier = container.read(trackCommentsProvider(1).notifier);
 
       notifier.setReplyingTo(_comment(id: 10, timestampSeconds: 5));
-
-      expect(container.read(trackCommentsProvider(1)).activeReplyCommentId, 10);
-    });
-
-    test('handleInputChanged clears reply mode when input is empty', () {
-      final container = buildContainer();
-      final notifier = container.read(trackCommentsProvider(1).notifier);
-
-      notifier.setReplyingTo(_comment(id: 10, timestampSeconds: 5));
+      notifier.clearReplyModeIfInputIsEmpty('');
 
       expect(
         container.read(trackCommentsProvider(1)).activeReplyCommentId,
@@ -195,7 +203,7 @@ void main() {
     test('sets isLoadingComments false when repository fails', () async {
       when(
         () => repository.getComments(trackId: 1, page: 0, size: 20),
-      ).thenAnswer((_) async => Left(ServerFailure('error')));
+      ).thenAnswer((_) async => const Left(ServerFailure('error')));
 
       final container = buildContainer();
       final notifier = container.read(trackCommentsProvider(1).notifier);
@@ -329,7 +337,7 @@ void main() {
     test('rolls back expanded and loading state when replies fail', () async {
       when(
         () => repository.getReplies(commentId: 10, page: 0, size: 5),
-      ).thenAnswer((_) async => Left(ServerFailure('error')));
+      ).thenAnswer((_) async => const Left(ServerFailure('error')));
 
       final container = buildContainer();
       final notifier = container.read(trackCommentsProvider(1).notifier);

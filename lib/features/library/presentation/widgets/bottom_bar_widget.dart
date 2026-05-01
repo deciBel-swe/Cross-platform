@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
+import '../utils/comment_formatters.dart';
 
 class BottomBarWidget extends ConsumerWidget {
   const BottomBarWidget({
@@ -27,9 +28,10 @@ class BottomBarWidget extends ConsumerWidget {
   final int commentCount;
   final VoidCallback onCommentPressed;
   final VoidCallback onSharePressed;
-  final VoidCallback onAddToPlaylistPressed; // 2. Add this
+  final VoidCallback onAddToPlaylistPressed;
   final ValueChanged<BuildContext> onMoreOptionsPressed;
 
+  /// Builds the preview action bar.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
@@ -60,7 +62,7 @@ class BottomBarWidget extends ConsumerWidget {
           Expanded(
             child: _buildTextIconButton(
               icon: Icons.chat_bubble_outline,
-              text: _formatCount(commentCount),
+              text: CommentFormatters.formatCount(commentCount),
               onTap: onCommentPressed,
               activeColor: Colors.white,
             ),
@@ -92,15 +94,7 @@ class BottomBarWidget extends ConsumerWidget {
     );
   }
 
-  String _formatCount(int number) {
-    if (number >= 1000000) {
-      return '${(number / 1000000).toStringAsFixed(1)}M';
-    } else if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(number % 1000 == 0 ? 0 : 1)}K';
-    }
-    return number.toString();
-  }
-
+  /// Builds a compact icon button with a text value.
   Widget _buildTextIconButton({
     required IconData icon,
     required String text,
@@ -140,6 +134,7 @@ class BottomBarWidget extends ConsumerWidget {
     );
   }
 
+  /// Builds a compact icon-only action button.
   Widget _buildSimpleIconButton({
     required IconData icon,
     required VoidCallback onTap,
