@@ -8,7 +8,7 @@ import '../../../playlists/domain/entities/playlist.dart';
 import '../../domain/repositories/playlist_social_repository.dart';
 import '../datasources/playlist_social_remote_datasource.dart';
 
-@Injectable(as: IPlaylistSocialRepository)
+@LazySingleton(as: IPlaylistSocialRepository)
 class PlaylistSocialRepositoryImpl implements IPlaylistSocialRepository {
   PlaylistSocialRepositoryImpl(this._remoteDataSource);
   final PlaylistSocialRemoteDatasource _remoteDataSource;
