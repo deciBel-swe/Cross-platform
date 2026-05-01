@@ -4,6 +4,8 @@ import '../../domain/entities/paginated_comment_reply.dart';
 enum CommentSortOption { newest, oldest, trackTime }
 
 class TrackCommentsState {
+  static const Object _unset = Object();
+
   const TrackCommentsState({
     this.comments = const [],
     this.selectedTimestampSeconds,
@@ -36,32 +38,37 @@ class TrackCommentsState {
 
   TrackCommentsState copyWith({
     List<Comment>? comments,
-    int? selectedTimestampSeconds,
+    Object? selectedTimestampSeconds = _unset,
     bool? isSubmitting,
     bool? isLoadingComments,
     Set<int>? loadingReplyIds,
     Map<int, PaginatedReplies>? repliesByCommentId,
     Set<int>? expandedCommentIds,
-    int? deletingCommentId,
+    Object? deletingCommentId = _unset,
     CommentSortOption? sortOption,
     int? currentCommentsPage,
     bool? isLastCommentsPage,
-    int? activeReplyCommentId,
+    Object? activeReplyCommentId = _unset,
   }) {
     return TrackCommentsState(
       comments: comments ?? this.comments,
-      selectedTimestampSeconds:
-          selectedTimestampSeconds ?? this.selectedTimestampSeconds,
+      selectedTimestampSeconds: identical(selectedTimestampSeconds, _unset)
+          ? this.selectedTimestampSeconds
+          : selectedTimestampSeconds as int?,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       isLoadingComments: isLoadingComments ?? this.isLoadingComments,
       loadingReplyIds: loadingReplyIds ?? this.loadingReplyIds,
       repliesByCommentId: repliesByCommentId ?? this.repliesByCommentId,
       expandedCommentIds: expandedCommentIds ?? this.expandedCommentIds,
-      deletingCommentId: deletingCommentId ?? this.deletingCommentId,
+      deletingCommentId: identical(deletingCommentId, _unset)
+          ? this.deletingCommentId
+          : deletingCommentId as int?,
       sortOption: sortOption ?? this.sortOption,
       currentCommentsPage: currentCommentsPage ?? this.currentCommentsPage,
       isLastCommentsPage: isLastCommentsPage ?? this.isLastCommentsPage,
-      activeReplyCommentId: activeReplyCommentId ?? this.activeReplyCommentId,
+      activeReplyCommentId: identical(activeReplyCommentId, _unset)
+          ? this.activeReplyCommentId
+          : activeReplyCommentId as int?,
     );
   }
 }
