@@ -10,7 +10,8 @@ class CommentUserModel with _$CommentUserModel {
   const factory CommentUserModel({
     required int id,
     required String username,
-    String? avatarUrl, // Nullable to match the domain entity and handle missing fields
+    String?
+    avatarUrl, // Nullable to match the domain entity and handle missing fields
   }) = _CommentUserModel;
 
   factory CommentUserModel.fromJson(Map<String, dynamic> json) =>

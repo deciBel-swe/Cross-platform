@@ -76,22 +76,27 @@ class _ProfileIconState extends ConsumerState<ProfileIcon> {
         ? selectedImage
         : _lastKnownImage;
 
-    return GestureDetector(
-      onTap: () {
-        if (effectiveImage != null) {
-          context.push('/profile-image', extra: effectiveImage);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No profile picture to view.')),
-          );
-        }
-      },
-      child: FittedBox(
-        fit: BoxFit.contain,
-        child: CircleAvatar(
-          radius: 64,
-          backgroundColor: AppColors.surface,
-          child: _buildImage(effectiveImage),
+    return Semantics(
+      button: true,
+      image: true,
+      label: 'View profile picture',
+      child: GestureDetector(
+        onTap: () {
+          if (effectiveImage != null) {
+            context.push('/profile-image', extra: effectiveImage);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No profile picture to view.')),
+            );
+          }
+        },
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: CircleAvatar(
+            radius: 64,
+            backgroundColor: AppColors.surface,
+            child: _buildImage(effectiveImage),
+          ),
         ),
       ),
     );

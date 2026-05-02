@@ -18,6 +18,8 @@ _$TrackMetadataModelImpl _$$TrackMetadataModelImplFromJson(
       .toList(),
   description: json['description'] as String?,
   tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+  uploadId: json['uploadId'] as String? ?? '',
+  access: json['access'] as String? ?? 'PLAYABLE',
 );
 
 Map<String, dynamic> _$$TrackMetadataModelImplToJson(
@@ -30,4 +32,6 @@ Map<String, dynamic> _$$TrackMetadataModelImplToJson(
   'waveFormData': instance.waveFormData,
   'description': instance.description,
   'tags': instance.tags,
+  'uploadId': instance.uploadId,
+  'access': instance.access,
 };

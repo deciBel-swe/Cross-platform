@@ -23,6 +23,7 @@ TrackEngagerModel _$TrackEngagerModelFromJson(Map<String, dynamic> json) {
 mixin _$TrackEngagerModel {
   int get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
+  String? get displayName => throw _privateConstructorUsedError;
   String? get avatarUrl => throw _privateConstructorUsedError;
   String get tier => throw _privateConstructorUsedError;
   bool get isFollowing => throw _privateConstructorUsedError;
@@ -47,6 +48,7 @@ abstract class $TrackEngagerModelCopyWith<$Res> {
   $Res call({
     int id,
     String username,
+    String? displayName,
     String? avatarUrl,
     String tier,
     bool isFollowing,
@@ -70,6 +72,7 @@ class _$TrackEngagerModelCopyWithImpl<$Res, $Val extends TrackEngagerModel>
   $Res call({
     Object? id = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? avatarUrl = freezed,
     Object? tier = null,
     Object? isFollowing = null,
@@ -84,6 +87,10 @@ class _$TrackEngagerModelCopyWithImpl<$Res, $Val extends TrackEngagerModel>
                 ? _value.username
                 : username // ignore: cast_nullable_to_non_nullable
                       as String,
+            displayName: freezed == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
+                      as String?,
             avatarUrl: freezed == avatarUrl
                 ? _value.avatarUrl
                 : avatarUrl // ignore: cast_nullable_to_non_nullable
@@ -114,6 +121,7 @@ abstract class _$$TrackEngagerModelImplCopyWith<$Res>
   $Res call({
     int id,
     String username,
+    String? displayName,
     String? avatarUrl,
     String tier,
     bool isFollowing,
@@ -136,6 +144,7 @@ class __$$TrackEngagerModelImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? username = null,
+    Object? displayName = freezed,
     Object? avatarUrl = freezed,
     Object? tier = null,
     Object? isFollowing = null,
@@ -150,6 +159,10 @@ class __$$TrackEngagerModelImplCopyWithImpl<$Res>
             ? _value.username
             : username // ignore: cast_nullable_to_non_nullable
                   as String,
+        displayName: freezed == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
+                  as String?,
         avatarUrl: freezed == avatarUrl
             ? _value.avatarUrl
             : avatarUrl // ignore: cast_nullable_to_non_nullable
@@ -173,6 +186,7 @@ class _$TrackEngagerModelImpl implements _TrackEngagerModel {
   const _$TrackEngagerModelImpl({
     required this.id,
     required this.username,
+    this.displayName,
     this.avatarUrl,
     required this.tier,
     this.isFollowing = false,
@@ -186,6 +200,8 @@ class _$TrackEngagerModelImpl implements _TrackEngagerModel {
   @override
   final String username;
   @override
+  final String? displayName;
+  @override
   final String? avatarUrl;
   @override
   final String tier;
@@ -195,7 +211,7 @@ class _$TrackEngagerModelImpl implements _TrackEngagerModel {
 
   @override
   String toString() {
-    return 'TrackEngagerModel(id: $id, username: $username, avatarUrl: $avatarUrl, tier: $tier, isFollowing: $isFollowing)';
+    return 'TrackEngagerModel(id: $id, username: $username, displayName: $displayName, avatarUrl: $avatarUrl, tier: $tier, isFollowing: $isFollowing)';
   }
 
   @override
@@ -206,6 +222,8 @@ class _$TrackEngagerModelImpl implements _TrackEngagerModel {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.username, username) ||
                 other.username == username) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
             (identical(other.avatarUrl, avatarUrl) ||
                 other.avatarUrl == avatarUrl) &&
             (identical(other.tier, tier) || other.tier == tier) &&
@@ -215,8 +233,15 @@ class _$TrackEngagerModelImpl implements _TrackEngagerModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, username, avatarUrl, tier, isFollowing);
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    username,
+    displayName,
+    avatarUrl,
+    tier,
+    isFollowing,
+  );
 
   /// Create a copy of TrackEngagerModel
   /// with the given fields replaced by the non-null parameter values.
@@ -239,6 +264,7 @@ abstract class _TrackEngagerModel implements TrackEngagerModel {
   const factory _TrackEngagerModel({
     required final int id,
     required final String username,
+    final String? displayName,
     final String? avatarUrl,
     required final String tier,
     final bool isFollowing,
@@ -251,6 +277,8 @@ abstract class _TrackEngagerModel implements TrackEngagerModel {
   int get id;
   @override
   String get username;
+  @override
+  String? get displayName;
   @override
   String? get avatarUrl;
   @override

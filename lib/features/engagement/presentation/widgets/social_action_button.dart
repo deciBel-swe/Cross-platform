@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -6,26 +7,30 @@ class SocialActionButton extends StatefulWidget {
   const SocialActionButton({
     super.key,
     required this.isActive,
-    required this.count,
+    this.count,
     required this.isLoading,
     required this.activeIcon,
     required this.inactiveIcon,
     required this.activeColor,
     required this.onToggle,
+    required this.identifier,
     this.onCountTap,
     this.iconSize = AppConstants.iconSizeMedium,
     this.fontSize = AppConstants.fontSizeRegular,
+    this.isVertical = false,
   });
   final bool isActive;
-  final int count;
+  final int? count;
   final bool isLoading;
   final IconData activeIcon;
   final IconData inactiveIcon;
   final Color activeColor;
   final VoidCallback onToggle;
   final VoidCallback? onCountTap;
+  final String identifier;
   final double iconSize;
   final double fontSize;
+  final bool isVertical;
 
   @override
   State<SocialActionButton> createState() => _SocialActionButtonState();
@@ -57,16 +62,19 @@ class _SocialActionButtonState extends State<SocialActionButton>
   }
 
   void _handleTap() {
+    HapticFeedback.lightImpact();
     _controller.forward(from: 0.0);
     widget.onToggle();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
+    final children = [
+      Semantics(
+        identifier: '${widget.identifier}_icon',
+        label: widget.isActive ? 'Active' : 'Inactive',
+        button: true,
+        child: GestureDetector(
           onTap: widget.isLoading ? null : _handleTap,
           behavior: HitTestBehavior.opaque,
           child: ScaleTransition(
@@ -86,23 +94,44 @@ class _SocialActionButtonState extends State<SocialActionButton>
             ),
           ),
         ),
-        const SizedBox(width: AppConstants.spacingSmall),
-        GestureDetector(
-          onTap: widget.onCountTap,
-          behavior: HitTestBehavior.opaque,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: Text(
-              '${widget.count}',
-              key: ValueKey<int>(widget.count),
-              style: TextStyle(
-                color: AppColors.onPrimary,
-                fontSize: widget.fontSize,
+      ),
+      if (widget.count != null) ...[
+        widget.isVertical
+            ? const SizedBox(height: 4)
+            : const SizedBox(width: AppConstants.spacingSmall),
+        Flexible(
+          child: Semantics(
+            identifier: '${widget.identifier}_count',
+            label: '${widget.count}',
+            button: widget.onCountTap != null,
+            child: GestureDetector(
+              onTap: widget.onCountTap,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Text(
+                    '${widget.count}',
+                    key: ValueKey<int?>(widget.count),
+                    style: TextStyle(
+                      color: AppColors.onPrimary,
+                      fontSize: widget.fontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
               ),
             ),
           ),
         ),
       ],
-    );
+    ];
+
+    return widget.isVertical
+        ? Column(mainAxisSize: MainAxisSize.min, children: children)
+        : Row(mainAxisSize: MainAxisSize.min, children: children);
   }
 }

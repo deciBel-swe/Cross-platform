@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
 import '../providers/user_playlists_provider.dart';
@@ -34,10 +36,19 @@ class PlaylistDetailsNotifier
 
     final result = await repository.getPlaylistDetails(arg);
 
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (playlist) => playlist,
-    );
+    return result.fold((failure) {
+      if (failure is NetworkFailure) {
+        final cachedPlaylists = ref.read(userPlaylistsProvider).valueOrNull;
+        if (cachedPlaylists != null) {
+          for (final playlist in cachedPlaylists) {
+            if (playlist.id == arg) {
+              return playlist;
+            }
+          }
+        }
+      }
+      throw Exception(failure.message);
+    }, (playlist) => playlist);
   }
 
   @override
@@ -56,7 +67,9 @@ class PlaylistDetailsNotifier
     _pendingDeletions.addAll(tracksToDelete);
 
     final idsToRemove = tracksToDelete.map((t) => t.id).toList();
-    ref.read(userPlaylistsProvider.notifier).removeTracksLocally(arg, idsToRemove);
+    ref
+        .read(userPlaylistsProvider.notifier)
+        .removeTracksLocally(arg, idsToRemove);
 
     // Optimistically update the UI to hide deleted tracks instantly
     if (state.value != null) {
@@ -64,19 +77,7 @@ class PlaylistDetailsNotifier
       final newTracks = p.tracks
           .where((t) => !_pendingDeletions.any((d) => d.id == t.id))
           .toList();
-      state = AsyncData(
-        Playlist(
-          id: p.id,
-          title: p.title,
-          description: p.description,
-          type: p.type,
-          isPrivate: p.isPrivate,
-          isLiked: p.isLiked,
-          coverArt: p.coverArt,
-          owner: p.owner,
-          tracks: newTracks,
-        ),
-      );
+      state = AsyncData(p.copyWith(tracks: newTracks));
     }
 
     // Start the 5-second countdown
@@ -89,7 +90,9 @@ class PlaylistDetailsNotifier
   void undoDeletions() {
     _deletionTimer?.cancel();
 
-    ref.read(userPlaylistsProvider.notifier).restoreTracksLocally(arg, _pendingDeletions);
+    ref
+        .read(userPlaylistsProvider.notifier)
+        .restoreTracksLocally(arg, _pendingDeletions);
 
     _pendingDeletions.clear();
 
@@ -98,6 +101,36 @@ class PlaylistDetailsNotifier
     _keepAliveLink = null;
 
     ref.invalidateSelf(); // Instantly fetch the original tracks back from the backend
+  }
+
+  void updatePlaylistLocally(Playlist updatedPlaylist) {
+    final current = state.valueOrNull;
+    if (current == null || current.id != updatedPlaylist.id) {
+      state = AsyncData(updatedPlaylist);
+      return;
+    }
+
+    state = AsyncData(
+      current.copyWith(
+        title: updatedPlaylist.title,
+        description: updatedPlaylist.description,
+        isPrivate: updatedPlaylist.isPrivate,
+        isLiked: updatedPlaylist.isLiked,
+        isReposted: updatedPlaylist.isReposted,
+        coverArt: updatedPlaylist.coverArt,
+        owner: updatedPlaylist.owner ?? current.owner,
+        tracks: updatedPlaylist.tracks.isNotEmpty
+            ? updatedPlaylist.tracks
+            : current.tracks,
+        totalDurationSeconds: updatedPlaylist.totalDurationSeconds,
+        trackCount: updatedPlaylist.trackCount,
+        playlistSlug: updatedPlaylist.playlistSlug,
+        firstTrackWaveformUrl: updatedPlaylist.firstTrackWaveformUrl,
+        secretToken: updatedPlaylist.secretToken,
+        access: updatedPlaylist.access,
+        createdAt: updatedPlaylist.createdAt ?? current.createdAt,
+      ),
+    );
   }
 
   void _flushDeletions() {
@@ -119,11 +152,18 @@ class PlaylistDetailsNotifier
   Future<Either<Failure, String>> fetchSecretLink() async {
     final repository = ref.read(playlistRepositoryProvider);
 
-    return await repository.getPlaylistSecretLink(arg);
-  }
-}
+    final result = await repository.getPlaylistSecretLink(arg);
 
-final playlistDetailsProvider = AsyncNotifierProvider.autoDispose
-    .family<PlaylistDetailsNotifier, Playlist, int>(
-      PlaylistDetailsNotifier.new,
-    );
+    return result.fold((failure) => Left(failure), (token) {
+      final fullLink =
+          'https://decibel.foo${RoutePaths.deepLinkSecretPlaylist(token)}';
+
+      return Right(fullLink);
+    });
+  }
+
+  final playlistDetailsProvider = AsyncNotifierProvider.autoDispose
+      .family<PlaylistDetailsNotifier, Playlist, int>(
+        PlaylistDetailsNotifier.new,
+      );
+}

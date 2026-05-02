@@ -24,8 +24,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final model = await _remoteDataSource.updateSocialLinks(links.toModel());
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -38,8 +42,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final model = await _remoteDataSource.getUserProfile();
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -52,8 +60,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final model = await _remoteDataSource.getPublicProfile(userId);
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -80,12 +92,23 @@ class ProfileRepositoryImpl implements ProfileRepository {
             ? {'favoriteGenres': favoriteGenres}
             : null),
         ...?(socialLinks != null
-            ? {'socialLinks': socialLinks.toModel().toJson()}
+            ? {
+                'socialLinks': {
+                  for (final platform in socialLinks.nonEmptyPlatforms(
+                    includeSupportLink: false,
+                  ))
+                    platform: socialLinks.valueForPlatform(platform),
+                },
+              }
             : null),
       };
 
       final success = await _remoteDataSource.updateProfile(updateData);
       return Right(success);
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -105,6 +128,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
       );
 
       return Right(success);
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

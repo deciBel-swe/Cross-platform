@@ -15,6 +15,7 @@ class CommentHeader extends StatelessWidget {
   final String timeAgo;
   final VoidCallback onTimestampTap;
 
+  /// Builds the comment author, timestamp, and age row.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

@@ -19,28 +19,32 @@ class ProfileTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      maxLength: maxLength,
-      validator: validator,
-      style: const TextStyle(color: AppColors.onPrimary),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: AppColors.onPrimary),
-        counterStyle: const TextStyle(color: AppColors.surface),
-        errorStyle: const TextStyle(color: Colors.redAccent),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.surface),
-        ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.google),
-        ),
-        errorBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.redAccent),
-        ),
-        focusedErrorBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.redAccent),
+    return Semantics(
+      label: label,
+      textField: true,
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        maxLength: maxLength,
+        validator: validator,
+        style: const TextStyle(color: AppColors.onPrimary),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: AppColors.onPrimary),
+          counterStyle: const TextStyle(color: AppColors.surface),
+          errorStyle: const TextStyle(color: Colors.redAccent),
+          enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.surface),
+          ),
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.google),
+          ),
+          errorBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.redAccent),
+          ),
+          focusedErrorBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.redAccent),
+          ),
         ),
       ),
     );

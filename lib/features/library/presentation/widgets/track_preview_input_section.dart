@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../notifiers/track_comment_notifier.dart';
+import '../providers/track_comment_provider.dart';
 import '../utils/mention_text_editing_controller.dart';
 import 'comment_reaction_bar.dart';
 
@@ -10,6 +10,7 @@ class TrackPreviewInputSection extends ConsumerStatefulWidget {
 
   final int trackId;
 
+  /// Creates the state that owns the preview comment input.
   @override
   ConsumerState<TrackPreviewInputSection> createState() =>
       _TrackPreviewInputSectionState();
@@ -21,21 +22,17 @@ class _TrackPreviewInputSectionState
       MentionTextEditingController();
   final FocusNode _focusNode = FocusNode();
 
+  /// Wires input changes to the comment notifier.
   @override
   void initState() {
     super.initState();
+    final notifier = ref.read(trackCommentsProvider(widget.trackId).notifier);
     _commentController.addListener(() {
-      if (_commentController.text.isEmpty) {
-        final state = ref.read(trackCommentsProvider(widget.trackId));
-        if (state.activeReplyCommentId != null) {
-          ref
-              .read(trackCommentsProvider(widget.trackId).notifier)
-              .clearReplyMode();
-        }
-      }
+      notifier.clearReplyModeIfInputIsEmpty(_commentController.text);
     });
   }
 
+  /// Disposes the preview input resources.
   @override
   void dispose() {
     _commentController.dispose();
@@ -43,6 +40,7 @@ class _TrackPreviewInputSectionState
     super.dispose();
   }
 
+  /// Builds the preview comment input section.
   @override
   Widget build(BuildContext context) {
     final commentsState = ref.watch(trackCommentsProvider(widget.trackId));
@@ -74,10 +72,6 @@ class _TrackPreviewInputSectionState
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Row(
                 children: [
-                  const Text(
-                    'Replying...',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
                   const Spacer(),
                   GestureDetector(
                     onTap: () {

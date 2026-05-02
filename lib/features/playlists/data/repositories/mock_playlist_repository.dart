@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+
 import '../../../../core/errors/failures.dart';
 import '../../../library/domain/entities/artist.dart';
 import '../../../library/domain/entities/track.dart';
@@ -31,6 +32,7 @@ final List<Track> _mockTracks = [
     likeCount: 342,
     repostCount: 56,
     createdAt: DateTime(2020, 4, 20),
+    trackDurationSeconds: 120,
   ),
   Track(
     id: 102,
@@ -49,6 +51,7 @@ final List<Track> _mockTracks = [
     likeCount: 4500,
     repostCount: 890,
     createdAt: DateTime(2024, 1, 10),
+    trackDurationSeconds: 120,
   ),
   Track(
     id: 103,
@@ -67,8 +70,10 @@ final List<Track> _mockTracks = [
     likeCount: 12400,
     repostCount: 3100,
     createdAt: DateTime(2023, 11, 18),
+    trackDurationSeconds: 120,
   ),
 ];
+
 // A local list to simulate a database
 final List<Playlist> _mockPlaylists = [
   const Playlist(
@@ -78,8 +83,16 @@ final List<Playlist> _mockPlaylists = [
     type: "PLAYLIST",
     isPrivate: false,
     isLiked: true,
+    coverArt: null,
     owner: PlaylistOwner(id: 101, username: "Ahmed Abd Al-Jaleel"),
     tracks: [],
+    totalDurationSeconds: 0,
+    trackCount: 0,
+    playlistSlug: null,
+    firstTrackWaveformUrl: null,
+    secretToken: null,
+    access: null,
+    createdAt: null,
   ),
   Playlist(
     id: 2,
@@ -88,16 +101,28 @@ final List<Playlist> _mockPlaylists = [
     type: "PLAYLIST",
     isPrivate: true,
     isLiked: false,
+    coverArt: null,
     owner: const PlaylistOwner(id: 101, username: "Ahmed Abd Al-Jaleel"),
     tracks: _mockTracks,
+    totalDurationSeconds: 0,
+    trackCount: _mockTracks.length,
+    playlistSlug: null,
+    firstTrackWaveformUrl: null,
+    secretToken: null,
+    access: null,
+    createdAt: null,
   ),
 ];
 
+// @Environment('mock')
+// @LazySingleton(as: IPlaylistRepository)
 class MockPlaylistRepository implements IPlaylistRepository {
   @override
   Future<Either<Failure, List<Playlist>>> getUserPlaylists({
-    int page = 0,
-    int size = 20,
+    required int page,
+    required int size,
+    int? userId,
+    String? username,
   }) async {
     return Right(_mockPlaylists);
   }
@@ -111,12 +136,20 @@ class MockPlaylistRepository implements IPlaylistRepository {
     final newPlaylist = Playlist(
       id: uniqueId,
       title: metadata.title,
+      description: metadata.description,
       type: "PLAYLIST",
       isPrivate: metadata.isPrivate,
       coverArt: metadata.coverImage?.path,
       isLiked: false,
       owner: const PlaylistOwner(id: 101, username: "Ahmed Abd Al-Jaleel"),
-      tracks: [],
+      tracks: const [],
+      totalDurationSeconds: 0,
+      trackCount: 0,
+      playlistSlug: null,
+      firstTrackWaveformUrl: null,
+      secretToken: null,
+      access: null,
+      createdAt: null,
     );
     _mockPlaylists.add(newPlaylist);
     return Right(newPlaylist);
@@ -147,18 +180,13 @@ class MockPlaylistRepository implements IPlaylistRepository {
 
     final existingPlaylist = _mockPlaylists[index];
 
-    final updatedPlaylist = Playlist(
-      id: existingPlaylist.id,
+    final updatedPlaylist = existingPlaylist.copyWith(
       title: metadata.title.isNotEmpty
           ? metadata.title
           : existingPlaylist.title,
       description: metadata.description,
-      type: existingPlaylist.type,
       isPrivate: metadata.isPrivate,
       coverArt: metadata.coverImage?.path ?? existingPlaylist.coverArt,
-      isLiked: existingPlaylist.isLiked,
-      owner: existingPlaylist.owner,
-      tracks: existingPlaylist.tracks,
     );
 
     _mockPlaylists[index] = updatedPlaylist;
@@ -178,12 +206,10 @@ class MockPlaylistRepository implements IPlaylistRepository {
 
     final playlist = _mockPlaylists[index];
 
-    // Create a new list of tracks based on the order of the IDs provided
     final reorderedTracks = <Track>[];
 
     try {
       for (final id in trackIds) {
-        // Find the track in the existing playlist that matches the ID
         final track = playlist.tracks.firstWhere((t) => t.id == id);
         reorderedTracks.add(track);
       }
@@ -193,16 +219,9 @@ class MockPlaylistRepository implements IPlaylistRepository {
       );
     }
 
-    final updatedPlaylist = Playlist(
-      id: playlist.id,
-      title: playlist.title,
-      description: playlist.description,
-      type: playlist.type,
-      isPrivate: playlist.isPrivate,
-      coverArt: playlist.coverArt,
-      isLiked: playlist.isLiked,
-      owner: playlist.owner,
+    final updatedPlaylist = playlist.copyWith(
       tracks: reorderedTracks,
+      trackCount: reorderedTracks.length,
     );
 
     _mockPlaylists[index] = updatedPlaylist;
@@ -226,10 +245,13 @@ class MockPlaylistRepository implements IPlaylistRepository {
     try {
       final track = _mockTracks.firstWhere((t) => t.id == trackId);
       final playlist = _mockPlaylists[index];
-      // Prevent duplicates in mock
       if (!playlist.tracks.any((t) => t.id == trackId)) {
         playlist.tracks.add(track);
       }
+      _mockPlaylists[index] = playlist.copyWith(
+        tracks: playlist.tracks,
+        trackCount: playlist.tracks.length,
+      );
       return const Right(null);
     } catch (e) {
       return const Left(ServerFailure("Track not found in mock data"));
@@ -244,7 +266,16 @@ class MockPlaylistRepository implements IPlaylistRepository {
     final index = _mockPlaylists.indexWhere((p) => p.id == playlistId);
     if (index == -1) return const Left(ServerFailure("Playlist not found"));
 
-    _mockPlaylists[index].tracks.removeWhere((t) => t.id == trackId);
+    final playlist = _mockPlaylists[index];
+    final updatedTracks = playlist.tracks
+        .where((t) => t.id != trackId)
+        .toList();
+
+    _mockPlaylists[index] = playlist.copyWith(
+      tracks: updatedTracks,
+      trackCount: updatedTracks.length,
+    );
+
     return const Right(null);
   }
 }
