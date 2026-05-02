@@ -11,7 +11,6 @@ import '../../domain/repositories/i_track_comments_repository.dart'
 import '../datasources/track_comments_remote_data_source.dart';
 import '../models/comment_reply_model.dart';
 import '../models/post_comment_request_model.dart';
-import '../models/post_comment_response_model.dart';
 
 @Environment("prod")
 @LazySingleton(as: ITrackCommentsRepository)

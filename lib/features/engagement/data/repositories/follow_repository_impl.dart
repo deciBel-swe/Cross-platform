@@ -26,12 +26,18 @@ class FollowRepositoryImpl implements FollowRepository {
   /// Returns [Right(PublicProfile)] on success,
   /// or [Left(Failure)] if a network or parsing error occurs.
   @override
-  Future<Either<Failure, PublicProfile>> getPublicProfile(int userId) async {
+  Future<Either<Failure, PublicProfile>> getPublicProfile(
+    String userIdentifier,
+  ) async {
     try {
-      final model = await _remoteDataSource.getPublicProfile(userId);
+      final model = await _remoteDataSource.getPublicProfile(userIdentifier);
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -50,6 +56,8 @@ class FollowRepositoryImpl implements FollowRepository {
       return Right(response.isFollowing);
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -68,6 +76,8 @@ class FollowRepositoryImpl implements FollowRepository {
       return Right(response.isFollowing);
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -88,8 +98,12 @@ class FollowRepositoryImpl implements FollowRepository {
         size: size,
       );
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -110,8 +124,12 @@ class FollowRepositoryImpl implements FollowRepository {
         size: size,
       );
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -130,8 +148,33 @@ class FollowRepositoryImpl implements FollowRepository {
         size: size,
       );
       return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PaginatedEngagers>> getFriends({
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      final model = await _remoteDataSource.getFriends(page: page, size: size);
+      return Right(model.toEntity());
+    } on NotFoundException catch (e) {
+      return Left(NotFoundFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

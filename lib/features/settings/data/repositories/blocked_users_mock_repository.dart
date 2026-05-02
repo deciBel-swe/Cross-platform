@@ -60,9 +60,7 @@ class BlockedUsersMockRepository implements BlockedUsersRepository {
   }
 
   @override
-  Future<void> unblockUser({
-    required int userId,
-  }) async {
+  Future<void> unblockUser({required int userId}) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     _allUsers.removeWhere((user) => user.id == userId);
   }

@@ -1,11 +1,18 @@
 import 'dart:async';
+
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+
+import '../../../home/presentation/providers/history_provider.dart';
+import '../../domain/entities/track.dart';
 import '../state/track_audio_state.dart';
 
 class TrackAudioNotifier extends Notifier<TrackAudioState> {
   AudioPlayer? _player;
+
+  final double _playerVolume = 1.0;
 
   /// Factory for creating AudioPlayer instances, customizable for testing.
   @visibleForTesting
@@ -13,9 +20,15 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<PlayerState>? _playerStateSubscription;
+  StreamSubscription<Duration?>? _durationSubscription;
+  StreamSubscription<PlaybackEvent>? _playbackEventSubscription;
 
   bool _isDisposed = false;
   bool _isStopping = false;
+  int _operationGeneration = 0;
+  Future<void> _transitionQueue = Future<void>.value();
+  bool _hasReportedPlayForPreparedTrack = false;
+  int? _reportedPlayTrackId;
 
   AudioPlayer get _audioPlayer {
     final player = _player;
@@ -31,7 +44,9 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     _listenToPlayer();
 
     ref.onDispose(() async {
+      _operationGeneration += 1;
       _isDisposed = true;
+
       await _disposeCurrentPlayer();
     });
 
@@ -40,62 +55,153 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
   void _createPlayer() {
     _player = audioPlayerFactory?.call() ?? AudioPlayer();
+    _player?.setVolume(_playerVolume);
   }
 
   Future<void> _disposeCurrentPlayer() async {
     await _positionSubscription?.cancel();
     await _playerStateSubscription?.cancel();
-
+    await _durationSubscription?.cancel();
+    await _playbackEventSubscription?.cancel();
     _positionSubscription = null;
     _playerStateSubscription = null;
+    _durationSubscription = null;
+    _playbackEventSubscription = null;
 
     try {
       await _player?.dispose();
-    } catch (_) {}
+    } catch (error) {
+      // Ignore error
+    }
 
     _player = null;
   }
 
   void _listenToPlayer() {
-    _positionSubscription = _audioPlayer.positionStream.listen((position) {
-      if (_isDisposed || _isStopping || state.isDragging) {
+    _positionSubscription = _audioPlayer.positionStream.listen(
+      (position) {
+        if (_isDisposed) {
+          return;
+        }
+
+        if (_isStopping) {
+          return;
+        }
+
+        if (state.isDragging) {
+          return;
+        }
+
+        state = state.copyWith(
+          position: position,
+          progress: _calculateProgress(
+            position: position,
+            duration: state.duration,
+          ),
+        );
+      },
+      onError: (Object error, StackTrace _) {},
+      onDone: () {},
+    );
+
+    _playerStateSubscription = _audioPlayer.playerStateStream.listen(
+      (event) {
+        if (_isDisposed) {
+          return;
+        }
+
+        if (_isStopping) {
+          return;
+        }
+
+        state = state.copyWith(isPlaying: event.playing);
+
+        if (event.processingState == ProcessingState.completed &&
+            !state.isDragging) {
+          _reportTrackCompleted();
+
+          unawaited(replay());
+        }
+      },
+      onError: (Object error, StackTrace _) {},
+      onDone: () {},
+    );
+
+    _durationSubscription = _audioPlayer.durationStream.listen(
+      (duration) {
+        if (_isDisposed) {
+          return;
+        }
+
+        if (_isStopping) {
+          return;
+        }
+
+        if (duration == null) {
+          return;
+        }
+
+        if (duration != state.duration) {
+          state = state.copyWith(
+            duration: duration,
+            progress: _calculateProgress(
+              position: state.position,
+              duration: duration,
+            ),
+          );
+        }
+      },
+      onError: (Object error, StackTrace _) {},
+      onDone: () {},
+    );
+
+    _playbackEventSubscription = _audioPlayer.playbackEventStream.listen(
+      (event) {
+        if (_isDisposed) {
+          return;
+        }
+      },
+      onError: (Object error, StackTrace _) {},
+      onDone: () {},
+    );
+  }
+
+  Future<void> _runSerializedTransition(
+    Future<void> Function(int operationId) transition,
+  ) {
+    final operationId = ++_operationGeneration;
+
+    final nextTransition = _transitionQueue.then((_) async {
+      if (_isDisposed) {
         return;
       }
 
-      final newPosition = position;
+      await transition(operationId);
+    });
 
-      state = state.copyWith(
-        position: newPosition,
-        progress: _calculateProgress(
-          position: newPosition,
-          duration: state.duration,
-        ),
-      );
-    }, onError: (_) {});
+    _transitionQueue = nextTransition.catchError(
+      (Object error, StackTrace st) {},
+    );
 
-    _playerStateSubscription = _audioPlayer.playerStateStream.listen((event) {
-      if (_isDisposed || _isStopping) {
-        return;
-      }
-
-      state = state.copyWith(isPlaying: event.playing);
-
-      if (event.processingState == ProcessingState.completed &&
-          !state.isDragging) {
-        // Keep the existing behavior: auto-replay when playback completes.
-        replay();
-      }
-    }, onError: (_) {});
+    return nextTransition;
   }
 
   Future<void> initializeForTrack({
     required int trackId,
     required String trackUrl,
+    Track? track,
+    List<Track>? queue,
     Duration duration = Duration.zero,
     bool autoPlay = true,
   }) async {
-    if (_isDisposed || _isStopping) return;
-    if (state.isPreparing) return;
+    if (_isDisposed || _isStopping) {
+      return;
+    }
+
+    final sanitizedQueue = _sanitizeQueue(
+      queue ?? state.queue,
+      currentTrack: track,
+    );
 
     final isSamePreparedTrack =
         state.isPrepared &&
@@ -106,59 +212,81 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       if (autoPlay && !state.isPlaying) {
         await play();
       }
+
       return;
     }
 
-    state = state.copyWith(isPreparing: true, duration: duration);
+    await _runSerializedTransition((operationId) async {
+      if (_isDisposed) {
+        return;
+      }
 
-    try {
-      await _prepareInternal(
-        trackId: trackId,
-        trackUrl: trackUrl,
+      state = state.copyWith(
+        isPreparing: true,
         duration: duration,
+        queue: sanitizedQueue,
       );
 
-      if (autoPlay) {
-        await play();
-      }
-    } catch (error) {
-      // Guard against source-load failures (e.g. invalid/unreachable URL)
-      // so playback errors don't bubble as unhandled UI exceptions.
-      if (kDebugMode) {
-        debugPrint('TrackAudioNotifier initializeForTrack failed: $error');
-      }
-
-      if (!_isDisposed) {
-        state = state.copyWith(
-          isPrepared: false,
-          preparedTrackId: null,
-          preparedTrackUrl: null,
-          isPlaying: false,
-          position: Duration.zero,
-          progress: 0,
-          dragProgress: null,
-          dragPosition: null,
-          isDragging: false,
+      try {
+        await _prepareInternal(
+          trackId: trackId,
+          trackUrl: trackUrl,
+          track: track,
+          duration: duration,
+          operationId: operationId,
         );
+
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        if (track != null) {
+          ref.read(historyProvider.notifier).addLocalRecentlyPlayed(track);
+        }
+
+        if (autoPlay) {
+          await play();
+        } else {}
+      } catch (error) {
+        if (!_isDisposed && operationId == _operationGeneration) {
+          state = state.copyWith(
+            isPrepared: false,
+            preparedTrackId: null,
+            preparedTrackUrl: null,
+            currentTrack: null,
+            isPlaying: false,
+            position: Duration.zero,
+            progress: 0,
+            dragProgress: null,
+            dragPosition: null,
+            isDragging: false,
+          );
+        }
+      } finally {
+        if (!_isDisposed && operationId == _operationGeneration) {
+          state = state.copyWith(isPreparing: false);
+        }
       }
-    } finally {
-      if (!_isDisposed) {
-        state = state.copyWith(isPreparing: false);
-      }
-    }
+    });
   }
 
   Future<void> _prepareInternal({
     required int trackId,
     required String trackUrl,
+    Track? track,
     required Duration duration,
+    required int operationId,
   }) async {
-    if (_isDisposed) return;
+    if (_isDisposed || operationId != _operationGeneration) {
+      return;
+    }
 
     if (state.isPrepared) {
       try {
         await _audioPlayer.stop();
-      } catch (_) {}
+      } catch (error) {
+        // Ignore error
+      }
     }
 
     state = state.copyWith(
@@ -166,6 +294,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       isPrepared: false,
       preparedTrackId: null,
       preparedTrackUrl: null,
+      currentTrack: null,
       position: Duration.zero,
       progress: 0,
       duration: duration,
@@ -174,9 +303,15 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       dragPosition: null,
     );
 
-    final loadedDuration = await _setSource(trackUrl);
+    final loadedDuration = await _setSource(
+      trackId: trackId,
+      urlOrPath: trackUrl,
+      track: track,
+    );
 
-    if (_isDisposed) return;
+    if (_isDisposed || operationId != _operationGeneration) {
+      return;
+    }
 
     var resolvedDuration = duration;
 
@@ -186,52 +321,211 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       final playerDuration = _audioPlayer.duration;
       if (playerDuration != null && playerDuration.inMilliseconds > 0) {
         resolvedDuration = playerDuration;
-      }
+      } else {}
     }
 
-    if (_isDisposed) return;
+    if (_isDisposed || operationId != _operationGeneration) {
+      return;
+    }
 
     state = state.copyWith(
       isPrepared: true,
       preparedTrackId: trackId,
       preparedTrackUrl: trackUrl,
+      currentTrack: track,
       duration: resolvedDuration,
       position: Duration.zero,
       progress: 0,
       dragProgress: null,
       dragPosition: null,
     );
+
+    _hasReportedPlayForPreparedTrack = false;
+    _reportedPlayTrackId = trackId;
+  }
+
+  Future<void> skipNext() async {
+    if (_isDisposed || _isStopping) {
+      return;
+    }
+
+    final currentId = state.preparedTrackId;
+    if (currentId == null) return;
+
+    final queue = state.queue;
+    if (queue.isEmpty) return;
+
+    final currentIndex = queue.indexWhere((t) => t.id == currentId);
+    if (currentIndex == -1) return;
+
+    final nextIndex = currentIndex + 1;
+    if (nextIndex >= queue.length) {
+      return;
+    }
+
+    final nextTrack = queue[nextIndex];
+    await playTrack(track: nextTrack, queue: queue, autoPlay: true);
+  }
+
+  Future<void> skipPrevious() async {
+    if (_isDisposed || _isStopping) {
+      return;
+    }
+
+    final currentId = state.preparedTrackId;
+    if (currentId == null) return;
+
+    final queue = state.queue;
+    if (queue.isEmpty) return;
+
+    final currentIndex = queue.indexWhere((t) => t.id == currentId);
+    if (currentIndex == -1) return;
+
+    final previousIndex = currentIndex - 1;
+    if (previousIndex < 0) {
+      return;
+    }
+
+    final previousTrack = queue[previousIndex];
+    await playTrack(track: previousTrack, queue: queue, autoPlay: true);
+  }
+
+  void addToQueue(Track track) {
+    if (_isDisposed) {
+      return;
+    }
+
+    if (!track.isPlayable) {
+      return;
+    }
+
+    final nextQueue = List<Track>.from(state.queue);
+    final alreadyInQueue = nextQueue.any((t) => t.id == track.id);
+
+    if (alreadyInQueue) return;
+
+    nextQueue.add(track);
+    state = state.copyWith(queue: _sanitizeQueue(nextQueue));
+  }
+
+  void removeFromQueue(int trackId) {
+    if (_isDisposed) {
+      return;
+    }
+
+    final nextQueue = state.queue.where((t) => t.id != trackId).toList();
+
+    if (nextQueue.length == state.queue.length) {
+      return;
+    }
+
+    state = state.copyWith(queue: nextQueue);
+  }
+
+  void reorderQueue(int oldIndex, int newIndex) {
+    if (_isDisposed) {
+      return;
+    }
+
+    if (oldIndex < 0 || oldIndex >= state.queue.length) {
+      return;
+    }
+
+    final nextQueue = List<Track>.from(state.queue);
+
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+
+    if (newIndex < 0 || newIndex >= nextQueue.length) {
+      return;
+    }
+
+    final item = nextQueue.removeAt(oldIndex);
+    nextQueue.insert(newIndex, item);
+
+    state = state.copyWith(queue: nextQueue);
+  }
+
+  Future<void> playFromQueueIndex(int index) async {
+    if (_isDisposed || _isStopping) {
+      return;
+    }
+
+    final queue = state.queue;
+    if (index < 0 || index >= queue.length) {
+      return;
+    }
+
+    final selected = queue[index];
+    await playTrack(track: selected, queue: queue, autoPlay: true);
+  }
+
+  Future<void> playTrack({
+    required Track track,
+    List<Track>? queue,
+    Duration duration = Duration.zero,
+    bool autoPlay = true,
+  }) async {
+    if (_isDisposed || _isStopping) {
+      return;
+    }
+
+    final trackUrl = track.normalizedTrackUrl;
+
+    if (!track.isPlayable || trackUrl == null) {
+      return;
+    }
+
+    await initializeForTrack(
+      trackId: track.id,
+      trackUrl: trackUrl,
+      track: track,
+      queue: queue,
+      duration: duration,
+      autoPlay: autoPlay,
+    );
   }
 
   Future<void> play() async {
-    if (!state.isPrepared || _isDisposed || _isStopping) return;
+    if (!state.isPrepared || _isDisposed || _isStopping) {
+      return;
+    }
 
     try {
       unawaited(
-        _audioPlayer.play().catchError((_) {
+        _audioPlayer.play().catchError((Object error, StackTrace _) {
           if (!_isDisposed) {
             state = state.copyWith(isPlaying: false);
           }
         }),
       );
-    } catch (_) {
+    } catch (error) {
       if (!_isDisposed) {
         state = state.copyWith(isPlaying: false);
       }
       return;
     }
 
-    if (_isDisposed || _isStopping) return;
+    if (_isDisposed || _isStopping) {
+      return;
+    }
 
     state = state.copyWith(isPlaying: true);
+
+    _reportPlayStartedIfNeeded();
   }
 
   Future<void> pause() async {
-    if (!state.isPrepared || _isDisposed || _isStopping) return;
+    if (!state.isPrepared || _isDisposed || _isStopping) {
+      return;
+    }
 
     try {
       await _audioPlayer.pause();
-    } catch (_) {}
+    } catch (error) {
+      // Ignore error
+    }
 
     if (_isDisposed) return;
 
@@ -239,15 +533,19 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   }
 
   Future<void> stop({bool resetState = true}) async {
-    if (_isDisposed) return;
+    if (_isDisposed) {
+      return;
+    }
 
     _isStopping = true;
 
     try {
       if (state.isPrepared) {
         await _audioPlayer.stop();
-      }
-    } catch (_) {}
+      } else {}
+    } catch (error) {
+      // Ignore error
+    }
 
     if (!_isDisposed && resetState) {
       state = state.copyWith(
@@ -255,6 +553,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         isPrepared: false,
         preparedTrackId: null,
         preparedTrackUrl: null,
+        currentTrack: null,
         isPlaying: false,
         position: Duration.zero,
         duration: Duration.zero,
@@ -263,13 +562,18 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
         dragProgress: null,
         dragPosition: null,
       );
+
+      _hasReportedPlayForPreparedTrack = false;
+      _reportedPlayTrackId = null;
     }
 
     _isStopping = false;
   }
 
   void onDragStart() {
-    if (_isDisposed) return;
+    if (_isDisposed) {
+      return;
+    }
 
     state = state.copyWith(
       isDragging: true,
@@ -279,7 +583,9 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   }
 
   void onDragUpdate(double progress) {
-    if (_isDisposed) return;
+    if (_isDisposed) {
+      return;
+    }
 
     final clamped = progress.clamp(0.0, 1.0);
 
@@ -295,7 +601,9 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   }
 
   Future<void> onDragEnd(double progress) async {
-    if (_isDisposed) return;
+    if (_isDisposed) {
+      return;
+    }
 
     final clamped = progress.clamp(0.0, 1.0);
 
@@ -313,13 +621,17 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   }
 
   Future<void> seek(Duration position) async {
-    if (!state.isPrepared || _isDisposed || _isStopping) return;
+    if (!state.isPrepared || _isDisposed || _isStopping) {
+      return;
+    }
 
     final safePosition = position > state.duration ? state.duration : position;
 
     try {
       await _audioPlayer.seek(safePosition);
-    } catch (_) {}
+    } catch (error) {
+      // Ignore error
+    }
 
     if (_isDisposed) return;
 
@@ -347,63 +659,232 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   }
 
   Future<void> replay() async {
-    if (_isDisposed || _isStopping) return;
-    if (!state.isPrepared) return;
-    if (state.preparedTrackUrl == null || state.preparedTrackId == null) return;
-
-    _isStopping = true;
-
-    var didRestart = false;
-
-    try {
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-      await _audioPlayer.stop();
-
-      await _disposeCurrentPlayer();
-      final preparedurl = state.preparedTrackUrl!;
-      if (_isDisposed) return;
-      _createPlayer();
-
-      await _setSource(preparedurl);
-      _listenToPlayer();
-      await _audioPlayer.seek(Duration.zero);
-      if (_isDisposed) return;
-
-      state = state.copyWith(
-        isPlaying: false,
-        isDragging: false,
-        dragProgress: null,
-        dragPosition: null,
-        position: Duration.zero,
-        progress: 0,
-      );
-
-      didRestart = true;
-    } catch (_) {
-      if (!_isDisposed) {
-        state = state.copyWith(isPlaying: false);
+    await _runSerializedTransition((operationId) async {
+      if (_isDisposed || _isStopping || state.isPreparing) {
+        return;
       }
-    } finally {
-      _isStopping = false;
-    }
 
-    if (_isDisposed || !didRestart) return;
+      if (!state.isPrepared) {
+        return;
+      }
 
-    // Actually resume playback after recreating the player.
-    await play();
+      if (state.preparedTrackUrl == null || state.preparedTrackId == null) {
+        return;
+      }
+
+      _isStopping = true;
+      var didRestart = false;
+
+      final preparedTrackId = state.preparedTrackId!;
+      final preparedUrl = state.preparedTrackUrl!;
+      final currentTrack = state.currentTrack;
+
+      try {
+        await _audioPlayer.stop();
+
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        await _disposeCurrentPlayer();
+
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        _createPlayer();
+
+        await _setSource(
+          trackId: preparedTrackId,
+          urlOrPath: preparedUrl,
+          track: currentTrack,
+        );
+
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        _listenToPlayer();
+
+        await _audioPlayer.seek(Duration.zero);
+
+        if (_isDisposed || operationId != _operationGeneration) {
+          return;
+        }
+
+        state = state.copyWith(
+          isPlaying: false,
+          isDragging: false,
+          dragProgress: null,
+          dragPosition: null,
+          position: Duration.zero,
+          progress: 0,
+        );
+
+        didRestart = true;
+      } catch (error) {
+        if (!_isDisposed && operationId == _operationGeneration) {
+          state = state.copyWith(isPlaying: false);
+        }
+      } finally {
+        _isStopping = false;
+      }
+
+      if (_isDisposed || !didRestart || operationId != _operationGeneration) {
+        return;
+      }
+
+      await play();
+    });
   }
 
-  Future<Duration?> _setSource(String urlOrPath) async {
+  Future<Duration?> _setSource({
+    required int trackId,
+    required String urlOrPath,
+    Track? track,
+  }) async {
     final normalizedSource = urlOrPath.trim();
+
     if (normalizedSource.isEmpty) {
-      // Fail fast for invalid audio source values.
       throw const FormatException('Track source is empty');
     }
 
+    final mediaItem = _buildMediaItem(
+      trackId: trackId,
+      urlOrPath: normalizedSource,
+      track: track,
+    );
+
     final uri = Uri.tryParse(normalizedSource);
-    if (uri != null && uri.hasScheme) {
-      return _audioPlayer.setUrl(normalizedSource);
+
+    try {
+      if (uri != null && uri.hasScheme) {
+        final result = await _audioPlayer.setAudioSource(
+          AudioSource.uri(uri, tag: mediaItem),
+          preload: false,
+        );
+
+        return result;
+      }
+
+      final result = await _audioPlayer.setAudioSource(
+        AudioSource.uri(Uri.file(normalizedSource), tag: mediaItem),
+        preload: false,
+      );
+
+      return result;
+    } catch (error) {
+      rethrow;
     }
-    return _audioPlayer.setFilePath(normalizedSource);
+  }
+
+  MediaItem _buildMediaItem({
+    required int trackId,
+    required String urlOrPath,
+    Track? track,
+  }) {
+    final title = track?.title.trim();
+    final artistName = track?.artist.displayName ?? track?.artist.username;
+    final coverUrl = track?.coverUrl?.trim();
+
+    return MediaItem(
+      id: trackId.toString(),
+      title: (title == null || title.isEmpty) ? 'Unknown track' : title,
+      artist: (artistName == null || artistName.isEmpty)
+          ? 'Unknown artist'
+          : artistName,
+      album: 'Decibel',
+      artUri: (coverUrl != null && coverUrl.isNotEmpty)
+          ? Uri.tryParse(coverUrl)
+          : null,
+      extras: <String, dynamic>{'source': urlOrPath},
+    );
+  }
+
+  Future<void> setVolume(double volume) async {
+    if (_isDisposed || _isStopping) {
+      return;
+    }
+
+    try {
+      await _audioPlayer.setVolume(volume);
+    } catch (error) {
+      // Ignore error
+    }
+  }
+
+  void _reportPlayStartedIfNeeded() {
+    final trackId = state.preparedTrackId;
+
+    if (trackId == null) {
+      return;
+    }
+
+    final alreadyReported =
+        _hasReportedPlayForPreparedTrack && _reportedPlayTrackId == trackId;
+
+    if (alreadyReported) {
+      return;
+    }
+
+    _hasReportedPlayForPreparedTrack = true;
+    _reportedPlayTrackId = trackId;
+
+    unawaited(_recordTrackPlayStarted(trackId));
+  }
+
+  void _reportTrackCompleted() {
+    final trackId = state.preparedTrackId;
+
+    if (trackId == null) {
+      return;
+    }
+
+    unawaited(_recordTrackCompleted(trackId));
+  }
+
+  Future<void> _recordTrackPlayStarted(int trackId) async {
+    final repository = ref.read(historyRepositoryProvider);
+
+    try {
+      await repository.incrementPlayCount(trackId: trackId);
+    } catch (error) {
+      // Ignore error
+    }
+  }
+
+  Future<void> _recordTrackCompleted(int trackId) async {
+    final repository = ref.read(historyRepositoryProvider);
+
+    try {
+      await repository.markTrackCompleted(trackId: trackId);
+    } catch (error) {
+      // Ignore error
+    }
+  }
+
+  List<Track> _sanitizeQueue(List<Track> queue, {Track? currentTrack}) {
+    final sanitizedQueue = <Track>[];
+    final seenTrackIds = <int>{};
+
+    for (final track in queue) {
+      if (!track.isPlayable) {
+        continue;
+      }
+
+      if (!seenTrackIds.add(track.id)) {
+        continue;
+      }
+
+      sanitizedQueue.add(track);
+    }
+
+    if (currentTrack != null &&
+        currentTrack.isPlayable &&
+        seenTrackIds.add(currentTrack.id)) {
+      sanitizedQueue.insert(0, currentTrack);
+    }
+
+    return sanitizedQueue;
   }
 }

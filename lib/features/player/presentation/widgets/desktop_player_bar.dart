@@ -3,13 +3,18 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/auto_scrolling_text.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
+import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
-import '../../../library_profile/presentation/providers/uploads_provider.dart';
+import 'queue_bottom_sheet.dart';
 
 /// Desktop player bar rendered at the bottom of the desktop layout.
 class DesktopPlayerBar extends ConsumerWidget {
@@ -19,10 +24,7 @@ class DesktopPlayerBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final audioState = ref.watch(trackAudioProvider);
     final audioNotifier = ref.read(trackAudioProvider.notifier);
-    final track = _resolveCurrentTrack(
-      tracks: ref.watch(uploadsProvider).valueOrNull,
-      trackId: audioState.preparedTrackId,
-    );
+    final track = audioState.currentTrack;
 
     final displayedProgress = audioState.isDragging
         ? (audioState.dragProgress ?? audioState.progress)
@@ -42,13 +44,27 @@ class DesktopPlayerBar extends ConsumerWidget {
         children: [
           Expanded(
             flex: 3,
-            child: _TrackInfo(
-              title: track?.title ?? 'No track playing',
-              artist:
-                  track?.artist.username ??
-                  (audioState.isPrepared
-                      ? 'Selected track'
-                      : 'Select a track to start listening'),
+            child: Semantics(
+              button: track != null,
+              enabled: track != null,
+              label: track == null
+                  ? 'No track playing'
+                  : 'Open player for ${track.title}',
+              child: GestureDetector(
+                onTap: track != null
+                    ? () => context.push(RoutePaths.trackPreview(track.id))
+                    : null,
+                behavior: HitTestBehavior.opaque,
+                child: MouseRegion(
+                  cursor: track != null
+                      ? SystemMouseCursors.click
+                      : SystemMouseCursors.basic,
+                  child: _TrackInfo(
+                    track: track,
+                    isPrepared: audioState.isPrepared,
+                  ),
+                ),
+              ),
             ),
           ),
           Expanded(
@@ -72,67 +88,69 @@ class DesktopPlayerBar extends ConsumerWidget {
               onSeekStart: (_) => audioNotifier.onDragStart(),
               onSeekChanged: audioNotifier.onDragUpdate,
               onSeekEnd: audioNotifier.onDragEnd,
+              onSkipNext: audioNotifier.skipNext,
+              onSkipPrevious: audioNotifier.skipPrevious,
             ),
           ),
-          const Expanded(flex: 3, child: _VolumeControls()),
+          Expanded(
+            flex: 3,
+            child: _VolumeControls(onVolumeChanged: audioNotifier.setVolume),
+          ),
         ],
       ),
     );
   }
 }
 
-Track? _resolveCurrentTrack({
-  required List<Track>? tracks,
-  required int? trackId,
-}) {
-  if (tracks == null || trackId == null) {
-    return null;
-  }
-
-  for (final track in tracks) {
-    if (track.id == trackId) {
-      return track;
-    }
-  }
-
-  return null;
-}
-
 class _TrackInfo extends StatelessWidget {
-  const _TrackInfo({required this.title, required this.artist});
+  const _TrackInfo({this.track, required this.isPrepared});
 
-  final String title;
-  final String artist;
+  final Track? track;
+  final bool isPrepared;
 
   @override
   Widget build(BuildContext context) {
+    final title = track?.title ?? 'No track playing';
+    final artist =
+        track?.artist.displayName ??
+        track?.artist.username ??
+        (isPrepared ? 'Selected track' : 'Select a track to start listening');
+    final coverUrl = track?.coverUrl;
+
     return Row(
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
+        if (coverUrl != null && coverUrl.isNotEmpty)
+          DecibelCachedImage(
+            imageUrl: coverUrl,
+            width: 48,
+            height: 48,
             borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primaryDark, AppColors.primary],
+          )
+        else
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.primaryDark, AppColors.primary],
+              ),
+            ),
+            child: const Icon(
+              Icons.music_note,
+              color: Colors.white70,
+              size: 24,
             ),
           ),
-          child: const Icon(Icons.music_note, color: Colors.white70, size: 24),
-        ),
         const SizedBox(width: AppDimensions.paddingSm),
         Flexible(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: AppTextStyles.cardTitle,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
+              AutoScrollingText(text: title, style: AppTextStyles.cardTitle),
               const SizedBox(height: 2),
               Text(
                 artist,
@@ -144,11 +162,19 @@ class _TrackInfo extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppDimensions.paddingSm),
-        const Icon(
-          Icons.favorite_border,
-          color: AppColors.textSecondary,
-          size: 20,
-        ),
+        if (track != null)
+          LikeButton(
+            trackId: track!.id,
+            isLiked: track!.isLiked,
+            likeCount: track!.likeCount,
+            iconSize: 20,
+          )
+        else
+          const Icon(
+            Icons.favorite_border,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
       ],
     );
   }
@@ -165,6 +191,8 @@ class _PlaybackControls extends StatelessWidget {
     required this.onSeekStart,
     required this.onSeekChanged,
     required this.onSeekEnd,
+    required this.onSkipNext,
+    required this.onSkipPrevious,
   });
 
   final bool isPrepared;
@@ -176,6 +204,8 @@ class _PlaybackControls extends StatelessWidget {
   final ValueChanged<double> onSeekStart;
   final ValueChanged<double> onSeekChanged;
   final ValueChanged<double> onSeekEnd;
+  final VoidCallback onSkipNext;
+  final VoidCallback onSkipPrevious;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +219,11 @@ class _PlaybackControls extends StatelessWidget {
           children: [
             const _ControlButton(icon: Icons.shuffle, size: 18),
             const SizedBox(width: AppDimensions.paddingMd),
-            const _ControlButton(icon: Icons.skip_previous, size: 24),
+            _ControlButton(
+              icon: Icons.skip_previous,
+              size: 24,
+              onTap: isPrepared ? onSkipPrevious : null,
+            ),
             const SizedBox(width: AppDimensions.paddingSm),
             GestureDetector(
               onTap: isPrepared ? onPlayPausePressed : null,
@@ -208,7 +242,11 @@ class _PlaybackControls extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppDimensions.paddingSm),
-            const _ControlButton(icon: Icons.skip_next, size: 24),
+            _ControlButton(
+              icon: Icons.skip_next,
+              size: 24,
+              onTap: isPrepared ? onSkipNext : null,
+            ),
             const SizedBox(width: AppDimensions.paddingMd),
             const _ControlButton(icon: Icons.repeat, size: 18),
           ],
@@ -257,17 +295,34 @@ class _PlaybackControls extends StatelessWidget {
   }
 }
 
-class _VolumeControls extends StatelessWidget {
-  const _VolumeControls();
+// Turned into a StatefulWidget so we can track the slider locally
+class _VolumeControls extends StatefulWidget {
+  const _VolumeControls({required this.onVolumeChanged});
+
+  final ValueChanged<double> onVolumeChanged;
+  @override
+  State<_VolumeControls> createState() => _VolumeControlsState();
+}
+
+class _VolumeControlsState extends State<_VolumeControls> {
+  double _volume = 1.0; // Default max volume
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        const _ControlButton(icon: Icons.queue_music, size: 20),
+        _ControlButton(
+          icon: Icons.queue_music,
+          size: 20,
+          onTap: () => QueueBottomSheet.show(context),
+        ),
         const SizedBox(width: AppDimensions.paddingSm),
-        const Icon(Icons.volume_up, size: 20, color: AppColors.textSecondary),
+        Icon(
+          _volume == 0 ? Icons.volume_off : Icons.volume_up,
+          size: 20,
+          color: AppColors.textSecondary,
+        ),
         SizedBox(
           width: 100,
           child: SliderTheme(
@@ -279,7 +334,13 @@ class _VolumeControls extends StatelessWidget {
               inactiveTrackColor: AppColors.surfaceLight,
               thumbColor: Colors.white,
             ),
-            child: Slider(value: 0.7, onChanged: (_) {}),
+            child: Slider(
+              value: _volume,
+              onChanged: (val) {
+                setState(() => _volume = val);
+                widget.onVolumeChanged(val);
+              },
+            ),
           ),
         ),
       ],
@@ -288,10 +349,11 @@ class _VolumeControls extends StatelessWidget {
 }
 
 class _ControlButton extends StatefulWidget {
-  const _ControlButton({required this.icon, required this.size});
+  const _ControlButton({required this.icon, required this.size, this.onTap});
 
   final IconData icon;
   final double size;
+  final VoidCallback? onTap;
 
   @override
   State<_ControlButton> createState() => _ControlButtonState();
@@ -302,14 +364,21 @@ class _ControlButtonState extends State<_ControlButton> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: Icon(
-        widget.icon,
-        size: widget.size,
-        color: _isHovered ? Colors.white : AppColors.textSecondary,
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: widget.onTap != null
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        child: Icon(
+          widget.icon,
+          size: widget.size,
+          color: _isHovered && widget.onTap != null
+              ? Colors.white
+              : AppColors.textSecondary,
+        ),
       ),
     );
   }

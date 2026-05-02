@@ -46,12 +46,12 @@ class DioClient {
   }
 
   // Helper method for PUT requests
-  Future<Response<T>> put<T>(String path, {Object? data}) {
-    return _dio.put(path, data: data);
+  Future<Response<T>> put<T>(String path, {Object? data, Options? options}) {
+    return _dio.put(path, data: data, options: options);
   }
 
-  Future<Response<T>> patch<T>(String path, {Object? data}) {
-    return _dio.patch(path, data: data);
+  Future<Response<T>> patch<T>(String path, {Object? data, Options? options}) {
+    return _dio.patch(path, data: data, options: options);
   }
 
   // Helper method for DELETE requests
@@ -60,5 +60,14 @@ class DioClient {
     Map<String, dynamic>? queryParams,
   }) {
     return _dio.delete(path, queryParameters: queryParams);
+  }
+
+  // Helper method for Download requests
+  Future<Response<dynamic>> download(
+    String urlPath,
+    Object savePath, {
+    Options? options,
+  }) {
+    return _dio.download(urlPath, savePath, options: options);
   }
 }

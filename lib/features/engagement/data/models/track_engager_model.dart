@@ -10,6 +10,7 @@ class TrackEngagerModel with _$TrackEngagerModel {
   const factory TrackEngagerModel({
     required int id,
     required String username,
+    String? displayName,
     String? avatarUrl,
     required String tier,
     @Default(false) bool isFollowing,
@@ -24,6 +25,7 @@ extension TrackEngagerModelX on TrackEngagerModel {
     return TrackEngager(
       id: id,
       username: username,
+      displayName: displayName,
       avatarUrl: avatarUrl,
       tier: tier,
       isFollowing: isFollowing,

@@ -8,11 +8,13 @@ class TrackPreviewInfo extends StatelessWidget {
     required this.title,
     required this.artistName,
     this.tagLabel,
+    this.onTagTap,
   });
 
   final String title;
   final String artistName;
   final String? tagLabel;
+  final VoidCallback? onTagTap;
 
   @override
   Widget build(BuildContext context) {
@@ -45,22 +47,26 @@ class TrackPreviewInfo extends StatelessWidget {
           ),
           if (tagLabel != null && tagLabel!.isNotEmpty) ...[
             const SizedBox(height: 12),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
+            GestureDetector(
+              onTap: onTagTap,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(8),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.12)),
                 ),
-                child: Text(
-                  tagLabel!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  child: Text(
+                    tagLabel!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),

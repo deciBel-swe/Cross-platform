@@ -15,7 +15,7 @@ class TrackCommentsMockFixtures {
   static final PostCommentResponseModel mockPostedComment =
       PostCommentResponseModel(
         replycount: 1,
-        commentId: 101,
+        commentid: 101, // Updated to match the Freezed model property name
         user: mockCommentUser,
         body: 'This part is fire 🔥',
         timestampSeconds: 17,
@@ -25,7 +25,7 @@ class TrackCommentsMockFixtures {
   static final List<PostCommentResponseModel> mockTrackComments = [
     PostCommentResponseModel(
       replycount: 3,
-      commentId: 101,
+      commentid: 101, // Updated to match the Freezed model property name
       user: mockCommentUser,
       body: 'This part is fire 🔥',
       timestampSeconds: 17,
@@ -33,7 +33,7 @@ class TrackCommentsMockFixtures {
     ),
     PostCommentResponseModel(
       replycount: 2,
-      commentId: 102,
+      commentid: 102, // Updated to match the Freezed model property name
       user: const CommentUserModel(id: 2, username: 'sarah', avatarUrl: ''),
       body: 'Love this transition',
       timestampSeconds: 29,
@@ -41,7 +41,7 @@ class TrackCommentsMockFixtures {
     ),
     PostCommentResponseModel(
       replycount: 3,
-      commentId: 103,
+      commentid: 103, // Updated to match the Freezed model property name
       user: const CommentUserModel(id: 3, username: 'hasna', avatarUrl: ''),
       body: 'Crazy drop here',
       timestampSeconds: 17,
@@ -49,7 +49,7 @@ class TrackCommentsMockFixtures {
     ),
     PostCommentResponseModel(
       replycount: 3,
-      commentId: 104,
+      commentid: 104, // Updated to match the Freezed model property name
       user: const CommentUserModel(id: 4, username: 'dissolve', avatarUrl: ''),
       body: 'Replaying this part again',
       timestampSeconds: 17,
@@ -92,10 +92,24 @@ class TrackCommentsMockFixtures {
         'timestampSeconds': 96,
         'createdAt': '2026-03-31T10:10:00.000Z',
       },
+      // Added a mock reply inside the main comments response so you can test the filter
+      {
+        'id': 4,
+        'replyToCommentId':
+            1, // <--- This is what the backend MUST send for replies
+        'user': {
+          'id': 104,
+          'username': 'karim',
+          'avatarUrl': 'https://i.pravatar.cc/150?u=karim',
+        },
+        'body': '@tarek I agree, it is perfect.',
+        'timestampSeconds': null,
+        'createdAt': '2026-03-31T10:11:00.000Z',
+      },
     ],
     'pageNumber': 0,
     'pageSize': 20,
-    'totalElements': 3,
+    'totalElements': 4, // Updated from 3 to 4
     'totalPages': 1,
     'isLast': true,
   };

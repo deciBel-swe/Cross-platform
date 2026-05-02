@@ -1,13 +1,16 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/auto_scrolling_text.dart';
+import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
 
 /// Reusable mobile feed track card matching the native-style post layout.
 class MobileFeedTrackCard extends StatelessWidget {
@@ -16,138 +19,246 @@ class MobileFeedTrackCard extends StatelessWidget {
     required this.trackId,
     required this.title,
     required this.artist,
+    this.coverUrl,
+    this.onPlay,
+    this.onAddToPlaylist,
+    this.onMoreOptions,
     required this.duration,
     required this.likeCount,
     required this.repostCount,
     required this.isLiked,
     required this.isReposted,
     required this.commentCount,
+    required this.commentTrack,
     required this.gradientColors,
   });
 
   final int trackId;
   final String title;
   final String artist;
+  final String? coverUrl;
+  final VoidCallback? onPlay;
+  final VoidCallback? onAddToPlaylist;
+  final VoidCallback? onMoreOptions;
   final String duration;
   final int likeCount;
   final int repostCount;
   final bool isLiked;
   final bool isReposted;
   final int commentCount;
+  final Track commentTrack;
   final List<Color> gradientColors;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: AspectRatio(
-        aspectRatio: 0.92,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: gradientColors,
-                  ),
-                ),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withValues(alpha: 0.45),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.music_note,
-                      size: 96,
-                      color: AppColors.textPrimary.withValues(alpha: 0.2),
-                    ),
+    return Semantics(
+      label: 'Track card: $title by $artist, duration $duration',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: AspectRatio(
+          aspectRatio: 0.92,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: onPlay,
+                  child: _MobileCoverBackground(
+                    coverUrl: coverUrl,
+                    gradientColors: gradientColors,
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              top: AppDimensions.paddingMd,
-              right: AppDimensions.paddingMd,
-              child: _MobileRightActions(
-                trackId: trackId,
-                initialLikeCount: likeCount,
-                initialRepostCount: repostCount,
-                initialIsLiked: isLiked,
-                initialIsReposted: isReposted,
-                commentCount: commentCount,
-              ),
-            ),
-            Positioned(
-              left: AppDimensions.paddingMd,
-              right: AppDimensions.paddingMd,
-              bottom: AppDimensions.paddingMd,
-              child: Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingMd),
-                decoration: BoxDecoration(
-                  color: AppColors.background.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(20),
+              Positioned(
+                top: AppDimensions.paddingMd,
+                right: AppDimensions.paddingMd,
+                child: _MobileRightActions(
+                  trackId: trackId,
+                  initialLikeCount: likeCount,
+                  initialRepostCount: repostCount,
+                  initialIsLiked: isLiked,
+                  initialIsReposted: isReposted,
+                  commentCount: commentCount,
+                  commentTrack: commentTrack,
+                  onAddToPlaylist: onAddToPlaylist,
+                  onMoreOptions: onMoreOptions,
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.surface,
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow,
-                        color: AppColors.textPrimary,
-                        size: 30,
-                      ),
+              ),
+              Positioned(
+                left: AppDimensions.paddingSm,
+                right:
+                    AppDimensions.paddingMd +
+                    48, // Account for right actions width
+                bottom: AppDimensions.paddingMd,
+                child: GestureDetector(
+                  onTap: onPlay,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.all(AppDimensions.paddingMd),
+                    decoration: BoxDecoration(
+                      color: AppColors.background.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    const SizedBox(width: AppDimensions.paddingSm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.sectionTitle.copyWith(
-                              fontSize: 18,
-                            ),
+                    child: Row(
+                      children: [
+                        _CardPlayButton(onPressed: onPlay),
+                        const SizedBox(width: AppDimensions.paddingSm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AutoScrollingText(
+                                text: title,
+                                style: AppTextStyles.sectionTitle.copyWith(
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                artist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.titleMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.titleMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                        ),
+                        Text(
+                          duration,
+                          style: AppTextStyles.cardTitle.copyWith(
+                            color: AppColors.textPrimary,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      duration,
-                      style: AppTextStyles.cardTitle.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _MobileRightActions extends ConsumerWidget {
+class _MobileCoverBackground extends StatelessWidget {
+  const _MobileCoverBackground({required this.gradientColors, this.coverUrl});
+
+  final List<Color> gradientColors;
+  final String? coverUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedCoverUrl = coverUrl?.trim();
+    if (normalizedCoverUrl != null && normalizedCoverUrl.isNotEmpty) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          DecibelCachedImage(
+            imageUrl: normalizedCoverUrl,
+            placeholder: _GradientCoverFallback(gradientColors: gradientColors),
+            errorWidget: _GradientCoverFallback(gradientColors: gradientColors),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.background.withValues(alpha: 0.22),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _GradientCoverFallback(gradientColors: gradientColors);
+  }
+}
+
+class _GradientCoverFallback extends StatelessWidget {
+  const _GradientCoverFallback({required this.gradientColors});
+
+  final List<Color> gradientColors;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: gradientColors,
+        ),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.background.withValues(alpha: 0.45),
+        ),
+        child: Center(
+          child: Icon(
+            Icons.music_note,
+            size: 96,
+            color: AppColors.textPrimary.withValues(alpha: 0.2),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CardPlayButton extends StatefulWidget {
+  const _CardPlayButton({this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  State<_CardPlayButton> createState() => _CardPlayButtonState();
+}
+
+class _CardPlayButtonState extends State<_CardPlayButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: Semantics(
+        button: true,
+        label: 'Play track',
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _isHovered ? AppColors.primary : AppColors.surface,
+              boxShadow: _isHovered
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Icon(
+              Icons.play_arrow,
+              color: _isHovered ? Colors.white : AppColors.textPrimary,
+              size: 30,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileRightActions extends StatefulWidget {
   const _MobileRightActions({
     required this.trackId,
     required this.initialLikeCount,
@@ -155,6 +266,9 @@ class _MobileRightActions extends ConsumerWidget {
     required this.initialIsLiked,
     required this.initialIsReposted,
     required this.commentCount,
+    required this.commentTrack,
+    this.onAddToPlaylist,
+    this.onMoreOptions,
   });
 
   final int trackId;
@@ -163,6 +277,33 @@ class _MobileRightActions extends ConsumerWidget {
   final bool initialIsLiked;
   final bool initialIsReposted;
   final int commentCount;
+  final Track commentTrack;
+  final VoidCallback? onAddToPlaylist;
+  final VoidCallback? onMoreOptions;
+
+  @override
+  State<_MobileRightActions> createState() => _MobileRightActionsState();
+}
+
+class _MobileRightActionsState extends State<_MobileRightActions> {
+  late int _currentCommentCount;
+  bool _isCommentHovered = false;
+  bool _isAddHovered = false;
+  bool _isMoreHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentCommentCount = widget.commentCount;
+  }
+
+  @override
+  void didUpdateWidget(_MobileRightActions oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.commentCount != widget.commentCount) {
+      _currentCommentCount = widget.commentCount;
+    }
+  }
 
   String _formatCount(int number) {
     if (number >= 1000000) {
@@ -174,65 +315,140 @@ class _MobileRightActions extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Column(
       children: [
-        const Icon(Icons.volume_off_outlined, color: AppColors.textPrimary),
-        const SizedBox(height: AppDimensions.paddingMd),
-
         LikeButton(
-          trackId: trackId,
-          isLiked: initialIsLiked,
-          likeCount: initialLikeCount,
-          iconSize: 32,
-          fontSize: 14,
+          trackId: widget.trackId,
+          isLiked: widget.initialIsLiked,
+          likeCount: widget.initialLikeCount,
+          iconSize: 23,
+          fontSize: 12,
+          isVertical: true,
         ),
 
         const SizedBox(height: AppDimensions.paddingMd),
 
         RepostButton(
-          trackId: trackId,
-          isReposted: initialIsReposted,
-          repostCount: initialRepostCount,
-          iconSize: 32,
-          fontSize: 14,
+          trackId: widget.trackId,
+          isReposted: widget.initialIsReposted,
+          repostCount: widget.initialRepostCount,
+          iconSize: 28,
+          fontSize: 12,
+          isVertical: true,
         ),
 
         const SizedBox(height: AppDimensions.paddingMd),
 
         // COMMENT BUTTON
-        GestureDetector(
-          onTap: () {
-            // Future feature: Open comments bottom sheet
-          },
-          child: Column(
-            children: [
-              const Icon(
-                Icons.mode_comment_outlined,
-                color: AppColors.textPrimary,
-                size: 32,
+        Semantics(
+          button: true,
+          label: 'View $_currentCommentCount comments',
+          child: GestureDetector(
+            onTap: () {
+              TrackCommentsBottomSheet.show(
+                context,
+                trackId: widget.trackId,
+                track: widget.commentTrack,
+              );
+            },
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isCommentHovered = true),
+              onExit: (_) => setState(() => _isCommentHovered = false),
+              cursor: SystemMouseCursors.click,
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.mode_comment_outlined,
+                    color: _isCommentHovered
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
+                    size: 28,
+                  ),
+                  const SizedBox(height: AppDimensions.paddingXs),
+                  Text(
+                    _formatCount(_currentCommentCount),
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: _isCommentHovered
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppDimensions.paddingXs),
-              Text(
-                _formatCount(commentCount),
-                style: AppTextStyles.cardTitle.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
 
         const SizedBox(height: AppDimensions.paddingMd),
-        const Icon(
-          Icons.add_box_outlined,
-          color: AppColors.textPrimary,
-          size: 32,
+        Semantics(
+          button: true,
+          label: 'Add to playlist or library',
+          child: GestureDetector(
+            onTap: widget.onAddToPlaylist,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isAddHovered = true),
+              onExit: (_) => setState(() => _isAddHovered = false),
+              cursor: SystemMouseCursors.click,
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.add_box_outlined,
+                    color: _isAddHovered
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
+                    size: 28,
+                  ),
+                  const SizedBox(height: AppDimensions.paddingXs),
+                  Text(
+                    'Add',
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: _isAddHovered
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        const SizedBox(height: AppDimensions.paddingXs),
-        Text(
-          'Add',
-          style: AppTextStyles.cardTitle.copyWith(color: AppColors.textPrimary),
+
+        const SizedBox(height: AppDimensions.paddingMd),
+        Semantics(
+          button: true,
+          label: 'More options',
+          child: GestureDetector(
+            onTap: widget.onMoreOptions,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isMoreHovered = true),
+              onExit: (_) => setState(() => _isMoreHovered = false),
+              cursor: SystemMouseCursors.click,
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.more_horiz_rounded,
+                    color: _isMoreHovered
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
+                    size: 28,
+                  ),
+                  const SizedBox(height: AppDimensions.paddingXs),
+                  Text(
+                    'More',
+                    style: AppTextStyles.cardTitle.copyWith(
+                      color: _isMoreHovered
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ],
     );

@@ -5,6 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../engagement/presentation/notifiers/liked_tracks_notifier.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
+import '../../../playlists/domain/entities/playlist.dart';
+import '../../../playlists/presentation/providers/user_playlists_provider.dart'
+    as playlist_providers;
+import '../../../playlists/presentation/widgets/playlist_options_bottom_sheet.dart';
+import '../../../playlists/presentation/widgets/playlist_square_card.dart';
+import 'playlist_tile.dart';
 import 'tile.dart';
 import 'track_tile.dart';
 
@@ -14,22 +22,64 @@ class MediaCollection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
+    final playlistsAsync = ref.watch(playlist_providers.userPlaylistsProvider);
     final likedTracksAsync = ref.watch(likedTracksProvider);
+    final likedPlaylistsAsync = ref.watch(playlist_providers.userLikedPlaylistsProvider);
     final repostedTracksAsync = ref.watch(repostedTracksProvider);
 
     return Column(
       children: [
         Tile(
-          title: "Playlist",
+          title: "Playlists",
           buttonText: "See All",
           onButtonPressed: () {
-            //TODO: hndle see all playlist action
+            context.push(RoutePaths.playlists);
           },
         ),
         const SizedBox(height: 14),
-        Text(
-          'No playlists yet',
-          style: textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        playlistsAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: CircularProgressIndicator(),
+          ),
+          error: (_, _) => Text(
+            'Could not load playlists',
+            style: textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          data: (playlists) {
+            if (playlists.isEmpty) {
+              return Text(
+                'No playlists yet',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              );
+            }
+
+            final previewPlaylists = playlists.take(6).toList();
+            return SizedBox(
+              height: 184,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: previewPlaylists.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 14),
+                itemBuilder: (context, index) {
+                  final playlist = previewPlaylists[index];
+                  return PlaylistSquareCard(
+                    playlist: playlist,
+                    onTap: () {
+                      context.push(RoutePaths.playlistTracks, extra: playlist);
+                    },
+                    onMore: () {
+                      PlaylistOptionsBottomSheet.show(context, playlist);
+                    },
+                  );
+                },
+              ),
+            );
+          },
         ),
         const SizedBox(height: 14),
         Tile(
@@ -52,7 +102,10 @@ class MediaCollection extends ConsumerWidget {
             ),
           ),
           data: (tracks) {
-            if (tracks.isEmpty) {
+            final playlists = likedPlaylistsAsync.valueOrNull ?? [];
+            final combined = [...tracks, ...playlists];
+
+            if (combined.isEmpty) {
               return Text(
                 'No likes yet',
                 style: textTheme.bodyMedium?.copyWith(
@@ -61,17 +114,30 @@ class MediaCollection extends ConsumerWidget {
               );
             }
 
-            final previewTracks = tracks.take(3).toList();
+            final previewItems = combined.take(3).toList();
             return ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: previewTracks.length,
+              itemCount: previewItems.length,
               itemBuilder: (context, index) {
-                final track = previewTracks[index];
-                return TrackTile(
-                  track: track,
-                  onTap: () => context.push(RoutePaths.trackPreview(track.id)),
-                );
+                final item = previewItems[index];
+                if (item is Track) {
+                  return TrackTile(
+                    track: item,
+                    onTap: () => ref
+                        .read(trackAudioProvider.notifier)
+                        .playTrack(track: item, queue: tracks),
+                  );
+                } else if (item is Playlist) {
+                  return PlaylistTile(
+                    playlist: item,
+                    onTap: () => context.push(
+                      RoutePaths.playlistTracks,
+                      extra: item,
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
               },
             );
           },
@@ -115,7 +181,9 @@ class MediaCollection extends ConsumerWidget {
                 final track = previewTracks[index];
                 return TrackTile(
                   track: track,
-                  onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+                  onTap: () => ref
+                      .read(trackAudioProvider.notifier)
+                      .playTrack(track: track, queue: tracks),
                 );
               },
             );

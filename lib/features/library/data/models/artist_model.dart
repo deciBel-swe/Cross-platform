@@ -12,6 +12,8 @@ class ArtistModel with _$ArtistModel {
     required String username,
     String? displayName,
     String? avatarUrl,
+    String? location,
+    String? bio,
   }) = _ArtistModel;
 
   factory ArtistModel.fromJson(Map<String, dynamic> json) =>
@@ -25,6 +27,19 @@ extension ArtistModelX on ArtistModel {
       username: username,
       displayName: displayName,
       avatarUrl: avatarUrl,
+      location: location,
+      bio: bio,
+    );
+  }
+
+  static ArtistModel fromEntity(Artist artist) {
+    return ArtistModel(
+      id: artist.id,
+      username: artist.username,
+      displayName: artist.displayName,
+      avatarUrl: artist.avatarUrl,
+      location: artist.location,
+      bio: artist.bio,
     );
   }
 }

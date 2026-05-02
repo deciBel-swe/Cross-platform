@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Shows actions for a comment and returns whether deletion was requested.
 Future<bool?> showTrackCommentOptionsSheet(
   BuildContext context,
   ThemeData theme,

@@ -185,17 +185,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
             )
           else
-            TextButton(
-              // style: TextButton.styleFrom(
-              //   backgroundColor: AppColors.primary,
-              //   padding: const EdgeInsets.symmetric(horizontal: 16),
-              // ),
-              onPressed: _saveProfile,
-              child: const Text(
-                'Save',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+            Semantics(
+              identifier: 'save_profile_button',
+              button: true,
+              label: 'Save profile changes',
+              child: TextButton(
+                // style: TextButton.styleFrom(
+                //   backgroundColor: AppColors.primary,
+                //   padding: const EdgeInsets.symmetric(horizontal: 16),
+                // ),
+                onPressed: _saveProfile,
+                child: const Text(
+                  'Save',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -255,49 +260,53 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     const SizedBox(height: 20),
 
                     // Country → State → City picker
-                    CSCPickerPlus(
-                      layout: Layout.vertical,
-                      flagState: CountryFlag.SHOW_IN_DROP_DOWN_ONLY,
-                      showStates: true,
-                      showCities: false,
-                      countryStateLanguage:
-                          CountryStateLanguage.englishOrNative,
-                      currentState: _selectedState,
-                      currentCountry: _selectedCountry,
-                      dropdownDecoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
+                    Semantics(
+                      identifier: 'location_picker',
+                      label: 'Location picker',
+                      child: CSCPickerPlus(
+                        layout: Layout.vertical,
+                        flagState: CountryFlag.SHOW_IN_DROP_DOWN_ONLY,
+                        showStates: true,
+                        showCities: false,
+                        countryStateLanguage:
+                            CountryStateLanguage.englishOrNative,
+                        currentState: _selectedState,
+                        currentCountry: _selectedCountry,
+                        dropdownDecoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        disabledDropdownDecoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        selectedItemStyle: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                        ),
+                        dropdownHeadingStyle: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        dropdownItemStyle: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                        ),
+                        dropdownDialogRadius: 12.0,
+                        searchBarRadius: 12.0,
+                        onCountryChanged: (value) {
+                          setState(() {
+                            _selectedCountry = value;
+                            _selectedState = null;
+                          });
+                        },
+                        onStateChanged: (value) {
+                          setState(() {
+                            _selectedState = value;
+                          });
+                        },
                       ),
-                      disabledDropdownDecoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      selectedItemStyle: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                      ),
-                      dropdownHeadingStyle: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      dropdownItemStyle: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                      ),
-                      dropdownDialogRadius: 12.0,
-                      searchBarRadius: 12.0,
-                      onCountryChanged: (value) {
-                        setState(() {
-                          _selectedCountry = value;
-                          _selectedState = null;
-                        });
-                      },
-                      onStateChanged: (value) {
-                        setState(() {
-                          _selectedState = value;
-                        });
-                      },
                     ),
 
                     const SizedBox(height: 32),
