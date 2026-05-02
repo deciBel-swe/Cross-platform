@@ -6,15 +6,22 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/upload_notifier.dart';
 
-class SubmitSection extends ConsumerWidget {
+class SubmitSection extends ConsumerStatefulWidget {
   const SubmitSection({super.key, required this.formKey});
 
   final GlobalKey<FormState> formKey;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SubmitSection> createState() => _SubmitSectionState();
+}
+
+class _SubmitSectionState extends ConsumerState<SubmitSection> {
+  bool _isSubmitting = false;
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(uploadNotifierProvider);
-    final isLoading = state.isLoading;
+    final isLoading = state.isLoading || _isSubmitting;
     final metadata = state.valueOrNull;
 
     return SizedBox(
@@ -34,12 +41,21 @@ class SubmitSection extends ConsumerWidget {
                 if (metadata == null) return;
 
                 // 1. Frontend Checks
-                final isFormValid = formKey.currentState!.validate();
+                setState(() => _isSubmitting = true);
+
+                final isFormValid = widget.formKey.currentState!.validate();
                 final hasAudioFile = metadata.audioFile != null;
                 final hasGenre = metadata.genre.isNotEmpty;
                 final isGenreValidLength = metadata.genre.length <= 100;
 
+                void unlockButton() {
+                  if (context.mounted) {
+                    setState(() => _isSubmitting = false);
+                  }
+                }
+
                 if (!hasAudioFile) {
+                  unlockButton();
                   ScaffoldMessenger.of(
                     context,
                   ).clearSnackBars(); // clear existed SnackBar if existed from previous error
@@ -54,6 +70,7 @@ class SubmitSection extends ConsumerWidget {
                 }
 
                 if (!hasGenre) {
+                  unlockButton();
                   ScaffoldMessenger.of(
                     context,
                   ).clearSnackBars(); // clear existed SnackBar if existed from previous error
@@ -68,6 +85,7 @@ class SubmitSection extends ConsumerWidget {
                 }
 
                 if (!isGenreValidLength) {
+                  unlockButton();
                   ScaffoldMessenger.of(
                     context,
                   ).clearSnackBars(); // clear existed SnackBar if existed from previous error
@@ -95,6 +113,7 @@ class SubmitSection extends ConsumerWidget {
                   if (success) {
                     context.go(RoutePaths.uploadLibrary);
                   } else {
+                    unlockButton();
                     // If Failed, Grab the exact error from the latest AsyncValue and show it.
                     final latestState = ref.read(uploadNotifierProvider);
                     String errorMessage;
@@ -116,6 +135,8 @@ class SubmitSection extends ConsumerWidget {
                       ),
                     );
                   }
+                } else {
+                  unlockButton();
                 }
               },
         child: isLoading
