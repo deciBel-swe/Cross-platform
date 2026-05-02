@@ -176,14 +176,9 @@ class TrackDetails extends ConsumerWidget {
       messenger.hideCurrentSnackBar();
 
       if (deleted) {
-        final audioState = container.read(trackAudioProvider);
         final audioNotifier = container.read(trackAudioProvider.notifier);
 
-        if (audioState.preparedTrackId == track.id) {
-          await audioNotifier.stop();
-        }
-
-        audioNotifier.removeFromQueue(track.id);
+        await audioNotifier.removeDeletedTrack(track.id);
         container.invalidate(trackPreviewProvider(track.id));
 
         if (!parentContext.mounted) return;

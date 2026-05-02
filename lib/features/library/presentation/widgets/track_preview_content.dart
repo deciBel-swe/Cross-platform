@@ -348,12 +348,8 @@ class TrackPreviewContent extends ConsumerWidget {
       return;
     }
 
-    final audioState = ref.read(trackAudioProvider);
     final audioNotifier = ref.read(trackAudioProvider.notifier);
-    if (audioState.preparedTrackId == track.id) {
-      await audioNotifier.stop();
-    }
-    audioNotifier.removeFromQueue(track.id);
+    await audioNotifier.removeDeletedTrack(track.id);
     ref.invalidate(trackPreviewProvider(track.id));
 
     if (!context.mounted) {
