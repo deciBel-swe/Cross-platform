@@ -145,6 +145,7 @@ class TrackRepositoryImpl implements TrackRepository {
         tags: request.tags,
         releaseDate: request.releaseDate,
         isPrivate: request.isPrivate,
+        access: request.access,
         coverImage: request.coverImage,
       );
       return Right(model.toEntity());

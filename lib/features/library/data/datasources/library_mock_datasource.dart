@@ -82,6 +82,7 @@ class LibraryMockDatasource {
     required List<String> tags,
     required DateTime? releaseDate,
     required bool isPrivate,
+    required String access,
     File? coverImage,
   }) async {
     await Future<void>.delayed(LibraryMockFixtures.mockDelay);

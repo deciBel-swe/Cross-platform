@@ -35,6 +35,7 @@ class TrackEditNotifier
           releaseDate: track.releaseDate,
           isPrivate: false,
           currentCoverUrl: track.coverUrl,
+          access: track.access,
         ),
       );
     } on TimeoutException {
@@ -82,6 +83,10 @@ class TrackEditNotifier
 
   void clearReleaseDate() {
     _updateState((state) => state.copyWith(clearReleaseDate: true));
+  }
+
+  void updateAccess(String value) {
+    _updateState((state) => state.copyWith(access: value));
   }
 
   void updateTagsFromInput(String value) {
@@ -187,6 +192,7 @@ class TrackEditNotifier
             tags: current.tags,
             releaseDate: current.releaseDate,
             isPrivate: current.isPrivate,
+            access: current.access,
             coverImage: current.newCoverImage,
           ),
         )

@@ -101,6 +101,7 @@ class MockTrackRepository implements TrackRepository {
             tags: request.tags,
             releaseDate: request.releaseDate,
             isPrivate: request.isPrivate,
+            access: request.access,
             coverImage: request.coverImage,
           );
       return Right(trackModel.toEntity());

@@ -131,6 +131,7 @@ class LibraryRemoteDatasource {
     required List<String> tags,
     required DateTime? releaseDate,
     required bool isPrivate,
+    required String access,
     File? coverImage,
   }) async {
     final releaseDateValue = releaseDate?.toIso8601String().split('T').first;
@@ -141,6 +142,7 @@ class LibraryRemoteDatasource {
       'description': description,
       'tags': jsonEncode(tags),
       'isPrivate': isPrivate,
+      'access': access,
       ...?releaseDateValue == null
           ? null
           : <String, dynamic>{'releaseDate': releaseDateValue},
