@@ -1,4 +1,5 @@
 /// Visually renders an individual chat message inside a conversation context.
+///
 /// Features:
 /// - Automatically shifts alignment based on message sender context (Me vs Them).
 /// - Routes to the other user's public profile when tapping the avatar.
@@ -16,6 +17,9 @@ import 'message_bubble_content.dart';
 import 'message_bubble_sender_avatar.dart';
 import 'message_bubble_timestamp.dart';
 
+/// Chat bubble that renders text, shared resources, sender avatar, and time.
+///
+/// [isMe] controls alignment and whether a sender avatar is shown.
 class MessageBubble extends ConsumerWidget {
   const MessageBubble({
     super.key,
@@ -78,6 +82,7 @@ class MessageBubble extends ConsumerWidget {
     );
   }
 
+  /// Formats a message creation time into a conversational relative label.
   String _formatTimeAgo(DateTime date) {
     final now = DateTime.now();
     final safeDate = date.isAfter(now) ? now : date;

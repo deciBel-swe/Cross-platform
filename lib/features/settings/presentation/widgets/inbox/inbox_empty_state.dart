@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Empty state shown when the inbox has no visible conversations.
 class InboxEmptyState extends StatelessWidget {
   const InboxEmptyState({super.key});
 

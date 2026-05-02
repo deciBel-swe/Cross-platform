@@ -6,13 +6,10 @@ import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message_resource_preview.dart';
 import '../providers/messaging_providers.dart';
 
-/// Renders a single conversation item inside the Inbox list.
+/// Renders a single conversation item inside the inbox list.
 ///
-/// Features:
-/// - Displays the real username/display name instead of "User ID".
-/// - Displays dynamic unread message count badges.
-/// - Marks the conversation as locally read when opened.
-/// - Hides raw resource markers and renders Track/Playlist previews.
+/// The tile resolves the other participant's profile, displays the last
+/// message summary, and marks the conversation as locally read before opening.
 class ConversationTile extends ConsumerWidget {
   const ConversationTile({
     super.key,
@@ -81,6 +78,7 @@ class ConversationTile extends ConsumerWidget {
   }
 }
 
+/// Visual content for a conversation once the display name is known.
 class _ConversationTileContent extends StatelessWidget {
   const _ConversationTileContent({
     required this.conversation,
@@ -158,12 +156,14 @@ class _ConversationTileContent extends StatelessWidget {
     );
   }
 
+  /// Returns the initial used inside the avatar bubble.
   static String _avatarLetter(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return '?';
     return trimmed.substring(0, 1).toUpperCase();
   }
 
+  /// Formats the conversation timestamp into a short relative label.
   String _formatLastMessageTime(DateTime date) {
     final now = DateTime.now();
     final safeDate = date.isAfter(now) ? now : date;
@@ -176,6 +176,7 @@ class _ConversationTileContent extends StatelessWidget {
   }
 }
 
+/// Last-message summary row for text or shared resource conversations.
 class _ConversationSubtitle extends StatelessWidget {
   const _ConversationSubtitle({
     required this.parsedMessage,
@@ -230,6 +231,7 @@ class _ConversationSubtitle extends StatelessWidget {
   }
 }
 
+/// Compact unread-count pill shown on conversations with unread messages.
 class _UnreadBadge extends StatelessWidget {
   const _UnreadBadge({required this.count});
 

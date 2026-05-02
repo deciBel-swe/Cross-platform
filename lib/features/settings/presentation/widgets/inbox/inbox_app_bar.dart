@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 
+/// App bar used by the direct messages inbox on non-desktop layouts.
+///
+/// Exposes the page title as a semantic header while keeping the visual style
+/// aligned with the dark inbox surface.
 class InboxAppBar extends StatelessWidget implements PreferredSizeWidget {
   const InboxAppBar({super.key});
 

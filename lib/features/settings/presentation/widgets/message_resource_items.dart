@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../playlists/domain/entities/playlist.dart';
 
+/// Selectable track row used by the message resource picker.
 class MessageTrackResourceTile extends StatelessWidget {
   const MessageTrackResourceTile({
     super.key,
@@ -51,6 +52,7 @@ class MessageTrackResourceTile extends StatelessWidget {
   }
 }
 
+/// Selectable playlist row used by the message resource picker.
 class MessagePlaylistResourceTile extends StatelessWidget {
   const MessagePlaylistResourceTile({
     super.key,
@@ -99,6 +101,7 @@ class MessagePlaylistResourceTile extends StatelessWidget {
   }
 }
 
+/// Square artwork image with an icon fallback for picker rows.
 class MessageArtworkBox extends StatelessWidget {
   const MessageArtworkBox({
     super.key,
@@ -134,6 +137,7 @@ class MessageArtworkBox extends StatelessWidget {
   }
 }
 
+/// One-line title and subtitle block shared by resource picker rows.
 class MessageResourceTitleSubtitle extends StatelessWidget {
   const MessageResourceTitleSubtitle({
     super.key,
@@ -171,6 +175,7 @@ class MessageResourceTitleSubtitle extends StatelessWidget {
   }
 }
 
+/// Circular visual indicator for the selected picker resource.
 class MessageSelectionCircle extends StatelessWidget {
   const MessageSelectionCircle({super.key, required this.selected});
 

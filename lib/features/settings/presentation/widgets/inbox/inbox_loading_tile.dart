@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 
+/// Placeholder conversation row shown while a participant profile is loading.
 class InboxLoadingTile extends StatelessWidget {
   const InboxLoadingTile({super.key});
 

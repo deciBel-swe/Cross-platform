@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// Artwork thumbnail for a shared track or playlist inside a message bubble.
+///
+/// Falls back to the matching resource icon when no usable image URL exists.
 class MessageBubbleResourceArtwork extends StatelessWidget {
   const MessageBubbleResourceArtwork({
     super.key,

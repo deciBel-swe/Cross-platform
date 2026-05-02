@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../core/router/route_paths.dart';
 
+/// Floating action button that opens the new-message user search flow.
 class InboxNewMessageFab extends StatelessWidget {
   const InboxNewMessageFab({super.key});
 

@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
-/// Provides the standardized user input methodology for active threads.
+/// Bottom input bar used to compose and send chat messages.
 ///
-/// Features:
-/// - Injects semantic labeling directives for hardware keyboard accessibility mechanisms.
-/// - Controls active state propagation regarding character validation prior to dispatch.
-/// - Bubbles submission events upward to coordinate parent scope notifiers seamlessly.
+/// The send button only appears once the trimmed input contains text, while the
+/// attach button delegates resource selection to the parent.
 class ChatInputBar extends StatefulWidget {
   const ChatInputBar({super.key, required this.onSend, required this.onAttach});
 
@@ -32,6 +30,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     });
   }
 
+  /// Sends the trimmed text and clears the field when there is content.
   void _handleSend() {
     if (_controller.text.trim().isEmpty) return;
     widget.onSend(_controller.text.trim());
