@@ -48,6 +48,8 @@ mixin _$FeedTrack {
   String? get repostedByDisplayName => throw _privateConstructorUsedError;
   String? get repostedByAvatarUrl => throw _privateConstructorUsedError;
   DateTime? get repostedAt => throw _privateConstructorUsedError;
+  String? get feedItemType => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get playlistData => throw _privateConstructorUsedError;
 
   /// Create a copy of FeedTrack
   /// with the given fields replaced by the non-null parameter values.
@@ -92,6 +94,8 @@ abstract class $FeedTrackCopyWith<$Res> {
     String? repostedByDisplayName,
     String? repostedByAvatarUrl,
     DateTime? repostedAt,
+    String? feedItemType,
+    Map<String, dynamic>? playlistData,
   });
 }
 
@@ -140,6 +144,8 @@ class _$FeedTrackCopyWithImpl<$Res, $Val extends FeedTrack>
     Object? repostedByDisplayName = freezed,
     Object? repostedByAvatarUrl = freezed,
     Object? repostedAt = freezed,
+    Object? feedItemType = freezed,
+    Object? playlistData = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -263,6 +269,14 @@ class _$FeedTrackCopyWithImpl<$Res, $Val extends FeedTrack>
                 ? _value.repostedAt
                 : repostedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
+            feedItemType: freezed == feedItemType
+                ? _value.feedItemType
+                : feedItemType // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            playlistData: freezed == playlistData
+                ? _value.playlistData
+                : playlistData // ignore: cast_nullable_to_non_nullable
+                      as Map<String, dynamic>?,
           )
           as $Val,
     );
@@ -309,6 +323,8 @@ abstract class _$$FeedTrackImplCopyWith<$Res>
     String? repostedByDisplayName,
     String? repostedByAvatarUrl,
     DateTime? repostedAt,
+    String? feedItemType,
+    Map<String, dynamic>? playlistData,
   });
 }
 
@@ -356,6 +372,8 @@ class __$$FeedTrackImplCopyWithImpl<$Res>
     Object? repostedByDisplayName = freezed,
     Object? repostedByAvatarUrl = freezed,
     Object? repostedAt = freezed,
+    Object? feedItemType = freezed,
+    Object? playlistData = freezed,
   }) {
     return _then(
       _$FeedTrackImpl(
@@ -479,6 +497,14 @@ class __$$FeedTrackImplCopyWithImpl<$Res>
             ? _value.repostedAt
             : repostedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
+        feedItemType: freezed == feedItemType
+            ? _value.feedItemType
+            : feedItemType // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        playlistData: freezed == playlistData
+            ? _value._playlistData
+            : playlistData // ignore: cast_nullable_to_non_nullable
+                  as Map<String, dynamic>?,
       ),
     );
   }
@@ -518,7 +544,10 @@ class _$FeedTrackImpl extends _FeedTrack {
     this.repostedByDisplayName,
     this.repostedByAvatarUrl,
     this.repostedAt,
+    this.feedItemType,
+    final Map<String, dynamic>? playlistData,
   }) : _tags = tags,
+       _playlistData = playlistData,
        super._();
 
   @override
@@ -589,10 +618,21 @@ class _$FeedTrackImpl extends _FeedTrack {
   final String? repostedByAvatarUrl;
   @override
   final DateTime? repostedAt;
+  @override
+  final String? feedItemType;
+  final Map<String, dynamic>? _playlistData;
+  @override
+  Map<String, dynamic>? get playlistData {
+    final value = _playlistData;
+    if (value == null) return null;
+    if (_playlistData is EqualUnmodifiableMapView) return _playlistData;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
 
   @override
   String toString() {
-    return 'FeedTrack(id: $id, title: $title, artistId: $artistId, artistUsername: $artistUsername, artistDisplayName: $artistDisplayName, artistAvatarUrl: $artistAvatarUrl, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, access: $access, isReposted: $isReposted, isLiked: $isLiked, tags: $tags, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, commentCount: $commentCount, isPrivate: $isPrivate, uploadDate: $uploadDate, description: $description, secretToken: $secretToken, trackDurationSeconds: $trackDurationSeconds, isARepost: $isARepost, repostedByUsername: $repostedByUsername, repostedByDisplayName: $repostedByDisplayName, repostedByAvatarUrl: $repostedByAvatarUrl, repostedAt: $repostedAt)';
+    return 'FeedTrack(id: $id, title: $title, artistId: $artistId, artistUsername: $artistUsername, artistDisplayName: $artistDisplayName, artistAvatarUrl: $artistAvatarUrl, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, access: $access, isReposted: $isReposted, isLiked: $isLiked, tags: $tags, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, commentCount: $commentCount, isPrivate: $isPrivate, uploadDate: $uploadDate, description: $description, secretToken: $secretToken, trackDurationSeconds: $trackDurationSeconds, isARepost: $isARepost, repostedByUsername: $repostedByUsername, repostedByDisplayName: $repostedByDisplayName, repostedByAvatarUrl: $repostedByAvatarUrl, repostedAt: $repostedAt, feedItemType: $feedItemType, playlistData: $playlistData)';
   }
 
   @override
@@ -653,7 +693,13 @@ class _$FeedTrackImpl extends _FeedTrack {
             (identical(other.repostedByAvatarUrl, repostedByAvatarUrl) ||
                 other.repostedByAvatarUrl == repostedByAvatarUrl) &&
             (identical(other.repostedAt, repostedAt) ||
-                other.repostedAt == repostedAt));
+                other.repostedAt == repostedAt) &&
+            (identical(other.feedItemType, feedItemType) ||
+                other.feedItemType == feedItemType) &&
+            const DeepCollectionEquality().equals(
+              other._playlistData,
+              _playlistData,
+            ));
   }
 
   @override
@@ -689,6 +735,8 @@ class _$FeedTrackImpl extends _FeedTrack {
     repostedByDisplayName,
     repostedByAvatarUrl,
     repostedAt,
+    feedItemType,
+    const DeepCollectionEquality().hash(_playlistData),
   ]);
 
   /// Create a copy of FeedTrack
@@ -732,6 +780,8 @@ abstract class _FeedTrack extends FeedTrack {
     final String? repostedByDisplayName,
     final String? repostedByAvatarUrl,
     final DateTime? repostedAt,
+    final String? feedItemType,
+    final Map<String, dynamic>? playlistData,
   }) = _$FeedTrackImpl;
   const _FeedTrack._() : super._();
 
@@ -795,6 +845,10 @@ abstract class _FeedTrack extends FeedTrack {
   String? get repostedByAvatarUrl;
   @override
   DateTime? get repostedAt;
+  @override
+  String? get feedItemType;
+  @override
+  Map<String, dynamic>? get playlistData;
 
   /// Create a copy of FeedTrack
   /// with the given fields replaced by the non-null parameter values.

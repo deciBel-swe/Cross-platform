@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/ref_pro_check_extension.dart';
 import '../../../library/domain/entities/track.dart';
-import '../../../library_profile/domain/entities/user_profile.dart';
-import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../../upgrade/presentation/widgets/pro_promotion_bottom_sheet.dart';
 import '../../data/datasources/offline_local_data_source.dart';
 import '../notifiers/collection_download_notifier.dart';
@@ -36,19 +35,21 @@ class CollectionDownloadButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dlState = ref.watch(collectionDownloadProvider(collectionId));
 
-    ref.listen(
-      collectionDownloadProvider(collectionId),
-      (CollectionDownloadState? previous, CollectionDownloadState next) {
-        if (next.error != null && previous?.error != next.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(next.error!),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      },
-    );
+    final isPro = ref.isPro;
+
+    ref.listen(collectionDownloadProvider(collectionId), (
+      CollectionDownloadState? previous,
+      CollectionDownloadState next,
+    ) {
+      if (next.error != null && previous?.error != next.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
 
     final color = iconColor ?? Theme.of(context).iconTheme.color;
 
@@ -77,19 +78,12 @@ class CollectionDownloadButton extends ConsumerWidget {
       child: IconButton(
         icon: Icon(Icons.download_outlined, color: color),
         tooltip: 'Download for offline',
-        onPressed: () => _onTap(context, ref),
+        onPressed: () => _onTap(context, ref, isPro: isPro),
       ),
     );
   }
 
-  void _onTap(BuildContext context, WidgetRef ref) {
-    final profile = ref.read(userProfileProvider).valueOrNull?.fold(
-          (_) => null,
-          (p) => p,
-        );
-    final isPro =
-        profile?.tier == UserTier.pro || profile?.tier == UserTier.artistPro;
-
+  void _onTap(BuildContext context, WidgetRef ref, {required bool isPro}) {
     if (isPro) {
       final info = OfflineCollectionInfo(
         id: collectionId,

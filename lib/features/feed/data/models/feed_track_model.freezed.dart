@@ -41,6 +41,7 @@ mixin _$FeedTrackModel {
   int get completedPlayCount => throw _privateConstructorUsedError;
   int get repostCount => throw _privateConstructorUsedError;
   int get commentCount => throw _privateConstructorUsedError;
+  bool get isPrivate => throw _privateConstructorUsedError;
   String? get uploadDate => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   String? get secretToken => throw _privateConstructorUsedError;
@@ -93,6 +94,7 @@ abstract class $FeedTrackModelCopyWith<$Res> {
     @JsonKey(name: 'CompletedPlayCount') int completedPlayCount,
     int repostCount,
     int commentCount,
+    bool isPrivate,
     String? uploadDate,
     String? description,
     String? secretToken,
@@ -141,6 +143,7 @@ class _$FeedTrackModelCopyWithImpl<$Res, $Val extends FeedTrackModel>
     Object? completedPlayCount = null,
     Object? repostCount = null,
     Object? commentCount = null,
+    Object? isPrivate = null,
     Object? uploadDate = freezed,
     Object? description = freezed,
     Object? secretToken = freezed,
@@ -231,6 +234,10 @@ class _$FeedTrackModelCopyWithImpl<$Res, $Val extends FeedTrackModel>
                 ? _value.commentCount
                 : commentCount // ignore: cast_nullable_to_non_nullable
                       as int,
+            isPrivate: null == isPrivate
+                ? _value.isPrivate
+                : isPrivate // ignore: cast_nullable_to_non_nullable
+                      as bool,
             uploadDate: freezed == uploadDate
                 ? _value.uploadDate
                 : uploadDate // ignore: cast_nullable_to_non_nullable
@@ -310,6 +317,7 @@ abstract class _$$FeedTrackModelImplCopyWith<$Res>
     @JsonKey(name: 'CompletedPlayCount') int completedPlayCount,
     int repostCount,
     int commentCount,
+    bool isPrivate,
     String? uploadDate,
     String? description,
     String? secretToken,
@@ -357,6 +365,7 @@ class __$$FeedTrackModelImplCopyWithImpl<$Res>
     Object? completedPlayCount = null,
     Object? repostCount = null,
     Object? commentCount = null,
+    Object? isPrivate = null,
     Object? uploadDate = freezed,
     Object? description = freezed,
     Object? secretToken = freezed,
@@ -447,6 +456,10 @@ class __$$FeedTrackModelImplCopyWithImpl<$Res>
             ? _value.commentCount
             : commentCount // ignore: cast_nullable_to_non_nullable
                   as int,
+        isPrivate: null == isPrivate
+            ? _value.isPrivate
+            : isPrivate // ignore: cast_nullable_to_non_nullable
+                  as bool,
         uploadDate: freezed == uploadDate
             ? _value.uploadDate
             : uploadDate // ignore: cast_nullable_to_non_nullable
@@ -520,6 +533,7 @@ class _$FeedTrackModelImpl extends _FeedTrackModel {
     @JsonKey(name: 'CompletedPlayCount') this.completedPlayCount = 0,
     this.repostCount = 0,
     this.commentCount = 0,
+    this.isPrivate = false,
     this.uploadDate,
     this.description,
     this.secretToken,
@@ -601,6 +615,9 @@ class _$FeedTrackModelImpl extends _FeedTrackModel {
   @JsonKey()
   final int commentCount;
   @override
+  @JsonKey()
+  final bool isPrivate;
+  @override
   final String? uploadDate;
   @override
   final String? description;
@@ -639,7 +656,7 @@ class _$FeedTrackModelImpl extends _FeedTrackModel {
 
   @override
   String toString() {
-    return 'FeedTrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, slug: $slug, access: $access, isReposted: $isReposted, isLiked: $isLiked, tags: $tags, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, completedPlayCount: $completedPlayCount, repostCount: $repostCount, commentCount: $commentCount, uploadDate: $uploadDate, description: $description, secretToken: $secretToken, trackDurationSeconds: $trackDurationSeconds, isARepost: $isARepost, repostedByUsername: $repostedByUsername, repostedByDisplayName: $repostedByDisplayName, repostedByAvatarUrl: $repostedByAvatarUrl, repostedAt: $repostedAt, feedItemType: $feedItemType, playlistData: $playlistData)';
+    return 'FeedTrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, slug: $slug, access: $access, isReposted: $isReposted, isLiked: $isLiked, tags: $tags, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, completedPlayCount: $completedPlayCount, repostCount: $repostCount, commentCount: $commentCount, isPrivate: $isPrivate, uploadDate: $uploadDate, description: $description, secretToken: $secretToken, trackDurationSeconds: $trackDurationSeconds, isARepost: $isARepost, repostedByUsername: $repostedByUsername, repostedByDisplayName: $repostedByDisplayName, repostedByAvatarUrl: $repostedByAvatarUrl, repostedAt: $repostedAt, feedItemType: $feedItemType, playlistData: $playlistData)';
   }
 
   @override
@@ -677,6 +694,8 @@ class _$FeedTrackModelImpl extends _FeedTrackModel {
                 other.repostCount == repostCount) &&
             (identical(other.commentCount, commentCount) ||
                 other.commentCount == commentCount) &&
+            (identical(other.isPrivate, isPrivate) ||
+                other.isPrivate == isPrivate) &&
             (identical(other.uploadDate, uploadDate) ||
                 other.uploadDate == uploadDate) &&
             (identical(other.description, description) ||
@@ -726,6 +745,7 @@ class _$FeedTrackModelImpl extends _FeedTrackModel {
     completedPlayCount,
     repostCount,
     commentCount,
+    isPrivate,
     uploadDate,
     description,
     secretToken,
@@ -777,6 +797,7 @@ abstract class _FeedTrackModel extends FeedTrackModel {
     @JsonKey(name: 'CompletedPlayCount') final int completedPlayCount,
     final int repostCount,
     final int commentCount,
+    final bool isPrivate,
     final String? uploadDate,
     final String? description,
     final String? secretToken,
@@ -833,6 +854,8 @@ abstract class _FeedTrackModel extends FeedTrackModel {
   int get repostCount;
   @override
   int get commentCount;
+  @override
+  bool get isPrivate;
   @override
   String? get uploadDate;
   @override

@@ -9,6 +9,7 @@ class TrackEditState {
     required this.releaseDate,
     required this.isPrivate,
     required this.currentCoverUrl,
+    required this.access,
     this.newCoverImage,
     this.removeCover = false,
     this.isSubmitting = false,
@@ -21,6 +22,7 @@ class TrackEditState {
   final DateTime? releaseDate;
   final bool isPrivate;
   final String? currentCoverUrl;
+  final String access;
   final File? newCoverImage;
   final bool removeCover;
   final bool isSubmitting;
@@ -35,6 +37,7 @@ class TrackEditState {
     bool? isPrivate,
     String? currentCoverUrl,
     bool clearCurrentCoverUrl = false,
+    String? access,
     File? newCoverImage,
     bool clearNewCoverImage = false,
     bool? removeCover,
@@ -50,6 +53,7 @@ class TrackEditState {
       currentCoverUrl: clearCurrentCoverUrl
           ? null
           : (currentCoverUrl ?? this.currentCoverUrl),
+      access: access ?? this.access,
       newCoverImage: clearNewCoverImage
           ? null
           : (newCoverImage ?? this.newCoverImage),

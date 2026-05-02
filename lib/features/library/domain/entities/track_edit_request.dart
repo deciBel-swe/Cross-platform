@@ -8,6 +8,7 @@ class TrackEditRequest {
     required this.tags,
     required this.releaseDate,
     required this.isPrivate,
+    required this.access,
     this.coverImage,
   });
 
@@ -17,5 +18,6 @@ class TrackEditRequest {
   final List<String> tags;
   final DateTime? releaseDate;
   final bool isPrivate;
+  final String access;
   final File? coverImage;
 }

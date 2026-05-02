@@ -99,7 +99,6 @@ class UploadSessionsNotifier extends Notifier<Map<String, UploadSession>> {
       _subscriptions.clear();
       _cancelUploadStatusSubscriptions.clear();
       _latestStatusByUploadId.clear();
-
     });
 
     return <String, UploadSession>{};
@@ -134,11 +133,9 @@ class UploadSessionsNotifier extends Notifier<Map<String, UploadSession>> {
         onError: (Object error, StackTrace stackTrace) {
           _handleStreamError(uploadId, error);
         },
-        onDone: () {
-        },
+        onDone: () {},
         cancelOnError: false,
       );
-
     } catch (error) {
       _handleStreamError(uploadId, error);
     }
@@ -197,11 +194,9 @@ class UploadSessionsNotifier extends Notifier<Map<String, UploadSession>> {
         onError: (Object error, StackTrace stackTrace) {
           _handleStreamError(uploadId, error);
         },
-        onDone: () {
-        },
+        onDone: () {},
         cancelOnError: false,
       );
-
     } catch (error) {
       _handleStreamError(uploadId, error);
     }
@@ -248,6 +243,10 @@ class UploadSessionsNotifier extends Notifier<Map<String, UploadSession>> {
           uploadsNotifier.upsertTrack(nextTrack);
         } else {
           await uploadsNotifier.refreshTrack(nextTrack.id);
+          uploadsNotifier.preserveTrackAccessIfMoreRestrictive(
+            trackId: nextTrack.id,
+            preferredAccess: nextTrack.access,
+          );
         }
 
         _removeCompletedSession(uploadId);
@@ -301,7 +300,6 @@ class UploadSessionsNotifier extends Notifier<Map<String, UploadSession>> {
     state = nextState;
 
     _latestStatusByUploadId.remove(uploadId);
-
   }
 
   void _cancelSubscription(String uploadId) {

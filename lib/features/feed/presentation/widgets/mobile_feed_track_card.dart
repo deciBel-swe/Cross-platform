@@ -125,12 +125,13 @@ class MobileFeedTrackCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        Text(
-                          duration,
-                          style: AppTextStyles.cardTitle.copyWith(
-                            color: AppColors.textPrimary,
+                        if (duration.isNotEmpty)
+                          Text(
+                            duration,
+                            style: AppTextStyles.cardTitle.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),

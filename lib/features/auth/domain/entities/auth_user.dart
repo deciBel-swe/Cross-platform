@@ -1,6 +1,7 @@
 /// Defines the membership tier of an authenticated user.
 enum UserTier {
   free('Free'),
+  pro('Pro'),
   artist('Artist'),
   artistPro('Artist Pro');
 

@@ -49,6 +49,14 @@ class SecureStorageService {
     }
   }
 
+  /// Updates the cached user model in storage.
+  Future<void> updateUser(AuthUserModel user) async {
+    await _storage.write(
+      key: _userKey,
+      value: jsonEncode(user.toJson()),
+    );
+  }
+
   /// Saves newly refreshed access token and optionally updates the refresh token.
   ///
   /// Calculates the new expiry time based on [expiresIn] seconds retrieved
@@ -106,4 +114,14 @@ class SecureStorageService {
 
   /// Clears all stored secure keys, effectively wiping the session.
   Future<void> clearAll() => _storage.deleteAll();
+
+  /// Generic string retrieval.
+  Future<String?> getString(String key) => _storage.read(key: key);
+
+  /// Generic string storage.
+  Future<void> setString(String key, String value) =>
+      _storage.write(key: key, value: value);
+
+  /// Generic removal.
+  Future<void> removeString(String key) => _storage.delete(key: key);
 }

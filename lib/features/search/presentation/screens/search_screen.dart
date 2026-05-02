@@ -401,9 +401,10 @@ class _TrackResultsList extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: AppDimensions.paddingSm),
             child: _SearchSurface(
               onTap: () => unawaited(
-                ref
-                    .read(trackAudioProvider.notifier)
-                    .playTrack(track: playableTrack, queue: playableQueue),
+                ref.read(trackAudioProvider.notifier).playTrack(
+                      track: playableTrack,
+                      queue: [playableTrack], // Discover mode: No queue
+                    ),
               ),
               leading: _ArtworkSquare(
                 imageUrl: track.coverUrl,

@@ -25,9 +25,11 @@ mixin _$TrackModel {
   String get title => throw _privateConstructorUsedError;
   ArtistModel get artist => throw _privateConstructorUsedError;
   String? get trackUrl => throw _privateConstructorUsedError;
+  String? get trackPreviewUrl => throw _privateConstructorUsedError;
   String? get coverUrl => throw _privateConstructorUsedError;
   String? get waveformUrl => throw _privateConstructorUsedError;
   String get genre => throw _privateConstructorUsedError;
+  String get access => throw _privateConstructorUsedError;
   List<String> get tags => throw _privateConstructorUsedError;
   TrackStatusModel get state => throw _privateConstructorUsedError;
   DateTime get releaseDate => throw _privateConstructorUsedError;
@@ -39,6 +41,7 @@ mixin _$TrackModel {
   DateTime get createdAt => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   int get trackDurationSeconds => throw _privateConstructorUsedError;
+  bool get isPrivate => throw _privateConstructorUsedError;
 
   /// Serializes this TrackModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -62,9 +65,11 @@ abstract class $TrackModelCopyWith<$Res> {
     String title,
     ArtistModel artist,
     String? trackUrl,
+    String? trackPreviewUrl,
     String? coverUrl,
     String? waveformUrl,
     String genre,
+    String access,
     List<String> tags,
     TrackStatusModel state,
     DateTime releaseDate,
@@ -76,6 +81,7 @@ abstract class $TrackModelCopyWith<$Res> {
     DateTime createdAt,
     String? description,
     int trackDurationSeconds,
+    bool isPrivate,
   });
 
   $ArtistModelCopyWith<$Res> get artist;
@@ -100,9 +106,11 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
     Object? title = null,
     Object? artist = null,
     Object? trackUrl = freezed,
+    Object? trackPreviewUrl = freezed,
     Object? coverUrl = freezed,
     Object? waveformUrl = freezed,
     Object? genre = null,
+    Object? access = null,
     Object? tags = null,
     Object? state = null,
     Object? releaseDate = null,
@@ -114,6 +122,7 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
     Object? createdAt = null,
     Object? description = freezed,
     Object? trackDurationSeconds = null,
+    Object? isPrivate = null,
   }) {
     return _then(
       _value.copyWith(
@@ -133,6 +142,10 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
                 ? _value.trackUrl
                 : trackUrl // ignore: cast_nullable_to_non_nullable
                       as String?,
+            trackPreviewUrl: freezed == trackPreviewUrl
+                ? _value.trackPreviewUrl
+                : trackPreviewUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
             coverUrl: freezed == coverUrl
                 ? _value.coverUrl
                 : coverUrl // ignore: cast_nullable_to_non_nullable
@@ -144,6 +157,10 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
             genre: null == genre
                 ? _value.genre
                 : genre // ignore: cast_nullable_to_non_nullable
+                      as String,
+            access: null == access
+                ? _value.access
+                : access // ignore: cast_nullable_to_non_nullable
                       as String,
             tags: null == tags
                 ? _value.tags
@@ -189,6 +206,10 @@ class _$TrackModelCopyWithImpl<$Res, $Val extends TrackModel>
                 ? _value.trackDurationSeconds
                 : trackDurationSeconds // ignore: cast_nullable_to_non_nullable
                       as int,
+            isPrivate: null == isPrivate
+                ? _value.isPrivate
+                : isPrivate // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -219,9 +240,11 @@ abstract class _$$TrackModelImplCopyWith<$Res>
     String title,
     ArtistModel artist,
     String? trackUrl,
+    String? trackPreviewUrl,
     String? coverUrl,
     String? waveformUrl,
     String genre,
+    String access,
     List<String> tags,
     TrackStatusModel state,
     DateTime releaseDate,
@@ -233,6 +256,7 @@ abstract class _$$TrackModelImplCopyWith<$Res>
     DateTime createdAt,
     String? description,
     int trackDurationSeconds,
+    bool isPrivate,
   });
 
   @override
@@ -257,9 +281,11 @@ class __$$TrackModelImplCopyWithImpl<$Res>
     Object? title = null,
     Object? artist = null,
     Object? trackUrl = freezed,
+    Object? trackPreviewUrl = freezed,
     Object? coverUrl = freezed,
     Object? waveformUrl = freezed,
     Object? genre = null,
+    Object? access = null,
     Object? tags = null,
     Object? state = null,
     Object? releaseDate = null,
@@ -271,6 +297,7 @@ class __$$TrackModelImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? description = freezed,
     Object? trackDurationSeconds = null,
+    Object? isPrivate = null,
   }) {
     return _then(
       _$TrackModelImpl(
@@ -290,6 +317,10 @@ class __$$TrackModelImplCopyWithImpl<$Res>
             ? _value.trackUrl
             : trackUrl // ignore: cast_nullable_to_non_nullable
                   as String?,
+        trackPreviewUrl: freezed == trackPreviewUrl
+            ? _value.trackPreviewUrl
+            : trackPreviewUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
         coverUrl: freezed == coverUrl
             ? _value.coverUrl
             : coverUrl // ignore: cast_nullable_to_non_nullable
@@ -301,6 +332,10 @@ class __$$TrackModelImplCopyWithImpl<$Res>
         genre: null == genre
             ? _value.genre
             : genre // ignore: cast_nullable_to_non_nullable
+                  as String,
+        access: null == access
+            ? _value.access
+            : access // ignore: cast_nullable_to_non_nullable
                   as String,
         tags: null == tags
             ? _value._tags
@@ -346,6 +381,10 @@ class __$$TrackModelImplCopyWithImpl<$Res>
             ? _value.trackDurationSeconds
             : trackDurationSeconds // ignore: cast_nullable_to_non_nullable
                   as int,
+        isPrivate: null == isPrivate
+            ? _value.isPrivate
+            : isPrivate // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -359,9 +398,11 @@ class _$TrackModelImpl implements _TrackModel {
     required this.title,
     required this.artist,
     this.trackUrl,
+    this.trackPreviewUrl,
     this.coverUrl,
     this.waveformUrl,
     this.genre = '',
+    this.access = 'PLAYABLE',
     final List<String> tags = const <String>[],
     required this.state,
     required this.releaseDate,
@@ -373,6 +414,7 @@ class _$TrackModelImpl implements _TrackModel {
     required this.createdAt,
     this.description,
     this.trackDurationSeconds = 0,
+    this.isPrivate = false,
   }) : _tags = tags;
 
   factory _$TrackModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -387,12 +429,17 @@ class _$TrackModelImpl implements _TrackModel {
   @override
   final String? trackUrl;
   @override
+  final String? trackPreviewUrl;
+  @override
   final String? coverUrl;
   @override
   final String? waveformUrl;
   @override
   @JsonKey()
   final String genre;
+  @override
+  @JsonKey()
+  final String access;
   final List<String> _tags;
   @override
   @JsonKey()
@@ -428,10 +475,13 @@ class _$TrackModelImpl implements _TrackModel {
   @override
   @JsonKey()
   final int trackDurationSeconds;
+  @override
+  @JsonKey()
+  final bool isPrivate;
 
   @override
   String toString() {
-    return 'TrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, tags: $tags, state: $state, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, isLiked: $isLiked, isReposted: $isReposted, createdAt: $createdAt, description: $description, trackDurationSeconds: $trackDurationSeconds)';
+    return 'TrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, access: $access, tags: $tags, state: $state, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, isLiked: $isLiked, isReposted: $isReposted, createdAt: $createdAt, description: $description, trackDurationSeconds: $trackDurationSeconds, isPrivate: $isPrivate)';
   }
 
   @override
@@ -444,11 +494,14 @@ class _$TrackModelImpl implements _TrackModel {
             (identical(other.artist, artist) || other.artist == artist) &&
             (identical(other.trackUrl, trackUrl) ||
                 other.trackUrl == trackUrl) &&
+            (identical(other.trackPreviewUrl, trackPreviewUrl) ||
+                other.trackPreviewUrl == trackPreviewUrl) &&
             (identical(other.coverUrl, coverUrl) ||
                 other.coverUrl == coverUrl) &&
             (identical(other.waveformUrl, waveformUrl) ||
                 other.waveformUrl == waveformUrl) &&
             (identical(other.genre, genre) || other.genre == genre) &&
+            (identical(other.access, access) || other.access == access) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
             (identical(other.state, state) || other.state == state) &&
             (identical(other.releaseDate, releaseDate) ||
@@ -467,20 +520,24 @@ class _$TrackModelImpl implements _TrackModel {
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.trackDurationSeconds, trackDurationSeconds) ||
-                other.trackDurationSeconds == trackDurationSeconds));
+                other.trackDurationSeconds == trackDurationSeconds) &&
+            (identical(other.isPrivate, isPrivate) ||
+                other.isPrivate == isPrivate));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     title,
     artist,
     trackUrl,
+    trackPreviewUrl,
     coverUrl,
     waveformUrl,
     genre,
+    access,
     const DeepCollectionEquality().hash(_tags),
     state,
     releaseDate,
@@ -492,7 +549,8 @@ class _$TrackModelImpl implements _TrackModel {
     createdAt,
     description,
     trackDurationSeconds,
-  );
+    isPrivate,
+  ]);
 
   /// Create a copy of TrackModel
   /// with the given fields replaced by the non-null parameter values.
@@ -514,9 +572,11 @@ abstract class _TrackModel implements TrackModel {
     required final String title,
     required final ArtistModel artist,
     final String? trackUrl,
+    final String? trackPreviewUrl,
     final String? coverUrl,
     final String? waveformUrl,
     final String genre,
+    final String access,
     final List<String> tags,
     required final TrackStatusModel state,
     required final DateTime releaseDate,
@@ -528,6 +588,7 @@ abstract class _TrackModel implements TrackModel {
     required final DateTime createdAt,
     final String? description,
     final int trackDurationSeconds,
+    final bool isPrivate,
   }) = _$TrackModelImpl;
 
   factory _TrackModel.fromJson(Map<String, dynamic> json) =
@@ -542,11 +603,15 @@ abstract class _TrackModel implements TrackModel {
   @override
   String? get trackUrl;
   @override
+  String? get trackPreviewUrl;
+  @override
   String? get coverUrl;
   @override
   String? get waveformUrl;
   @override
   String get genre;
+  @override
+  String get access;
   @override
   List<String> get tags;
   @override
@@ -569,6 +634,8 @@ abstract class _TrackModel implements TrackModel {
   String? get description;
   @override
   int get trackDurationSeconds;
+  @override
+  bool get isPrivate;
 
   /// Create a copy of TrackModel
   /// with the given fields replaced by the non-null parameter values.

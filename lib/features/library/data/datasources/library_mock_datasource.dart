@@ -82,6 +82,7 @@ class LibraryMockDatasource {
     required List<String> tags,
     required DateTime? releaseDate,
     required bool isPrivate,
+    required String access,
     File? coverImage,
   }) async {
     await Future<void>.delayed(LibraryMockFixtures.mockDelay);
@@ -103,7 +104,8 @@ class LibraryMockDatasource {
       ..['genre'] = genre
       ..['description'] = description
       ..['tags'] = tags
-      ..['isPrivate'] = isPrivate;
+      ..['isPrivate'] = isPrivate
+      ..['access'] = access.trim().toUpperCase();
 
     if (releaseDate != null) {
       updatedTrack['releaseDate'] = releaseDate.toIso8601String();

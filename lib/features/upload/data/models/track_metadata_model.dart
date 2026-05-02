@@ -30,11 +30,14 @@ extension TrackUploadMetadataX on TrackUploadMetadata {
     final dateToUse = releaseDate ?? DateTime.now();
     final formattedDate = DateFormat('yyyy-MM-dd').format(dateToUse);
 
+    final normalizedAccess = access.trim().toUpperCase();
+
     return TrackMetadataModel(
       title: title,
       genre: genre,
       isPrivate: isPrivate,
       uploadId: uploadId,
+      access: normalizedAccess,
 
       description: description.isEmpty ? null : description,
       releaseDate: formattedDate,

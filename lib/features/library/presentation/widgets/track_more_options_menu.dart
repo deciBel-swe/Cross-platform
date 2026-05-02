@@ -25,6 +25,7 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
   BuildContext? anchorContext,
   bool includeEdit = false,
   bool includeDelete = false,
+  bool isPro = false,
 }) {
   if (ResponsiveUtils.isDesktop(context)) {
     return showMenu<TrackMoreOption>(
@@ -79,6 +80,7 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
           value: TrackMoreOption.download,
           icon: Icons.download_rounded,
           label: 'Download',
+          enabled: isPro,
         ),
         _desktopTrackOptionItem(
           value: TrackMoreOption.report,
@@ -168,6 +170,7 @@ Future<TrackMoreOption?> showTrackMoreOptionsMenu({
                   value: TrackMoreOption.download,
                   icon: Icons.download_rounded,
                   label: 'Download',
+                  enabled: isPro,
                 ),
                 _mobileTrackOptionItem(
                   sheetContext,
@@ -222,11 +225,15 @@ PopupMenuItem<TrackMoreOption> _desktopTrackOptionItem({
   required IconData icon,
   required String label,
   Color? color,
+  bool enabled = true,
 }) {
-  final itemColor = color ?? AppColors.textPrimary.withValues(alpha: 0.82);
+  final itemColor = !enabled
+      ? AppColors.textHint
+      : color ?? AppColors.textPrimary.withValues(alpha: 0.82);
 
   return PopupMenuItem<TrackMoreOption>(
     value: value,
+    enabled: enabled,
     height: 52,
     child: SizedBox(
       width: 300,
@@ -245,6 +252,8 @@ PopupMenuItem<TrackMoreOption> _desktopTrackOptionItem({
               ),
             ),
           ),
+          if (!enabled)
+            Icon(Icons.lock_outline_rounded, color: itemColor, size: 16),
         ],
       ),
     ),
@@ -258,14 +267,21 @@ Widget _mobileTrackOptionItem(
   required IconData icon,
   required String label,
   Color? color,
+  bool enabled = true,
 }) {
-  final itemColor = color ?? AppColors.textSecondary;
+  final itemColor = !enabled
+      ? AppColors.textHint
+      : color ?? AppColors.textSecondary;
   return ListTile(
     leading: Icon(icon, color: itemColor),
     title: Text(
       label,
       style: AppTextStyles.titleMedium.copyWith(color: itemColor),
     ),
-    onTap: () => Navigator.of(context).pop(value),
+    trailing: !enabled
+        ? Icon(Icons.lock_outline_rounded, color: itemColor, size: 16)
+        : null,
+    enabled: enabled,
+    onTap: enabled ? () => Navigator.of(context).pop(value) : null,
   );
 }
