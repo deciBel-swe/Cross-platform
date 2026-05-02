@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/core/network/firebase_messaging_service.dart.dart';
 import 'package:decibel/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:decibel/features/notifications/presentation/providers/device_token_provider.dart';
@@ -20,11 +21,13 @@ void main() {
   late MockNotificationRepository mockNotificationRepository;
   late ProviderContainer container;
   late StreamController<String> tokenRefreshController;
+  late StreamController<RemoteMessage> foregroundController;
 
   setUp(() {
     mockFirebaseMessagingService = MockFirebaseMessagingService();
     mockNotificationRepository = MockNotificationRepository();
     tokenRefreshController = StreamController<String>.broadcast();
+    foregroundController = StreamController<RemoteMessage>.broadcast();
 
     when(
       () => mockFirebaseMessagingService.requestPermission(),
@@ -37,7 +40,7 @@ void main() {
     ).thenAnswer((_) => tokenRefreshController.stream);
     when(
       () => mockFirebaseMessagingService.onForegroundMessage,
-    ).thenAnswer((_) => const Stream<RemoteMessage>.empty());
+    ).thenAnswer((_) => foregroundController.stream);
     when(
       () => mockNotificationRepository.registerDeviceToken(any()),
     ).thenAnswer((_) async => null);
@@ -56,6 +59,7 @@ void main() {
 
   tearDown(() async {
     await tokenRefreshController.close();
+    await foregroundController.close();
     container.dispose();
   });
 
@@ -85,6 +89,52 @@ void main() {
       verifyNever(
         () => mockNotificationRepository.registerDeviceToken('duplicate-token'),
       );
+
+      foregroundController.add(RemoteMessage(data: {'kind': 'notification'}));
+      await Future<void>.delayed(Duration.zero);
     },
   );
+
+  test(
+    'syncDeviceTokenProvider does not register when permission is denied',
+    () async {
+      when(
+        () => mockFirebaseMessagingService.requestPermission(),
+      ).thenAnswer((_) async => false);
+
+      await container.read(syncDeviceTokenProvider.future);
+
+      verifyNever(() => mockFirebaseMessagingService.getDeviceToken());
+      verifyNever(() => mockNotificationRepository.registerDeviceToken(any()));
+    },
+  );
+
+  test('syncDeviceTokenProvider ignores null and empty tokens', () async {
+    when(
+      () => mockFirebaseMessagingService.getDeviceToken(),
+    ).thenAnswer((_) async => null);
+
+    await container.read(syncDeviceTokenProvider.future);
+    verifyNever(() => mockNotificationRepository.registerDeviceToken(any()));
+
+    container.invalidate(syncDeviceTokenProvider);
+    when(
+      () => mockFirebaseMessagingService.getDeviceToken(),
+    ).thenAnswer((_) async => '');
+
+    await container.read(syncDeviceTokenProvider.future);
+    verifyNever(() => mockNotificationRepository.registerDeviceToken(any()));
+  });
+
+  test('syncDeviceTokenProvider ignores registration failures', () async {
+    when(
+      () => mockNotificationRepository.registerDeviceToken(any()),
+    ).thenAnswer((_) async => const ServerFailure('cannot register'));
+
+    await container.read(syncDeviceTokenProvider.future);
+
+    verify(
+      () => mockNotificationRepository.registerDeviceToken('initial-token'),
+    ).called(1);
+  });
 }

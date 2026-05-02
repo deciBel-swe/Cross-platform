@@ -1,6 +1,7 @@
 import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/core/router/route_paths.dart';
 import 'package:decibel/features/notifications/domain/entities/activity_notification.dart';
+import 'package:decibel/features/notifications/presentation/notifiers/notification_feed_notifier.dart';
 import 'package:decibel/features/notifications/presentation/providers/notification_providers.dart';
 import 'package:decibel/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:decibel/features/notifications/presentation/widgets/notification_card.dart';
@@ -145,5 +146,43 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Track 44'), findsOneWidget);
+  });
+
+  testWidgets('fetches the next page when scrolled near the bottom', (
+    tester,
+  ) async {
+    final repository = FakeNotificationRepository(
+      pages: {
+        0: List<ActivityNotification>.generate(
+          20,
+          (index) => activityNotification(id: index + 1, username: 'u$index'),
+        ),
+        1: [
+          activityNotification(
+            id: 99,
+            username: 'last_user',
+            displayName: 'Last User',
+          ),
+        ],
+      },
+    );
+
+    await tester.pumpWidget(app(repository));
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(ListView), const Offset(0, -3000));
+    await tester.pumpAndSettle();
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(NotificationsScreen)),
+    );
+    expect(
+      container
+          .read(notificationFeedProvider)
+          .value
+          ?.notifications
+          .map((item) => item.id),
+      contains(99),
+    );
   });
 }

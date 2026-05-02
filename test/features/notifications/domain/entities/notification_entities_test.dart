@@ -4,14 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('notification entities preserve constructor values', () {
-    final actor = const NotificationActor(id: 1, username: 'actor');
-    final user = const NotificationUser(
+    const actor = NotificationActor(id: 1, username: 'actor');
+    const user = NotificationUser(
       id: 2,
       username: 'alice',
       displayName: 'Alice',
       avatarUrl: 'avatar.png',
     );
-    final resource = const NotificationResource(
+    const resource = NotificationResource(
       resourceType: ResourceType.track,
       resourceId: 42,
     );
