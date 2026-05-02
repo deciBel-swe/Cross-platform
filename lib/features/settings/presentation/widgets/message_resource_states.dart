@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Centered empty-state text for resource picker tabs.
 class MessageResourceEmptyState extends StatelessWidget {
   const MessageResourceEmptyState({super.key, required this.text});
 
@@ -13,6 +14,7 @@ class MessageResourceEmptyState extends StatelessWidget {
   }
 }
 
+/// Centered error-state text for resource picker tabs.
 class MessageResourceErrorState extends StatelessWidget {
   const MessageResourceErrorState({super.key, required this.text});
 

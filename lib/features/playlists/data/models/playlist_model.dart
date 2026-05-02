@@ -47,6 +47,7 @@ class PlaylistModel with _$PlaylistModel {
     required String type,
     @Default(false) bool isPrivate,
     @Default(false) bool isLiked,
+    @Default(false) bool isReposted,
     @JsonKey(name: 'coverArtUrl') String? coverArt,
     OwnerModel? owner,
     @JsonKey(name: 'trackSummaryDto')

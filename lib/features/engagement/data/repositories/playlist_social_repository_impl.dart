@@ -14,10 +14,36 @@ class PlaylistSocialRepositoryImpl implements IPlaylistSocialRepository {
   final PlaylistSocialRemoteDatasource _remoteDataSource;
 
   @override
-  Future<Either<Failure, bool>> toggleLike(int playlistId, bool isCurrentlyLiked) async {
+  Future<Either<Failure, bool>> toggleLike(
+    int playlistId,
+    bool isCurrentlyLiked,
+  ) async {
     try {
-      final isLiked = await _remoteDataSource.toggleLike(playlistId, isCurrentlyLiked: isCurrentlyLiked);
+      final isLiked = await _remoteDataSource.toggleLike(
+        playlistId,
+        isCurrentlyLiked: isCurrentlyLiked,
+      );
       return Right(isLiked);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> toggleRepost(
+    int playlistId,
+    bool isCurrentlyReposted,
+  ) async {
+    try {
+      final isReposted = await _remoteDataSource.toggleRepost(
+        playlistId,
+        isCurrentlyReposted: isCurrentlyReposted,
+      );
+      return Right(isReposted);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on NetworkException catch (e) {

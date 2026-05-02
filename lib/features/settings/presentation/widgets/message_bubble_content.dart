@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/message_resource_preview.dart';
 import 'message_bubble_resource_preview_card.dart';
 
+/// Renders the inside of a chat bubble.
+///
+/// Plain messages become text, while messages containing a resource marker show
+/// optional text followed by a resource preview card.
 class MessageBubbleContent extends StatelessWidget {
   const MessageBubbleContent({super.key, required this.parsed});
 

@@ -18,6 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$PlaylistSocialData {
   bool get isLiked => throw _privateConstructorUsedError;
+  bool get isReposted => throw _privateConstructorUsedError;
 
   /// Create a copy of PlaylistSocialData
   /// with the given fields replaced by the non-null parameter values.
@@ -33,7 +34,7 @@ abstract class $PlaylistSocialDataCopyWith<$Res> {
     $Res Function(PlaylistSocialData) then,
   ) = _$PlaylistSocialDataCopyWithImpl<$Res, PlaylistSocialData>;
   @useResult
-  $Res call({bool isLiked});
+  $Res call({bool isLiked, bool isReposted});
 }
 
 /// @nodoc
@@ -50,12 +51,16 @@ class _$PlaylistSocialDataCopyWithImpl<$Res, $Val extends PlaylistSocialData>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? isLiked = null}) {
+  $Res call({Object? isLiked = null, Object? isReposted = null}) {
     return _then(
       _value.copyWith(
             isLiked: null == isLiked
                 ? _value.isLiked
                 : isLiked // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isReposted: null == isReposted
+                ? _value.isReposted
+                : isReposted // ignore: cast_nullable_to_non_nullable
                       as bool,
           )
           as $Val,
@@ -72,7 +77,7 @@ abstract class _$$PlaylistSocialDataImplCopyWith<$Res>
   ) = __$$PlaylistSocialDataImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({bool isLiked});
+  $Res call({bool isLiked, bool isReposted});
 }
 
 /// @nodoc
@@ -88,12 +93,16 @@ class __$$PlaylistSocialDataImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? isLiked = null}) {
+  $Res call({Object? isLiked = null, Object? isReposted = null}) {
     return _then(
       _$PlaylistSocialDataImpl(
         isLiked: null == isLiked
             ? _value.isLiked
             : isLiked // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isReposted: null == isReposted
+            ? _value.isReposted
+            : isReposted // ignore: cast_nullable_to_non_nullable
                   as bool,
       ),
     );
@@ -103,14 +112,19 @@ class __$$PlaylistSocialDataImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$PlaylistSocialDataImpl implements _PlaylistSocialData {
-  const _$PlaylistSocialDataImpl({required this.isLiked});
+  const _$PlaylistSocialDataImpl({
+    required this.isLiked,
+    required this.isReposted,
+  });
 
   @override
   final bool isLiked;
+  @override
+  final bool isReposted;
 
   @override
   String toString() {
-    return 'PlaylistSocialData(isLiked: $isLiked)';
+    return 'PlaylistSocialData(isLiked: $isLiked, isReposted: $isReposted)';
   }
 
   @override
@@ -118,11 +132,13 @@ class _$PlaylistSocialDataImpl implements _PlaylistSocialData {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$PlaylistSocialDataImpl &&
-            (identical(other.isLiked, isLiked) || other.isLiked == isLiked));
+            (identical(other.isLiked, isLiked) || other.isLiked == isLiked) &&
+            (identical(other.isReposted, isReposted) ||
+                other.isReposted == isReposted));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, isLiked);
+  int get hashCode => Object.hash(runtimeType, isLiked, isReposted);
 
   /// Create a copy of PlaylistSocialData
   /// with the given fields replaced by the non-null parameter values.
@@ -137,11 +153,15 @@ class _$PlaylistSocialDataImpl implements _PlaylistSocialData {
 }
 
 abstract class _PlaylistSocialData implements PlaylistSocialData {
-  const factory _PlaylistSocialData({required final bool isLiked}) =
-      _$PlaylistSocialDataImpl;
+  const factory _PlaylistSocialData({
+    required final bool isLiked,
+    required final bool isReposted,
+  }) = _$PlaylistSocialDataImpl;
 
   @override
   bool get isLiked;
+  @override
+  bool get isReposted;
 
   /// Create a copy of PlaylistSocialData
   /// with the given fields replaced by the non-null parameter values.

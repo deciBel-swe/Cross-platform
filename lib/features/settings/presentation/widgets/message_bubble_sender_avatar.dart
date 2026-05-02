@@ -5,6 +5,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../library_profile/presentation/screens/public_profile_screen.dart';
 import '../providers/messaging_providers.dart';
 
+/// Sender avatar shown beside incoming chat bubbles.
+///
+/// Resolves the sender profile when possible and opens their public profile
+/// when tapped.
 class MessageBubbleSenderAvatar extends ConsumerStatefulWidget {
   const MessageBubbleSenderAvatar({super.key, required this.otherUserId});
 
@@ -67,6 +71,7 @@ class _MessageBubbleSenderAvatarState
     );
   }
 
+  /// Opens the public profile once and resets when the route closes.
   Future<void> _openProfile(BuildContext context, String identifier) async {
     if (_isOpening) return;
 
@@ -84,6 +89,7 @@ class _MessageBubbleSenderAvatarState
   }
 }
 
+/// Generic avatar used while the profile is loading or unavailable.
 class _FallbackUserAvatar extends StatelessWidget {
   const _FallbackUserAvatar();
 

@@ -11,6 +11,7 @@ extension PlaylistModelX on PlaylistModel {
     type: type,
     isPrivate: isPrivate,
     isLiked: isLiked,
+    isReposted: isReposted,
     coverArt: coverArt,
     owner:
         owner?.toEntity() ??

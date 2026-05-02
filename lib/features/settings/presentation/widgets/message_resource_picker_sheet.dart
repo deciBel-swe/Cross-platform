@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'message_resource_tabs.dart';
 
+/// Selected track or playlist returned by [MessageResourcePickerSheet].
 class MessageResourceSelection {
   const MessageResourceSelection({
     required this.resourceType,
@@ -20,9 +21,14 @@ class MessageResourceSelection {
   final String? imageUrl;
 }
 
+/// Bottom sheet for choosing a track or playlist to attach to a message.
+///
+/// The sheet lets users browse liked tracks, playlists, and uploads, then
+/// returns a [MessageResourceSelection] when Done is tapped.
 class MessageResourcePickerSheet extends ConsumerStatefulWidget {
   const MessageResourcePickerSheet({super.key});
 
+  /// Opens the picker and completes with the selected resource, if any.
   static Future<MessageResourceSelection?> show(BuildContext context) {
     return showModalBottomSheet<MessageResourceSelection>(
       context: context,
@@ -59,16 +65,19 @@ class _MessageResourcePickerSheetState
     super.dispose();
   }
 
+  /// Stores the current resource selection.
   void _select(MessageResourceSelection selection) {
     setState(() {
       _selection = selection;
     });
   }
 
+  /// Checks whether a tab row should render as selected.
   bool _isSelected(String type, int id) {
     return _selection?.resourceType == type && _selection?.resourceId == id;
   }
 
+  /// Closes the sheet with the selected resource.
   void _done() {
     final selection = _selection;
     if (selection == null) return;

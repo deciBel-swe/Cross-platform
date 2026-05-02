@@ -8,6 +8,7 @@ import 'message_resource_items.dart';
 import 'message_resource_picker_sheet.dart';
 import 'message_resource_states.dart';
 
+/// Picker tab that lists tracks liked by the current user.
 class MessageLikedTracksTab extends ConsumerWidget {
   const MessageLikedTracksTab({
     super.key,
@@ -57,6 +58,7 @@ class MessageLikedTracksTab extends ConsumerWidget {
   }
 }
 
+/// Picker tab that lists tracks uploaded by the current user.
 class MessageUploadsTab extends ConsumerWidget {
   const MessageUploadsTab({
     super.key,
@@ -106,6 +108,7 @@ class MessageUploadsTab extends ConsumerWidget {
   }
 }
 
+/// Picker tab that lists playlists owned by the current user.
 class MessagePlaylistsTab extends ConsumerWidget {
   const MessagePlaylistsTab({
     super.key,

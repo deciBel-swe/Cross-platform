@@ -6,6 +6,10 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/blocked_user.dart';
 
+/// Row widget for a blocked user entry.
+///
+/// Shows the user's avatar/name and exposes an unblock action supplied by the
+/// parent screen.
 class BlockedUserTile extends StatelessWidget {
   const BlockedUserTile({
     required this.user,

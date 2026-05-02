@@ -9,6 +9,7 @@ import '../../domain/repositories/playlist_social_repository.dart';
 @LazySingleton(as: IPlaylistSocialRepository)
 class MockPlaylistSocialRepositoryImpl implements IPlaylistSocialRepository {
   final Map<int, bool> _likedState = {};
+  final Map<int, bool> _repostedState = {};
 
   @override
   Future<Either<Failure, bool>> toggleLike(
@@ -18,6 +19,16 @@ class MockPlaylistSocialRepositoryImpl implements IPlaylistSocialRepository {
     await Future<void>.delayed(const Duration(milliseconds: 500));
     _likedState[playlistId] = !isCurrentlyLiked;
     return Right(!isCurrentlyLiked);
+  }
+
+  @override
+  Future<Either<Failure, bool>> toggleRepost(
+    int playlistId,
+    bool isCurrentlyReposted,
+  ) async {
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    _repostedState[playlistId] = !isCurrentlyReposted;
+    return Right(!isCurrentlyReposted);
   }
 
   @override

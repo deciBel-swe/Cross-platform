@@ -93,7 +93,9 @@ class _PlaylistDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ownerName = playlist.owner?.username ?? 'Unknown User';
+    final ownerName = playlist.owner?.displayName?.trim().isNotEmpty == true
+        ? playlist.owner!.displayName!.trim()
+        : playlist.owner?.username.trim();
     final trackCount = playlist.trackCount > 0
         ? playlist.trackCount
         : playlist.tracks.length;
@@ -113,13 +115,18 @@ class _PlaylistDetails extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
-        Text(
-          ownerName.toUpperCase(),
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 4),
+        if (ownerName != null && ownerName.isNotEmpty) ...[
+          Text(
+            ownerName,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+        ],
         Row(
           children: [
             Text(

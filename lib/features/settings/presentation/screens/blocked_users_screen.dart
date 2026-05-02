@@ -10,6 +10,10 @@ import '../../../library_profile/domain/entities/blocked_user_summary.dart';
 import '../../../library_profile/presentation/providers/block_provider.dart';
 import '../providers/blocked_users_provider.dart';
 
+/// Shows users blocked by the current account.
+///
+/// The list supports pull-to-refresh, pagination, navigation to public
+/// profiles, and unblocking users after confirmation.
 class BlockedUsersScreen extends ConsumerStatefulWidget {
   const BlockedUsersScreen({super.key});
 
@@ -38,6 +42,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
     super.dispose();
   }
 
+  /// Loads the next page once the user scrolls near the end of the list.
   void _onScroll() {
     if (!_scrollController.hasClients) {
       return;
@@ -51,6 +56,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
     }
   }
 
+  /// Confirms and performs an unblock request for [username].
   Future<void> _showUnblockConfirmation(
     BuildContext context,
     int userId,

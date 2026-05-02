@@ -1,5 +1,9 @@
 import 'dart:convert';
 
+/// Parsed representation of a resource marker embedded in message text.
+///
+/// [cleanText] is the human-written message with the marker removed. The
+/// resource fields describe the shared track or playlist when one is present.
 class MessageResourcePreview {
   const MessageResourcePreview({
     required this.cleanText,
@@ -17,27 +21,33 @@ class MessageResourcePreview {
   final String? subtitle;
   final String? imageUrl;
 
+  /// Whether the message contains a usable resource reference.
   bool get hasResource => resourceType != null && resourceId != null;
 
+  /// Whether the referenced resource is a track.
   bool get isTrack => resourceType == 'TRACK';
 
+  /// Title shown in chat previews, with a resource-type fallback.
   String get displayTitle {
     final value = title?.trim();
     if (value != null && value.isNotEmpty) return value;
     return isTrack ? 'Track' : 'Playlist';
   }
 
+  /// Subtitle shown in chat previews, with a resource-type fallback.
   String get displaySubtitle {
     final value = subtitle?.trim();
     if (value != null && value.isNotEmpty) return value;
     return isTrack ? 'Track' : 'Playlist';
   }
 
+  /// Short resource label used in conversation summaries.
   String get conversationLabel {
     return isTrack ? 'Track' : 'Playlist';
   }
 }
 
+/// Encodes a shared resource payload and appends it to optional message text.
 String buildResourceMessageContent({
   required String resourceType,
   required int resourceId,
@@ -62,6 +72,10 @@ String buildResourceMessageContent({
   return '$cleanText $marker';
 }
 
+/// Extracts a resource marker from [content] and returns clean display text.
+///
+/// Supports both the current base64 JSON marker and the older compact marker
+/// format so existing conversations keep rendering correctly.
 MessageResourcePreview parseMessageResourceContent(String content) {
   final fullRegex = RegExp(r'\[\[DECIBEL_RESOURCE_FULL:([A-Za-z0-9_\-=]+)\]\]');
 

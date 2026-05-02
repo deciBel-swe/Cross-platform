@@ -6,7 +6,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/app_icon_option.dart';
 import '../providers/app_icon_provider.dart';
 
-/// App icon selector list.
+/// Lets the user pick the app's launcher icon.
+///
+/// The selected option is provided by [appIconProvider] and updated as soon as
+/// the user taps a different icon.
 class ChangeAppIconScreen extends ConsumerWidget {
   const ChangeAppIconScreen({super.key});
 
@@ -44,6 +47,7 @@ class ChangeAppIconScreen extends ConsumerWidget {
   }
 }
 
+/// Single selectable row for one [AppIconOption].
 class _AppIconOptionTile extends StatelessWidget {
   const _AppIconOptionTile({
     required this.option,
@@ -85,6 +89,7 @@ class _AppIconOptionTile extends StatelessWidget {
   }
 }
 
+/// Circular checkmark shown beside the currently selected app icon.
 class _SelectionIndicator extends StatelessWidget {
   const _SelectionIndicator({required this.isSelected});
 
@@ -112,6 +117,7 @@ class _SelectionIndicator extends StatelessWidget {
   }
 }
 
+/// Returns the display label for an app icon option.
 String _labelFor(AppIconOption option) {
   return switch (option) {
     AppIconOption.classic => 'Classic',
@@ -127,6 +133,7 @@ String _labelFor(AppIconOption option) {
   };
 }
 
+/// Returns the bundled image asset for an app icon option.
 String _assetFor(AppIconOption option) {
   return switch (option) {
     AppIconOption.classic => AppAssets.appIcon,

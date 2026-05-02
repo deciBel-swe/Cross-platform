@@ -5,6 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
+/// Top-level settings hub.
+///
+/// Provides navigation to account, basic, notification, and social settings,
+/// plus a logout action for the authenticated session.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -63,6 +67,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
+/// Reusable card row that opens a nested settings screen.
 class _SettingsNavigationTile extends StatelessWidget {
   const _SettingsNavigationTile({
     required this.title,

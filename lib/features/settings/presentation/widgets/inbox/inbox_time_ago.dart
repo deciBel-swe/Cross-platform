@@ -1,3 +1,6 @@
+/// Formats an inbox timestamp into a compact relative age label.
+///
+/// Future dates are clamped to now so clock skew renders as `Now`.
 String formatInboxTimeAgo(DateTime date) {
   final now = DateTime.now();
   final safeDate = date.isAfter(now) ? now : date;

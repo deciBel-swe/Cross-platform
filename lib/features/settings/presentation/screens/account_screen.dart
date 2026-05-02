@@ -8,6 +8,11 @@ import '../../../library_profile/presentation/providers/user_profile_provider.da
 import '../notifiers/change_email_notifier.dart';
 import '../providers/change_email_provider.dart';
 
+/// Displays account-level settings for the signed-in user.
+///
+/// The screen currently lets the user review and update their account email,
+/// including inline validation and a confirmation step before dispatching the
+/// change request.
 class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
 
@@ -33,6 +38,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     super.dispose();
   }
 
+  /// Switches the email row into edit mode and seeds it with [currentEmail].
   void _startEditing(String currentEmail) {
     ref.read(changeEmailProvider.notifier).reset();
     setState(() {
@@ -43,6 +49,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     });
   }
 
+  /// Leaves edit mode and restores the last known account email.
   void _cancelEditing() {
     setState(() {
       _isEditingEmail = false;
@@ -51,12 +58,14 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     });
   }
 
+  /// Re-validates the email field as the user types.
   void _onEmailChanged(String value) {
     setState(() {
       _emailError = AuthValidators.validateEmail(value);
     });
   }
 
+  /// Validates the current email value before showing the confirmation dialog.
   void _confirmEditing() {
     final error = AuthValidators.validateEmail(_emailController.text);
     if (error != null) {
@@ -140,6 +149,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     );
   }
 
+  /// Asks the user to confirm the email change before calling the notifier.
   void _showChangeEmailDialog(BuildContext context) {
     final newEmail = _emailController.text;
 
@@ -187,7 +197,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                               .changeEmail(newEmail);
                           setState(() => _isEditingEmail = false);
                           dialogContext.pop();
-                        }, 
+                        },
                         child: const Text(
                           'CONFIRM',
                           style: TextStyle(
@@ -205,6 +215,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   }
 }
 
+/// Read-only account info row with a single edit action.
 class _AccountInfoTile extends StatelessWidget {
   const _AccountInfoTile({
     required this.label,
@@ -225,10 +236,7 @@ class _AccountInfoTile extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         title: Text(
           label,
-          style: const TextStyle(
-            color: AppColors.onPrimary,
-            fontSize: 14,
-          ),
+          style: const TextStyle(color: AppColors.onPrimary, fontSize: 14),
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
@@ -250,6 +258,7 @@ class _AccountInfoTile extends StatelessWidget {
   }
 }
 
+/// Inline editor for account information with validation feedback.
 class _EditableAccountInfoTile extends StatelessWidget {
   const _EditableAccountInfoTile({
     required this.label,
@@ -279,10 +288,7 @@ class _EditableAccountInfoTile extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                color: AppColors.onPrimary,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: AppColors.onPrimary, fontSize: 14),
             ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,

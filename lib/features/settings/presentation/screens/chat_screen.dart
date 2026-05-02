@@ -21,6 +21,10 @@ import '../widgets/chat_input_bar.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/message_resource_picker_sheet.dart';
 
+/// Conversation view for a direct message thread.
+///
+/// Requires the backend [conversationId] and the display name of the other
+/// participant so the route can render immediately while message details load.
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({
     super.key,
@@ -54,6 +58,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
+  /// Requests older messages when the reversed list nears its scroll boundary.
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -63,6 +68,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  /// Confirms and blocks the other participant from the conversation menu.
   Future<void> _blockUser({
     required int userId,
     required String username,
@@ -122,6 +128,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  /// Confirms and removes a block from the other participant.
   Future<void> _unblockUser({
     required int userId,
     required String username,
@@ -376,6 +383,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  /// Builds the desktop-only header used when the app shell owns the top bar.
   Widget _buildDesktopChatHeader(
     BuildContext context,
     int? otherUserId,

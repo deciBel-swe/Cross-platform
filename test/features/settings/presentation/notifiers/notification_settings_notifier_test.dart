@@ -156,4 +156,44 @@ void main() {
       expect(container.read(notificationSettingsProvider).value, secondUpdate);
     },
   );
+
+  test('toggle helpers update individual notification preferences', () async {
+    when(() => mockRepository.updateNotificationSettings(any())).thenAnswer((
+      invocation,
+    ) async {
+      return invocation.positionalArguments.single as NotificationSettings;
+    });
+
+    await container.read(notificationSettingsProvider.future);
+
+    await container
+        .read(notificationSettingsProvider.notifier)
+        .toggleLike(false);
+    expect(
+      container.read(notificationSettingsProvider).value?.notifyOnLike,
+      isFalse,
+    );
+
+    await container
+        .read(notificationSettingsProvider.notifier)
+        .toggleRepost(false);
+    expect(
+      container.read(notificationSettingsProvider).value?.notifyOnRepost,
+      isFalse,
+    );
+
+    await container
+        .read(notificationSettingsProvider.notifier)
+        .toggleComment(false);
+    expect(
+      container.read(notificationSettingsProvider).value?.notifyOnComment,
+      isFalse,
+    );
+
+    await container.read(notificationSettingsProvider.notifier).toggleDM(false);
+    expect(
+      container.read(notificationSettingsProvider).value?.notifyOnDM,
+      isFalse,
+    );
+  });
 }

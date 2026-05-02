@@ -7,6 +7,10 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../notifiers/social_settings_notifier.dart';
 
+/// Social privacy settings for the current user.
+///
+/// The screen manages profile visibility, listening history visibility, and
+/// navigation to the blocked-users list.
 class SocialSettingsScreen extends ConsumerWidget {
   const SocialSettingsScreen({super.key});
 
@@ -78,6 +82,7 @@ class SocialSettingsScreen extends ConsumerWidget {
   }
 }
 
+/// Toggle row used for social privacy preferences.
 class _SocialToggleTile extends StatelessWidget {
   const _SocialToggleTile({
     required this.title,

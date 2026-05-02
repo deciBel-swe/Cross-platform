@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Small timestamp label rendered below a chat bubble.
+///
+/// Semantics are excluded because [MessageBubble] includes the time in its
+/// full accessibility label.
 class MessageBubbleTimestamp extends StatelessWidget {
   const MessageBubbleTimestamp({super.key, required this.timeString});
 

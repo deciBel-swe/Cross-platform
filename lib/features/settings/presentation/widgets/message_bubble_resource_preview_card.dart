@@ -7,6 +7,10 @@ import '../../../playlists/domain/entities/playlist.dart';
 import '../../domain/entities/message_resource_preview.dart';
 import 'message_bubble_resource_artwork.dart';
 
+/// Tap target for a shared track or playlist embedded in a message.
+///
+/// Tracks route to the track preview screen, while playlists are converted into
+/// a lightweight [Playlist] entity for the playlist tracks route.
 class MessageBubbleResourcePreviewCard extends StatefulWidget {
   const MessageBubbleResourcePreviewCard({super.key, required this.resource});
 
@@ -125,6 +129,7 @@ class _MessageBubbleResourcePreviewCardState
     );
   }
 
+  /// Builds the minimal playlist model needed by the playlist detail route.
   Playlist _toPlaylistEntity(MessageResourcePreview resource) {
     final subtitle = resource.displaySubtitle.trim();
     final ownerName = subtitle.isEmpty || subtitle == 'Playlist'
