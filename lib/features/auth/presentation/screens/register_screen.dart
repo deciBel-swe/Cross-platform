@@ -2,7 +2,6 @@
 library;
 
 import 'package:csc_picker_plus/csc_picker_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -122,9 +121,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             gender: _selectedGender!,
             city: city.isEmpty ? null : city,
             country: country.isEmpty ? null : country,
-            captchaToken: kDebugMode
-                ? 'mock-recaptcha-token'
-                : ApiConstants.recaptchaSiteKey,
+            captchaToken: ApiConstants.recaptchaSiteKey,
           );
 
       if (!mounted) {

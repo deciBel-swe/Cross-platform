@@ -16,6 +16,7 @@ class RoutePaths {
     'user',
     'profile-image',
     'resend-verification',
+    'verify-email',
     'playlist',
   };
   // ==========================================
@@ -135,4 +136,5 @@ class RoutePaths {
 
   static const String forgotPassword = '/login-create-account/forgot-password';
   static const String resetPassword = '/reset-password';
+  static const String verifyEmail = '/verify-email';
 }

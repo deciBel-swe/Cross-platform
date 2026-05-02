@@ -14,6 +14,7 @@ import '../../features/auth/presentation/screens/resend_verification_screen.dart
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/start_screen.dart';
+import '../../features/auth/presentation/screens/verify_email_screen.dart';
 import '../../features/engagement/presentation/providers/follow_connections_provider.dart';
 import '../../features/engagement/presentation/screens/follow_connections_screen.dart';
 import '../../features/engagement/presentation/screens/liked_tracks_screen.dart';
@@ -137,6 +138,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.resendVerification,
         builder: (context, state) => const ResendVerificationScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.verifyEmail,
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return VerifyEmailScreen(token: token);
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

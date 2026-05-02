@@ -221,11 +221,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i271.IGenreRemoteDataSource>(
       () => _i271.GenreRemoteDataSource(gh<_i667.DioClient>()),
     );
+    gh.factory<_i127.PlaylistSocialRemoteDatasource>(
+      () => _i127.PlaylistSocialRemoteDatasource(gh<_i667.DioClient>()),
+    );
     gh.factory<_i459.TrackSocialRemoteDatasource>(
       () => _i459.TrackSocialRemoteDatasource(gh<_i667.DioClient>()),
     );
-    gh.factory<_i127.PlaylistSocialRemoteDatasource>(
-      () => _i127.PlaylistSocialRemoteDatasource(gh<_i667.DioClient>()),
+    gh.lazySingleton<_i870.HistoryRemoteDatasource>(
+      () => _i870.HistoryRemoteDatasource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i534.LibraryRemoteDatasource>(
       () => _i534.LibraryRemoteDatasource(gh<_i667.DioClient>()),
@@ -233,14 +236,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i688.BlockedUsersRemoteDatasource>(
       () => _i688.BlockedUsersRemoteDatasource(gh<_i667.DioClient>()),
     );
-    gh.lazySingleton<_i92.NotificationSettingsRemoteDatasource>(
-      () => _i92.NotificationSettingsRemoteDatasource(gh<_i667.DioClient>()),
-    );
-    gh.lazySingleton<_i870.HistoryRemoteDatasource>(
-      () => _i870.HistoryRemoteDatasource(gh<_i667.DioClient>()),
-    );
     gh.lazySingleton<_i707.ChangeEmailRemoteDatasource>(
       () => _i707.ChangeEmailRemoteDatasource(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i92.NotificationSettingsRemoteDatasource>(
+      () => _i92.NotificationSettingsRemoteDatasource(gh<_i667.DioClient>()),
     );
     gh.lazySingleton<_i419.HistoryRepository>(
       () => _i694.HistoryRepositoryImpl(gh<_i870.HistoryRemoteDatasource>()),

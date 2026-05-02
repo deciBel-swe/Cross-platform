@@ -392,7 +392,7 @@ class __$$TrackModelImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$TrackModelImpl implements _TrackModel {
+class _$TrackModelImpl with DiagnosticableTreeMixin implements _TrackModel {
   const _$TrackModelImpl({
     required this.id,
     required this.title,
@@ -480,8 +480,36 @@ class _$TrackModelImpl implements _TrackModel {
   final bool isPrivate;
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'TrackModel(id: $id, title: $title, artist: $artist, trackUrl: $trackUrl, trackPreviewUrl: $trackPreviewUrl, coverUrl: $coverUrl, waveformUrl: $waveformUrl, genre: $genre, access: $access, tags: $tags, state: $state, releaseDate: $releaseDate, playCount: $playCount, likeCount: $likeCount, repostCount: $repostCount, isLiked: $isLiked, isReposted: $isReposted, createdAt: $createdAt, description: $description, trackDurationSeconds: $trackDurationSeconds, isPrivate: $isPrivate)';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty('type', 'TrackModel'))
+      ..add(DiagnosticsProperty('id', id))
+      ..add(DiagnosticsProperty('title', title))
+      ..add(DiagnosticsProperty('artist', artist))
+      ..add(DiagnosticsProperty('trackUrl', trackUrl))
+      ..add(DiagnosticsProperty('trackPreviewUrl', trackPreviewUrl))
+      ..add(DiagnosticsProperty('coverUrl', coverUrl))
+      ..add(DiagnosticsProperty('waveformUrl', waveformUrl))
+      ..add(DiagnosticsProperty('genre', genre))
+      ..add(DiagnosticsProperty('access', access))
+      ..add(DiagnosticsProperty('tags', tags))
+      ..add(DiagnosticsProperty('state', state))
+      ..add(DiagnosticsProperty('releaseDate', releaseDate))
+      ..add(DiagnosticsProperty('playCount', playCount))
+      ..add(DiagnosticsProperty('likeCount', likeCount))
+      ..add(DiagnosticsProperty('repostCount', repostCount))
+      ..add(DiagnosticsProperty('isLiked', isLiked))
+      ..add(DiagnosticsProperty('isReposted', isReposted))
+      ..add(DiagnosticsProperty('createdAt', createdAt))
+      ..add(DiagnosticsProperty('description', description))
+      ..add(DiagnosticsProperty('trackDurationSeconds', trackDurationSeconds))
+      ..add(DiagnosticsProperty('isPrivate', isPrivate));
   }
 
   @override

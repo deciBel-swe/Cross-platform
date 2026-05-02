@@ -56,6 +56,7 @@ class ApiConstants {
   static const String resendVerificationEndpoint = '/auth/resend-verification';
   static const String forgotPasswordEndpoint = '/auth/forgot-password';
   static const String resetPasswordEndpoint = '/auth/reset-password';
+  static const String verifyEmailEndpoint = '/auth/verify-email';
 
   /// Station endpoints are relative to the `/api` base URL.
   static const String genreStationEndpoint = '/stations/genre';
@@ -248,13 +249,9 @@ class ApiConstants {
   }
 
   static String get recaptchaSiteKey {
-    if (!dotenv.isInitialized) {
-      return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';
-    }
-    final value = dotenv.env['RECAPTCHA_SITE_KEY']?.trim();
-    if (value == null || value.isEmpty) {
-      return '6Ldh3posAAAAAM8gLEEHLzIOcxEwGDyfiwSYn940';
-    }
-    return value;
+    if (!dotenv.isInitialized) return '';
+    return dotenv.env['RECAPTCHA_SITE_KEY']?.trim() ?? '';
   }
+
+  static String get recaptchaSiteKeyAndroid => recaptchaSiteKey;
 }

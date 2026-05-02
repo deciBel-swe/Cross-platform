@@ -60,4 +60,9 @@ abstract class IAuthRepository {
   Future<Either<Failure, (String, int?)>> resendVerificationCode({
     required String email,
   });
+
+  /// Verifies the user's email address using the token from the verification link.
+  ///
+  /// Returns the server confirmation message.
+  Future<Either<Failure, String>> verifyEmail(String token);
 }
