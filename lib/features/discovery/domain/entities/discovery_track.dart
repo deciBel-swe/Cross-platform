@@ -22,7 +22,6 @@ class DiscoveryTrack {
     this.commentCount = 0,
     this.releaseDate,
     this.createdAt,
-    this.durationSeconds,
     this.description,
     this.secretToken,
   });
@@ -46,7 +45,6 @@ class DiscoveryTrack {
   final int commentCount;
   final DateTime? releaseDate;
   final DateTime? createdAt;
-  final int? durationSeconds;
   final String? description;
   final String? secretToken;
 }

@@ -15,10 +15,12 @@ Track discoveryTrackToLibraryTrack(DiscoveryTrack track) {
       displayName: track.artist.displayName,
       avatarUrl: track.artist.avatarUrl,
     ),
-    trackUrl: track.trackUrl ?? track.trackPreviewUrl,
+    trackUrl: track.trackUrl,
+    trackPreviewUrl: track.trackPreviewUrl,
     coverUrl: track.coverUrl,
     waveformUrl: track.waveformUrl,
     genre: track.genre ?? '',
+    access: track.availability ?? 'PLAYABLE',
     tags: track.tags,
     state: TrackStatus.finished,
     releaseDate: track.releaseDate ?? track.createdAt ?? now,
@@ -28,7 +30,8 @@ Track discoveryTrackToLibraryTrack(DiscoveryTrack track) {
     isLiked: track.isLiked,
     isReposted: track.isReposted,
     createdAt: track.createdAt ?? track.releaseDate ?? now,
-    trackDurationSeconds: track.durationSeconds ?? 0,
+    trackDurationSeconds: 0, // Discovery tracks require separate request for duration
+    isPrivate: false, // DiscoveryTrack doesn't have isPrivate
   );
 }
 

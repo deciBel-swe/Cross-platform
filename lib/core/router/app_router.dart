@@ -146,8 +146,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: RoutePaths.home,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: HomeScreen()),
+                pageBuilder: (context, state) => NoTransitionPage(
+                  key: state.pageKey,
+                  child: const HomeScreen(),
+                ),
               ),
               GoRoute(
                 path: RoutePaths.upload,
@@ -207,8 +209,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: RoutePaths.library,
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: LibraryScreen()),
+                pageBuilder: (context, state) => NoTransitionPage(
+                  key: state.pageKey,
+                  child: const LibraryScreen(),
+                ),
                 routes: [
                   GoRoute(
                     path: 'add-to-playlist',
@@ -224,10 +228,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'behind-track/:trackId',
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) {
+                    pageBuilder: (context, state) {
                       final trackIdStr = state.pathParameters['trackId']!;
                       final trackId = int.parse(trackIdStr);
-                      return BehindTrackScreen(trackId: trackId);
+                      return MaterialPage(
+                        key: state.pageKey,
+                        child: BehindTrackScreen(trackId: trackId),
+                      );
                     },
                   ),
                   GoRoute(
@@ -236,7 +243,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'playlists/edit',
-                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
                       final playlist = state.extra as Playlist;
                       return EditPlaylistScreen(playlist: playlist);
@@ -244,7 +250,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'playlists/playlist-tracks',
-                    parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
                       final playlist = state.extra as Playlist;
 
@@ -300,11 +305,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       }
                       return null;
                     },
-                    builder: (context, state) {
+                    pageBuilder: (context, state) {
                       final trackId = int.parse(
                         state.pathParameters['trackId']!,
                       );
-                      return TrackPreviewScreen(trackId: trackId);
+                      return MaterialPage(
+                        key: state.pageKey,
+                        child: TrackPreviewScreen(trackId: trackId),
+                      );
                     },
                   ),
                   GoRoute(
@@ -318,11 +326,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       }
                       return null;
                     },
-                    builder: (context, state) {
+                    pageBuilder: (context, state) {
                       final trackId = int.parse(
                         state.pathParameters['trackId']!,
                       );
-                      return TrackEditScreen(trackId: trackId);
+                      return MaterialPage(
+                        key: state.pageKey,
+                        child: TrackEditScreen(trackId: trackId),
+                      );
                     },
                   ),
                   GoRoute(

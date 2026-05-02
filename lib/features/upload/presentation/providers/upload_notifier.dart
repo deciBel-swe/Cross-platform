@@ -74,7 +74,6 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         genreSuggestions[index] = available.first;
 
         state = AsyncData(currentState.copyWith(genre: genre));
-
       }
     }
   }
@@ -84,7 +83,14 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
   }
 
   void updateAccess(String access) {
-    _updateState((state) => state.copyWith(access: access));
+    final normalized = access.trim().toUpperCase();
+    const allowed = <String>{'PLAYABLE', 'PREVIEW', 'BLOCKED'};
+
+    if (!allowed.contains(normalized)) {
+      return;
+    }
+
+    _updateState((state) => state.copyWith(access: normalized));
   }
 
   void togglePrivacy(bool isPrivate) async {
@@ -92,12 +98,10 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
     if (currentState != null) {
       state = AsyncData(currentState.copyWith(isPrivate: isPrivate));
-    } else {
-    }
+    } else {}
 
     final prefsService = ref.read(sharedPrefsServiceProvider);
     await prefsService.saveLastPrivacySettings(isPrivate);
-
   }
 
   void updateReleaseDate(DateTime date) {
@@ -122,9 +126,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
           releaseDate: null,
         ),
       );
-
-    } else {
-    }
+    } else {}
   }
 
   void addTag(String tag) {
@@ -145,9 +147,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         sanitizedTag.isNotEmpty) {
       final newTags = List<String>.from(currentState.tags)..add(sanitizedTag);
       _updateState((state) => state.copyWith(tags: newTags));
-
-    } else {
-    }
+    } else {}
   }
 
   void removeTag(String tag) {
@@ -156,9 +156,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
     if (currentState != null) {
       final newTags = List<String>.from(currentState.tags)..remove(tag);
       _updateState((state) => state.copyWith(tags: newTags));
-
-    } else {
-    }
+    } else {}
   }
 
   Future<void> pickAudioFile() async {
@@ -213,7 +211,6 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
 
       final metadata = currentState.copyWith(audioFile: file);
       state = AsyncData(metadata);
-
     } catch (error) {
       state = AsyncValue<TrackUploadMetadata>.error(
         error.toString(),
@@ -256,7 +253,6 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
       }
 
       _updateState((state) => state.copyWith(coverImage: image));
-
     } catch (error) {
       state = AsyncValue<TrackUploadMetadata>.error(
         error.toString(),
@@ -285,8 +281,7 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
         noOfSamples: 100,
       );
 
-      if (waveFormData.isNotEmpty) {
-      }
+      if (waveFormData.isNotEmpty) {}
     } catch (e) {
       waveFormData = [];
     }
@@ -358,7 +353,6 @@ class UploadNotifier extends AsyncNotifier<TrackUploadMetadata> {
   void _updateState(TrackUploadMetadata Function(TrackUploadMetadata) update) {
     if (state.value != null) {
       state = AsyncData(update(state.value!));
-    } else {
-    }
+    } else {}
   }
 }

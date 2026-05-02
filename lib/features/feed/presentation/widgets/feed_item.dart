@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/ref_pro_check_extension.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/auto_scrolling_text.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
@@ -59,6 +60,8 @@ class FeedItem extends StatelessWidget {
     this.gradientColors,
     this.feedItemType = FeedItemType.trackPosted,
     this.playlistData,
+    this.onTapPlaylist,
+    this.isBlocked = false,
   });
 
   final int trackId;
@@ -94,6 +97,8 @@ class FeedItem extends StatelessWidget {
   final List<Color>? gradientColors;
   final FeedItemType feedItemType;
   final Map<String, dynamic>? playlistData;
+  final VoidCallback? onTapPlaylist;
+  final bool isBlocked;
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +115,7 @@ class FeedItem extends StatelessWidget {
         action: action,
         timeAgo: timeAgo,
         playlistData: playlistData,
+        onTap: onTapPlaylist,
         coverUrl: coverUrl,
         colors: colors,
       );
@@ -137,43 +143,26 @@ class FeedItem extends StatelessWidget {
         onViewQueue: onViewQueue,
         coverUrl: coverUrl,
         gradientColors: colors,
+        isBlocked: isBlocked,
       );
     }
 
     return Semantics(
       label: 'Feed item: $trackTitle by $trackArtist',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Opacity(
+        opacity: isBlocked ? 0.5 : 1.0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                _Avatar(
-                  colors: colors,
-                  userName: userName,
-                  imageUrl: userAvatarUrl,
-                ),
-                const SizedBox(width: AppDimensions.paddingSm),
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: userName,
-                          style: AppTextStyles.cardTitle,
-                        ),
-                        TextSpan(
-                          text: ' $action $timeAgo',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            _FeedHeaderRow(
+              userName: userName,
+              action: action,
+              timeAgo: timeAgo,
+              colors: colors,
+              imageUrl: userAvatarUrl,
+              isDesktop: true,
             ),
             const SizedBox(height: AppDimensions.paddingMd),
             Row(
@@ -254,6 +243,7 @@ class FeedItem extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -280,6 +270,7 @@ class _MobileFeedItem extends StatelessWidget {
     this.onViewQueue,
     this.coverUrl,
     required this.gradientColors,
+    this.isBlocked = false,
   });
 
   final int trackId;
@@ -302,36 +293,26 @@ class _MobileFeedItem extends StatelessWidget {
   final VoidCallback? onViewQueue;
   final String? coverUrl;
   final List<Color> gradientColors;
+  final bool isBlocked;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       label: '$userName $action $timeAgo',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Opacity(
+        opacity: isBlocked ? 0.5 : 1.0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                _MobileAvatar(
-                  imageUrl: userAvatarUrl,
-                  userName: userName,
-                  colors: gradientColors,
-                ),
-                const SizedBox(width: AppDimensions.paddingSm),
-                Expanded(
-                  child: Text(
-                    '$userName $action · $timeAgo',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.headlineMedium.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+            _FeedHeaderRow(
+              userName: userName,
+              action: action,
+              timeAgo: timeAgo,
+              colors: gradientColors,
+              imageUrl: userAvatarUrl,
+              isDesktop: false,
             ),
             const SizedBox(height: AppDimensions.paddingMd),
             MobileFeedTrackCard(
@@ -354,84 +335,234 @@ class _MobileFeedItem extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.colors, required this.userName, this.imageUrl});
+class _PlaylistFeedCard extends StatelessWidget {
+  const _PlaylistFeedCard({
+    required this.userName,
+    this.userAvatarUrl,
+    required this.action,
+    required this.timeAgo,
+    this.playlistData,
+    this.onTap,
+    this.coverUrl,
+    required this.colors,
+  });
 
-  final List<Color> colors;
   final String userName;
-  final String? imageUrl;
+  final String? userAvatarUrl;
+  final String action;
+  final String timeAgo;
+  final Map<String, dynamic>? playlistData;
+  final VoidCallback? onTap;
+  final String? coverUrl;
+  final List<Color> colors;
 
   @override
   Widget build(BuildContext context) {
-    final normalizedImageUrl = imageUrl?.trim();
-    if (normalizedImageUrl != null && normalizedImageUrl.isNotEmpty) {
-      return DecibelCachedImage(
-        imageUrl: normalizedImageUrl,
-        width: 40,
-        height: 40,
-        shape: BoxShape.circle,
-        placeholderIcon: Icons.person,
-        errorIcon: Icons.person,
-        iconSize: 18,
-        iconColor: AppColors.textSecondary,
-        placeholder: _AvatarFallback(colors: colors, userName: userName),
-        errorWidget: _AvatarFallback(colors: colors, userName: userName),
-      );
-    }
+    final playlistTitle =
+        playlistData?['title'] as String? ?? 'Unknown Playlist';
+    final trackCount = playlistData?['trackCount'] as int? ?? 0;
+    final owner = playlistData?['owner'] as Map<String, dynamic>?;
+    final ownerUsername = owner?['username'] as String? ?? userName;
+    final ownerDisplayName = owner?['displayName'] as String?;
+    final ownerAvatarUrl = owner?['avatarUrl'] as String?;
 
-    return _AvatarFallback(colors: colors, userName: userName);
+    return Semantics(
+      label: '$userName $action $timeAgo',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _FeedHeaderRow(
+              userName: ownerDisplayName ?? ownerUsername,
+              action: action,
+              timeAgo: timeAgo,
+              colors: colors,
+              imageUrl: ownerAvatarUrl ?? userAvatarUrl,
+              isDesktop: false,
+            ),
+            const SizedBox(height: AppDimensions.paddingMd),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppDimensions.paddingMd),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
+                        child: coverUrl != null && coverUrl!.isNotEmpty
+                            ? DecibelCachedImage(
+                                imageUrl: coverUrl!,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                width: 80,
+                                height: 80,
+                                color: AppColors.surfaceVariant,
+                                child: const Icon(
+                                  Icons.queue_music_rounded,
+                                  color: AppColors.textMuted,
+                                  size: 32,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(width: AppDimensions.paddingMd),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              playlistTitle,
+                              style: AppTextStyles.titleMedium,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$trackCount track${trackCount == 1 ? '' : 's'}',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
-class _MobileAvatar extends StatelessWidget {
-  const _MobileAvatar({
+// ── Reusable Layout Components ───────────────────────────────────────────────
+
+class _FeedHeaderRow extends StatelessWidget {
+  const _FeedHeaderRow({
+    required this.userName,
+    required this.action,
+    required this.timeAgo,
+    required this.colors,
+    this.imageUrl,
+    this.isDesktop = false,
+  });
+
+  final String userName;
+  final String action;
+  final String timeAgo;
+  final List<Color> colors;
+  final String? imageUrl;
+  final bool isDesktop;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _FeedAvatar(
+          colors: colors,
+          userName: userName,
+          imageUrl: imageUrl,
+          size: isDesktop ? 40 : 24,
+          iconSize: isDesktop ? 18 : 14,
+          fontSize: isDesktop ? 14 : 10,
+        ),
+        const SizedBox(width: AppDimensions.paddingSm),
+        Expanded(
+          child: isDesktop
+              ? RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(text: userName, style: AppTextStyles.cardTitle),
+                      TextSpan(
+                        text: ' $action $timeAgo',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Text(
+                  '$userName $action · $timeAgo',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.headlineMedium.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FeedAvatar extends StatelessWidget {
+  const _FeedAvatar({
     required this.colors,
     required this.userName,
     this.imageUrl,
+    this.size = 40,
+    this.iconSize = 18,
+    this.fontSize = 14,
   });
 
   final List<Color> colors;
   final String userName;
   final String? imageUrl;
+  final double size;
+  final double iconSize;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
     final normalizedImageUrl = imageUrl?.trim();
+    final fallback = _AvatarFallback(
+      colors: colors,
+      userName: userName,
+      size: size,
+      fontSize: fontSize,
+    );
+
     if (normalizedImageUrl != null && normalizedImageUrl.isNotEmpty) {
       return DecibelCachedImage(
         imageUrl: normalizedImageUrl,
-        width: 24,
-        height: 24,
+        width: size,
+        height: size,
         shape: BoxShape.circle,
         placeholderIcon: Icons.person,
         errorIcon: Icons.person,
-        iconSize: 14,
+        iconSize: iconSize,
         iconColor: AppColors.textSecondary,
-        placeholder: _AvatarFallback(
-          colors: colors,
-          userName: userName,
-          size: 24,
-          fontSize: 10,
-        ),
-        errorWidget: _AvatarFallback(
-          colors: colors,
-          userName: userName,
-          size: 24,
-          fontSize: 10,
-        ),
+        placeholder: fallback,
+        errorWidget: fallback,
       );
     }
 
-    return _AvatarFallback(
-      colors: colors,
-      userName: userName,
-      size: 24,
-      fontSize: 10,
-    );
+    return fallback;
   }
 }
 
@@ -473,6 +604,8 @@ class _AvatarFallback extends StatelessWidget {
     );
   }
 }
+
+// ── Shared Content Elements ──────────────────────────────────────────────────
 
 class _ArtworkTile extends StatelessWidget {
   const _ArtworkTile({
@@ -859,7 +992,7 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
   }
 }
 
-class _DesktopMoreOptionsButton extends StatelessWidget {
+class _DesktopMoreOptionsButton extends ConsumerWidget {
   const _DesktopMoreOptionsButton({
     required this.trackId,
     this.onAddToPlaylist,
@@ -886,7 +1019,9 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
   final VoidCallback? onDeleteTrack;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPro = ref.isPro;
+
     return Builder(
       builder: (buttonContext) {
         return IconButton(
@@ -897,12 +1032,17 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
               anchorContext: buttonContext,
               includeEdit: onEditTrack != null,
               includeDelete: onDeleteTrack != null,
+              isPro: isPro,
             );
             if (option == null || !context.mounted) {
               return;
             }
 
             switch (option) {
+              case TrackMoreOption.viewQueue:
+                QueueBottomSheet.show(context);
+                break;
+
               case TrackMoreOption.report:
                 await TrackReportBottomSheet.show(context, trackId);
                 break;
@@ -913,9 +1053,7 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
               case TrackMoreOption.addToQueue:
                 onAddToQueue?.call();
                 break;
-              case TrackMoreOption.viewQueue:
-                QueueBottomSheet.show(context);
-                break;
+
               case TrackMoreOption.editTrack:
                 onEditTrack?.call();
                 break;
@@ -946,138 +1084,6 @@ class _DesktopMoreOptionsButton extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// Widget for displaying playlist posts in the feed.
-class _PlaylistFeedCard extends StatelessWidget {
-  const _PlaylistFeedCard({
-    required this.userName,
-    this.userAvatarUrl,
-    required this.action,
-    required this.timeAgo,
-    this.playlistData,
-    this.coverUrl,
-    required this.colors,
-  });
-
-  final String userName;
-  final String? userAvatarUrl;
-  final String action;
-  final String timeAgo;
-  final Map<String, dynamic>? playlistData;
-  final String? coverUrl;
-  final List<Color> colors;
-
-  @override
-  Widget build(BuildContext context) {
-    final playlistTitle =
-        playlistData?['title'] as String? ?? 'Unknown Playlist';
-    final trackCount = playlistData?['trackCount'] as int? ?? 0;
-    final owner = playlistData?['owner'] as Map<String, dynamic>?;
-    final ownerUsername = owner?['username'] as String? ?? userName;
-    final ownerDisplayName = owner?['displayName'] as String?;
-    final ownerAvatarUrl = owner?['avatarUrl'] as String?;
-
-    return Semantics(
-      label: '$userName $action $timeAgo',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _MobileAvatar(
-                  imageUrl: ownerAvatarUrl ?? userAvatarUrl,
-                  userName: ownerDisplayName ?? ownerUsername,
-                  colors: colors,
-                ),
-                const SizedBox(width: AppDimensions.paddingSm),
-                Expanded(
-                  child: Text(
-                    '$ownerUsername $action · $timeAgo',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.headlineMedium.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.paddingMd),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                onTap: () {
-                  // TODO: Navigate to playlist details
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(AppDimensions.paddingMd),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusSm,
-                        ),
-                        child: coverUrl != null && coverUrl!.isNotEmpty
-                            ? DecibelCachedImage(
-                                imageUrl: coverUrl!,
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                              )
-                            : Container(
-                                width: 80,
-                                height: 80,
-                                color: AppColors.surfaceVariant,
-                                child: const Icon(
-                                  Icons.queue_music_rounded,
-                                  color: AppColors.textMuted,
-                                  size: 32,
-                                ),
-                              ),
-                      ),
-                      const SizedBox(width: AppDimensions.paddingMd),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              playlistTitle,
-                              style: AppTextStyles.titleMedium,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '$trackCount track${trackCount == 1 ? '' : 's'}',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

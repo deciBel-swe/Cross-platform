@@ -34,7 +34,6 @@ _$DiscoveryTrackModelImpl _$$DiscoveryTrackModelImplFromJson(
   createdAt: json['createdAt'] == null
       ? null
       : DateTime.parse(json['createdAt'] as String),
-  durationSeconds: (json['durationSeconds'] as num?)?.toInt(),
   description: json['description'] as String?,
   secretToken: json['secretToken'] as String?,
 );
@@ -61,7 +60,6 @@ Map<String, dynamic> _$$DiscoveryTrackModelImplToJson(
   'commentCount': instance.commentCount,
   'releaseDate': instance.releaseDate?.toIso8601String(),
   'createdAt': instance.createdAt?.toIso8601String(),
-  'durationSeconds': instance.durationSeconds,
   'description': instance.description,
   'secretToken': instance.secretToken,
 };

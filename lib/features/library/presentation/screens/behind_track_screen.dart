@@ -10,8 +10,10 @@ import '../../../engagement/presentation/widgets/follow_button.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../engagement/presentation/widgets/track_report_bottom_sheet.dart';
+import '../../../library_profile/domain/entities/user_profile.dart';
 import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
+import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../domain/entities/artist.dart';
 import '../../domain/entities/track.dart';
 import '../widgets/track_comments_bottom_sheet.dart';
@@ -232,6 +234,14 @@ class _SocialSection extends ConsumerWidget {
     final isPlaying =
         audioState.isPlaying && audioState.preparedTrackId == track.id;
 
+    final profileAsync = ref.watch(userProfileProvider);
+    final isPro =
+        profileAsync.valueOrNull?.fold(
+          (_) => false,
+          (p) => p.tier == UserTier.pro || p.tier == UserTier.artistPro,
+        ) ??
+        false;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -270,6 +280,7 @@ class _SocialSection extends ConsumerWidget {
             final option = await showTrackMoreOptionsMenu(
               context: context,
               includeDelete: false, // Or true based on ownership
+              isPro: isPro,
             );
 
             if (context.mounted && option != null) {

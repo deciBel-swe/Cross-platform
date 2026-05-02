@@ -53,6 +53,12 @@ class TrackDetails extends ConsumerWidget {
     // Hide the mini player before the sheet appears.
     final miniPlayerNotifier = ref.read(miniPlayerVisibleProvider.notifier);
     miniPlayerNotifier.state = false;
+
+    // Wait a short duration to let the mini player slide down before the bottom sheet covers the screen
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+
+    if (!context.mounted) return;
+
     try {
       await showModalBottomSheet<void>(
         context: context,
@@ -474,6 +480,11 @@ class _SheetContent extends StatelessWidget {
               icon: Icons.queue_music_rounded,
               label: 'Add to queue',
               onTap: onAddToQueue,
+            ),
+            _ActionTile(
+              icon: Icons.featured_play_list_rounded,
+              label: 'View queue',
+              onTap: onOpenQueue,
             ),
             if (showEditAction)
               _ActionTile(

@@ -29,7 +29,6 @@ class DiscoveryTrackModel with _$DiscoveryTrackModel {
     @Default(0) int commentCount,
     DateTime? releaseDate,
     DateTime? createdAt,
-    int? durationSeconds,
     String? description,
     String? secretToken,
   }) = _DiscoveryTrackModel;
@@ -71,7 +70,7 @@ class DiscoveryTrackModel with _$DiscoveryTrackModel {
       'releaseDate': asDateTime(json['releaseDate'])?.toIso8601String(),
       'createdAt': asDateTime(json['createdAt'] ?? json['uploadDate'])
           ?.toIso8601String(),
-      'durationSeconds': asInt(json['trackDurationSeconds']),
+
       'description': asString(json['description']),
       'secretToken': asString(json['secretToken']),
     };
@@ -100,7 +99,7 @@ extension DiscoveryTrackModelX on DiscoveryTrackModel {
       commentCount: commentCount,
       releaseDate: releaseDate,
       createdAt: createdAt,
-      durationSeconds: durationSeconds,
+
       description: description,
       secretToken: secretToken,
     );

@@ -91,6 +91,18 @@ class RecentlyPlayedScreen extends ConsumerWidget {
     Track track,
     List<Track> queue,
   ) async {
+    if (track.isBlocked) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${track.title} is blocked and cannot be played.'),
+          backgroundColor: AppColors.errors,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     if (!track.isPlayable) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -128,43 +140,50 @@ class _HistoryTrackTile extends StatelessWidget {
         child: InkWell(
           excludeFromSemantics: true,
           onTap: onPlay,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppDimensions.paddingSm,
-            ),
-            child: Row(
-              children: [
-                _HistoryArtwork(track: track, size: 56),
-                const SizedBox(width: AppDimensions.paddingMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        track.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.cardTitle,
-                      ),
-                      const SizedBox(height: AppDimensions.paddingXs),
-                      Text(
-                        artistName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.cardSubtitle,
-                      ),
-                    ],
+          child: Opacity(
+            opacity: track.isBlocked ? 0.5 : 1.0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppDimensions.paddingSm,
+              ),
+              child: Row(
+                children: [
+                  _HistoryArtwork(track: track, size: 56),
+                  const SizedBox(width: AppDimensions.paddingMd),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          track.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.cardTitle,
+                        ),
+                        const SizedBox(height: AppDimensions.paddingXs),
+                        Text(
+                          artistName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.cardSubtitle,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Icon(
-                  track.isPlayable
-                      ? Icons.play_arrow_rounded
-                      : Icons.lock_outline_rounded,
-                  color: track.isPlayable
-                      ? AppColors.textPrimary
-                      : AppColors.textHint,
-                ),
-              ],
+                  Icon(
+                    track.isBlocked
+                        ? Icons.block_flipped
+                        : (track.isPlayable
+                            ? Icons.play_arrow_rounded
+                            : Icons.lock_outline_rounded),
+                    color: track.isBlocked
+                        ? AppColors.errors
+                        : (track.isPlayable
+                            ? AppColors.textPrimary
+                            : AppColors.textHint),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

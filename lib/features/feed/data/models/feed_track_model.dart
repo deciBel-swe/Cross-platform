@@ -28,6 +28,7 @@ class FeedTrackModel with _$FeedTrackModel {
     @JsonKey(name: 'CompletedPlayCount') @Default(0) int completedPlayCount,
     @Default(0) int repostCount,
     @Default(0) int commentCount,
+    @Default(false) bool isPrivate,
     String? uploadDate,
     String? description,
     String? secretToken,
@@ -51,22 +52,29 @@ class FeedTrackModel with _$FeedTrackModel {
 
   static Map<String, dynamic> _normalize(Map<String, dynamic> json) {
     // Check if this is a playlist post
-    final type = json['type'] as String?;
-    final isPlaylistPost = type == 'PLAYLIST_POSTED';
+    final type = (json['type'] ?? json['feedItemType'])?.toString().toUpperCase();
+    final isPlaylistPost = type == 'PLAYLIST_POSTED' || 
+                          type == 'PLAYLIST_CREATED' || 
+                          json['playlistData'] != null ||
+                          (json['resource'] is Map && (json['resource'] as Map).containsKey('playlist'));
 
     if (isPlaylistPost) {
       // Handle playlist post - extract playlist data
       final resource = json['resource'] as Map<String, dynamic>?;
-      final playlist = resource != null ? resource['playlist'] as Map<String, dynamic>? : null;
+      final playlist = resource != null ? resource['playlist'] as Map<String, dynamic>? : json['playlistData'] as Map<String, dynamic>?;
       
       if (playlist != null) {
+        final owner = playlist['owner'] as Map<String, dynamic>?;
+        if (owner != null) {
+          owner['displayName'] ??= owner['display_name'];
+        }
         return {
           'id': playlist['id'] as int? ?? 0,
           'title': playlist['title'] as String? ?? '',
-          'artist': <String, dynamic>{'id': 0, 'username': 'Unknown'},
+          'artist': owner ?? <String, dynamic>{'id': 0, 'username': 'Unknown'},
           'feedItemType': 'playlist_posted',
           'playlistData': playlist,
-          'coverUrl': playlist['coverArtUrl'] as String?,
+          'coverUrl': playlist['coverArtUrl'] as String? ?? playlist['coverUrl'] as String?,
           'isLiked': playlist['isLiked'] as bool? ?? false,
           'trackCount': playlist['trackCount'] as int? ?? 0,
         };
@@ -92,15 +100,42 @@ class FeedTrackModel with _$FeedTrackModel {
 
     final flatMap = Map<String, dynamic>.from(trackData);
 
-    // Extract repost data from envelope if present
+    // Extract repost data from envelope if present and type is repost
+    final isRepostEvent = type == 'TRACK_REPOSTED' || type == 'PLAYLIST_REPOSTED';
     final repostedBy = json['repostedBy'];
-    if (repostedBy is Map<String, dynamic>) {
+    
+    if (isRepostEvent && repostedBy is Map<String, dynamic>) {
       flatMap['isARepost'] = true;
       flatMap['repostedByUsername'] = repostedBy['username'];
-      flatMap['repostedByDisplayName'] = repostedBy['displayName'];
+      flatMap['repostedByDisplayName'] = repostedBy['displayName'] ?? repostedBy['display_name'];
       flatMap['repostedByAvatarUrl'] = repostedBy['avatarUrl'];
       flatMap['repostedAt'] = json['repostedAt'];
+    }
+
+    // Normalize access level
+    flatMap['access'] = (flatMap['access'] ?? 'PLAYABLE').toString().toUpperCase();
+
+
+
+    // Normalize isPrivate
+    if (flatMap['isPrivate'] == null) {
+      flatMap['isPrivate'] = flatMap['is_private'] ?? false;
+    }
+
+    // Fallback for preview URL if the backend uses previewUrl or preview_url
+    if (flatMap['trackPreviewUrl'] == null) {
+      final preview = flatMap['previewUrl'] ?? flatMap['preview_url'];
+      if (preview != null) {
+        flatMap['trackPreviewUrl'] = preview;
+      }
+    }
+
+    // Determine feed item type
+    final String? itemType = (json['type'] ?? flatMap['type'])?.toString().toUpperCase();
+    if (itemType == 'TRACK_REPOSTED' || itemType == 'PLAYLIST_REPOSTED' || itemType == 'REPOST') {
       flatMap['feedItemType'] = 'repost';
+    } else if (itemType == 'PLAYLIST_POSTED' || itemType == 'PLAYLIST_CREATED' || flatMap['playlistData'] != null) {
+      flatMap['feedItemType'] = 'playlist_posted';
     } else {
       flatMap['feedItemType'] = 'track_posted';
     }
@@ -144,7 +179,7 @@ class FeedTrackModel with _$FeedTrackModel {
       title: title,
       artistId: (artistMap['id'] as num?)?.toInt() ?? 0,
       artistUsername: artistMap['username'] as String? ?? 'Unknown',
-      artistDisplayName: artistMap['displayName'] as String?,
+      artistDisplayName: artistMap['displayName'] as String? ?? artistMap['display_name'] as String?,
       artistAvatarUrl: artistMap['avatarUrl'] as String?,
       trackUrl: trackUrl,
       trackPreviewUrl: trackPreviewUrl,
@@ -162,7 +197,7 @@ class FeedTrackModel with _$FeedTrackModel {
       likeCount: likeCount,
       repostCount: repostCount,
       commentCount: commentCount,
-      isPrivate: completedPlayCount > 0, // Fallback since isPrivate is missing from the old model
+      isPrivate: isPrivate,
       uploadDate: uploadDate != null
           ? DateTime.tryParse(uploadDate!) ?? DateTime.now()
           : DateTime.now(),
@@ -174,6 +209,8 @@ class FeedTrackModel with _$FeedTrackModel {
       repostedByDisplayName: repostedByDisplayName,
       repostedByAvatarUrl: repostedByAvatarUrl,
       repostedAt: repostedAt != null ? DateTime.tryParse(repostedAt!) : null,
+      feedItemType: feedItemType,
+      playlistData: playlistData,
     );
   }
 }

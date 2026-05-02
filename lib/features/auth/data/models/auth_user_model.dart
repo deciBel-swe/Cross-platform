@@ -34,6 +34,8 @@ class AuthUserModel with _$AuthUserModel {
 
   UserTier _parseTier(String tierString) {
     switch (tierString) {
+      case 'PRO':
+        return UserTier.pro;
       case 'ARTIST':
         return UserTier.artist;
       case 'ARTIST_PRO':

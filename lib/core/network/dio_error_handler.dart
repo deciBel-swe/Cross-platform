@@ -8,12 +8,24 @@ class DioErrorHandler {
   DioErrorHandler._();
 
   /// Converts a [DioException] into an appropriate [AppException] subclass.
-  static AppException handle(DioException error, {String fallback = 'Server error occurred'}) {
+  static AppException handle(
+    DioException error, {
+    String fallback = 'Server error occurred',
+  }) {
     if (isNetworkError(error)) {
       return const NetworkException('No internet connection');
     }
 
     final statusCode = error.response?.statusCode;
+
+    if (statusCode == 503) {
+      return ServiceUnavailableException(
+        extractErrorMessage(
+          error,
+          fallback: 'Service temporarily unavailable. Please try again later',
+        ),
+      );
+    }
 
     // Check for specific backend errors, including HTTP 500
     if (statusCode != null && statusCode >= 500) {
@@ -21,11 +33,15 @@ class DioErrorHandler {
     }
 
     if (statusCode == 404) {
-      return NotFoundException(extractErrorMessage(error, fallback: 'Requested resource not found'));
+      return NotFoundException(
+        extractErrorMessage(error, fallback: 'Requested resource not found'),
+      );
     }
 
     if (statusCode == 401 || statusCode == 403) {
-      return AuthException(extractErrorMessage(error, fallback: 'Authentication failed'));
+      return AuthException(
+        extractErrorMessage(error, fallback: 'Authentication failed'),
+      );
     }
 
     return ServerException(extractErrorMessage(error, fallback: fallback));
@@ -37,11 +53,15 @@ class DioErrorHandler {
         error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout ||
-        (error.type == DioExceptionType.unknown && error.error is SocketException);
+        (error.type == DioExceptionType.unknown &&
+            error.error is SocketException);
   }
 
   /// Extracts a human-readable error message from the [DioException] response body.
-  static String extractErrorMessage(DioException error, {required String fallback}) {
+  static String extractErrorMessage(
+    DioException error, {
+    required String fallback,
+  }) {
     final data = error.response?.data;
 
     if (data is Map<String, dynamic>) {
