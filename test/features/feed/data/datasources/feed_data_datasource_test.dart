@@ -1,4 +1,5 @@
 import 'package:decibel/core/constants/api_constants.dart';
+import 'package:decibel/core/errors/exceptions.dart';
 import 'package:decibel/core/network/dio_client.dart';
 import 'package:decibel/features/feed/data/datasources/feed_data_datasource.dart';
 import 'package:dio/dio.dart';
@@ -70,5 +71,53 @@ void main() {
         queryParams: <String, Object?>{'page': 0, 'size': 20},
       ),
     ).called(1);
+  });
+
+  test('getFeed calls /feed with correct parameters', () async {
+    when(
+      () => dioClient.get<dynamic>(
+        '/feed',
+        queryParams: <String, Object?>{'page': 1, 'size': 10},
+      ),
+    ).thenAnswer(
+      (_) async => Response<dynamic>(
+        requestOptions: RequestOptions(path: '/feed'),
+        data: <String, Object?>{
+          'content': [],
+          'pageNumber': 1,
+          'pageSize': 10,
+          'totalElements': 0,
+          'totalPages': 0,
+          'isLast': true,
+        },
+      ),
+    );
+
+    final result = await datasource.getFeed(page: 1, size: 10);
+
+    expect(result.pageNumber, 1);
+    expect(result.pageSize, 10);
+    verify(
+      () => dioClient.get<dynamic>(
+        '/feed',
+        queryParams: <String, Object?>{'page': 1, 'size': 10},
+      ),
+    ).called(1);
+  });
+
+  test('should throw NetworkException on Dio connection error', () async {
+    when(
+      () => dioClient.get<dynamic>(any(), queryParams: any(named: 'queryParams')),
+    ).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/feed'),
+        type: DioExceptionType.connectionError,
+      ),
+    );
+
+    expect(
+      () => datasource.getFeed(page: 0, size: 20),
+      throwsA(isA<NetworkException>()),
+    );
   });
 }

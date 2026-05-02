@@ -12,7 +12,9 @@ import 'package:decibel/features/auth/domain/entities/auth_state.dart';
 import 'package:decibel/features/auth/domain/entities/auth_user.dart';
 import 'package:decibel/features/auth/presentation/notifiers/auth_notifier.dart';
 import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
+import 'package:decibel/features/engagement/domain/repositories/playlist_social_repository.dart';
 import 'package:decibel/features/engagement/domain/repositories/track_social_repository.dart';
+import 'package:decibel/features/engagement/presentation/providers/playlist_social_provider.dart';
 import 'package:decibel/features/engagement/presentation/providers/track_social_provider.dart';
 import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:decibel/features/library/domain/entities/track.dart';
@@ -46,6 +48,9 @@ class MockTrackRepository extends Mock implements TrackRepository {}
 class MockTrackSocialRepository extends Mock
     implements ITrackSocialRepository {}
 
+class MockPlaylistSocialRepository extends Mock
+  implements IPlaylistSocialRepository {}
+
 class MockSharedPrefsService extends Mock implements SharedPrefsService {}
 
 class FakeUnauthenticatedAuthNotifier extends AuthNotifier {
@@ -70,6 +75,7 @@ void main() {
   late MockPlaylistRepository playlistRepository;
   late MockTrackRepository trackRepository;
   late MockTrackSocialRepository trackSocialRepository;
+  late MockPlaylistSocialRepository playlistSocialRepository;
   late MockSharedPrefsService sharedPrefsService;
 
   setUpAll(() {
@@ -82,6 +88,7 @@ void main() {
     playlistRepository = MockPlaylistRepository();
     trackRepository = MockTrackRepository();
     trackSocialRepository = MockTrackSocialRepository();
+    playlistSocialRepository = MockPlaylistSocialRepository();
     sharedPrefsService = MockSharedPrefsService();
 
     when(
@@ -128,6 +135,10 @@ void main() {
     ).thenAnswer((_) async => const Right(null));
 
     when(
+      () => playlistSocialRepository.toggleRepost(any(), any()),
+    ).thenAnswer((_) async => const Right(true));
+
+    when(
       () => trackRepository.fetchTrackById(any()),
     ).thenAnswer((invocation) async {
       final trackId = invocation.positionalArguments.first as int;
@@ -153,6 +164,9 @@ void main() {
         playlistRepositoryProvider.overrideWithValue(playlistRepository),
         trackRepositoryProvider.overrideWithValue(trackRepository),
         trackSocialRepositoryProvider.overrideWithValue(trackSocialRepository),
+        playlistSocialRepositoryProvider.overrideWithValue(
+          playlistSocialRepository,
+        ),
         sharedPrefsServiceProvider.overrideWithValue(sharedPrefsService),
         if (useUnauthenticatedAuth)
           authStateProvider.overrideWith(() => FakeUnauthenticatedAuthNotifier()),
@@ -418,6 +432,8 @@ void main() {
     expect(state.isPrivate, false);
   });
 
+  
+
   testWidgets('PlaylistTracksTab shows an empty state when there are no tracks', (
     tester,
   ) async {
@@ -470,6 +486,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(copied, isTrue);
+  });
+
+  testWidgets('ShareOptionsRow shows an error when link lookup fails', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildApp(
+        ShareOptionsRow(
+          onCopyLinkTap: () async => const Left(ServerFailure('link failed')),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Copy Link'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('link failed'), findsOneWidget);
   });
 
   testWidgets('DeletePlaylistDialog deletes the playlist and closes', (
@@ -616,6 +649,73 @@ void main() {
     expect(find.text('Delete playlist'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('PlaylistOptionsBottomSheet reposts a playlist for non-owners', (
+    tester,
+  ) async {
+    final playlist = _playlist(
+      id: 8,
+      title: 'Shared playlist',
+      owner: const PlaylistOwner(id: 88, username: 'other-user'),
+    );
+
+    await tester.pumpWidget(
+      buildApp(
+        Builder(
+          builder: (context) {
+            return Center(
+              child: ElevatedButton(
+                onPressed: () => PlaylistOptionsBottomSheet.show(
+                  context,
+                  playlist,
+                ),
+                child: const Text('Open options 2'),
+              ),
+            );
+          },
+        ),
+        useUnauthenticatedAuth: false,
+        overrides: [
+          authStateProvider.overrideWith(
+            () => FakeAuthenticatedAuthNotifier(
+              const AuthUser(
+                id: 1,
+                username: 'listener',
+                tier: UserTier.free,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    when(() => playlistRepository.getPlaylistDetails(8)).thenAnswer(
+      (_) async => Right(playlist),
+    );
+    when(() => playlistSocialRepository.toggleRepost(8, false)).thenAnswer(
+      (_) async => const Right(true),
+    );
+
+    await tester.tap(find.text('Open options 2'));
+    await tester.pumpAndSettle();
+
+    final sheetList = find.byWidgetPredicate(
+      (widget) => widget is ListView && widget.scrollDirection == Axis.vertical,
+    );
+
+    await tester.drag(sheetList, const Offset(0, -400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Repost playlist'), findsOneWidget);
+    expect(find.text('Edit playlist'), findsNothing);
+    expect(find.text('Delete'), findsNothing);
+
+    await tester.tap(find.text('Repost playlist'));
+    await tester.pumpAndSettle();
+
+    verify(() => playlistSocialRepository.toggleRepost(8, false)).called(1);
+    expect(find.text('Playlist reposted'), findsOneWidget);
   });
 }
 

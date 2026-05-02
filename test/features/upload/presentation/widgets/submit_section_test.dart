@@ -147,8 +147,9 @@ void main() {
     await tester.tap(find.text('Save'));
     await tester.pump(); // Trigger the async uploadTrack
 
-    // Wait for the async repository call to finish
-    await tester.pumpAndSettle();
+    // Let the async repository call and navigation callback finish without
+    // waiting on the indeterminate loading spinner to settle.
+    await tester.pump(const Duration(milliseconds: 100));
 
     // 3. Assert
     // Verify the repository was actually called with our data
