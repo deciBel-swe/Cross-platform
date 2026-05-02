@@ -417,6 +417,87 @@ class UploadsNotifier extends AutoDisposeAsyncNotifier<List<Track>> {
     _syncProcessingPolling(updatedTracks);
   }
 
+  void preserveTrackAccessIfMoreRestrictive({
+    required int trackId,
+    required String preferredAccess,
+  }) {
+    if (_isDisposed) {
+      return;
+    }
+
+    final normalizedPreferred = preferredAccess.trim().toUpperCase();
+    if (normalizedPreferred == 'PLAYABLE') {
+      return;
+    }
+
+    final currentTracks = state.valueOrNull ?? const <Track>[];
+    if (currentTracks.isEmpty) {
+      return;
+    }
+
+    var didChange = false;
+
+    final updatedTracks = [
+      for (final track in currentTracks)
+        if (track.id == trackId)
+          () {
+            final currentAccess = track.access.trim().toUpperCase();
+            if (currentAccess != 'PLAYABLE') {
+              return track;
+            }
+
+            didChange = true;
+
+            final shouldMarkFinished =
+                track.isProcessing &&
+                (normalizedPreferred == 'BLOCKED' ||
+                    (normalizedPreferred == 'PREVIEW' &&
+                        (track.trackPreviewUrl?.trim().isNotEmpty ?? false)));
+
+            return track.copyWith(
+              access: normalizedPreferred,
+              state: shouldMarkFinished ? TrackStatus.finished : track.state,
+            );
+          }()
+        else
+          track,
+    ];
+
+    if (!didChange) {
+      return;
+    }
+
+    state = AsyncData(updatedTracks);
+
+    Track? updatedTrack;
+    for (final track in updatedTracks) {
+      if (track.id == trackId) {
+        updatedTrack = track;
+        break;
+      }
+    }
+
+    if (updatedTrack != null) {
+      if (updatedTrack.isProcessing) {
+        _terminalStatusTrackIds.remove(trackId);
+      } else {
+        _terminalStatusTrackIds.add(trackId);
+      }
+    }
+
+    final userId = _ensureActiveUserId();
+    if (userId != null) {
+      final cached = _memoryCacheByUser[userId];
+      _memoryCacheByUser[userId] = (
+        tracks: updatedTracks,
+        currentPage: cached?.currentPage ?? _currentPage,
+        isLastPage: cached?.isLastPage ?? _isLastPage,
+      );
+    }
+
+    _syncProcessingPolling(updatedTracks);
+  }
+
   void _syncProcessingPolling(List<Track> tracks) {
     // Poll only tracks still processing and not already marked terminal.
     final hasProcessing = tracks.any(

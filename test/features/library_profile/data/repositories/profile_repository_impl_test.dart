@@ -12,7 +12,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockRemoteDataSource extends Mock implements IProfileRemoteDataSource {}
+
 class MockLocalDataSource extends Mock implements IProfileLocalDataSource {}
+
 class MockSecureStorageService extends Mock implements SecureStorageService {}
 
 const tProfileModel = UserProfileModel(
@@ -27,11 +29,7 @@ const tProfileModel = UserProfileModel(
   stats: UserStatsModel(followers: 0, following: 0, tracksCount: 0),
 );
 
-const tAuthUser = AuthUserModel(
-  id: 1,
-  username: 'testuser',
-  tier: 'FREE',
-);
+const tAuthUser = AuthUserModel(id: 1, username: 'testuser', tier: 'FREE');
 
 void main() {
   late ProfileRepositoryImpl repository;
@@ -49,51 +47,78 @@ void main() {
   });
 
   group('ProfileRepositoryImpl', () {
+    test(
+      'getUserProfile should fetch from remote, cache, and sync auth user',
+      () async {
+        // Arrange
+        when(
+          () => mockRemote.getUserProfile(),
+        ).thenAnswer((_) async => tProfileModel);
+        when(
+          () => mockLocal.cacheUserProfile(any()),
+        ).thenAnswer((_) async => {});
+        when(() => mockSecure.getUser()).thenAnswer((_) async => tAuthUser);
+        when(() => mockSecure.updateUser(any())).thenAnswer((_) async => {});
 
-    test('getUserProfile should fetch from remote, cache, and sync auth user', () async {
-      // Arrange
-      when(() => mockRemote.getUserProfile()).thenAnswer((_) async => tProfileModel);
-      when(() => mockLocal.cacheUserProfile(any())).thenAnswer((_) async => {});
-      when(() => mockSecure.getUser()).thenAnswer((_) async => tAuthUser);
-      when(() => mockSecure.updateUser(any())).thenAnswer((_) async => {});
+        // Act
+        final result = await repository.getUserProfile();
 
-      // Act
-      final result = await repository.getUserProfile();
+        // Assert
+        expect(result.isRight(), true);
+        verify(() => mockRemote.getUserProfile()).called(1);
+        verify(() => mockLocal.cacheUserProfile(tProfileModel)).called(1);
+        verify(
+          () => mockSecure.updateUser(
+            any(that: predicate<AuthUserModel>((u) => u.tier == 'PRO')),
+          ),
+        ).called(1);
+      },
+    );
 
-      // Assert
-      expect(result.isRight(), true);
-      verify(() => mockRemote.getUserProfile()).called(1);
-      verify(() => mockLocal.cacheUserProfile(tProfileModel)).called(1);
-      verify(() => mockSecure.updateUser(any(that: predicate<AuthUserModel>((u) => u.tier == 'PRO')))).called(1);
-    });
+    test(
+      'getUserProfile should return local cache when remote fails with NetworkException',
+      () async {
+        // Arrange
+        when(
+          () => mockRemote.getUserProfile(),
+        ).thenThrow(const NetworkException('Offline'));
+        when(
+          () => mockLocal.getLastUserProfile(),
+        ).thenAnswer((_) async => tProfileModel);
 
-    test('getUserProfile should return local cache when remote fails with NetworkException', () async {
-      // Arrange
-      when(() => mockRemote.getUserProfile()).thenThrow(NetworkException('Offline'));
-      when(() => mockLocal.getLastUserProfile()).thenAnswer((_) async => tProfileModel);
+        // Act
+        final result = await repository.getUserProfile();
 
-      // Act
-      final result = await repository.getUserProfile();
+        // Assert
+        expect(result.isRight(), true);
+        result.fold(
+          (l) => fail('Should be Right'),
+          (r) => expect(r.id, tProfileModel.id),
+        );
+        verify(() => mockLocal.getLastUserProfile()).called(1);
+      },
+    );
 
-      // Assert
-      expect(result.isRight(), true);
-      result.fold(
-        (l) => fail('Should be Right'),
-        (r) => expect(r.id, tProfileModel.id),
-      );
-      verify(() => mockLocal.getLastUserProfile()).called(1);
-    });
+    test(
+      'getUserProfile should return NetworkFailure when offline and no cache',
+      () async {
+        // Arrange
+        when(
+          () => mockRemote.getUserProfile(),
+        ).thenThrow(const NetworkException('Offline'));
+        when(
+          () => mockLocal.getLastUserProfile(),
+        ).thenAnswer((_) async => null);
 
-    test('getUserProfile should return NetworkFailure when offline and no cache', () async {
-      // Arrange
-      when(() => mockRemote.getUserProfile()).thenThrow(NetworkException('Offline'));
-      when(() => mockLocal.getLastUserProfile()).thenAnswer((_) async => null);
+        // Act
+        final result = await repository.getUserProfile();
 
-      // Act
-      final result = await repository.getUserProfile();
-
-      // Assert
-      expect(result, const Left(NetworkFailure('Offline and no cached profile found.')));
-    });
+        // Assert
+        expect(
+          result,
+          const Left(NetworkFailure('Offline and no cached profile found.')),
+        );
+      },
+    );
   });
 }

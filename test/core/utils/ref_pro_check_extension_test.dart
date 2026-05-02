@@ -39,50 +39,71 @@ void main() {
     );
 
     test('isPro should return true if userProfileProvider has pro tier', () {
-      when(() => mockRef.watch(userProfileProvider))
-          .thenReturn(const AsyncData(Right(tProfile)));
+      when(
+        () => mockRef.watch(userProfileProvider),
+      ).thenReturn(const AsyncData(Right(tProfile)));
 
       expect(mockRef.isPro, isTrue);
     });
 
-    test('isPro should return true if userProfileProvider fails but authStateProvider has pro tier', () {
-      when(() => mockRef.watch(userProfileProvider))
-          .thenReturn(const AsyncData(Left(ServerFailure('Error'))));
-      when(() => mockRef.watch(authStateProvider))
-          .thenReturn(const AsyncData(AuthAuthenticated(user: tAuthUser)));
+    test(
+      'isPro should return true if userProfileProvider fails but authStateProvider has pro tier',
+      () {
+        when(
+          () => mockRef.watch(userProfileProvider),
+        ).thenReturn(const AsyncData(Left(ServerFailure('Error'))));
+        when(
+          () => mockRef.watch(authStateProvider),
+        ).thenReturn(const AsyncData(AuthAuthenticated(user: tAuthUser)));
 
-      expect(mockRef.isPro, isTrue);
-    });
+        expect(mockRef.isPro, isTrue);
+      },
+    );
 
     test('isPro should return false if both say free tier', () {
-      when(() => mockRef.watch(userProfileProvider))
-          .thenReturn(AsyncData(Right(UserProfile(
-            id: 1,
-            role: 'user',
-            email: 'test@example.com',
-            username: 'testuser',
-            emailVerified: true,
-            tier: UserTier.free,
-            profileDetails: const UserProfileDetails(favoriteGenres: []),
-            privacySettings: const PrivacySettings(isPrivate: false, showHistory: true),
-            stats: const UserStats(followers: 0, following: 0, tracksCount: 0),
-          ))));
-      
-      when(() => mockRef.watch(authStateProvider))
-          .thenReturn(const AsyncData(AuthAuthenticated(user: auth.AuthUser(
-            id: 1,
-            username: 'testuser',
-            tier: auth.UserTier.free,
-          ))));
+      when(() => mockRef.watch(userProfileProvider)).thenReturn(
+        const AsyncData(
+          Right(
+            UserProfile(
+              id: 1,
+              role: 'user',
+              email: 'test@example.com',
+              username: 'testuser',
+              emailVerified: true,
+              tier: UserTier.free,
+              profileDetails: UserProfileDetails(favoriteGenres: []),
+              privacySettings: PrivacySettings(
+                isPrivate: false,
+                showHistory: true,
+              ),
+              stats: UserStats(followers: 0, following: 0, tracksCount: 0),
+            ),
+          ),
+        ),
+      );
+
+      when(() => mockRef.watch(authStateProvider)).thenReturn(
+        const AsyncData(
+          AuthAuthenticated(
+            user: auth.AuthUser(
+              id: 1,
+              username: 'testuser',
+              tier: auth.UserTier.free,
+            ),
+          ),
+        ),
+      );
 
       expect(mockRef.isPro, isFalse);
     });
 
     test('isPro should return false if loading and unauthenticated', () {
-      when(() => mockRef.watch(userProfileProvider))
-          .thenReturn(const AsyncLoading());
-      when(() => mockRef.watch(authStateProvider))
-          .thenReturn(const AsyncData(AuthUnauthenticated()));
+      when(
+        () => mockRef.watch(userProfileProvider),
+      ).thenReturn(const AsyncLoading());
+      when(
+        () => mockRef.watch(authStateProvider),
+      ).thenReturn(const AsyncData(AuthUnauthenticated()));
 
       expect(mockRef.isPro, isFalse);
     });

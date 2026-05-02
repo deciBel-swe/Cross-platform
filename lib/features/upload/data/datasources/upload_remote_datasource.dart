@@ -44,9 +44,7 @@ class UploadRemoteDatasource {
             .join(',');
 
         dataMap['waveformData'] = '[$waveformValues]';
-
-      } else {
-      }
+      } else {}
 
       if (tagsRaw is List) {
         // Backend expects tags in JSON-array string form in multipart fields.
@@ -145,6 +143,7 @@ class UploadRemoteDatasource {
       ...responseData,
       'artist': responseData['artist'] ?? {'id': 0, 'username': 'You'},
       'genre': responseData['genre'] ?? metadata.genre,
+      'access': responseData['access'] ?? metadata.access,
       'tags': responseData['tags'] ?? metadata.tags,
       'state': responseData['state'] ?? 'PROCESSING',
       'releaseDate': responseData['releaseDate'] ?? releaseDateIso,
@@ -167,14 +166,12 @@ class UploadRemoteDatasource {
 
           return status;
         })
-        .handleError((Object error, StackTrace stackTrace) {
-        });
+        .handleError((Object error, StackTrace stackTrace) {});
   }
 
   void cancelUploadStatusSubscription(String uploadId) {
     final topicEndpoint = ApiConstants.trackUploadStatusTopic(uploadId);
 
     _wsClient.disconnect(topicEndpoint);
-
   }
 }

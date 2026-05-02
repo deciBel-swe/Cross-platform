@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../auth/domain/entities/auth_user.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../home/presentation/providers/history_provider.dart';
 import '../../domain/entities/track.dart';
 import '../state/track_audio_state.dart';
@@ -471,9 +474,30 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       return;
     }
 
-    final trackUrl = track.normalizedTrackUrl;
+    final isProUser = _isCurrentUserPro();
+    final trackUrl = _resolvePlaybackUrl(track: track, isProUser: isProUser);
 
-    if (!track.isPlayable || trackUrl == null || track.isBlocked) {
+    // DEBUG: Log track state for PREVIEW tracks
+    if (track.isPreviewOnly) {
+      debugPrint('[TrackAudioNotifier] PREVIEW Track Debug:');
+      debugPrint('  - Track ID: ${track.id}, Title: ${track.title}');
+      debugPrint('  - Access: ${track.access}');
+      debugPrint('  - State: ${track.state}');
+      debugPrint(
+        '  - isProcessing: ${track.isProcessing}, isFailed: ${track.isFailed}',
+      );
+      debugPrint('  - isPlayable: ${track.isPlayable}');
+      debugPrint('  - trackPreviewUrl: ${track.trackPreviewUrl}');
+      debugPrint('  - Resolved trackUrl from _resolvePlaybackUrl(): $trackUrl');
+      debugPrint('  - isProUser: $isProUser');
+    }
+
+    if (!track.isPlayable || trackUrl == null) {
+      if (track.isPreviewOnly) {
+        debugPrint(
+          '[TrackAudioNotifier] Early return - Track not playable (isPlayable: ${track.isPlayable}, trackUrl: $trackUrl)',
+        );
+      }
       return;
     }
 
@@ -485,6 +509,40 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       duration: duration,
       autoPlay: autoPlay,
     );
+  }
+
+  bool _isCurrentUserPro() {
+    final authState = ref.read(authStateProvider).valueOrNull;
+
+    if (authState is! AuthAuthenticated) {
+      return false;
+    }
+
+    return authState.user.tier == UserTier.pro ||
+        authState.user.tier == UserTier.artistPro;
+  }
+
+  String? _resolvePlaybackUrl({required Track track, required bool isProUser}) {
+    if (track.isBlocked && !isProUser) {
+      return null;
+    }
+
+    if (track.isPreviewOnly && !isProUser) {
+      final previewUrl = track.trackPreviewUrl?.trim();
+      if (previewUrl != null && previewUrl.isNotEmpty) {
+        return previewUrl;
+      }
+
+      // Compatibility fallback for preview tracks when backend has not
+      // published trackPreviewUrl yet but full trackUrl exists.
+      final trackUrl = track.trackUrl?.trim();
+      if (trackUrl == null || trackUrl.isEmpty) {
+        return null;
+      }
+      return trackUrl;
+    }
+
+    return track.normalizedTrackUrl;
   }
 
   Future<void> play() async {

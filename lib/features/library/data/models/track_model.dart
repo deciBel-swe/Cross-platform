@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../domain/entities/track.dart';
@@ -44,7 +45,17 @@ class TrackModel with _$TrackModel {
   static Map<String, dynamic> _normalizeTrackJson(Map<String, dynamic> json) {
     final map = Map<String, dynamic>.from(json);
     final normalizedTrackUrl = (map['trackUrl'] as String?)?.trim();
-    final rawState = (map['state'] ?? map['status'])
+    final normalizedPreviewUrl =
+        (map['trackPreviewUrl'] as String?)?.trim() ??
+        (map['previewUrl'] as String?)?.trim() ??
+        (map['preview_url'] as String?)?.trim() ??
+        (map['previewTrackUrl'] as String?)?.trim() ??
+        (map['track_preview_url'] as String?)?.trim();
+    final normalizedAccess = (map['access'] ?? 'PLAYABLE')
+        .toString()
+        .trim()
+        .toUpperCase();
+    final rawState = (map['state'] ?? map['status'] ?? map['trackState'])
         ?.toString()
         .trim()
         .toUpperCase();
@@ -69,15 +80,39 @@ class TrackModel with _$TrackModel {
     }
 
     // state handling
-    map['state'] = switch (rawState) {
-      'UPLOADING' || 'PROCESSING' => 'PROCESSING',
-      'FAILED' => 'FAILED',
-      'FINISHED' => 'FINISHED',
-      _ =>
-        (normalizedTrackUrl == null || normalizedTrackUrl.isEmpty)
+    // Priority: For PREVIEW/BLOCKED tracks, check URL availability first
+    // before trusting rawState from backend. This ensures PREVIEW tracks
+    // with URLs are playable even if backend says they're still processing.
+    final inferredState = switch (normalizedAccess) {
+      'BLOCKED' => 'FINISHED',
+      'PREVIEW' =>
+        (normalizedPreviewUrl == null || normalizedPreviewUrl.isEmpty)
             ? 'PROCESSING'
             : 'FINISHED',
+      _ => switch (rawState) {
+        'UPLOADING' || 'PROCESSING' => 'PROCESSING',
+        'FAILED' => 'FAILED',
+        'FINISHED' => 'FINISHED',
+        _ =>
+          (normalizedTrackUrl == null || normalizedTrackUrl.isEmpty)
+              ? 'PROCESSING'
+              : 'FINISHED',
+      },
     };
+
+    // DEBUG: Log state inference for uploads
+    if (json['id'] != null &&
+        (json['trackUrl'] == null || json['trackPreviewUrl'] == null)) {
+      debugPrint(
+        '[TrackModel] State inference for track ${json['id']}: '
+        'rawState=$rawState → inferredState=$inferredState, '
+        'access=$normalizedAccess, '
+        'trackUrl=${json['trackUrl']}, '
+        'trackPreviewUrl=${json['trackPreviewUrl']}',
+      );
+    }
+
+    map['state'] = inferredState;
 
     // Normalize access level
     map['access'] = (map['access'] ?? 'PLAYABLE').toString().toUpperCase();
@@ -89,7 +124,24 @@ class TrackModel with _$TrackModel {
 
     // Normalize trackPreviewUrl
     if (map['trackPreviewUrl'] == null) {
-      map['trackPreviewUrl'] = map['previewUrl'] ?? map['preview_url'];
+      map['trackPreviewUrl'] =
+          map['previewUrl'] ??
+          map['preview_url'] ??
+          map['previewTrackUrl'] ??
+          map['track_preview_url'];
+    }
+
+    if (normalizedAccess == 'PREVIEW') {
+      final normalizedPreviewUrl = (map['trackPreviewUrl'] as String?)?.trim();
+
+      // Some backend payloads expose only trackUrl for preview mode.
+      // Reuse it so preview tracks remain playable until a dedicated
+      // trackPreviewUrl is returned.
+      if ((normalizedPreviewUrl == null || normalizedPreviewUrl.isEmpty) &&
+          normalizedTrackUrl != null &&
+          normalizedTrackUrl.isNotEmpty) {
+        map['trackPreviewUrl'] = normalizedTrackUrl;
+      }
     }
 
     return map;

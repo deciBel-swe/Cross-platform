@@ -88,7 +88,9 @@ class TrackPreviewContent extends ConsumerWidget {
                       TrackPreviewInfo(
                         title: track.title,
                         artistName: track.artist.username,
-                        tagLabel: 'Behind this track',
+                        tagLabel: track.isPreviewOnly
+                            ? 'PREVIEW'
+                            : 'Behind this track',
                         onTagTap: () {
                           context.push(RoutePaths.behindTrack(trackId));
                         },
