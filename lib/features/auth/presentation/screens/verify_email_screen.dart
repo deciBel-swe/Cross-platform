@@ -246,7 +246,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               elevation: 0,
             ),
             child: const Text(
-              'Back to login',
+              'Continue',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

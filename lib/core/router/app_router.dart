@@ -80,7 +80,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == RoutePaths.start ||
           state.matchedLocation == RoutePaths.forgotPassword ||
           state.matchedLocation == RoutePaths.resetPassword ||
-          state.matchedLocation == RoutePaths.verifyEmail ||
           state.matchedLocation == RoutePaths.splash;
 
       final authState = authStateAsync.valueOrNull;
