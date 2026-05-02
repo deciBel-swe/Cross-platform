@@ -187,5 +187,47 @@ void main() {
         ),
       );
     });
+
+    test(
+      'methods map generic Dio and parsing failures to ServerException',
+      () async {
+        when(
+          () => dioClient.get<Object?>(ApiConstants.unreadNotificationCount),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(
+              path: ApiConstants.unreadNotificationCount,
+            ),
+          ),
+        );
+        await expectLater(
+          dataSource.getUnreadCount,
+          throwsA(
+            isA<ServerException>().having(
+              (e) => e.message,
+              'message',
+              'Failed to fetch unread count',
+            ),
+          ),
+        );
+
+        when(
+          () => dioClient.post<Object?>(
+            ApiConstants.markAllNotificationsRead,
+            data: <String, Object?>{},
+          ),
+        ).thenThrow(Exception('boom'));
+        await expectLater(
+          dataSource.markAllAsRead,
+          throwsA(
+            isA<ServerException>().having(
+              (e) => e.message,
+              'message',
+              'Unexpected error occurred',
+            ),
+          ),
+        );
+      },
+    );
   });
 }
