@@ -7,6 +7,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../notifiers/message_search_notifier.dart';
 import '../providers/messaging_providers.dart';
 
+/// User search screen for starting a new direct message.
+///
+/// Typing in the search field updates [newMessageQueryProvider], while tapping
+/// a result creates or retrieves a conversation before navigating to chat.
 class NewMessageScreen extends ConsumerWidget {
   const NewMessageScreen({super.key});
 
@@ -147,7 +151,7 @@ class NewMessageScreen extends ConsumerWidget {
     );
   }
 
-  /// Initiates a conversation via the repository and navigates to the chat screen
+  /// Starts or reuses a conversation and navigates directly to that chat.
   Future<void> _startChat(
     BuildContext context,
     WidgetRef ref,

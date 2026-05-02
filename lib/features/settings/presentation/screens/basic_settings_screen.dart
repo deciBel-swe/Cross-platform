@@ -3,7 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
 
-/// Basic settings options.
+/// Entry point for basic application preferences.
+///
+/// This screen groups low-risk app customization options, such as changing the
+/// launcher icon, behind a simple navigation list.
 class BasicSettingsScreen extends StatelessWidget {
   const BasicSettingsScreen({super.key});
 

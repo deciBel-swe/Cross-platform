@@ -45,6 +45,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     super.dispose();
   }
 
+  /// Loads additional conversations as the user approaches the end of the list.
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -116,10 +117,11 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
                         final conversation = visibleConversations[index];
 
-                        final otherUserId = conversation.participants.firstWhere(
-                          (id) => id != currentUserId,
-                          orElse: () => currentUserId,
-                        );
+                        final otherUserId = conversation.participants
+                            .firstWhere(
+                              (id) => id != currentUserId,
+                              orElse: () => currentUserId,
+                            );
 
                         final otherUserAsync = ref.watch(
                           messageUserProfileProvider(otherUserId),

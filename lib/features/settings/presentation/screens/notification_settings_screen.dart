@@ -5,6 +5,10 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../notifiers/notification_settings_notifier.dart';
 
+/// Notification preference screen for account activity.
+///
+/// Each toggle updates optimistically through [notificationSettingsProvider]
+/// and surfaces a snackbar when an update fails.
 class NotificationSettingsScreen extends ConsumerWidget {
   const NotificationSettingsScreen({super.key});
 
@@ -98,6 +102,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
   }
 }
 
+/// Accessible toggle row for one notification preference.
 class _NotificationToggleTile extends StatelessWidget {
   const _NotificationToggleTile({
     required this.semanticLabel,
