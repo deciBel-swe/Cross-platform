@@ -34,10 +34,12 @@ class TrackPreviewContent extends ConsumerWidget {
     super.key,
     required this.trackId,
     required this.data,
+    this.onMinimize,
   });
 
   final int trackId;
   final TrackPreviewData data;
+  final VoidCallback? onMinimize;
 
   /// Builds the full track preview, playback area, comments, and action bar.
   @override
@@ -83,7 +85,7 @@ class TrackPreviewContent extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 8),
-                      const TrackPreviewTopBar(),
+                      TrackPreviewTopBar(onMore: onMinimize),
                       const SizedBox(height: 16),
                       TrackPreviewInfo(
                         title: track.title,
@@ -348,12 +350,8 @@ class TrackPreviewContent extends ConsumerWidget {
       return;
     }
 
-    final audioState = ref.read(trackAudioProvider);
     final audioNotifier = ref.read(trackAudioProvider.notifier);
-    if (audioState.preparedTrackId == track.id) {
-      await audioNotifier.stop();
-    }
-    audioNotifier.removeFromQueue(track.id);
+    await audioNotifier.removeDeletedTrack(track.id);
     ref.invalidate(trackPreviewProvider(track.id));
 
     if (!context.mounted) {

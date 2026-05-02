@@ -32,6 +32,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
   Future<void> _transitionQueue = Future<void>.value();
   bool _hasReportedPlayForPreparedTrack = false;
   int? _reportedPlayTrackId;
+  int? _pendingTrackId;
 
   AudioPlayer get _audioPlayer {
     final player = _player;
@@ -175,7 +176,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     final operationId = ++_operationGeneration;
 
     final nextTransition = _transitionQueue.then((_) async {
-      if (_isDisposed) {
+      if (_isDisposed || operationId != _operationGeneration) {
         return;
       }
 
@@ -218,6 +219,8 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
       return;
     }
+
+    _pendingTrackId = trackId;
 
     await _runSerializedTransition((operationId) async {
       if (_isDisposed) {
@@ -268,6 +271,10 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
       } finally {
         if (!_isDisposed && operationId == _operationGeneration) {
           state = state.copyWith(isPreparing: false);
+        }
+
+        if (_pendingTrackId == trackId) {
+          _pendingTrackId = null;
         }
       }
     });
@@ -345,6 +352,7 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
 
     _hasReportedPlayForPreparedTrack = false;
     _reportedPlayTrackId = trackId;
+    _pendingTrackId = null;
   }
 
   Future<void> skipNext() async {
@@ -423,6 +431,25 @@ class TrackAudioNotifier extends Notifier<TrackAudioState> {
     }
 
     state = state.copyWith(queue: nextQueue);
+  }
+
+  Future<void> removeDeletedTrack(int trackId) async {
+    if (_isDisposed) {
+      return;
+    }
+
+    final isActiveTrack =
+        state.preparedTrackId == trackId ||
+        state.currentTrack?.id == trackId ||
+        _pendingTrackId == trackId;
+
+    if (isActiveTrack) {
+      _operationGeneration += 1;
+      _pendingTrackId = null;
+      await stop();
+    }
+
+    removeFromQueue(trackId);
   }
 
   void reorderQueue(int oldIndex, int newIndex) {

@@ -324,6 +324,136 @@ void main() {
       expect(state.queue.map((track) => track.id), [1]);
     });
 
+    test('removeDeletedTrack removes queued non-current track', () async {
+      final container = buildContainer();
+      final notifier = container.read(trackAudioProvider.notifier);
+
+      final first = _track(id: 1);
+      final second = _track(id: 2);
+
+      await notifier.initializeForTrack(
+        trackId: first.id,
+        trackUrl: first.normalizedTrackUrl!,
+        queue: [first, second],
+        autoPlay: false,
+      );
+
+      clearInteractions(player);
+
+      await notifier.removeDeletedTrack(second.id);
+
+      final state = container.read(trackAudioProvider);
+
+      expect(state.preparedTrackId, first.id);
+      expect(state.isPrepared, isTrue);
+      expect(state.queue.map((track) => track.id), [first.id]);
+      verifyNever(() => player.stop());
+    });
+
+    test('removeDeletedTrack stops and clears current track', () async {
+      final container = buildContainer();
+      final notifier = container.read(trackAudioProvider.notifier);
+
+      final first = _track(id: 1);
+      final second = _track(id: 2);
+
+      await notifier.initializeForTrack(
+        trackId: first.id,
+        trackUrl: first.normalizedTrackUrl!,
+        queue: [first, second],
+        autoPlay: false,
+      );
+
+      clearInteractions(player);
+
+      await notifier.removeDeletedTrack(first.id);
+
+      final state = container.read(trackAudioProvider);
+
+      expect(state.currentTrack, isNull);
+      expect(state.preparedTrackId, isNull);
+      expect(state.isPrepared, isFalse);
+      expect(state.isPlaying, isFalse);
+      expect(state.queue.map((track) => track.id), [second.id]);
+      verify(() => player.stop()).called(1);
+    });
+
+    test('removeDeletedTrack clears track while it is preparing', () async {
+      final sourceCompleter = Completer<Duration?>();
+      when(
+        () => player.setAudioSource(any(), preload: any(named: 'preload')),
+      ).thenAnswer((_) => sourceCompleter.future);
+
+      final container = buildContainer();
+      final notifier = container.read(trackAudioProvider.notifier);
+
+      final track = _track(id: 1);
+      final playFuture = notifier.playTrack(
+        track: track,
+        queue: [track],
+        autoPlay: true,
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      await notifier.removeDeletedTrack(track.id);
+      sourceCompleter.complete(const Duration(seconds: 48));
+      await playFuture;
+
+      final state = container.read(trackAudioProvider);
+
+      expect(state.currentTrack, isNull);
+      expect(state.preparedTrackId, isNull);
+      expect(state.isPrepared, isFalse);
+      expect(state.isPreparing, isFalse);
+      expect(state.isPlaying, isFalse);
+      expect(state.queue, isEmpty);
+      verifyNever(() => player.play());
+    });
+
+    test(
+      'removeDeletedTrack keeps deleted pending track out of queue',
+      () async {
+        final firstSourceCompleter = Completer<Duration?>();
+        when(
+          () => player.setAudioSource(any(), preload: any(named: 'preload')),
+        ).thenAnswer((_) => firstSourceCompleter.future);
+
+        final container = buildContainer();
+        final notifier = container.read(trackAudioProvider.notifier);
+
+        final first = _track(id: 1);
+        final deleted = _track(id: 2);
+
+        final firstPlayFuture = notifier.playTrack(
+          track: first,
+          queue: [first],
+          autoPlay: false,
+        );
+
+        await Future<void>.delayed(Duration.zero);
+
+        final deletedPlayFuture = notifier.playTrack(
+          track: deleted,
+          queue: [deleted],
+          autoPlay: false,
+        );
+
+        await notifier.removeDeletedTrack(deleted.id);
+
+        firstSourceCompleter.complete(const Duration(seconds: 48));
+        await firstPlayFuture;
+        await deletedPlayFuture;
+
+        final state = container.read(trackAudioProvider);
+
+        expect(
+          state.queue.map((track) => track.id),
+          isNot(contains(deleted.id)),
+        );
+      },
+    );
+
     test('reorderQueue moves item', () {
       final container = buildContainer();
       final notifier = container.read(trackAudioProvider.notifier);

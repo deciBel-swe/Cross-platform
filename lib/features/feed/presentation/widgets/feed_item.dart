@@ -17,6 +17,7 @@ import '../../../engagement/presentation/widgets/track_report_bottom_sheet.dart'
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
 import '../../../library/presentation/widgets/track_more_options_menu.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../../library_profile/presentation/providers/track_peaks_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
 import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
@@ -152,98 +153,99 @@ class FeedItem extends StatelessWidget {
       child: Opacity(
         opacity: isBlocked ? 0.5 : 1.0,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppDimensions.paddingSm,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _FeedHeaderRow(
-              userName: userName,
-              action: action,
-              timeAgo: timeAgo,
-              colors: colors,
-              imageUrl: userAvatarUrl,
-              isDesktop: true,
-            ),
-            const SizedBox(height: AppDimensions.paddingMd),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _ArtworkTile(
-                  colors: colors,
-                  title: trackTitle,
-                  imageUrl: coverUrl,
-                  onTap: onPlay,
-                ),
-                const SizedBox(width: AppDimensions.paddingMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          _PlayButton(onPressed: onPlay),
-                          const SizedBox(width: AppDimensions.paddingMd),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: onPlay,
-                              behavior: HitTestBehavior.opaque,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    trackArtist,
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                      color: AppColors.textSecondary,
+            children: [
+              _FeedHeaderRow(
+                userName: userName,
+                action: action,
+                timeAgo: timeAgo,
+                colors: colors,
+                imageUrl: userAvatarUrl,
+                isDesktop: true,
+              ),
+              const SizedBox(height: AppDimensions.paddingMd),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _ArtworkTile(
+                    colors: colors,
+                    title: trackTitle,
+                    imageUrl: coverUrl,
+                    onTap: onPlay,
+                  ),
+                  const SizedBox(width: AppDimensions.paddingMd),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _PlayButton(trackId: trackId, onPressed: onPlay),
+                            const SizedBox(width: AppDimensions.paddingMd),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: onPlay,
+                                behavior: HitTestBehavior.opaque,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      trackArtist,
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
-                                  ),
-                                  AutoScrollingText(
-                                    text: trackTitle,
-                                    style: AppTextStyles.sectionTitle.copyWith(
-                                      fontSize: 33,
+                                    AutoScrollingText(
+                                      text: trackTitle,
+                                      style: AppTextStyles.sectionTitle
+                                          .copyWith(fontSize: 33),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          _GenreChip(genre: genre),
-                        ],
-                      ),
-                      const SizedBox(height: AppDimensions.paddingMd),
-                      _WaveformStrip(
-                        trackId: trackId,
-                        fallbackPeaks: waveformPeaks,
-                        duration: duration,
-                      ),
-                      const SizedBox(height: AppDimensions.paddingMd),
-                      _DesktopFeedActions(
-                        trackId: trackId,
-                        initialLikeCount: likeCount,
-                        initialRepostCount: repostCount,
-                        initialIsLiked: isLiked,
-                        initialIsReposted: isReposted,
-                        commentCount: commentCount,
-                        commentTrack: commentTrack,
-                        plays: plays,
-                        onAddToPlaylist: onAddToPlaylist,
-                        onAddToQueue: onAddToQueue,
-                        onEditTrack: onEditTrack,
-                        onGoToArtist: onGoToArtist,
-                        onGoToAlbum: onGoToAlbum,
-                        onShare: onShare,
-                        onCopyLink: onCopyLink,
-                        onDownload: onDownload,
-                        onDeleteTrack: onDeleteTrack,
-                      ),
-                    ],
+                            _GenreChip(genre: genre),
+                          ],
+                        ),
+                        const SizedBox(height: AppDimensions.paddingMd),
+                        _WaveformStrip(
+                          trackId: trackId,
+                          fallbackPeaks: waveformPeaks,
+                          duration: duration,
+                        ),
+                        const SizedBox(height: AppDimensions.paddingMd),
+                        _DesktopFeedActions(
+                          trackId: trackId,
+                          initialLikeCount: likeCount,
+                          initialRepostCount: repostCount,
+                          initialIsLiked: isLiked,
+                          initialIsReposted: isReposted,
+                          commentCount: commentCount,
+                          commentTrack: commentTrack,
+                          plays: plays,
+                          onAddToPlaylist: onAddToPlaylist,
+                          onAddToQueue: onAddToQueue,
+                          onEditTrack: onEditTrack,
+                          onGoToArtist: onGoToArtist,
+                          onGoToAlbum: onGoToAlbum,
+                          onShare: onShare,
+                          onCopyLink: onCopyLink,
+                          onDownload: onDownload,
+                          onDeleteTrack: onDeleteTrack,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -302,40 +304,42 @@ class _MobileFeedItem extends StatelessWidget {
       child: Opacity(
         opacity: isBlocked ? 0.5 : 1.0,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppDimensions.paddingSm,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _FeedHeaderRow(
-              userName: userName,
-              action: action,
-              timeAgo: timeAgo,
-              colors: gradientColors,
-              imageUrl: userAvatarUrl,
-              isDesktop: false,
-            ),
-            const SizedBox(height: AppDimensions.paddingMd),
-            MobileFeedTrackCard(
-              trackId: trackId,
-              title: trackTitle,
-              artist: trackArtist,
-              coverUrl: coverUrl,
-              onPlay: onPlay,
-              onAddToPlaylist: onAddToPlaylist,
-              onMoreOptions: onMoreOptions,
-              gradientColors: gradientColors,
-              likeCount: likeCount,
-              repostCount: repostCount,
-              isLiked: isLiked,
-              isReposted: isReposted,
-              commentCount: commentCount,
-              commentTrack: commentTrack,
-              duration: duration,
-            ),
-          ],
+            children: [
+              _FeedHeaderRow(
+                userName: userName,
+                action: action,
+                timeAgo: timeAgo,
+                colors: gradientColors,
+                imageUrl: userAvatarUrl,
+                isDesktop: false,
+              ),
+              const SizedBox(height: AppDimensions.paddingMd),
+              MobileFeedTrackCard(
+                trackId: trackId,
+                title: trackTitle,
+                artist: trackArtist,
+                coverUrl: coverUrl,
+                onPlay: onPlay,
+                onAddToPlaylist: onAddToPlaylist,
+                onMoreOptions: onMoreOptions,
+                gradientColors: gradientColors,
+                likeCount: likeCount,
+                repostCount: repostCount,
+                isLiked: isLiked,
+                isReposted: isReposted,
+                commentCount: commentCount,
+                commentTrack: commentTrack,
+                duration: duration,
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -681,29 +685,43 @@ class _ArtworkFallback extends StatelessWidget {
   }
 }
 
-class _PlayButton extends StatefulWidget {
-  const _PlayButton({this.onPressed});
+class _PlayButton extends ConsumerStatefulWidget {
+  const _PlayButton({required this.trackId, this.onPressed});
 
+  final int trackId;
   final VoidCallback? onPressed;
 
   @override
-  State<_PlayButton> createState() => _PlayButtonState();
+  ConsumerState<_PlayButton> createState() => _PlayButtonState();
 }
 
-class _PlayButtonState extends State<_PlayButton> {
+class _PlayButtonState extends ConsumerState<_PlayButton> {
   bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final audioState = ref.watch(trackAudioProvider);
+    final isCurrentTrack =
+        audioState.preparedTrackId == widget.trackId ||
+        audioState.currentTrack?.id == widget.trackId;
+    final isPlaying = isCurrentTrack && audioState.isPlaying;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
       child: Semantics(
         button: true,
-        label: 'Play track',
+        label: isPlaying ? 'Pause track' : 'Play track',
         child: GestureDetector(
-          onTap: widget.onPressed,
+          onTap: () {
+            if (isPlaying) {
+              ref.read(trackAudioProvider.notifier).pause();
+              return;
+            }
+
+            widget.onPressed?.call();
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: 50,
@@ -722,7 +740,7 @@ class _PlayButtonState extends State<_PlayButton> {
                   : [],
             ),
             child: Icon(
-              Icons.play_arrow,
+              isPlaying ? Icons.pause : Icons.play_arrow,
               color: _isHovered ? Colors.white : AppColors.textSecondary,
               size: 34,
             ),
