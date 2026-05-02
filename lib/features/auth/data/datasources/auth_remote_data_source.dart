@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -15,24 +16,14 @@ import '../models/device_info_model.dart';
 import '../models/login_local_request_model.dart';
 import '../models/login_response_model.dart';
 import '../models/oauth_exchange_request_dto.dart';
-import '../models/refresh_token_response_model.dart';
 import '../models/register_local_request_model.dart';
-import '../models/resend_verification_response_model.dart';
 import '../utils/auth_success_page.dart';
 
 abstract class IAuthRemoteDataSource {
   Future<LoginResponseModel> loginLocal(LoginLocalRequestModel request);
   Future<void> registerLocal(RegisterLocalRequestModel request);
   Future<LoginResponseModel> loginWithGoogle(DeviceInfoModel deviceInfo);
-  Future<RefreshTokenResponseModel> refreshToken({
-    required String refreshToken,
-    required String accessToken,
-  });
-  Future<ResendVerificationResponseModel> resendVerification(String email);
   Future<void> logout();
-
-  Future<String> forgotPassword(String email);
-  Future<String> resetPassword(String token, String newPassword);
 }
 
 @LazySingleton(as: IAuthRemoteDataSource)
@@ -64,11 +55,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       return _parseLoginResponse(response);
     } on DioException catch (e) {
       throw ServerException(
-        _extractDioErrorMessage(
-          e,
-          fallback: 'Login failed',
-          useLoginUnauthorizedMessage: true,
-        ),
+        _extractDioErrorMessage(e, fallback: 'Login failed'),
       );
     } on AppException {
       rethrow;
@@ -113,7 +100,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     if (isMobile) {
       try {
         await g_sign_in.GoogleSignIn.instance.initialize(
-          serverClientId: ApiConstants.googleServerClientId,
+          serverClientId: ApiConstants.googleDesktopClientId,
         );
         // I removed the signOut call as it causes crashes from google credential center for some weird reason
 
@@ -122,7 +109,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
           scopeHint: ['email', 'profile'],
         );
 
-        // The critical Server Auth Code needed for the Spring Boot backend
+        // Request Authorization (the server auth code for the backend)
         final authz = await account.authorizationClient.authorizeServer([
           'email',
           'profile',
@@ -142,285 +129,133 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         throw AuthException('Google Sign In failed: ${e.message}');
       }
     } else {
-      return _loginWithGoogleLoopback(deviceInfo);
-    }
-  }
+      // DESKTOP: Use local HTTP server loopback
+      final completer = Completer<LoginResponseModel>();
 
-  /// Uses the OAuth loopback redirect flow that the backend already accepts.
-  Future<LoginResponseModel> _loginWithGoogleLoopback(
-    DeviceInfoModel deviceInfo,
-  ) async {
-    final completer = Completer<LoginResponseModel>();
+      final clientId = ApiConstants.googleDesktopClientId;
+      const redirectUri = ApiConstants.googleDesktopRedirectUri;
 
-    final clientId = ApiConstants.googleDesktopClientId;
-    const redirectUri = ApiConstants.googleDesktopRedirectUri;
-
-    final Uri authUrl = Uri.parse(ApiConstants.googleAuthUrl).replace(
-      queryParameters: {
-        'client_id': clientId,
-        'redirect_uri': redirectUri,
-        'response_type': 'code',
-        'scope': 'email profile',
-      },
-    );
-
-    // Early error check: pre-flight the auth URL
-    try {
-      final checkResponse = await Dio().getUri<dynamic>(authUrl);
-      if (checkResponse.realUri.toString().contains('oauth/error')) {
-        return Future.error(
-          const AuthException('error while loging with google'),
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.realUri.toString().contains('oauth/error') == true) {
-        return Future.error(
-          const AuthException('error while loging with google'),
-        );
-      }
-    } catch (_) {
-      // Ignored, proceed to normal flow if the check fails for some other reason
-    }
-
-    HttpServer? localServer;
-    try {
-      localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 8081);
-
-      localServer.listen((HttpRequest request) async {
-        final Uri uri = request.uri;
-
-        if (uri.path == '/oauth/callback' ||
-            uri.path == '/login/oauth2/code/google' ||
-            uri.path == '/') {
-          final authCode =
-              uri.queryParameters['token'] ?? uri.queryParameters['code'];
-          final error = uri.queryParameters['error'];
-
-          if (authCode != null) {
-            final String html = await buildAuthSuccessHtml();
-
-            request.response
-              ..statusCode = 200
-              ..headers.contentType = ContentType.html
-              ..write(html);
-
-            await request.response.close();
-            await localServer?.close(force: true);
-
-            try {
-              final model = await exchangeCodeWithBackend(authCode, deviceInfo);
-              if (!completer.isCompleted) {
-                completer.complete(model);
-              }
-            } catch (e) {
-              if (!completer.isCompleted) {
-                completer.completeError(AuthException(e.toString()));
-              }
-            }
-          } else if (error != null) {
-            request.response
-              ..statusCode = 400
-              ..write('Error: $error');
-            await request.response.close();
-            await localServer?.close(force: true);
-
-            if (!completer.isCompleted) {
-              completer.completeError(
-                AuthException('Google Auth Error: $error'),
-              );
-            }
-          } else {
-            request.response
-              ..statusCode = 400
-              ..write('Missing auth code');
-            await request.response.close();
-            await localServer?.close(force: true);
-
-            if (!completer.isCompleted) {
-              completer.completeError(
-                const AuthException('No code returned from redirect'),
-              );
-            }
-          }
-        }
-      });
-    } catch (e) {
-      if (!completer.isCompleted) {
-        completer.completeError(
-          AuthException('Could not start local server on port 8081: $e'),
-        );
-      }
-      return completer.future;
-    }
-
-    try {
-      final bool launched = await launchUrl(
-        authUrl,
-        mode: LaunchMode.externalApplication,
+      final authUrl = Uri.parse(
+        '${ApiConstants.googleAuthUrl}'
+        '?client_id=$clientId'
+        '&redirect_uri=$redirectUri'
+        '&response_type=code'
+        '&scope=email%20profile',
       );
 
-      if (!launched) {
+      // Early error check: pre-flight the auth URL
+      try {
+        final checkResponse = await Dio().getUri<dynamic>(authUrl);
+        if (checkResponse.realUri.toString().contains('oauth/error')) {
+          return Future.error(const AuthException('error while loging with google'));
+        }
+      } on DioException catch (e) {
+        if (e.response?.realUri.toString().contains('oauth/error') == true) {
+          return Future.error(const AuthException('error while loging with google'));
+        }
+      } catch (_) {
+        // Ignored, proceed to normal flow if the check fails for some other reason
+      }
+
+      HttpServer? localServer;
+      try {
+        localServer = await HttpServer.bind(InternetAddress.loopbackIPv4, 8081);
+
+        // Listen to single incoming request on the localhost server
+        localServer.listen((HttpRequest request) async {
+          final uri = request.uri;
+
+          // Check if it's the OAuth redirect path
+          if (uri.path == '/login/oauth2/code/google' || uri.path == '/') {
+            final authCode =
+                uri.queryParameters['token'] ?? uri.queryParameters['code'];
+            final error = uri.queryParameters['error'];
+
+            if (authCode != null) {
+              // Serve a branded success page and close
+              final html = await buildAuthSuccessHtml();
+
+              request.response
+                ..statusCode = 200
+                ..headers.contentType = ContentType.html
+                ..write(html);
+              await request.response.close();
+              await localServer?.close(force: true);
+
+              // Exchange the code with our backend
+              try {
+                final model = await exchangeCodeWithBackend(
+                  authCode,
+                  deviceInfo,
+                );
+                if (!completer.isCompleted) {
+                  completer.complete(model);
+                }
+              } catch (e) {
+                if (!completer.isCompleted) {
+                  completer.completeError(AuthException(e.toString()));
+                }
+              }
+            } else if (error != null) {
+              request.response
+                ..statusCode = 400
+                ..write('Error: $error');
+              await request.response.close();
+              await localServer?.close(force: true);
+              if (!completer.isCompleted) {
+                completer.completeError(
+                  AuthException('Google Auth Error: $error'),
+                );
+              }
+            } else {
+              request.response
+                ..statusCode = 400
+                ..write('Missing auth code');
+              await request.response.close();
+              await localServer?.close(force: true);
+              if (!completer.isCompleted) {
+                completer.completeError(
+                  const AuthException('No code returned from redirect'),
+                );
+              }
+            }
+          }
+        });
+      } catch (e) {
+        if (!completer.isCompleted) {
+          completer.completeError(
+            AuthException('Could not start local server on port 3000: $e'),
+          );
+        }
+        return completer.future;
+      }
+
+      try {
+        final launched = await launchUrl(
+          authUrl,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (!launched) {
+          await localServer.close(force: true);
+          if (!completer.isCompleted) {
+            completer.completeError(
+              const AuthException(
+                'Could not launch browser for Google Sign In.',
+              ),
+            );
+          }
+        }
+      } catch (e) {
         await localServer.close(force: true);
         if (!completer.isCompleted) {
           completer.completeError(
-            const AuthException('Could not launch browser for Google Sign In.'),
+            AuthException('Failed to launch the browser: $e'),
           );
         }
       }
-    } catch (e) {
-      await localServer.close(force: true);
-      if (!completer.isCompleted) {
-        completer.completeError(
-          AuthException('Failed to launch the browser: $e'),
-        );
-      }
-    }
 
-    return completer.future;
-  }
-
-  @override
-  Future<RefreshTokenResponseModel> refreshToken({
-    required String refreshToken,
-    required String accessToken,
-  }) async {
-    try {
-      final cookieHeader =
-          'refreshToken=$refreshToken; accessToken=$accessToken';
-
-      final response = await _dioClient.post<dynamic>(
-        ApiConstants.refreshTokenEndpoint,
-        data: {'refreshToken': refreshToken},
-        options: Options(headers: {'Cookie': cookieHeader}),
-      );
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        throw AuthException(
-          _parseManualError(response.data, fallback: 'Token refresh failed'),
-        );
-      }
-
-      return _parseRefreshTokenResponse(response);
-    } on DioException catch (e) {
-      throw ServerException(
-        _extractDioErrorMessage(e, fallback: 'Token refresh failed'),
-      );
-    } catch (e) {
-      throw AuthException(
-        'An unexpected error occurred during token refresh: $e',
-      );
-    }
-  }
-
-  @override
-  Future<ResendVerificationResponseModel> resendVerification(
-    String email,
-  ) async {
-    try {
-      final response = await _dioClient.post<dynamic>(
-        ApiConstants.resendVerificationEndpoint,
-        data: {'email': email},
-      );
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        throw AuthException(
-          _parseManualError(
-            response.data,
-            fallback: 'Resend verification failed',
-          ),
-        );
-      }
-
-      final body = response.data;
-      if (body is Map<String, dynamic>) {
-        return ResendVerificationResponseModel.fromJson(body);
-      } else {
-        throw const AuthException('Invalid response format from server.');
-      }
-    } on DioException catch (e) {
-      throw ServerException(
-        _extractDioErrorMessage(e, fallback: 'Resend verification failed'),
-      );
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw AuthException(
-        'An unexpected error occurred during resending verification: $e',
-      );
-    }
-  }
-
-  @override
-  Future<String> forgotPassword(String email) async {
-    try {
-      final response = await _dioClient.post<dynamic>(
-        ApiConstants.forgotPasswordEndpoint,
-        data: {'email': email},
-      );
-
-      if (!_isSuccessfulResponse(response.statusCode)) {
-        throw AuthException(
-          _parseManualError(
-            response.data,
-            fallback: 'Password recovery could not be started.',
-          ),
-        );
-      }
-
-      return _parseMessageResponse(
-        response.data,
-        fallback: 'Password recovery started.',
-      );
-    } on DioException catch (e) {
-      throw ServerException(
-        _extractDioErrorMessage(
-          e,
-          fallback: 'Password recovery could not be started.',
-        ),
-      );
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw AuthException(
-        'An unexpected error occurred during password recovery: $e',
-      );
-    }
-  }
-
-  @override
-  Future<String> resetPassword(String token, String newPassword) async {
-    try {
-      final response = await _dioClient.post<dynamic>(
-        ApiConstants.resetPasswordEndpoint,
-        data: {'token': token, 'newPassword': newPassword},
-      );
-
-      if (!_isSuccessfulResponse(response.statusCode)) {
-        throw AuthException(
-          _parseManualError(
-            response.data,
-            fallback: 'Password reset could not be completed.',
-          ),
-        );
-      }
-
-      return _parseMessageResponse(
-        response.data,
-        fallback: 'Password reset completed.',
-      );
-    } on DioException catch (e) {
-      throw ServerException(
-        _extractDioErrorMessage(
-          e,
-          fallback: 'Password reset could not be completed.',
-        ),
-      );
-    } on AppException {
-      rethrow;
-    } catch (e) {
-      throw AuthException(
-        'An unexpected error occurred during password reset: $e',
-      );
+      return completer.future;
     }
   }
 
@@ -432,7 +267,7 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
         data: const <String, dynamic>{},
       );
 
-      if (response.statusCode != 200 && response.statusCode != 204) {
+      if (response.statusCode != 204) {
         throw AuthException(
           'Backend returned an error. Status Code: ${response.statusCode}',
         );
@@ -453,63 +288,45 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     String authCode,
     DeviceInfoModel deviceInfo,
   ) async {
-    final OauthExchangeRequestDto dto = OauthExchangeRequestDto(
-      code: authCode,
-      deviceInfo: deviceInfo,
-    );
+    try {
+      final dto = OauthExchangeRequestDto(
+        code: authCode,
+        deviceInfo: deviceInfo,
+      );
+      if (kDebugMode) {
+        debugPrint('=== OAUTH BACKEND PAYLOAD ===');
+        debugPrint(jsonEncode(dto.toApiJson()));
+        debugPrint('=============================');
+      }
 
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        if (kDebugMode) {}
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.googleTokenExchangeEndpoint,
+        data: dto.toApiJson(),
+      );
 
-        final response = await _dioClient.post<dynamic>(
-          ApiConstants.googleTokenExchangeEndpoint,
-          data: dto.toApiJson(),
-        );
+      if (kDebugMode) {
+        debugPrint('=== OAUTH BACKEND RESPONSE ===');
+        debugPrint('Status: ${response.statusCode}');
+        debugPrint(jsonEncode(response.data));
+        debugPrint('==============================');
+      }
 
-        if (kDebugMode) {}
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          return _parseLoginResponse(response);
-        } else {
-          throw AuthException(
-            'Backend returned an error. Status Code: ${response.statusCode}',
-          );
-        }
-      } on DioException catch (e) {
-        if (_shouldRetryOAuthExchange(e, attempt)) {
-          await Future<void>.delayed(
-            Duration(milliseconds: 700 * (attempt + 1)),
-          );
-          continue;
-        }
-
-        throw ServerException(
-          _extractDioErrorMessage(e, fallback: 'Google Sign-In failed'),
-        );
-      } on AppException {
-        rethrow;
-      } catch (e) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _parseLoginResponse(response);
+      } else {
         throw AuthException(
-          'An unexpected error occurred during Google Sign In: $e',
+          'Backend returned an error. Status Code: ${response.statusCode}',
         );
       }
+    } on DioException catch (e) {
+      throw ServerException(
+        'A network error occurred during login: ${e.message}',
+      );
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during Google Sign In: $e',
+      );
     }
-
-    throw const ServerException('Google Sign-In failed');
-  }
-
-  bool _shouldRetryOAuthExchange(DioException e, int attempt) {
-    if (attempt >= 2) return false;
-    if (e.response != null) return false;
-
-    final message = e.message ?? '';
-    return e.type == DioExceptionType.connectionError ||
-        e.type == DioExceptionType.connectionTimeout ||
-        e.type == DioExceptionType.receiveTimeout ||
-        e.type == DioExceptionType.sendTimeout ||
-        e.error is SocketException ||
-        message.contains('Failed host lookup');
   }
 
   LoginResponseModel _parseLoginResponse(Response<dynamic> response) {
@@ -550,59 +367,6 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     return LoginResponseModel.fromJson(dataMap);
   }
 
-  RefreshTokenResponseModel _parseRefreshTokenResponse(
-    Response<dynamic> response,
-  ) {
-    final body = response.data;
-
-    Map<String, dynamic> dataMap;
-    if (body is Map<String, dynamic> && body['data'] != null) {
-      dataMap = Map<String, dynamic>.from(body['data'] as Map);
-    } else if (body is Map<String, dynamic>) {
-      dataMap = Map<String, dynamic>.from(body);
-    } else {
-      throw const AuthException('Invalid refresh response format from server.');
-    }
-
-    final cookies = response.headers.map['set-cookie'] ?? <String>[];
-    String? extractedRefreshToken;
-
-    for (final cookie in cookies) {
-      final parts = cookie.split(';');
-      for (final part in parts) {
-        final trimmed = part.trim();
-        if (trimmed.startsWith('refreshToken=')) {
-          extractedRefreshToken = trimmed.substring('refreshToken='.length);
-        }
-      }
-    }
-
-    final accessToken = dataMap['accessToken'];
-    final expiresInRaw = dataMap['expiresIn'];
-
-    if (accessToken is! String || accessToken.isEmpty) {
-      throw const AuthException('Missing access token in refresh response.');
-    }
-
-    final expiresIn = switch (expiresInRaw) {
-      int value => value,
-      String value => int.tryParse(value),
-      _ => null,
-    };
-
-    if (expiresIn == null || expiresIn <= 0) {
-      throw const AuthException(
-        'Missing or invalid expiresIn in refresh response.',
-      );
-    }
-
-    return RefreshTokenResponseModel(
-      accessToken: accessToken,
-      expiresIn: expiresIn,
-      refreshToken: extractedRefreshToken,
-    );
-  }
-
   String _parseManualError(Object? data, {required String fallback}) {
     if (data is Map<String, dynamic>) {
       final parsed = _parseErrorMap(data);
@@ -611,36 +375,17 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     return fallback;
   }
 
-  bool _isSuccessfulResponse(int? statusCode) {
-    return statusCode != null && statusCode >= 200 && statusCode < 300;
-  }
-
-  String _parseMessageResponse(Object? data, {required String fallback}) {
-    if (data is Map<String, dynamic>) {
-      final message = _parseMessageFromMap(data);
-      if (message != null) {
-        return message;
-      }
-    }
-
-    return fallback;
-  }
-
-  String _extractDioErrorMessage(
-    DioException e, {
-    required String fallback,
-    bool useLoginUnauthorizedMessage = false,
-  }) {
+  String _extractDioErrorMessage(DioException e, {required String fallback}) {
     final data = e.response?.data;
     final statusCode = e.response?.statusCode;
+
+    if (statusCode == 401){
+      return 'Incorrect email or password.';
+    }
 
     if (data is Map<String, dynamic>) {
       final parsed = _parseErrorMap(data);
       if (parsed != null) return parsed;
-    }
-
-    if (useLoginUnauthorizedMessage && statusCode == 401) {
-      return 'Incorrect email or password.';
     }
 
     final fallbackMessage = e.message?.trim();
@@ -669,10 +414,6 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
       }
     }
 
-    return _parseMessageFromMap(data);
-  }
-
-  String? _parseMessageFromMap(Map<String, dynamic> data) {
     final messageData = data['message'];
     if (messageData is List && messageData.isNotEmpty) {
       return messageData.join('\n');
@@ -684,9 +425,9 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
 
     final nestedData = data['data'];
     if (nestedData is Map<String, dynamic>) {
-      final nestedMessage = _parseMessageFromMap(nestedData);
-      if (nestedMessage != null) {
-        return nestedMessage;
+      final nestedMessage = nestedData['message'];
+      if (nestedMessage is String && nestedMessage.trim().isNotEmpty) {
+        return nestedMessage.trim();
       }
     }
 

@@ -27,6 +27,7 @@ Widget buildTestWidget(PublicProfileSocialLinks socialLinks) {
 }
 
 void main() {
+
   group('SocialLinksWidget', () {
     testWidgets('renders nothing when all links are null', (tester) async {
       await tester.pumpWidget(
@@ -34,8 +35,8 @@ void main() {
       );
 
       expect(find.byType(IconButton), findsNothing);
-      expect(find.byTooltip('Open instagram link'), findsNothing);
-      expect(find.byTooltip('Open twitter link'), findsNothing);
+      expect(find.byTooltip('instagram'), findsNothing);
+      expect(find.byTooltip('twitter'), findsNothing);
     });
 
     testWidgets('renders only instagram icon when instagram exists', (
@@ -49,10 +50,8 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
-
-      expect(find.byTooltip('Open instagram link'), findsOneWidget);
-      expect(find.byTooltip('Open twitter link'), findsNothing);
+      expect(find.byTooltip('instagram'), findsOneWidget);
+      expect(find.byTooltip('twitter'), findsNothing);
       expect(find.byType(IconButton), findsOneWidget);
     });
 
@@ -74,16 +73,14 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
-
-      expect(find.byTooltip('Open instagram link'), findsOneWidget);
-      expect(find.byTooltip('Open twitter link'), findsOneWidget);
-      expect(find.byTooltip('Open youtube link'), findsNothing);
-      expect(find.byTooltip('Open tiktok link'), findsNothing);
-      expect(find.byTooltip('Open linkedin link'), findsNothing);
-      expect(find.byTooltip('Open snapchat link'), findsNothing);
-      expect(find.byTooltip('Open facebook link'), findsNothing);
-      expect(find.byTooltip('Open website link'), findsNothing);
+      expect(find.byTooltip('instagram'), findsOneWidget);
+      expect(find.byTooltip('twitter'), findsOneWidget);
+      expect(find.byTooltip('youtube'), findsNothing);
+      expect(find.byTooltip('tiktok'), findsNothing);
+      expect(find.byTooltip('linkedin'), findsNothing);
+      expect(find.byTooltip('snapchat'), findsNothing);
+      expect(find.byTooltip('facebook'), findsNothing);
+      expect(find.byTooltip('website'), findsNothing);
       expect(find.byType(IconButton), findsNWidgets(2));
     });
   });

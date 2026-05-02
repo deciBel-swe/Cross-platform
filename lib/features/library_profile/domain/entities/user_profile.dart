@@ -8,8 +8,6 @@ enum UserTier {
   free,
   @JsonValue('PRO')
   pro,
-  @JsonValue('ARTIST_PRO')
-  artistPro,
 }
 
 class UserProfile {

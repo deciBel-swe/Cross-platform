@@ -12,8 +12,6 @@ _$ArtistModelImpl _$$ArtistModelImplFromJson(Map<String, dynamic> json) =>
       username: json['username'] as String,
       displayName: json['displayName'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
-      location: json['location'] as String?,
-      bio: json['bio'] as String?,
     );
 
 Map<String, dynamic> _$$ArtistModelImplToJson(_$ArtistModelImpl instance) =>
@@ -22,6 +20,4 @@ Map<String, dynamic> _$$ArtistModelImplToJson(_$ArtistModelImpl instance) =>
       'username': instance.username,
       'displayName': instance.displayName,
       'avatarUrl': instance.avatarUrl,
-      'location': instance.location,
-      'bio': instance.bio,
     };

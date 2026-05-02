@@ -1,12 +1,10 @@
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import '../../../../core/utils/responsive_utils.dart';
 import '../../../library_profile/presentation/widgets/track_preview_waveform_section.dart';
 import '../notifiers/track_audio_notifier.dart';
 import '../state/track_audio_state.dart';
 
-class InteractiveWaveform extends StatefulWidget {
+class InteractiveWaveform extends StatelessWidget {
   const InteractiveWaveform({
     super.key,
     required this.peaks,
@@ -18,14 +16,6 @@ class InteractiveWaveform extends StatefulWidget {
   final TrackAudioState audioState;
   final TrackAudioNotifier audioNotifier;
 
-  /// Builds a draggable waveform bound to the audio notifier.
-  @override
-  State<InteractiveWaveform> createState() => _InteractiveWaveformState();
-}
-
-class _InteractiveWaveformState extends State<InteractiveWaveform> {
-  int? _lastHapticPeakIndex;
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -36,41 +26,24 @@ class _InteractiveWaveformState extends State<InteractiveWaveform> {
 
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onHorizontalDragStart: (_) {
-              widget.audioNotifier.onDragStart();
-              _lastHapticPeakIndex = null;
-            },
+            onHorizontalDragStart: (_) => audioNotifier.onDragStart(),
             onHorizontalDragUpdate: (details) {
               final progress = (details.localPosition.dx / waveformWidth).clamp(
                 0.0,
                 1.0,
               );
-              widget.audioNotifier.onDragUpdate(progress);
-
-              if (widget.peaks.isNotEmpty) {
-                final currentPeakIndex = (progress * widget.peaks.length)
-                    .floor()
-                    .clamp(0, widget.peaks.length - 1);
-
-                if (_lastHapticPeakIndex != currentPeakIndex) {
-                  _lastHapticPeakIndex = currentPeakIndex;
-                  if (!ResponsiveUtils.isDesktop(context)) {
-                    HapticFeedback.selectionClick();
-                  }
-                }
-              }
+              audioNotifier.onDragUpdate(progress);
             },
             onHorizontalDragEnd: (_) async {
-              await widget.audioNotifier.onDragEnd(
-                widget.audioState.dragProgress ?? widget.audioState.progress,
+              await audioNotifier.onDragEnd(
+                audioState.dragProgress ?? audioState.progress,
               );
-              _lastHapticPeakIndex = null;
             },
             child: TrackWaveform(
-              peaks: widget.peaks,
-              playedPosition: widget.audioState.position,
-              totalDuration: widget.audioState.duration,
-              dragPosition: widget.audioState.dragPosition,
+              peaks: peaks,
+              playedPosition: audioState.position,
+              totalDuration: audioState.duration,
+              dragPosition: audioState.dragPosition,
               height: 140,
             ),
           );

@@ -4,12 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../library_profile/presentation/widgets/pro_badge.dart';
 import '../../domain/entities/paginated_engagers.dart';
 import '../../domain/entities/track_engager.dart';
 import '../providers/follow_connections_provider.dart';
@@ -45,14 +43,13 @@ class FollowConnectionsScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        scrolledUnderElevation: 0,
-        title: Semantics(
-          identifier: 'follow_connections_title',
-          label: primaryTitle[0].toUpperCase() + primaryTitle.substring(1),
-          container: true,
-          child: Text(
-            primaryTitle[0].toUpperCase() + primaryTitle.substring(1),
-          ),
+        title: Text(
+          primaryTitle[0].toUpperCase() + primaryTitle.substring(1),
+          style: const TextStyle(color: AppColors.onPrimary),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
+          onPressed: () => context.pop(),
         ),
       ),
       body: RefreshIndicator(
@@ -107,82 +104,64 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final heading = title[0].toUpperCase() + title.substring(1);
 
-    return Semantics(
-      identifier: 'follow_section_${title.replaceAll(' ', '_')}',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            heading,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: AppColors.onPrimary,
-              fontWeight: FontWeight.bold,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          heading,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: AppColors.onPrimary,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: AppConstants.spacingSmall),
-          data.when(
-            data: (page) {
-              if (page.content.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppConstants.spacingRegular,
-                  ),
-                  child: Text(
-                    emptyMessage,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                );
-              }
-
-              return Column(
-                children: page.content
-                    .map(
-                      (user) => _ConnectionTile(
-                        user: user,
-                        isFollowerContext: itemsAreFollowers,
-                        currentUserId: currentUserId,
-                      ),
-                    )
-                    .toList(),
-              );
-            },
-            loading: () => Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppConstants.spacingRegular,
-              ),
-              child: Center(
-                child: Semantics(
-                  identifier: 'follow_connections_loading',
-                  label: 'Loading connections',
-                  child: const CircularProgressIndicator(),
+        ),
+        const SizedBox(height: AppConstants.spacingSmall),
+        data.when(
+          data: (page) {
+            if (page.content.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppConstants.spacingRegular,
                 ),
-              ),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppConstants.spacingRegular,
-              ),
-              child: Semantics(
-                identifier: 'follow_connections_error',
-                label: 'Error: ${error.toString()}',
                 child: Text(
-                  error is NotFoundFailure
-                      ? '404 | Not Found'
-                      : error.toString().replaceAll('Exception: ', ''),
+                  emptyMessage,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.errors,
-                    fontWeight: error is NotFoundFailure
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    color: AppColors.textSecondary,
                   ),
                 ),
-              ),
+              );
+            }
+
+            return Column(
+              children: page.content
+                  .map(
+                    (user) => _ConnectionTile(
+                      user: user,
+                      isFollowerContext: itemsAreFollowers,
+                      currentUserId: currentUserId,
+                    ),
+                  )
+                  .toList(),
+            );
+          },
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: AppConstants.spacingRegular,
+            ),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, _) => Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppConstants.spacingRegular,
+            ),
+            child: Text(
+              error.toString().replaceAll('Exception: ', ''),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.errors),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -210,91 +189,59 @@ class _ConnectionTile extends ConsumerWidget {
 
       ref.read(followBackHintProvider(user.id).notifier).state =
           isFollowerContext;
-      context.push(RoutePaths.publicProfile(user.id.toString()));
+      context.push(RoutePaths.publicProfile(user.id));
     }
 
-    return Semantics(
-      identifier: 'connection_tile_${user.id}',
-      label: 'User ${user.displayName ?? user.username}',
-      container: true,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: AppConstants.spacingSmall,
-        ),
-        child: Row(
-          children: [
-            Semantics(
-              identifier: 'connection_avatar_${user.id}',
-              label: '${user.displayName ?? user.username}\'s avatar',
-              button: true,
-              child: GestureDetector(
-                onTap: openProfile,
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundColor: AppColors.surface,
-                  child: ClipOval(
-                    child: user.avatarUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: user.avatarUrl!,
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => const Icon(
-                              Icons.person,
-                              color: AppColors.onPrimary,
-                            ),
-                            errorWidget: (context, url, error) => const Icon(
-                              Icons.person,
-                              color: AppColors.onPrimary,
-                            ),
-                          )
-                        : const Icon(Icons.person, color: AppColors.onPrimary),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppConstants.spacingSmall),
-            Expanded(
-              child: Semantics(
-                identifier: 'connection_name_${user.id}',
-                label: user.displayName ?? user.username,
-                button: true,
-                child: GestureDetector(
-                  onTap: openProfile,
-                  behavior: HitTestBehavior.opaque,
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          (user.displayName?.isNotEmpty == true)
-                              ? user.displayName!
-                              : user.username,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: AppColors.onPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingSmall),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: openProfile,
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.surface,
+              child: ClipOval(
+                child: user.avatarUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: user.avatarUrl!,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Icon(
+                          Icons.person,
+                          color: AppColors.onPrimary,
                         ),
-                      ),
-                      if (user.tier.toUpperCase() == 'PRO') ...[
-                        const SizedBox(width: AppConstants.spacingTiny),
-                        const ProBadge(),
-                      ],
-                    ],
-                  ),
+                        errorWidget: (context, url, error) => const Icon(
+                          Icons.person,
+                          color: AppColors.onPrimary,
+                        ),
+                      )
+                    : const Icon(Icons.person, color: AppColors.onPrimary),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppConstants.spacingSmall),
+          Expanded(
+            child: GestureDetector(
+              onTap: openProfile,
+              behavior: HitTestBehavior.opaque,
+              child: Text(
+                user.username,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppColors.onPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            if (!isCurrentUser)
-              _InlineFollowButton(
-                userId: user.id,
-                initialIsFollowing: user.isFollowing,
-                showFollowBackWhenNotFollowing: isFollowerContext,
-              ),
-          ],
-        ),
+          ),
+          if (!isCurrentUser)
+            _InlineFollowButton(
+              userId: user.id,
+              initialIsFollowing: user.isFollowing,
+              showFollowBackWhenNotFollowing: isFollowerContext,
+            ),
+        ],
       ),
     );
   }
@@ -336,26 +283,21 @@ class _InlineFollowButtonState extends ConsumerState<_InlineFollowButton> {
         ? 'Following'
         : (widget.showFollowBackWhenNotFollowing ? 'Follow Back' : 'Follow');
 
-    return Semantics(
-      identifier: 'inline_follow_button_${widget.userId}',
-      label: label,
-      button: true,
-      child: OutlinedButton(
-        onPressed: () {
-          ref.read(followStateProvider(widget.userId).notifier).toggleFollow();
-        },
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(
-            color: isFollowing ? AppColors.borderLight : AppColors.primary,
-          ),
-          minimumSize: const Size(0, 32),
+    return OutlinedButton(
+      onPressed: () {
+        ref.read(followStateProvider(widget.userId).notifier).toggleFollow();
+      },
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(
+          color: isFollowing ? AppColors.borderLight : AppColors.primary,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isFollowing ? AppColors.onPrimary : AppColors.primary,
-            fontSize: AppConstants.fontSizeSmall,
-          ),
+        minimumSize: const Size(0, 32),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: isFollowing ? AppColors.onPrimary : AppColors.primary,
+          fontSize: AppConstants.fontSizeSmall,
         ),
       ),
     );

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -32,10 +31,13 @@ class BlockedUserTile extends StatelessWidget {
               backgroundColor: AppColors.surfaceVariant,
               backgroundImage:
                   user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                  ? CachedNetworkImageProvider(user.avatarUrl!)
-                  : null,
+                      ? NetworkImage(user.avatarUrl!)
+                      : null,
               child: user.avatarUrl == null || user.avatarUrl!.isEmpty
-                  ? const Icon(Icons.person, color: AppColors.textMuted)
+                  ? const Icon(
+                      Icons.person,
+                      color: AppColors.textMuted,
+                    )
                   : null,
             ),
             const SizedBox(width: AppDimensions.paddingMd),

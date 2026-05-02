@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/paginated_tracks_model.dart';
 import '../models/track_model.dart';
@@ -32,7 +32,14 @@ class LibraryRemoteDatasource {
       throw Exception('Empty response');
     }
 
-    final normalizedData = _normalizePaginatedTracksPayload(data);
+    final normalizedData = Map<String, dynamic>.from(data);
+    final content = normalizedData['content'];
+    if (content is List) {
+      normalizedData['content'] = content
+          .whereType<Map<String, dynamic>>()
+          .map(_normalizeTrackJson)
+          .toList();
+    }
 
     return PaginatedTracksModel.fromJson(normalizedData);
   }
@@ -52,7 +59,14 @@ class LibraryRemoteDatasource {
       throw Exception('Empty response');
     }
 
-    final normalizedData = _normalizePaginatedTracksPayload(data);
+    final normalizedData = Map<String, dynamic>.from(data);
+    final content = normalizedData['content'];
+    if (content is List) {
+      normalizedData['content'] = content
+          .whereType<Map<String, dynamic>>()
+          .map(_normalizeTrackJson)
+          .toList();
+    }
 
     return PaginatedTracksModel.fromJson(normalizedData);
   }
@@ -82,45 +96,6 @@ class LibraryRemoteDatasource {
       }
       return _fetchTrackByIdFallbackFromUserTracks(id);
     }
-  }
-
-  Future<int> resolveTrackIdentifier(String trackIdentifier) async {
-    final trimmed = trackIdentifier.trim();
-    if (trimmed.isEmpty) {
-      throw Exception('Track identifier is empty');
-    }
-
-    final parsedId = int.tryParse(trimmed);
-    if (parsedId != null) {
-      return parsedId;
-    }
-
-    final encodedSlug = Uri.encodeComponent(trimmed);
-    final response = await _dioClient.get<Map<String, dynamic>>(
-      ApiConstants.resolveTrackBySlug(encodedSlug),
-    );
-
-    final payload = response.data;
-    if (payload == null) {
-      throw Exception('Empty track resolve response');
-    }
-
-    final body = payload['data'] is Map<String, dynamic>
-        ? payload['data'] as Map<String, dynamic>
-        : payload;
-
-    final rawId = body['id'];
-    final resolvedId = switch (rawId) {
-      int value => value,
-      String value => int.tryParse(value),
-      _ => null,
-    };
-
-    if (resolvedId == null) {
-      throw Exception('Invalid track resolve response payload');
-    }
-
-    return resolvedId;
   }
 
   Future<TrackModel> updateTrackMetadata({
@@ -204,10 +179,6 @@ class LibraryRemoteDatasource {
     await _dioClient.delete<dynamic>('/tracks/$trackId/cover');
   }
 
-  Future<void> deleteTrack(int trackId) async {
-    await _dioClient.delete<dynamic>('${ApiConstants.tracks}/$trackId');
-  }
-
   Future<String> fetchTrackStatusById(int id) async {
     // Backend-driven processing state source used by uploads polling.
     final response = await _dioClient.get<Object?>('/tracks/$id/status');
@@ -218,8 +189,8 @@ class LibraryRemoteDatasource {
     return normalized;
   }
 
-  Future<TrackPeaksModel> fetchTrackPeaks(int id, {String? waveformUrl}) async {
-    waveformUrl ??= await _resolveWaveformUrl(id);
+  Future<TrackPeaksModel> fetchTrackPeaks(int id) async {
+    final waveformUrl = await _resolveWaveformUrl(id);
     if (waveformUrl == null || waveformUrl.trim().isEmpty) {
       throw Exception('Empty waveformUrl');
     }
@@ -229,6 +200,10 @@ class LibraryRemoteDatasource {
     if (peaksData == null) {
       throw Exception('Empty waveform payload');
     }
+    debugPrint(
+      'WaveformDebug blob raw payload type=${peaksData.runtimeType}: $peaksData',
+    );
+
     final normalizedPayload = _normalizeTrackPeaksPayload(
       trackId: id,
       payload: peaksData,
@@ -237,6 +212,14 @@ class LibraryRemoteDatasource {
     if (normalizedPayload == null) {
       throw Exception('Invalid waveform payload');
     }
+
+    final normalizedPeaks = normalizedPayload['peaks'];
+    final normalizedCount = normalizedPeaks is List
+        ? normalizedPeaks.length
+        : 'unknown';
+    debugPrint(
+      'WaveformDebug blob normalized peaks (count=$normalizedCount): $normalizedPeaks',
+    );
 
     return TrackPeaksModel.fromJson(normalizedPayload);
   }
@@ -259,9 +242,7 @@ class LibraryRemoteDatasource {
       if (fallback != null && fallback.trim().isNotEmpty) {
         return fallback;
       }
-    } catch (_) {
-      // Ignore wrapper exception
-    }
+    } catch (_) {}
 
     return null;
   }
@@ -480,19 +461,16 @@ class LibraryRemoteDatasource {
   }) {
     // Normalize payload differences so strict model parsing stays stable.
     final nowIso = DateTime.now().toIso8601String();
-    final normalizedTrackUrl = (trackJson['trackUrl'] as String?)?.trim();
     final rawState = (trackJson['state'] ?? trackJson['status'])
         ?.toString()
         .toUpperCase();
+    final waveformUrl = trackJson['waveformUrl'] as String?;
+    final hasWaveformUrl = waveformUrl != null && waveformUrl.trim().isNotEmpty;
 
     final normalizedState = switch (rawState) {
-      'FAILED' => 'FAILED',
       'FINISHED' => 'FINISHED',
       'PROCESSING' || 'UPLOADING' => 'PROCESSING',
-      _ =>
-        (normalizedTrackUrl == null || normalizedTrackUrl.isEmpty)
-            ? 'PROCESSING'
-            : 'FINISHED',
+      _ => hasWaveformUrl ? 'FINISHED' : 'PROCESSING',
     };
 
     final normalized = <String, dynamic>{
@@ -510,30 +488,5 @@ class LibraryRemoteDatasource {
     }
 
     return normalized;
-  }
-
-  Map<String, dynamic> _normalizePaginatedTracksPayload(
-    Map<String, dynamic> data,
-  ) {
-    final nestedData = data['data'];
-    final source = nestedData is Map<String, dynamic> ? nestedData : data;
-    final normalizedData = Map<String, dynamic>.from(source);
-    final content = normalizedData['content'];
-
-    if (content is List) {
-      normalizedData['content'] = content
-          .whereType<Map<String, dynamic>>()
-          .map(_normalizeTrackJson)
-          .toList();
-    }
-
-    normalizedData['pageNumber'] ??= normalizedData['number'] ?? 0;
-    normalizedData['pageSize'] ??= normalizedData['size'] ?? 0;
-    normalizedData['totalElements'] ??=
-        (normalizedData['content'] as List?)?.length ?? 0;
-    normalizedData['totalPages'] ??= 1;
-    normalizedData['isLast'] ??= normalizedData['last'] ?? true;
-
-    return normalizedData;
   }
 }

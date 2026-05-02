@@ -9,5 +9,4 @@ part of 'track_status_model.dart';
 const _$TrackStatusModelEnumMap = {
   TrackStatusModel.processing: 'PROCESSING',
   TrackStatusModel.finished: 'FINISHED',
-  TrackStatusModel.failed: 'FAILED',
 };

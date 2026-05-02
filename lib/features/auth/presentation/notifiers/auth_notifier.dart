@@ -3,12 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/app_reset_provider.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/events/auth_event_bus.dart';
-import '../../../../core/storage/secure_storage_service.dart';
 import '../../domain/entities/auth_state.dart';
-import '../../domain/repositories/i_auth_repository.dart';
 import '../providers/auth_provider.dart';
 
 /// Manages the authentication state of the application.
@@ -30,6 +27,9 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   FutureOr<AuthState> build() async {
     // Listen for forced logouts from interceptors or other backend-driven events
     final logoutSub = AuthEventBus().logoutStream.listen((_) {
+      debugPrint(
+        '[AuthNotifier] Received forced logout event from AuthEventBus',
+      );
       logout();
     });
 
@@ -53,7 +53,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         }
         return const AuthUnauthenticated();
       });
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[AuthNotifier] build() failed: $e\n$st');
       return const AuthUnauthenticated();
     }
   }
@@ -64,9 +65,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       final repo = ref.read(authRepositoryProvider);
       final userEither = await repo.getCurrentUser();
       userEither.fold(
-        (failure) {
-          // Ignore wrapper exception
-        }, // ignore failure
+        (failure) {}, // ignore failure
         (user) {
           if (user != null) {
             state = AsyncData(AuthAuthenticated(user: user));
@@ -77,34 +76,40 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   Future<void> loginWithGoogle() async {
+    debugPrint('[AuthNotifier] loginWithGoogle() started.');
     state = const AsyncLoading();
-    String? failureMessage;
 
     try {
       final repo = ref.read(authRepositoryProvider);
-
+      
+      debugPrint('[AuthNotifier] calling repo.loginWithGoogle()...');
       final userEither = await repo.loginWithGoogle();
 
-      userEither.fold(
+      final user = userEither.fold(
         (failure) {
-          failureMessage = failure.message;
-          state = const AsyncData(AuthUnauthenticated());
+          debugPrint('[AuthNotifier] Failure: ${failure.message}');
+          throw Exception(failure.message);
         },
         (user) {
-          state = AsyncData(AuthAuthenticated(user: user));
+          debugPrint(
+            '[AuthNotifier] repo.loginWithGoogle() succeeded! User: ${user.username} (ID: ${user.id}, Tier: ${user.tier.name})',
+          );
+          return user;
         },
       );
+      
+      state = AsyncData(AuthAuthenticated(user: user));
     } on AppException catch (e) {
+      debugPrint('[AuthNotifier] AppException: ${e.message}');
       state = const AsyncData(AuthUnauthenticated());
       throw Exception(e.message);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[AuthNotifier] Unexpected Exception: $e\n$st');
       state = const AsyncData(AuthUnauthenticated());
       throw Exception(e.toString());
     }
 
-    if (failureMessage != null) {
-      throw Exception(failureMessage);
-    }
+    debugPrint('[AuthNotifier] State is now: $state');
   }
 
   Future<void> loginWithEmailPassword({
@@ -125,7 +130,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         (failure) => throw Exception(failure.message),
         (user) => user,
       );
-
+      
       state = AsyncData(AuthAuthenticated(user: user));
     } catch (e) {
       state = const AsyncData(AuthUnauthenticated());
@@ -170,29 +175,12 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       logoutResult.fold(
         (failure) =>
             debugPrint('[AuthNotifier] logout failed: ${failure.message}'),
-        (_) async {
-          await _invalidateUserCaches();
-        },
+        (_) => debugPrint('[AuthNotifier] logout succeeded.'),
       );
-    } catch (e) {
-      await _invalidateUserCaches();
+    } catch (e, st) {
+      debugPrint('[AuthNotifier] Unexpected Exception during logout: $e\n$st');
     } finally {
       state = const AsyncData(AuthUnauthenticated());
     }
-  }
-
-  Future<void> _invalidateUserCaches() async {
-    // Forces a total destruction and recreation of the ProviderScope.
-    await ref.read(appResetProvider.notifier).reset();
-  }
-
-  Future<(String, int?)> resendVerificationCode({required String email}) async {
-    final repo = ref.read(authRepositoryProvider);
-    final result = await repo.resendVerificationCode(email: email);
-
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (response) => response,
-    );
   }
 }

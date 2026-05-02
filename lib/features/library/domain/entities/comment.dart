@@ -8,7 +8,6 @@ class Comment {
     this.timestampSeconds,
     required this.createdAt,
     required this.replycount,
-    this.replyToCommentId,
   });
   final int commentid;
   final CommentUser user;
@@ -17,5 +16,4 @@ class Comment {
   final DateTime createdAt;
 
   final int replycount;
-  final int? replyToCommentId;
 }

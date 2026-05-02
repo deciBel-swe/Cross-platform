@@ -1,8 +1,6 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/playlist.dart';
 import 'playlist_options_bottom_sheet.dart';
@@ -16,7 +14,7 @@ class PlaylistTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
         children: [
           _PlaylistCoverArt(coverArtPath: playlist.coverArt),
@@ -39,8 +37,6 @@ class _PlaylistCoverArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final coverArtPath = this.coverArtPath?.trim();
-
     return Container(
       width: 56,
       height: 56,
@@ -48,41 +44,18 @@ class _PlaylistCoverArt extends StatelessWidget {
         color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(4),
       ),
-      child: coverArtPath != null && coverArtPath.isNotEmpty
+      child: (coverArtPath != null && coverArtPath!.trim().isNotEmpty)
           ? ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: _isRemote(coverArtPath)
-                  ? CachedNetworkImage(
-                      imageUrl: coverArtPath,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          const _PlaylistCoverPlaceholder(),
-                      errorWidget: (context, url, error) =>
-                          const _PlaylistCoverPlaceholder(),
-                    )
-                  : Image.file(
-                      File(coverArtPath),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stack) =>
-                          const _PlaylistCoverPlaceholder(),
-                    ),
+              child: Image.file(
+                File(coverArtPath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) =>
+                    const Icon(Icons.music_note, color: AppColors.textMuted),
+              ),
             )
-          : const _PlaylistCoverPlaceholder(),
+          : const Icon(Icons.music_note, color: AppColors.textMuted),
     );
-  }
-
-  bool _isRemote(String path) {
-    final uri = Uri.tryParse(path);
-    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
-  }
-}
-
-class _PlaylistCoverPlaceholder extends StatelessWidget {
-  const _PlaylistCoverPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Icon(Icons.music_note, color: AppColors.textMuted);
   }
 }
 
@@ -93,14 +66,6 @@ class _PlaylistDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ownerName = playlist.owner?.displayName?.trim().isNotEmpty == true
-        ? playlist.owner!.displayName!.trim()
-        : playlist.owner?.username.trim();
-    final trackCount = playlist.trackCount > 0
-        ? playlist.trackCount
-        : playlist.tracks.length;
-    final trackLabel = trackCount == 1 ? 'Track' : 'Tracks';
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -115,22 +80,17 @@ class _PlaylistDetails extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
-        if (ownerName != null && ownerName.isNotEmpty) ...[
-          Text(
-            ownerName,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-        ],
+        Text(
+          playlist.owner.username.toUpperCase(),
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 4),
         Row(
           children: [
             Text(
-              'Playlist - $trackCount $trackLabel',
+              'Playlist • ${playlist.tracks.length} Tracks',
               style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
             const SizedBox(width: 4),

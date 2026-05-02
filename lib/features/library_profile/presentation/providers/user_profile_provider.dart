@@ -6,7 +6,6 @@ import '../../domain/entities/user_profile.dart';
 import '../notifiers/user_profile_notifier.dart';
 
 final userProfileProvider =
-    AsyncNotifierProvider.autoDispose<
-      UserProfileNotifier,
-      Either<Failure, UserProfile>
-    >(UserProfileNotifier.new);
+    AsyncNotifierProvider<UserProfileNotifier, Either<Failure, UserProfile>>(
+      UserProfileNotifier.new,
+    );

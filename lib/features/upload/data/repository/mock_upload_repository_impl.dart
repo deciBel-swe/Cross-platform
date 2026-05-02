@@ -8,7 +8,6 @@ import '../../../library/data/datasources/library_mock_fixtures.dart';
 import '../../../library/data/models/track_model.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/track_upload_metadata.dart';
-import '../../domain/entities/track_upload_status.dart';
 import '../../domain/repositories/i_upload_repository.dart';
 import '../models/track_metadata_model.dart';
 
@@ -74,7 +73,6 @@ class MockUploadRepository implements IUploadRepository {
         'genre': model.genre,
         'tags': model.tags ?? const <String>[],
         'state': 'PROCESSING',
-        'access': model.access,
         'releaseDate': model.releaseDate,
         'playCount': 0,
         'likeCount': 0,
@@ -99,10 +97,14 @@ class MockUploadRepository implements IUploadRepository {
           LibraryMockFixtures.trackMetaDataById[id]!['state'] = 'FINISHED';
         }
         if (kDebugMode) {
+          debugPrint('[MockUploadRepository] Finished processing track id=$id');
         }
       });
 
       if (kDebugMode) {
+        debugPrint(
+          '[MockUploadRepository] inserted track id=$id, allTracks=${LibraryMockFixtures.allTracks.length}',
+        );
       }
 
       final peaks = _peaksFromWaveFormData(model.waveFormData);
@@ -117,40 +119,20 @@ class MockUploadRepository implements IUploadRepository {
       }
 
       if (kDebugMode) {
+        debugPrint(
+          '[MockUploadRepository] stored peaks for trackId=$id, peaks=${peaks.length}',
+        );
       }
 
       final trackModel = TrackModel.fromJson(trackJson);
       return Right(trackModel.toEntity());
     } catch (e) {
       if (kDebugMode) {
-      // Ignore wrapper exception
-    }
+        debugPrint('[MockUploadRepository] error: $e');
+      }
       return const Left(
         ServerFailure('An unexpected error occurred during file upload'),
       );
-    }
-  }
-
-  @override
-  Stream<TrackUploadStatus> watchUploadStatus(String uploadId) async* {
-    // Simulate a network upload stream going from 0 to 100%
-    for (int i = 0; i <= 100; i += 10) {
-      // ignore: inference_failure_on_instance_creation
-      await Future.delayed(const Duration(milliseconds: 400));
-      yield TrackUploadStatus(
-        state: i >= 100
-            ? TrackUploadState.finished
-            : TrackUploadState.processing,
-        progressPercentage: i,
-        stepName: i >= 100 ? 'Ready' : 'Processing audio',
-      );
-    }
-  }
-
-  @override
-  void cancelUploadStatusSubscription(String uploadId) {
-    // No-op for the mock
-    if (kDebugMode) {
     }
   }
 }

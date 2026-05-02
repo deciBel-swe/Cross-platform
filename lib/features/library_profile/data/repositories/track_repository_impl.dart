@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -13,16 +10,14 @@ import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/domain/entities/track_edit_request.dart';
 import '../../../library/domain/entities/track_peaks.dart';
-import '../../../offline/data/datasources/offline_local_data_source.dart';
 import '../../domain/repositories/track_repository.dart';
 
 @Environment('prod')
 @LazySingleton(as: TrackRepository)
 class TrackRepositoryImpl implements TrackRepository {
-  const TrackRepositoryImpl(this._remote, this._offlineLocalDataSource);
+  const TrackRepositoryImpl(this._remote);
 
   final LibraryRemoteDatasource _remote;
-  final OfflineLocalDataSource _offlineLocalDataSource;
 
   @override
   Future<Either<Failure, PaginatedTracks>> fetchMyTracks({
@@ -33,7 +28,7 @@ class TrackRepositoryImpl implements TrackRepository {
       final model = await _remote.fetchMyTracks(page: page, size: size);
       return Right(model.toEntity());
     } catch (e) {
-      return Left(_toFailure(e));
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -51,7 +46,7 @@ class TrackRepositoryImpl implements TrackRepository {
       );
       return Right(model.toEntity());
     } catch (e) {
-      return Left(_toFailure(e));
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -61,31 +56,7 @@ class TrackRepositoryImpl implements TrackRepository {
       final model = await _remote.fetchTrackById(id);
       return Right(model.toEntity());
     } catch (e) {
-      final failure = _toFailure(e);
-      if (failure is NetworkFailure) {
-        try {
-          final offlineTrack = await _offlineLocalDataSource
-              .getOfflineTrackById(id);
-          if (offlineTrack != null) {
-            return Right(offlineTrack);
-          }
-        } catch (_) {
-          // Ignore wrapper exception
-        }
-      }
-      return Left(failure);
-    }
-  }
-
-  @override
-  Future<Either<Failure, int>> resolveTrackIdentifier(
-    String trackIdentifier,
-  ) async {
-    try {
-      final trackId = await _remote.resolveTrackIdentifier(trackIdentifier);
-      return Right(trackId);
-    } catch (e) {
-      return Left(_toFailure(e));
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -96,38 +67,17 @@ class TrackRepositoryImpl implements TrackRepository {
       final status = await _remote.fetchTrackStatusById(id);
       return Right(status);
     } catch (e) {
-      return Left(_toFailure(e));
+      return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(
-    int id, {
-    String? waveformUrl,
-  }) async {
-    final cachedPeaks = await _offlineLocalDataSource.getOfflineTrackPeaksById(
-      id,
-    );
-    if (cachedPeaks != null) {
-      return Right(cachedPeaks);
-    }
-
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id) async {
     try {
-      final model = await _remote.fetchTrackPeaks(id, waveformUrl: waveformUrl);
-      try {
-        await _offlineLocalDataSource.saveTrackPeaks(model);
-      } catch (_) {
-        // Best-effort cache; do not fail waveform fetch on cache errors.
-      }
+      final model = await _remote.fetchTrackPeaks(id);
       return Right(model.toEntity());
     } catch (e) {
-      final offlinePeaks = await _offlineLocalDataSource
-          .getOfflineTrackPeaksById(id);
-      if (offlinePeaks != null) {
-        return Right(offlinePeaks);
-      }
-
-      return Left(_toFailure(e));
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -149,17 +99,7 @@ class TrackRepositoryImpl implements TrackRepository {
       );
       return Right(model.toEntity());
     } catch (e) {
-      return Left(_toFailure(e));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> deleteTrack(int trackId) async {
-    try {
-      await _remote.deleteTrack(trackId);
-      return const Right(true);
-    } catch (e) {
-      return Left(_toFailure(e));
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -169,23 +109,7 @@ class TrackRepositoryImpl implements TrackRepository {
       await _remote.deleteTrackCover(trackId);
       return const Right(true);
     } catch (e) {
-      return Left(_toFailure(e));
+      return Left(ServerFailure(e.toString()));
     }
-  }
-
-  Failure _toFailure(Object error) {
-    if (error is DioException &&
-        (error.type == DioExceptionType.connectionError ||
-            error.type == DioExceptionType.connectionTimeout ||
-            error.type == DioExceptionType.receiveTimeout ||
-            error.type == DioExceptionType.sendTimeout ||
-            (error.type == DioExceptionType.unknown &&
-                error.error is SocketException))) {
-      return const NetworkFailure(
-        'No internet connection. Offline content is still available.',
-      );
-    }
-
-    return ServerFailure(error.toString());
   }
 }

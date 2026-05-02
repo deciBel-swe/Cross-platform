@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../../core/network/dio_error_handler.dart';
 import '../models/track_dto.dart';
 
 abstract class ITrackRemoteDataSource {
@@ -34,7 +33,7 @@ class TrackRemoteDataSourceImpl implements ITrackRemoteDataSource {
           .map((trackJson) => TrackDto.fromJson(trackJson))
           .toList();
     } on DioException catch (e) {
-      throw DioErrorHandler.handle(e, fallback: 'Failed to fetch tracks');
+      throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
       throw ServerException(e.toString());
     }

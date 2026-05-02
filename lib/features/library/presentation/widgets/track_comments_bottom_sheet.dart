@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/widgets/right_side_panel.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 import '../../domain/entities/track.dart';
-import '../providers/track_comment_provider.dart';
+import '../notifiers/track_comment_notifier.dart';
 import '../utils/mention_text_editing_controller.dart';
-import '../utils/track_comment_formatters.dart';
 import 'track_comment_tile.dart';
 import 'track_comments_context_tile.dart';
 import 'track_comments_header.dart';
@@ -16,31 +15,16 @@ class TrackCommentsBottomSheet extends ConsumerStatefulWidget {
     super.key,
     required this.trackId,
     required this.track,
-    this.asSidePanel = false,
   });
   final int trackId;
   final Track track;
-  final bool asSidePanel;
 
-  /// Opens comments as a side panel on desktop and as a sheet elsewhere.
   static Future<void> show(
     BuildContext context, {
     required int trackId,
     required Track track,
   }) {
-    if (isDesktopPanelLayout(context)) {
-      return showRightSidePanel<void>(
-        context: context,
-        child: TrackCommentsBottomSheet(
-          trackId: trackId,
-          track: track,
-          asSidePanel: true,
-        ),
-      );
-    }
-
-    return showModalBottomSheet<void>(
-      useSafeArea: true,
+    return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -53,7 +37,6 @@ class TrackCommentsBottomSheet extends ConsumerStatefulWidget {
     );
   }
 
-  /// Creates the state that owns the input controller.
   @override
   ConsumerState<TrackCommentsBottomSheet> createState() =>
       _TrackCommentsBottomSheetState();
@@ -68,26 +51,34 @@ class _TrackCommentsBottomSheetState
       MentionTextEditingController();
   final FocusNode _focusNode = FocusNode();
 
-  /// Captures the starting timestamp and wires input changes to the notifier.
   @override
   void initState() {
     super.initState();
-    final notifier = ref.read(trackCommentsProvider(widget.trackId).notifier);
-    _staticSeconds = notifier.currentPlaybackSecond();
-    _staticFormattedTime = TrackCommentFormatters.formatTimestamp(
-      _staticSeconds,
-    );
+    final audioState = ref.read(trackAudioProvider);
+    _staticSeconds = (audioState.duration.inSeconds * audioState.progress)
+        .round();
+    final m = _staticSeconds ~/ 60;
+    final s = _staticSeconds % 60;
+    _staticFormattedTime = '$m:${s.toString().padLeft(2, '0')}';
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifier.selectTimestamp(_staticSeconds);
+      ref
+          .read(trackCommentsProvider(widget.trackId).notifier)
+          .selectTimestamp(_staticSeconds);
     });
 
     _commentController.addListener(() {
-      notifier.clearReplyModeIfInputIsEmpty(_commentController.text);
+      if (_commentController.text.isEmpty) {
+        final state = ref.read(trackCommentsProvider(widget.trackId));
+        if (state.activeReplyCommentId != null) {
+          ref
+              .read(trackCommentsProvider(widget.trackId).notifier)
+              .clearReplyMode();
+        }
+      }
     });
   }
 
-  /// Disposes the comment input resources.
   @override
   void dispose() {
     _commentController.dispose();
@@ -95,7 +86,6 @@ class _TrackCommentsBottomSheetState
     super.dispose();
   }
 
-  /// Builds the comments panel content.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -121,12 +111,7 @@ class _TrackCommentsBottomSheetState
     return Container(
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        borderRadius: widget.asSidePanel
-            ? const BorderRadius.horizontal(left: Radius.circular(18))
-            : const BorderRadius.vertical(top: Radius.circular(24)),
-        border: widget.asSidePanel
-            ? const Border(left: BorderSide(color: Colors.white12, width: 0.5))
-            : null,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [

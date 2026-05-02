@@ -10,7 +10,6 @@ import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/domain/entities/track_edit_request.dart';
 import '../../../library/domain/entities/track_peaks.dart';
-import '../../../library/domain/entities/track_status.dart';
 import '../../domain/repositories/track_repository.dart';
 
 @Environment('mock')
@@ -36,38 +35,18 @@ class MockTrackRepository implements TrackRepository {
   }
 
   @override
-  Future<Either<Failure, int>> resolveTrackIdentifier(
-    String trackIdentifier,
-  ) async {
-    final parsed = int.tryParse(trackIdentifier);
-    if (parsed != null) {
-      return Right(parsed);
-    }
-
-    return Left(
-      ServerFailure('Mock resolver could not resolve track: $trackIdentifier'),
-    );
-  }
-
-  @override
   Future<Either<Failure, String>> fetchTrackStatusById(int id) async {
     // Simulate backend status from current mock track state.
     final trackResult = await fetchTrackById(id);
     return trackResult.fold(
       (failure) => Left(failure),
-      (track) => Right(switch (track.state) {
-        TrackStatus.finished => 'FINISHED',
-        TrackStatus.failed => 'FAILED',
-        TrackStatus.processing => 'PROCESSING',
-      }),
+      (track) =>
+          Right(track.state.name == 'finished' ? 'FINISHED' : 'PROCESSING'),
     );
   }
 
   @override
-  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(
-    int id, {
-    String? waveformUrl,
-  }) async {
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id) async {
     final peaksModel = await const LibraryMockDatasource().fetchTrackPeaks(id);
 
     return Right(peaksModel.toEntity());
@@ -104,16 +83,6 @@ class MockTrackRepository implements TrackRepository {
             coverImage: request.coverImage,
           );
       return Right(trackModel.toEntity());
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> deleteTrack(int trackId) async {
-    try {
-      await const LibraryMockDatasource().deleteTrack(trackId);
-      return const Right(true);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

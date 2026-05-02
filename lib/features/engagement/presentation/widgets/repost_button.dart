@@ -10,7 +10,7 @@ import '../providers/track_social_provider.dart';
 import 'social_action_button.dart';
 import 'track_engagers_bottom_sheet.dart';
 
-class RepostButton extends ConsumerWidget {
+class RepostButton extends ConsumerStatefulWidget {
   const RepostButton({
     super.key,
     required this.trackId,
@@ -18,7 +18,6 @@ class RepostButton extends ConsumerWidget {
     required this.repostCount,
     this.iconSize,
     this.fontSize,
-    this.isVertical = false,
   });
 
   final int trackId;
@@ -26,13 +25,27 @@ class RepostButton extends ConsumerWidget {
   final int repostCount;
   final double? iconSize;
   final double? fontSize;
-  final bool isVertical;
 
-  void _handleTap(
-    BuildContext context,
-    WidgetRef ref,
-    bool isCurrentlyReposted,
-  ) {
+  @override
+  ConsumerState<RepostButton> createState() => _RepostButtonState();
+}
+
+class _RepostButtonState extends ConsumerState<RepostButton> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(trackSocialProvider.notifier)
+          .mergeTrack(
+            widget.trackId,
+            isReposted: widget.isReposted,
+            repostCount: widget.repostCount,
+          );
+    });
+  }
+
+  void _handleTap(BuildContext context, bool isCurrentlyReposted) {
     if (isCurrentlyReposted) {
       showDialog<bool>(
         context: context,
@@ -69,46 +82,51 @@ class RepostButton extends ConsumerWidget {
       ).then((confirmed) {
         if (confirmed == true) {
           ref
-              .read(trackSocialProvider(trackId).notifier)
-              .toggleAction(SocialActionType.repost);
+              .read(trackSocialProvider.notifier)
+              .toggleAction(
+                widget.trackId,
+                SocialActionType.repost,
+                initialRepostCount: widget.repostCount,
+                initialIsReposted: widget.isReposted,
+              );
         }
       });
     } else {
       ref
-          .read(trackSocialProvider(trackId).notifier)
-          .toggleAction(SocialActionType.repost);
+          .read(trackSocialProvider.notifier)
+          .toggleAction(
+            widget.trackId,
+            SocialActionType.repost,
+            initialRepostCount: widget.repostCount,
+            initialIsReposted: widget.isReposted,
+          );
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final trackSocial = ref.watch(trackSocialProvider(trackId));
-
-    // Derive state components from AsyncValue
-    final socialData = trackSocial.valueOrNull;
-
-    // Use fetched data if available, otherwise fallback to initial props
-    final isCurrentlyReposted = socialData?.isReposted ?? isReposted;
-    final repostCount = socialData?.repostCount ?? this.repostCount;
-    final isLoading = trackSocial.isLoading;
+  Widget build(BuildContext context) {
+    final providerState = ref.watch(trackSocialProvider);
+    final trackData = providerState.trackStates[widget.trackId.toString()];
+    final isCurrentlyReposted = trackData?.isReposted ?? widget.isReposted;
+    final isLoading = providerState.loadingKeys.contains(
+      'repost_${widget.trackId}',
+    );
 
     return SocialActionButton(
       isActive: isCurrentlyReposted,
-      count: repostCount,
+      count: trackData?.repostCount ?? widget.repostCount,
       isLoading: isLoading,
       activeIcon: Icons.repeat,
       inactiveIcon: Icons.repeat,
       activeColor: AppColors.primary,
-      onToggle: () => _handleTap(context, ref, isCurrentlyReposted),
-      identifier: 'repost_button',
+      onToggle: () => _handleTap(context, isCurrentlyReposted),
       onCountTap: () => showTrackEngagersSheet(
         context,
-        trackId: trackId,
+        trackId: widget.trackId,
         type: EngagerType.reposters,
       ),
-      iconSize: iconSize ?? AppConstants.iconSizeMedium,
-      fontSize: fontSize ?? AppConstants.fontSizeRegular,
-      isVertical: isVertical,
+      iconSize: widget.iconSize ?? AppConstants.iconSizeMedium,
+      fontSize: widget.fontSize ?? AppConstants.fontSizeRegular,
     );
   }
 }

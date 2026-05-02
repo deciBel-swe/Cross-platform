@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
@@ -42,7 +43,7 @@ class WaveformExtractionService {
               noOfSamples: noOfSamples,
             );
           } catch (e) {
-            // Ignore wrapper exception
+            debugPrint('WaveformService mobile extractor error: $e');
           }
         }
 
@@ -64,7 +65,8 @@ class WaveformExtractionService {
             (result.isNotEmpty && !isFlat) ? result : const [],
           );
         }
-      } catch (e) {
+      } catch (e, stack) {
+        debugPrint('WaveformService Failure: $e\n$stack');
         if (!completer.isCompleted) {
           completer.complete(const <double>[]);
         }
@@ -89,7 +91,8 @@ class WaveformExtractionService {
       );
 
       return audioData.map((e) => e.abs().toDouble()).toList();
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Windows SoLoud Error: $e\n$stack');
       return const [];
     }
   }

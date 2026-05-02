@@ -1135,36 +1135,6 @@ test('it works', () { });
 
 ## Code Generation
 
-## Using the WebSocketClient
-
-Our app uses a centralized `WebSocketClient` (located in `core/network/websocket_client.dart`) to handle real-time events. 
-
-### Rules for Teammates
-- **DO NOT** instantiate `WebSocketClient` directly. It is registered as a `@lazySingleton`. Get it via DI (`getIt<WebSocketClient>()`) inside your Repositories/DataSources.
-- **DO NOT** listen to the stream directly in widgets. Always expose the stream through a Riverpod `StreamProvider`.
-
-### Step-by-Step Usage
-
-**1. Data Layer (Remote Data Source)**
-Inject the client and map the raw JSON stream into what your feature needs.
-
-```dart
-@injectable
-class NotificationRemoteDataSource {
-  NotificationRemoteDataSource(this._wsClient);
-  final WebSocketClient _wsClient;
-
-  Stream<NotificationModel> watchNotifications() async* {
-    // 1. Connect (Safe to call multiple times, it only connects once)
-    await _wsClient.connect('/ws/notifications');
-
-    // 2. Filter and map the broadcast stream
-    yield* _wsClient.stream
-        .where((event) => event['type'] == 'NOTIFICATION')
-        .map((event) => NotificationModel.fromJson(event));
-  }
-}
-
 ### Commands
 
 ```bash

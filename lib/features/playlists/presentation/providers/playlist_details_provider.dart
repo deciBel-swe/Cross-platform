@@ -9,5 +9,5 @@ final pendingTracksProvider = StateProvider.autoDispose<List<int>?>(
 
 final playlistDetailsProvider = AsyncNotifierProvider.autoDispose
     .family<PlaylistDetailsNotifier, Playlist, int>(
-      PlaylistDetailsNotifier.new,
-    );
+  PlaylistDetailsNotifier.new,
+);

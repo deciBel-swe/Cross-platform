@@ -1,7 +1,6 @@
 /// Account creation screen with social login and email/date/gender form.
 library;
 
-import 'package:csc_picker_plus/csc_picker_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,9 +70,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final email = _emailController.text.trim();
     final displayName = _displayNameController.text.trim();
     final password = _passwordController.text;
-    final city = _cityController.text
-        .replaceAll(RegExp(r'\s*Governorate\s*', caseSensitive: false), '')
-        .trim();
+    final city = _cityController.text.trim();
     final country = _countryController.text.trim();
 
     if (displayName.isEmpty) {
@@ -202,11 +199,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Semantics(
-          header: true,
-          label: 'Create account screen',
-          child: const Text('Create account'),
-        ),
+        title: const Text('Create account'),
         backgroundColor: AppColors.transparent,
         elevation: 0,
       ),
@@ -221,51 +214,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 24),
 
                 // ---- Social login buttons ----
-                Semantics(
-                  button: true,
+                SocialLoginButton(
                   label: 'Continue with Google',
-                  child: SocialLoginButton(
-                    label: 'Continue with Google',
-                    icon: const Icon(
-                      Icons.g_mobiledata,
-                      color: AppColors.google,
-                      size: 24,
-                    ),
-                    isLoading: _loadingType == AuthLoadingType.google,
-                    onPressed: _isAnyLoading ? null : _handleGoogleLogin,
+                  icon: const Icon(
+                    Icons.g_mobiledata,
+                    color: AppColors.google,
+                    size: 24,
                   ),
+                  isLoading: _loadingType == AuthLoadingType.google,
+                  onPressed: _isAnyLoading ? null : _handleGoogleLogin,
                 ),
                 const SizedBox(height: 12),
-                Semantics(
-                  button: true,
+                SocialLoginButton(
                   label: 'Continue with Facebook',
-                  child: SocialLoginButton(
-                    label: 'Continue with Facebook',
-                    icon: const Icon(
-                      Icons.facebook,
-                      color: AppColors.facebook,
-                      size: 24,
-                    ),
-                    onPressed: () {
-                      // TODO(auth): implement Facebook sign-in
-                    },
+                  icon: const Icon(
+                    Icons.facebook,
+                    color: AppColors.facebook,
+                    size: 24,
                   ),
+                  onPressed: () {
+                    // TODO(auth): implement Facebook sign-in
+                  },
                 ),
                 const SizedBox(height: 12),
-                Semantics(
-                  button: true,
+                SocialLoginButton(
                   label: 'Continue with Apple',
-                  child: SocialLoginButton(
-                    label: 'Continue with Apple',
-                    icon: const Icon(
-                      Icons.apple,
-                      color: AppColors.apple,
-                      size: 24,
-                    ),
-                    onPressed: () {
-                      // TODO(auth): implement Apple sign-in
-                    },
+                  icon: const Icon(
+                    Icons.apple,
+                    color: AppColors.apple,
+                    size: 24,
                   ),
+                  onPressed: () {
+                    // TODO(auth): implement Apple sign-in
+                  },
                 ),
 
                 const SizedBox(height: 28),
@@ -285,71 +266,54 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 28),
 
                 // ---- Email field ----
-                Semantics(
-                  textField: true,
-                  label: 'Email address input field',
-                  child: TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.email],
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                    decoration: _inputDecoration('Email'),
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
                   ),
+                  decoration: _inputDecoration('Email'),
                 ),
 
                 const SizedBox(height: 16),
 
-                Semantics(
-                  textField: true,
-                  label: 'Display name input field',
-                  child: TextField(
-                    controller: _displayNameController,
-                    textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.name],
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                    decoration: _inputDecoration('Display name'),
+                TextField(
+                  controller: _displayNameController,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.name],
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
                   ),
+                  decoration: _inputDecoration('Display name'),
                 ),
 
                 const SizedBox(height: 16),
 
-                Semantics(
-                  textField: true,
-                  label: 'Password input field',
-                  child: TextField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    enableSuggestions: false,
-                    autocorrect: false,
-                    textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.newPassword],
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                    decoration: _inputDecoration('Password').copyWith(
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                        icon: Semantics(
-                          label: _obscurePassword
-                              ? 'Show password'
-                              : 'Hide password',
-                          child: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.newPassword],
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Password').copyWith(
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -358,23 +322,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 // ---- Date of birth field ----
-                Semantics(
-                  button: true,
-                  label: 'Select date of birth',
-                  child: TextField(
-                    controller: _dateController,
-                    readOnly: true,
-                    onTap: _pickDate,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                    decoration: _inputDecoration('Date of birth').copyWith(
-                      suffixIcon: const Icon(
-                        Icons.calendar_today,
-                        color: AppColors.textSecondary,
-                        size: 20,
-                      ),
+                TextField(
+                  controller: _dateController,
+                  readOnly: true,
+                  onTap: _pickDate,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Date of birth').copyWith(
+                    suffixIcon: const Icon(
+                      Icons.calendar_today,
+                      color: AppColors.textSecondary,
+                      size: 20,
                     ),
                   ),
                 ),
@@ -382,80 +342,58 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 // ---- Gender dropdown ----
-                Semantics(
-                  button: true,
-                  label: 'Select gender',
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _selectedGender,
-                    hint: const Text(
-                      'Gender',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    dropdownColor: AppColors.surface,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedGender,
+                  hint: const Text(
+                    'Gender',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
                       fontSize: 14,
                     ),
-                    decoration: _inputDecoration(),
-                    items: const [
-                      DropdownMenuItem(value: 'male', child: Text('Male')),
-                      DropdownMenuItem(value: 'female', child: Text('Female')),
-                    ],
-                    onChanged: (value) =>
-                        setState(() => _selectedGender = value),
                   ),
+                  dropdownColor: AppColors.surface,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration(),
+                  items: const [
+                    DropdownMenuItem(value: 'male', child: Text('Male')),
+                    DropdownMenuItem(value: 'female', child: Text('Female')),
+                    DropdownMenuItem(
+                      value: 'non_binary',
+                      child: Text('Non-binary'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'prefer_not_to_say',
+                      child: Text('Prefer not to say'),
+                    ),
+                  ],
+                  onChanged: (value) => setState(() => _selectedGender = value),
                 ),
 
                 const SizedBox(height: 16),
 
-                Semantics(
-                  label: 'Select location',
-                  child: CSCPickerPlus(
-                    layout: Layout.vertical,
-                    flagState: CountryFlag.SHOW_IN_DROP_DOWN_ONLY,
-                    showStates: true,
-                    showCities: false,
-                    countryStateLanguage: CountryStateLanguage.englishOrNative,
-                    countrySearchPlaceholder: "Country",
-                    stateSearchPlaceholder: "State",
-                    countryDropdownLabel: "Country (optional)",
-                    stateDropdownLabel: "State (optional)",
-                    dropdownDecoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.outline),
-                    ),
-                    disabledDropdownDecoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.outline),
-                    ),
-                    selectedItemStyle: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                    dropdownHeadingStyle: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    dropdownItemStyle: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                    dropdownDialogRadius: 12.0,
-                    searchBarRadius: 12.0,
-                    onCountryChanged: (value) {
-                      _countryController.text = value.toString();
-                      _cityController.clear();
-                    },
-                    onStateChanged: (value) {
-                      _cityController.text = value.toString();
-                    },
+                TextField(
+                  controller: _cityController,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
                   ),
+                  decoration: _inputDecoration('City (optional)'),
+                ),
+
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: _countryController,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _isAnyLoading ? null : _handleRegister(),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Country (optional)'),
                 ),
 
                 const SizedBox(height: 16),
@@ -472,23 +410,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 32),
 
                 // ---- Continue button (white) ----
-                Semantics(
-                  button: true,
-                  label: 'Continue to create account',
-                  child: ElevatedButton(
-                    onPressed: _isAnyLoading ? null : _handleRegister,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.onPrimary,
-                      foregroundColor: AppColors.onBackground,
-                    ),
-                    child: _loadingType == AuthLoadingType.email
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Continue'),
+                ElevatedButton(
+                  onPressed: _isAnyLoading ? null : _handleRegister,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.onPrimary,
+                    foregroundColor: AppColors.onBackground,
                   ),
+                  child: _loadingType == AuthLoadingType.email
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Continue'),
                 ),
 
                 const SizedBox(height: 32),

@@ -15,6 +15,175 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
+OwnerModel _$OwnerModelFromJson(Map<String, dynamic> json) {
+  return _OwnerModel.fromJson(json);
+}
+
+/// @nodoc
+mixin _$OwnerModel {
+  int get id => throw _privateConstructorUsedError;
+  String get username => throw _privateConstructorUsedError;
+
+  /// Serializes this OwnerModel to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of OwnerModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $OwnerModelCopyWith<OwnerModel> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $OwnerModelCopyWith<$Res> {
+  factory $OwnerModelCopyWith(
+    OwnerModel value,
+    $Res Function(OwnerModel) then,
+  ) = _$OwnerModelCopyWithImpl<$Res, OwnerModel>;
+  @useResult
+  $Res call({int id, String username});
+}
+
+/// @nodoc
+class _$OwnerModelCopyWithImpl<$Res, $Val extends OwnerModel>
+    implements $OwnerModelCopyWith<$Res> {
+  _$OwnerModelCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of OwnerModel
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? id = null, Object? username = null}) {
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as int,
+            username: null == username
+                ? _value.username
+                : username // ignore: cast_nullable_to_non_nullable
+                      as String,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$OwnerModelImplCopyWith<$Res>
+    implements $OwnerModelCopyWith<$Res> {
+  factory _$$OwnerModelImplCopyWith(
+    _$OwnerModelImpl value,
+    $Res Function(_$OwnerModelImpl) then,
+  ) = __$$OwnerModelImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({int id, String username});
+}
+
+/// @nodoc
+class __$$OwnerModelImplCopyWithImpl<$Res>
+    extends _$OwnerModelCopyWithImpl<$Res, _$OwnerModelImpl>
+    implements _$$OwnerModelImplCopyWith<$Res> {
+  __$$OwnerModelImplCopyWithImpl(
+    _$OwnerModelImpl _value,
+    $Res Function(_$OwnerModelImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of OwnerModel
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? id = null, Object? username = null}) {
+    return _then(
+      _$OwnerModelImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as int,
+        username: null == username
+            ? _value.username
+            : username // ignore: cast_nullable_to_non_nullable
+                  as String,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$OwnerModelImpl implements _OwnerModel {
+  const _$OwnerModelImpl({required this.id, required this.username});
+
+  factory _$OwnerModelImpl.fromJson(Map<String, dynamic> json) =>
+      _$$OwnerModelImplFromJson(json);
+
+  @override
+  final int id;
+  @override
+  final String username;
+
+  @override
+  String toString() {
+    return 'OwnerModel(id: $id, username: $username)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$OwnerModelImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.username, username) ||
+                other.username == username));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, username);
+
+  /// Create a copy of OwnerModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$OwnerModelImplCopyWith<_$OwnerModelImpl> get copyWith =>
+      __$$OwnerModelImplCopyWithImpl<_$OwnerModelImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$OwnerModelImplToJson(this);
+  }
+}
+
+abstract class _OwnerModel implements OwnerModel {
+  const factory _OwnerModel({
+    required final int id,
+    required final String username,
+  }) = _$OwnerModelImpl;
+
+  factory _OwnerModel.fromJson(Map<String, dynamic> json) =
+      _$OwnerModelImpl.fromJson;
+
+  @override
+  int get id;
+  @override
+  String get username;
+
+  /// Create a copy of OwnerModel
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$OwnerModelImplCopyWith<_$OwnerModelImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 PlaylistModel _$PlaylistModelFromJson(Map<String, dynamic> json) {
   return _PlaylistModel.fromJson(json);
 }
@@ -27,21 +196,11 @@ mixin _$PlaylistModel {
   String get type => throw _privateConstructorUsedError;
   bool get isPrivate => throw _privateConstructorUsedError;
   bool get isLiked => throw _privateConstructorUsedError;
-  bool get isReposted => throw _privateConstructorUsedError;
-  @JsonKey(name: 'coverArtUrl')
+  @JsonKey(name: 'CoverArt')
   String? get coverArt => throw _privateConstructorUsedError;
   OwnerModel? get owner => throw _privateConstructorUsedError;
-  @JsonKey(name: 'trackSummaryDto')
   @PlaylistTracksConverter()
   List<TrackModel> get tracks => throw _privateConstructorUsedError;
-  int get totalDurationSeconds => throw _privateConstructorUsedError;
-  int get trackCount => throw _privateConstructorUsedError;
-  String? get playlistSlug => throw _privateConstructorUsedError;
-  String? get firstTrackWaveformUrl => throw _privateConstructorUsedError;
-  String? get secretToken => throw _privateConstructorUsedError;
-  String? get access => throw _privateConstructorUsedError;
-  List<String>? get genres => throw _privateConstructorUsedError;
-  DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this PlaylistModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -67,20 +226,9 @@ abstract class $PlaylistModelCopyWith<$Res> {
     String type,
     bool isPrivate,
     bool isLiked,
-    bool isReposted,
-    @JsonKey(name: 'coverArtUrl') String? coverArt,
+    @JsonKey(name: 'CoverArt') String? coverArt,
     OwnerModel? owner,
-    @JsonKey(name: 'trackSummaryDto')
-    @PlaylistTracksConverter()
-    List<TrackModel> tracks,
-    int totalDurationSeconds,
-    int trackCount,
-    String? playlistSlug,
-    String? firstTrackWaveformUrl,
-    String? secretToken,
-    String? access,
-    List<String>? genres,
-    DateTime? createdAt,
+    @PlaylistTracksConverter() List<TrackModel> tracks,
   });
 
   $OwnerModelCopyWith<$Res>? get owner;
@@ -107,18 +255,9 @@ class _$PlaylistModelCopyWithImpl<$Res, $Val extends PlaylistModel>
     Object? type = null,
     Object? isPrivate = null,
     Object? isLiked = null,
-    Object? isReposted = null,
     Object? coverArt = freezed,
     Object? owner = freezed,
     Object? tracks = null,
-    Object? totalDurationSeconds = null,
-    Object? trackCount = null,
-    Object? playlistSlug = freezed,
-    Object? firstTrackWaveformUrl = freezed,
-    Object? secretToken = freezed,
-    Object? access = freezed,
-    Object? genres = freezed,
-    Object? createdAt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -146,10 +285,6 @@ class _$PlaylistModelCopyWithImpl<$Res, $Val extends PlaylistModel>
                 ? _value.isLiked
                 : isLiked // ignore: cast_nullable_to_non_nullable
                       as bool,
-            isReposted: null == isReposted
-                ? _value.isReposted
-                : isReposted // ignore: cast_nullable_to_non_nullable
-                      as bool,
             coverArt: freezed == coverArt
                 ? _value.coverArt
                 : coverArt // ignore: cast_nullable_to_non_nullable
@@ -162,38 +297,6 @@ class _$PlaylistModelCopyWithImpl<$Res, $Val extends PlaylistModel>
                 ? _value.tracks
                 : tracks // ignore: cast_nullable_to_non_nullable
                       as List<TrackModel>,
-            totalDurationSeconds: null == totalDurationSeconds
-                ? _value.totalDurationSeconds
-                : totalDurationSeconds // ignore: cast_nullable_to_non_nullable
-                      as int,
-            trackCount: null == trackCount
-                ? _value.trackCount
-                : trackCount // ignore: cast_nullable_to_non_nullable
-                      as int,
-            playlistSlug: freezed == playlistSlug
-                ? _value.playlistSlug
-                : playlistSlug // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            firstTrackWaveformUrl: freezed == firstTrackWaveformUrl
-                ? _value.firstTrackWaveformUrl
-                : firstTrackWaveformUrl // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            secretToken: freezed == secretToken
-                ? _value.secretToken
-                : secretToken // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            access: freezed == access
-                ? _value.access
-                : access // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            genres: freezed == genres
-                ? _value.genres
-                : genres // ignore: cast_nullable_to_non_nullable
-                      as List<String>?,
-            createdAt: freezed == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime?,
           )
           as $Val,
     );
@@ -230,20 +333,9 @@ abstract class _$$PlaylistModelImplCopyWith<$Res>
     String type,
     bool isPrivate,
     bool isLiked,
-    bool isReposted,
-    @JsonKey(name: 'coverArtUrl') String? coverArt,
+    @JsonKey(name: 'CoverArt') String? coverArt,
     OwnerModel? owner,
-    @JsonKey(name: 'trackSummaryDto')
-    @PlaylistTracksConverter()
-    List<TrackModel> tracks,
-    int totalDurationSeconds,
-    int trackCount,
-    String? playlistSlug,
-    String? firstTrackWaveformUrl,
-    String? secretToken,
-    String? access,
-    List<String>? genres,
-    DateTime? createdAt,
+    @PlaylistTracksConverter() List<TrackModel> tracks,
   });
 
   @override
@@ -270,18 +362,9 @@ class __$$PlaylistModelImplCopyWithImpl<$Res>
     Object? type = null,
     Object? isPrivate = null,
     Object? isLiked = null,
-    Object? isReposted = null,
     Object? coverArt = freezed,
     Object? owner = freezed,
     Object? tracks = null,
-    Object? totalDurationSeconds = null,
-    Object? trackCount = null,
-    Object? playlistSlug = freezed,
-    Object? firstTrackWaveformUrl = freezed,
-    Object? secretToken = freezed,
-    Object? access = freezed,
-    Object? genres = freezed,
-    Object? createdAt = freezed,
   }) {
     return _then(
       _$PlaylistModelImpl(
@@ -309,10 +392,6 @@ class __$$PlaylistModelImplCopyWithImpl<$Res>
             ? _value.isLiked
             : isLiked // ignore: cast_nullable_to_non_nullable
                   as bool,
-        isReposted: null == isReposted
-            ? _value.isReposted
-            : isReposted // ignore: cast_nullable_to_non_nullable
-                  as bool,
         coverArt: freezed == coverArt
             ? _value.coverArt
             : coverArt // ignore: cast_nullable_to_non_nullable
@@ -325,38 +404,6 @@ class __$$PlaylistModelImplCopyWithImpl<$Res>
             ? _value._tracks
             : tracks // ignore: cast_nullable_to_non_nullable
                   as List<TrackModel>,
-        totalDurationSeconds: null == totalDurationSeconds
-            ? _value.totalDurationSeconds
-            : totalDurationSeconds // ignore: cast_nullable_to_non_nullable
-                  as int,
-        trackCount: null == trackCount
-            ? _value.trackCount
-            : trackCount // ignore: cast_nullable_to_non_nullable
-                  as int,
-        playlistSlug: freezed == playlistSlug
-            ? _value.playlistSlug
-            : playlistSlug // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        firstTrackWaveformUrl: freezed == firstTrackWaveformUrl
-            ? _value.firstTrackWaveformUrl
-            : firstTrackWaveformUrl // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        secretToken: freezed == secretToken
-            ? _value.secretToken
-            : secretToken // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        access: freezed == access
-            ? _value.access
-            : access // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        genres: freezed == genres
-            ? _value._genres
-            : genres // ignore: cast_nullable_to_non_nullable
-                  as List<String>?,
-        createdAt: freezed == createdAt
-            ? _value.createdAt
-            : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime?,
       ),
     );
   }
@@ -372,22 +419,10 @@ class _$PlaylistModelImpl implements _PlaylistModel {
     required this.type,
     this.isPrivate = false,
     this.isLiked = false,
-    this.isReposted = false,
-    @JsonKey(name: 'coverArtUrl') this.coverArt,
+    @JsonKey(name: 'CoverArt') this.coverArt,
     this.owner,
-    @JsonKey(name: 'trackSummaryDto')
-    @PlaylistTracksConverter()
-    final List<TrackModel> tracks = const [],
-    this.totalDurationSeconds = 0,
-    this.trackCount = 0,
-    this.playlistSlug,
-    this.firstTrackWaveformUrl,
-    this.secretToken,
-    this.access,
-    final List<String>? genres,
-    this.createdAt,
-  }) : _tracks = tracks,
-       _genres = genres;
+    @PlaylistTracksConverter() final List<TrackModel> tracks = const [],
+  }) : _tracks = tracks;
 
   factory _$PlaylistModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$PlaylistModelImplFromJson(json);
@@ -407,16 +442,13 @@ class _$PlaylistModelImpl implements _PlaylistModel {
   @JsonKey()
   final bool isLiked;
   @override
-  @JsonKey()
-  final bool isReposted;
-  @override
-  @JsonKey(name: 'coverArtUrl')
+  @JsonKey(name: 'CoverArt')
   final String? coverArt;
   @override
   final OwnerModel? owner;
   final List<TrackModel> _tracks;
   @override
-  @JsonKey(name: 'trackSummaryDto')
+  @JsonKey()
   @PlaylistTracksConverter()
   List<TrackModel> get tracks {
     if (_tracks is EqualUnmodifiableListView) return _tracks;
@@ -425,35 +457,8 @@ class _$PlaylistModelImpl implements _PlaylistModel {
   }
 
   @override
-  @JsonKey()
-  final int totalDurationSeconds;
-  @override
-  @JsonKey()
-  final int trackCount;
-  @override
-  final String? playlistSlug;
-  @override
-  final String? firstTrackWaveformUrl;
-  @override
-  final String? secretToken;
-  @override
-  final String? access;
-  final List<String>? _genres;
-  @override
-  List<String>? get genres {
-    final value = _genres;
-    if (value == null) return null;
-    if (_genres is EqualUnmodifiableListView) return _genres;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(value);
-  }
-
-  @override
-  final DateTime? createdAt;
-
-  @override
   String toString() {
-    return 'PlaylistModel(id: $id, title: $title, description: $description, type: $type, isPrivate: $isPrivate, isLiked: $isLiked, isReposted: $isReposted, coverArt: $coverArt, owner: $owner, tracks: $tracks, totalDurationSeconds: $totalDurationSeconds, trackCount: $trackCount, playlistSlug: $playlistSlug, firstTrackWaveformUrl: $firstTrackWaveformUrl, secretToken: $secretToken, access: $access, genres: $genres, createdAt: $createdAt)';
+    return 'PlaylistModel(id: $id, title: $title, description: $description, type: $type, isPrivate: $isPrivate, isLiked: $isLiked, coverArt: $coverArt, owner: $owner, tracks: $tracks)';
   }
 
   @override
@@ -469,26 +474,10 @@ class _$PlaylistModelImpl implements _PlaylistModel {
             (identical(other.isPrivate, isPrivate) ||
                 other.isPrivate == isPrivate) &&
             (identical(other.isLiked, isLiked) || other.isLiked == isLiked) &&
-            (identical(other.isReposted, isReposted) ||
-                other.isReposted == isReposted) &&
             (identical(other.coverArt, coverArt) ||
                 other.coverArt == coverArt) &&
             (identical(other.owner, owner) || other.owner == owner) &&
-            const DeepCollectionEquality().equals(other._tracks, _tracks) &&
-            (identical(other.totalDurationSeconds, totalDurationSeconds) ||
-                other.totalDurationSeconds == totalDurationSeconds) &&
-            (identical(other.trackCount, trackCount) ||
-                other.trackCount == trackCount) &&
-            (identical(other.playlistSlug, playlistSlug) ||
-                other.playlistSlug == playlistSlug) &&
-            (identical(other.firstTrackWaveformUrl, firstTrackWaveformUrl) ||
-                other.firstTrackWaveformUrl == firstTrackWaveformUrl) &&
-            (identical(other.secretToken, secretToken) ||
-                other.secretToken == secretToken) &&
-            (identical(other.access, access) || other.access == access) &&
-            const DeepCollectionEquality().equals(other._genres, _genres) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+            const DeepCollectionEquality().equals(other._tracks, _tracks));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -501,18 +490,9 @@ class _$PlaylistModelImpl implements _PlaylistModel {
     type,
     isPrivate,
     isLiked,
-    isReposted,
     coverArt,
     owner,
     const DeepCollectionEquality().hash(_tracks),
-    totalDurationSeconds,
-    trackCount,
-    playlistSlug,
-    firstTrackWaveformUrl,
-    secretToken,
-    access,
-    const DeepCollectionEquality().hash(_genres),
-    createdAt,
   );
 
   /// Create a copy of PlaylistModel
@@ -537,20 +517,9 @@ abstract class _PlaylistModel implements PlaylistModel {
     required final String type,
     final bool isPrivate,
     final bool isLiked,
-    final bool isReposted,
-    @JsonKey(name: 'coverArtUrl') final String? coverArt,
+    @JsonKey(name: 'CoverArt') final String? coverArt,
     final OwnerModel? owner,
-    @JsonKey(name: 'trackSummaryDto')
-    @PlaylistTracksConverter()
-    final List<TrackModel> tracks,
-    final int totalDurationSeconds,
-    final int trackCount,
-    final String? playlistSlug,
-    final String? firstTrackWaveformUrl,
-    final String? secretToken,
-    final String? access,
-    final List<String>? genres,
-    final DateTime? createdAt,
+    @PlaylistTracksConverter() final List<TrackModel> tracks,
   }) = _$PlaylistModelImpl;
 
   factory _PlaylistModel.fromJson(Map<String, dynamic> json) =
@@ -569,32 +538,13 @@ abstract class _PlaylistModel implements PlaylistModel {
   @override
   bool get isLiked;
   @override
-  bool get isReposted;
-  @override
-  @JsonKey(name: 'coverArtUrl')
+  @JsonKey(name: 'CoverArt')
   String? get coverArt;
   @override
   OwnerModel? get owner;
   @override
-  @JsonKey(name: 'trackSummaryDto')
   @PlaylistTracksConverter()
   List<TrackModel> get tracks;
-  @override
-  int get totalDurationSeconds;
-  @override
-  int get trackCount;
-  @override
-  String? get playlistSlug;
-  @override
-  String? get firstTrackWaveformUrl;
-  @override
-  String? get secretToken;
-  @override
-  String? get access;
-  @override
-  List<String>? get genres;
-  @override
-  DateTime? get createdAt;
 
   /// Create a copy of PlaylistModel
   /// with the given fields replaced by the non-null parameter values.

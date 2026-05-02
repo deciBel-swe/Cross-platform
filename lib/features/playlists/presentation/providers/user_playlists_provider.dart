@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../engagement/presentation/notifiers/user_liked_playlist_notifier.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
 import '../../domain/entities/playlist_metadata.dart';
@@ -18,39 +17,6 @@ final userPlaylistsProvider =
     AsyncNotifierProvider.autoDispose<UserPlaylistsNotifier, List<Playlist>>(
       UserPlaylistsNotifier.new,
     );
-
-final userLikedPlaylistsProvider =
-    AsyncNotifierProvider.autoDispose<
-      UserLikedPlaylistsNotifier,
-      List<Playlist>
-    >(UserLikedPlaylistsNotifier.new);
-
-final combinedPlaylistsProvider =
-    Provider.autoDispose<AsyncValue<List<Playlist>>>((ref) {
-      final created = ref.watch(userPlaylistsProvider);
-      final liked = ref.watch(userLikedPlaylistsProvider);
-
-      if (created.isLoading || liked.isLoading) {
-        return const AsyncLoading();
-      }
-
-      if (created.hasError) {
-        return AsyncError(created.error!, created.stackTrace!);
-      }
-      if (liked.hasError) {
-        return AsyncError(liked.error!, liked.stackTrace!);
-      }
-
-      final createdList = created.value ?? [];
-      final likedList = liked.value ?? [];
-
-      final createdIds = createdList.map((p) => p.id).toSet();
-      final filteredLikedList = likedList
-          .where((p) => !createdIds.contains(p.id))
-          .toList();
-
-      return AsyncData([...createdList, ...filteredLikedList]);
-    });
 
 final playlistRepositoryProvider = Provider<IPlaylistRepository>((ref) {
   return getIt<IPlaylistRepository>();
@@ -66,30 +32,10 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
     // Fetch initial data
     final result = await _repository.getUserPlaylists(page: 0, size: 20);
 
-    return result.fold((failure) {
-      if (failure is NetworkFailure) {
-        return const <Playlist>[];
-      }
-      throw failure;
-    }, (playlists) => playlists);
-  }
-
-  /// Adds a [track] into the matching playlist locally (mock, client-only).
-  /// Prevents duplicates and updates UI immediately without contacting backend.
-  void addTrackLocally(int playlistId, Track track) {
-    if (state.value == null) return;
-    final updatedList = state.value!.map((p) {
-      if (p.id == playlistId) {
-        // avoid duplicates
-        final already = p.tracks.any((t) => t.id == track.id);
-        final newTracks = List<Track>.from(p.tracks);
-        if (!already) newTracks.add(track);
-        return p.copyWith(tracks: newTracks);
-      }
-      return p;
-    }).toList();
-
-    state = AsyncData(updatedList);
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (playlists) => playlists,
+    );
   }
 
   /// Deletes a playlist and instantly updates the UI if the backend call succeeds.
@@ -141,10 +87,12 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
     if (state.value != null) {
       final updatedList = state.value!.map((p) {
         if (p.id == playlistId) {
-          final newTracks = p.tracks
-              .where((t) => !trackIdsToRemove.contains(t.id))
-              .toList();
-          return p.copyWith(tracks: newTracks);
+          final newTracks = p.tracks.where((t) => !trackIdsToRemove.contains(t.id)).toList();
+          return Playlist(
+            id: p.id, title: p.title, description: p.description, type: p.type,
+            isPrivate: p.isPrivate, isLiked: p.isLiked, coverArt: p.coverArt,
+            owner: p.owner, tracks: newTracks, 
+          );
         }
         return p;
       }).toList();
@@ -158,7 +106,11 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
       final updatedList = state.value!.map((p) {
         if (p.id == playlistId) {
           final newTracks = List<Track>.from(p.tracks)..addAll(restoredTracks);
-          return p.copyWith(tracks: newTracks);
+          return Playlist(
+            id: p.id, title: p.title, description: p.description, type: p.type,
+            isPrivate: p.isPrivate, isLiked: p.isLiked, coverArt: p.coverArt,
+            owner: p.owner, tracks: newTracks,
+          );
         }
         return p;
       }).toList();
@@ -171,20 +123,11 @@ class UserPlaylistsNotifier extends AutoDisposeAsyncNotifier<List<Playlist>> {
     if (state.value != null) {
       final updatedList = state.value!.map((p) {
         if (p.id == updatedPlaylist.id) {
-          return p.copyWith(
-            title: updatedPlaylist.title,
-            description: updatedPlaylist.description,
-            isPrivate: updatedPlaylist.isPrivate,
-            isLiked: updatedPlaylist.isLiked,
-            coverArt: updatedPlaylist.coverArt,
-            owner: updatedPlaylist.owner,
-            totalDurationSeconds: updatedPlaylist.totalDurationSeconds,
-            trackCount: updatedPlaylist.trackCount,
-            playlistSlug: updatedPlaylist.playlistSlug,
-            firstTrackWaveformUrl: updatedPlaylist.firstTrackWaveformUrl,
-            secretToken: updatedPlaylist.secretToken,
-            access: updatedPlaylist.access,
-            createdAt: updatedPlaylist.createdAt,
+          return Playlist(
+            id: updatedPlaylist.id, title: updatedPlaylist.title, description: updatedPlaylist.description,
+            type: updatedPlaylist.type, isPrivate: updatedPlaylist.isPrivate, isLiked: updatedPlaylist.isLiked,
+            coverArt: updatedPlaylist.coverArt, owner: updatedPlaylist.owner, 
+            tracks: p.tracks,
           );
         }
         return p;

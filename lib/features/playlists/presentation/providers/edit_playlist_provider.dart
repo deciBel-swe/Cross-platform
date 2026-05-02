@@ -5,5 +5,5 @@ import '../notifiers/edit_playlist_notifier.dart';
 
 final editPlaylistProvider = AsyncNotifierProvider.autoDispose
     .family<EditPlaylistNotifier, List<Track>, Playlist>(
-      EditPlaylistNotifier.new,
-    );
+  EditPlaylistNotifier.new,
+);

@@ -1,12 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../library/data/models/paginated_tracks_model.dart';
 import '../../../library/domain/entities/paginated_tracks.dart';
 import '../../domain/entities/paginated_engagers.dart';
-import '../../domain/entities/repost_history.dart';
 import '../../domain/repositories/track_social_repository.dart';
 import '../datasources/track_social_remote_datasource.dart';
 import '../models/paginated_engagers_model.dart';
@@ -21,21 +19,12 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
-    String? username,
   }) async {
-    final model = username != null && username.trim().isNotEmpty
-        ? await _datasource.getLikedTracks(
-            page: page,
-            size: size,
-            username: username,
-          )
-        : userId != null
-        ? await _datasource.getLikedTracks(
-            page: page,
-            size: size,
-            userId: userId,
-          )
-        : await _datasource.getLikedTracks(page: page, size: size);
+    final model = await _datasource.getLikedTracks(
+      page: page,
+      size: size,
+      userId: userId,
+    );
     return model.toEntity();
   }
 
@@ -44,34 +33,11 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
-    String? username,
   }) async {
-    final model = username != null && username.trim().isNotEmpty
-        ? await _datasource.getRepostedTracks(
-            page: page,
-            size: size,
-            username: username,
-          )
-        : userId != null
-        ? await _datasource.getRepostedTracks(
-            page: page,
-            size: size,
-            userId: userId,
-          )
-        : await _datasource.getRepostedTracks(page: page, size: size);
-    return model.toEntity();
-  }
-
-  @override
-  Future<PaginatedRepostHistory> getRepostHistory(
-    String username, {
-    int page = 0,
-    int size = 20,
-  }) async {
-    final model = await _datasource.getRepostHistory(
-      username,
+    final model = await _datasource.getRepostedTracks(
       page: page,
       size: size,
+      userId: userId,
     );
     return model.toEntity();
   }
@@ -101,8 +67,6 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
         size: size,
       );
       return Right(model.toEntity());
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -121,21 +85,8 @@ class TrackSocialRepositoryImpl implements ITrackSocialRepository {
         size: size,
       );
       return Right(model.toEntity());
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
-
-  @override
-  Future<void> reportTrack({
-    required int trackId,
-    required String reason,
-    String? description,
-  }) => _datasource.reportTrack(
-    trackId: trackId,
-    reason: reason,
-    description: description,
-  );
 }

@@ -19,7 +19,6 @@ class TrackCommentsInputArea extends StatelessWidget {
   final String staticFormattedTime;
   final bool isReplying;
 
-  /// Builds the comments input area and reply cancellation row.
   @override
   Widget build(BuildContext context) {
     return SafeArea(

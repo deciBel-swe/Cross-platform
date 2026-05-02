@@ -11,7 +11,6 @@ _$TrackEngagerModelImpl _$$TrackEngagerModelImplFromJson(
 ) => _$TrackEngagerModelImpl(
   id: (json['id'] as num).toInt(),
   username: json['username'] as String,
-  displayName: json['displayName'] as String?,
   avatarUrl: json['avatarUrl'] as String?,
   tier: json['tier'] as String,
   isFollowing: json['isFollowing'] as bool? ?? false,
@@ -22,7 +21,6 @@ Map<String, dynamic> _$$TrackEngagerModelImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'username': instance.username,
-  'displayName': instance.displayName,
   'avatarUrl': instance.avatarUrl,
   'tier': instance.tier,
   'isFollowing': instance.isFollowing,

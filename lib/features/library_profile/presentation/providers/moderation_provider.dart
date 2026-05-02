@@ -6,9 +6,7 @@ import '../../data/repositories/mock_moderation_repository_impl.dart';
 import '../../domain/repositories/moderation_repository.dart';
 
 final moderationRepositoryProvider = Provider<ModerationRepository>((ref) {
-  final useMock =
-      dotenv.isInitialized &&
-      dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
+  final useMock = dotenv.isInitialized && dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
 
   if (useMock) {
     return MockModerationRepository();
@@ -17,7 +15,8 @@ final moderationRepositoryProvider = Provider<ModerationRepository>((ref) {
   return getIt<ModerationRepository>();
 });
 
-final moderationProvider = AsyncNotifierProvider<ModerationNotifier, Set<int>>(
+final moderationProvider =
+    AsyncNotifierProvider<ModerationNotifier, Set<int>>(
   ModerationNotifier.new,
 );
 

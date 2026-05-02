@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/widgets/decibel_cached_image.dart';
 import '../utils/profile_image_path_utils.dart'; // Adjust import if needed
 
 class FullscreenImagePage extends StatelessWidget {
@@ -30,12 +29,11 @@ class FullscreenImagePage extends StatelessWidget {
 
     // Remote Image
     if (ProfileImagePathUtils.isRemote(path)) {
-      return DecibelCachedImage(
-        imageUrl: path,
+      return Image.network(
+        path,
         fit: BoxFit.contain,
-        errorIcon: Icons.broken_image,
-        iconSize: 100,
-        iconColor: Colors.white,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.broken_image, size: 100, color: Colors.white),
       );
     }
 

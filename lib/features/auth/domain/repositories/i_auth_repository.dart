@@ -28,9 +28,6 @@ abstract class IAuthRepository {
   /// Returns a failure if authentication process gets interrupted, or fails for another reason.
   Future<Either<Failure, AuthUser>> loginWithGoogle();
 
-  /// Refreshes the current authentication token.
-  Future<Either<Failure, AuthUser>> refreshToken();
-
   /// Retrieves the current authenticated user off local storage/session if one exists.
   ///
   /// Returns null if no user is currently logged in or the session has expired.
@@ -41,23 +38,4 @@ abstract class IAuthRepository {
   /// Returns a failure if the backend logout request fails.
   /// Local authentication data should still be cleared afterwards.
   Future<Either<Failure, Unit>> logout();
-
-  /// Starts the forgot password flow by requesting a reset email.
-  ///
-  /// Returns the server confirmation message.
-  Future<Either<Failure, String>> forgotPassword(String email);
-
-  /// Resets a user's password using the recovery token from their email.
-  ///
-  /// Returns the server confirmation message.
-  Future<Either<Failure, String>> resetPassword(
-    String token,
-    String newPassword,
-  );
-
-  /// Resends the verification code to the provided email.
-  /// Returns the message and the optional cooldown time in seconds.
-  Future<Either<Failure, (String, int?)>> resendVerificationCode({
-    required String email,
-  });
 }

@@ -20,18 +20,10 @@ class ServerFailure extends Failure {
   const ServerFailure([super.message = 'Server failure']);
 }
 
-class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'No internet connection']);
-}
-
 class CacheFailure extends Failure {
   const CacheFailure([super.message = 'Cache failure']);
 }
 
 class AuthFailure extends Failure {
   const AuthFailure([super.message = 'Authentication failure']);
-}
-
-class NotFoundFailure extends Failure {
-  const NotFoundFailure([super.message = 'Requested resource not found']);
 }

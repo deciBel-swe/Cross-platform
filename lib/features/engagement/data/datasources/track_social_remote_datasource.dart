@@ -1,14 +1,10 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../library/data/models/paginated_tracks_model.dart';
 import '../models/paginated_engagers_model.dart';
-import '../models/repost_history_model.dart';
 
 @injectable
 class TrackSocialRemoteDatasource {
@@ -48,19 +44,11 @@ class TrackSocialRemoteDatasource {
     int page = 0,
     int size = 10,
     int? userId,
-    String? username,
   }) async {
-    final publicUsername = _normalizeUsername(username);
     final meEndpoints = <String>[
-      if (publicUsername != null)
-        ApiConstants.likedTracksByUsername(publicUsername),
-      if (publicUsername == null &&
-          userId == null &&
-          _cachedLikedMeEndpoint != null)
+      if (userId == null && _cachedLikedMeEndpoint != null)
         _cachedLikedMeEndpoint!,
-      if (publicUsername == null && userId == null) '/users/me/liked-tracks',
-      if (publicUsername == null && userId != null)
-        '/users/$userId/liked-tracks',
+      if (userId == null) '/users/me/liked-tracks',
     ];
 
     final firstPass = _uniqueEndpoints(meEndpoints);
@@ -70,24 +58,15 @@ class TrackSocialRemoteDatasource {
         page: page,
         size: size,
         onSuccess: (endpoint) {
-          if (publicUsername == null &&
-              userId == null &&
-              endpoint.startsWith('/users/me/')) {
+          if (userId == null && endpoint.startsWith('/users/me/')) {
             _cachedLikedMeEndpoint = endpoint;
           }
         },
       );
-    } on AppException catch (error) {
-      if (error is NetworkException) {
-        rethrow;
-      }
-
+    } on AppException {
       final resolvedUserId = userId ?? await _resolveCurrentUserId();
       final fallbackEndpoints = <String>[
-        if (publicUsername != null)
-          ApiConstants.likedTracksByUsername(publicUsername),
-        if (publicUsername == null && resolvedUserId != null)
-          '/users/$resolvedUserId/liked-tracks',
+        if (resolvedUserId != null) '/users/$resolvedUserId/liked-tracks',
       ];
 
       return _fetchTrackCollection(
@@ -102,20 +81,11 @@ class TrackSocialRemoteDatasource {
     int page = 0,
     int size = 10,
     int? userId,
-    String? username,
   }) async {
-    final publicUsername = _normalizeUsername(username);
     final meEndpoints = <String>[
-      if (publicUsername != null)
-        ApiConstants.repostedTracksByUsername(publicUsername),
-      if (publicUsername == null &&
-          userId == null &&
-          _cachedRepostedMeEndpoint != null)
+      if (userId == null && _cachedRepostedMeEndpoint != null)
         _cachedRepostedMeEndpoint!,
-      if (publicUsername == null && userId == null) '/users/me/repost',
-      if (publicUsername == null && userId != null)
-        '/users/$userId/reposted-tracks',
-      if (publicUsername == null && userId != null) '/users/$userId/repost',
+      if (userId == null) '/users/me/repost',
     ];
 
     final firstPass = _uniqueEndpoints(meEndpoints);
@@ -125,26 +95,15 @@ class TrackSocialRemoteDatasource {
         page: page,
         size: size,
         onSuccess: (endpoint) {
-          if (publicUsername == null &&
-              userId == null &&
-              endpoint.startsWith('/users/me/')) {
+          if (userId == null && endpoint.startsWith('/users/me/')) {
             _cachedRepostedMeEndpoint = endpoint;
           }
         },
       );
-    } on AppException catch (error) {
-      if (error is NetworkException) {
-        rethrow;
-      }
-
+    } on AppException {
       final resolvedUserId = userId ?? await _resolveCurrentUserId();
       final fallbackEndpoints = <String>[
-        if (publicUsername != null)
-          ApiConstants.repostedTracksByUsername(publicUsername),
-        if (publicUsername == null && resolvedUserId != null)
-          '/users/$resolvedUserId/reposted-tracks',
-        if (publicUsername == null && resolvedUserId != null)
-          '/users/$resolvedUserId/repost',
+        if (resolvedUserId != null) '/users/$resolvedUserId/repost',
       ];
 
       return _fetchTrackCollection(
@@ -152,34 +111,6 @@ class TrackSocialRemoteDatasource {
         page: page,
         size: size,
       );
-    }
-  }
-
-  Future<PaginatedRepostHistoryModel> getRepostHistory(
-    String username, {
-    int page = 0,
-    int size = 20,
-  }) async {
-    try {
-      final response = await _dioClient.get<Map<String, dynamic>>(
-        ApiConstants.repostHistoryByUsername(username),
-        queryParams: {'page': page, 'size': size},
-      );
-
-      final data = response.data;
-      if (data == null) {
-        throw const ServerException('No data returned from server.');
-      }
-
-      final payload = data['data'] is Map<String, dynamic>
-          ? data['data'] as Map<String, dynamic>
-          : data;
-
-      return PaginatedRepostHistoryModel.fromJson(
-        _normalizePagination(payload),
-      );
-    } on DioException catch (e) {
-      throw _handleDioError(e);
     }
   }
 
@@ -205,7 +136,7 @@ class TrackSocialRemoteDatasource {
 
         onSuccess?.call(endpoint);
 
-        return PaginatedTracksModel.fromJson(_normalizeTrackPage(data));
+        return PaginatedTracksModel.fromJson(data);
       } on DioException catch (error) {
         lastDioException = error;
         final statusCode = error.response?.statusCode;
@@ -224,14 +155,6 @@ class TrackSocialRemoteDatasource {
     }
 
     throw const ServerException('No track collection endpoint succeeded.');
-  }
-
-  String? _normalizeUsername(String? username) {
-    final trimmed = username?.trim();
-    if (trimmed == null || trimmed.isEmpty) {
-      return null;
-    }
-    return trimmed;
   }
 
   List<String> _uniqueEndpoints(List<String> endpoints) {
@@ -300,23 +223,6 @@ class TrackSocialRemoteDatasource {
   Future<void> unrepostTrack(int trackId) async {
     try {
       await _dioClient.delete<dynamic>('/tracks/$trackId/repost');
-    } on DioException catch (e) {
-      throw _handleDioError(e);
-    }
-  }
-
-  Future<void> reportTrack({
-    required int trackId,
-    required String reason,
-    String? description,
-  }) async {
-    try {
-      final data = <String, dynamic>{'reason': reason};
-      if (description != null) {
-        data['description'] = description;
-      }
-
-      await _dioClient.post<dynamic>('/tracks/$trackId/report', data: data);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -397,21 +303,6 @@ class TrackSocialRemoteDatasource {
     return normalized;
   }
 
-  Map<String, dynamic> _normalizeTrackPage(Map<String, dynamic> json) {
-    final nestedData = json['data'];
-    final source = nestedData is Map<String, dynamic> ? nestedData : json;
-    final normalized = Map<String, dynamic>.from(source);
-
-    normalized['pageNumber'] ??= normalized['number'] ?? 0;
-    normalized['pageSize'] ??= normalized['size'] ?? 0;
-    normalized['totalElements'] ??=
-        (normalized['content'] as List?)?.length ?? 0;
-    normalized['totalPages'] ??= 1;
-    normalized['isLast'] ??= normalized['last'] ?? true;
-
-    return normalized;
-  }
-
   /// Maps a [DioException] to the appropriate [AppException] subclass.
   AppException _handleDioError(DioException e) {
     switch (e.type) {
@@ -453,14 +344,8 @@ class TrackSocialRemoteDatasource {
       case DioExceptionType.cancel:
         return const ServerException('Request was cancelled.');
 
-      case DioExceptionType.badCertificate:
-        return ServerException(e.message ?? 'An unexpected error occurred.');
       case DioExceptionType.unknown:
-        if (e.error is SocketException) {
-          return const NetworkException(
-            'No internet connection. Please check your network and try again.',
-          );
-        }
+      case DioExceptionType.badCertificate:
         return ServerException(e.message ?? 'An unexpected error occurred.');
     }
   }

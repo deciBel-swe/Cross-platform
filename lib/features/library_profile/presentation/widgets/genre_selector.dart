@@ -65,32 +65,27 @@ class GenreSelector extends StatelessWidget {
             final isSelected = selectedGenres.contains(genre);
             final isDisabled = atLimit && !isSelected;
 
-            return Semantics(
-              button: true,
+            return FilterChip(
+              label: Text(genre),
               selected: isSelected,
-              label: '$genre genre',
-              child: FilterChip(
-                label: Text(genre),
-                selected: isSelected,
-                onSelected: isDisabled
-                    ? null
-                    : (bool selected) => onGenreToggled(genre, selected),
-                backgroundColor: isDisabled
-                    ? AppColors.surface.withValues(alpha: 0.4)
-                    : AppColors.surface,
-                selectedColor: AppColors.onPrimary,
-                showCheckmark: false,
-                // checkmarkColor: AppColors.onBackground,
-                labelStyle: TextStyle(
-                  color: isDisabled
-                      ? AppColors.onPrimary.withValues(alpha: 0.35)
-                      : isSelected
-                      ? AppColors.onBackground
-                      : AppColors.onPrimary,
-                ),
-                side: BorderSide(
-                  color: isSelected ? AppColors.onPrimary : Colors.transparent,
-                ),
+              onSelected: isDisabled
+                  ? null
+                  : (bool selected) => onGenreToggled(genre, selected),
+              backgroundColor: isDisabled
+                  ? AppColors.surface.withValues(alpha: 0.4)
+                  : AppColors.surface,
+              selectedColor: AppColors.onPrimary,
+              showCheckmark: false,
+              // checkmarkColor: AppColors.onBackground,
+              labelStyle: TextStyle(
+                color: isDisabled
+                    ? AppColors.onPrimary.withValues(alpha: 0.35)
+                    : isSelected
+                    ? AppColors.onBackground
+                    : AppColors.onPrimary,
+              ),
+              side: BorderSide(
+                color: isSelected ? AppColors.onPrimary : Colors.transparent,
               ),
             );
           }).toList(),

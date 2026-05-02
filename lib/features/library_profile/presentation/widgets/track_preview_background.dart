@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 /// Background image layer for the track preview screen.
@@ -21,7 +20,7 @@ class TrackPreviewBackground extends StatelessWidget {
     ImageProvider? imageProvider;
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       if (imageUrl!.startsWith('http')) {
-        imageProvider = CachedNetworkImageProvider(imageUrl!);
+        imageProvider = NetworkImage(imageUrl!);
       } else {
         imageProvider = FileImage(File(imageUrl!));
       }

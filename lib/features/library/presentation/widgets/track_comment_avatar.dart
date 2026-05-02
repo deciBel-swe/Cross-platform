@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class TrackCommentAvatar extends StatelessWidget {
@@ -6,7 +5,6 @@ class TrackCommentAvatar extends StatelessWidget {
 
   final String? avatarUrl;
 
-  /// Builds a circular avatar with a fallback person icon.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -15,9 +13,7 @@ class TrackCommentAvatar extends StatelessWidget {
     return CircleAvatar(
       radius: 18,
       backgroundColor: theme.colorScheme.surfaceContainerHighest,
-      backgroundImage: hasValidUrl
-          ? CachedNetworkImageProvider(avatarUrl!)
-          : null,
+      backgroundImage: hasValidUrl ? NetworkImage(avatarUrl!) : null,
       onBackgroundImageError: hasValidUrl
           ? (exception, stackTrace) => debugPrint('Image failed: $exception')
           : null,

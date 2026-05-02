@@ -99,11 +99,11 @@ void main() {
     test('editLink updates state for different platforms', () async {
       final notifier = getNotifier();
       const oldLink = 'https://instagram.com/test';
-      const newLink = 'https://twitter.com/new';
+      const newLink = 'https://youtube.com/@new';
 
       when(() => mockRepository.updateSocialLinks(any())).thenAnswer(
         (_) async => Right(
-          const PublicProfileSocialLinks().copyWithPlatform('twitter', newLink),
+          const PublicProfileSocialLinks().copyWithPlatform('youtube', newLink),
         ),
       );
 
@@ -112,7 +112,7 @@ void main() {
 
       expect(result, isTrue);
       expect(container.read(webProfilesProvider).instagram, isNull);
-      expect(container.read(webProfilesProvider).twitter, newLink);
+      expect(container.read(webProfilesProvider).youtube, newLink);
     });
 
     test('deleteLink clears the correct platform', () async {
@@ -164,14 +164,14 @@ void main() {
         isTrue,
       );
       expect(
-        notifier.platformAlreadyExists('https://twitter.com/test'),
+        notifier.platformAlreadyExists('https://youtube.com/@test'),
         isFalse,
       );
     });
 
     test('getPlatformKey returns correct platform using utils', () {
       final notifier = getNotifier();
-      expect(notifier.getPlatformKey('https://x.com/test'), 'twitter');
+      expect(notifier.getPlatformKey('https://youtube.com/@test'), 'youtube');
       expect(notifier.getPlatformKey('https://unknown.com'), 'website');
     });
   });

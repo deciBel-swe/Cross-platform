@@ -7,14 +7,13 @@ import 'moderation_provider.dart';
 
 final blockedUsersProvider =
     StateNotifierProvider<BlockedUsersNotifier, Set<int>>(
-      (ref) => BlockedUsersNotifier(ref),
-    );
+  (ref) => BlockedUsersNotifier(ref),
+);
 
 final blockedUserProfilesProvider =
-    StateNotifierProvider<
-      BlockedUserProfilesNotifier,
-      List<BlockedUserSummary>
-    >((ref) => BlockedUserProfilesNotifier());
+    StateNotifierProvider<BlockedUserProfilesNotifier, List<BlockedUserSummary>>(
+  (ref) => BlockedUserProfilesNotifier(),
+);
 
 class BlockedUsersNotifier extends StateNotifier<Set<int>> {
   BlockedUsersNotifier(this.ref) : super(<int>{});
@@ -45,9 +44,7 @@ class BlockedUsersNotifier extends StateNotifier<Set<int>> {
 
     state = {...state, userId};
 
-    ref
-        .read(blockedUserProfilesProvider.notifier)
-        .upsert(
+    ref.read(blockedUserProfilesProvider.notifier).upsert(
           BlockedUserSummary(
             id: userId,
             username: username,

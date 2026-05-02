@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -233,7 +232,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
 
                 return InkWell(
                   onTap: () {
-                    context.push(RoutePaths.publicProfile(user.id.toString()));
+                    context.push(RoutePaths.publicProfile(user.id));
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
@@ -250,7 +249,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                           backgroundImage:
                               (user.avatarUrl != null &&
                                   user.avatarUrl!.trim().isNotEmpty)
-                              ? CachedNetworkImageProvider(user.avatarUrl!)
+                              ? NetworkImage(user.avatarUrl!)
                               : null,
                           child:
                               (user.avatarUrl == null ||

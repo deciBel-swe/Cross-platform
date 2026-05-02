@@ -21,7 +21,7 @@ class EditPlaylistNotifier
   }
 
   final genreListProvider = StateProvider<List<String>>((ref) {
-    return GenreConstants.genres;
+  return GenreConstants.genres;
   });
 
   // Safely compares the IDs to know if the order actually changed
@@ -65,13 +65,13 @@ class EditPlaylistNotifier
     state = const AsyncLoading();
     final repository = ref.read(playlistRepositoryProvider);
     final curr = currentTracks;
-
+    
     final trackIds = curr.map((t) => t.id).toList()
       ..addAll(_deletedTracks.map((t) => t.id));
 
     final result = await repository.reorderTracks(arg.id, trackIds);
 
-    return result.fold(
+return result.fold(
       (failure) {
         state = AsyncError(failure.message, StackTrace.current);
         return false;
@@ -86,6 +86,4 @@ class EditPlaylistNotifier
 }
 
 final editPlaylistProvider = AsyncNotifierProvider.autoDispose
-    .family<EditPlaylistNotifier, List<Track>, Playlist>(
-      EditPlaylistNotifier.new,
-    );
+    .family<EditPlaylistNotifier, List<Track>, Playlist>(EditPlaylistNotifier.new);

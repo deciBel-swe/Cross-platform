@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/user_profile.dart';
@@ -31,8 +30,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen>
-    with WidgetsBindingObserver {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late ScrollController _scrollController;
   bool _showAppBarIcon = false;
   bool _shouldWatchSections = true;
@@ -44,16 +42,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // When the app comes back to the foreground, refresh the profile
-    // so images updated externally (e.g. via the website) are re-fetched.
-    if (state == AppLifecycleState.resumed && !_isPublicProfile) {
-      ref.read(userProfileProvider.notifier).refreshProfile();
-    }
   }
 
   Future<bool> _showConfirmDialog(BuildContext context, bool isBlocked) async {
@@ -211,7 +199,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -248,43 +235,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  error is NotFoundFailure
-                      ? Icons.person_off_rounded
-                      : error is NetworkFailure
-                      ? Icons.cloud_off_rounded
-                      : Icons.wifi_off_rounded,
+                const Icon(
+                  Icons.wifi_off_rounded,
                   color: AppColors.surface,
                   size: AppConstants.errorIconSize,
                 ),
                 const SizedBox(height: AppConstants.spacingRegular),
-                if (error is! NotFoundFailure && error is! NetworkFailure) ...[
-                  Text(
-                    'Oops! Something went wrong.',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: AppConstants.spacingSmall),
-                ],
                 Text(
-                  error is NotFoundFailure
-                      ? '404 | Not Found'
-                      : error is NetworkFailure
-                      ? 'You are offline. Downloads are still available from your library.'
-                      : error.toString().replaceAll(
-                          AppConstants.errorExceptionPrefix,
-                          '',
-                        ),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  'Oops! Something went wrong.',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppColors.onPrimary,
-                    fontSize: error is NotFoundFailure ? 18 : null,
-                    fontWeight: error is NotFoundFailure
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
+                const SizedBox(height: AppConstants.spacingSmall),
+                Text(
+                  error.toString().replaceAll(
+                    AppConstants.errorExceptionPrefix,
+                    '',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
                 ),
                 const SizedBox(height: AppConstants.spacingExtraLarge),
                 ElevatedButton.icon(
@@ -320,35 +293,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               child: SizedBox(
                 height: MediaQuery.of(context).size.height,
                 child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        failure is NotFoundFailure
-                            ? Icons.person_off_rounded
-                            : failure is NetworkFailure
-                            ? Icons.cloud_off_rounded
-                            : Icons.error_outline_rounded,
-                        color: AppColors.onPrimary.withValues(alpha: 0.5),
-                        size: AppConstants.errorIconSize,
-                      ),
-                      const SizedBox(height: AppConstants.spacingRegular),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppConstants.spacingExtraLarge,
-                        ),
-                        child: Text(
-                          failure is NotFoundFailure
-                              ? '404 | Not Found'
-                              : failure is NetworkFailure
-                              ? 'You are offline. Downloads are still available from your library.'
-                              : 'Could not load profile: ${failure.message}',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: AppColors.onPrimary),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    'Could not load profile: ${failure.message}',
+                    style: const TextStyle(color: AppColors.onPrimary),
                   ),
                 ),
               ),
@@ -365,13 +312,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      Semantics(
-                        identifier: 'profile_cover_photo',
-                        image: true,
-                        label: 'Profile cover photo',
-                        child: _ProfileCoverPhoto(
-                          imageUrl: user.profileDetails.coverPic,
-                        ),
+                      _ProfileCoverPhoto(
+                        imageUrl: user.profileDetails.coverPic,
                       ),
 
                       const Positioned(
@@ -439,7 +381,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       backgroundColor: AppColors.background,
       leading: Button(
         icon: Icons.arrow_back_rounded,
-        semanticLabel: 'Back',
         onPressed: () =>
             context.canPop() ? context.pop() : context.go(RoutePaths.library),
       ),
@@ -454,7 +395,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       leadingWidth: AppConstants.appBarLeadingWidth,
       leading: Button(
         icon: Icons.arrow_back_rounded,
-        semanticLabel: 'Back',
         onPressed: () =>
             context.canPop() ? context.pop() : context.go(RoutePaths.library),
       ),
@@ -491,19 +431,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         if (_isPublicProfile)
           IconButton(
             icon: const Icon(Icons.more_vert),
-            tooltip: 'More options',
             onPressed: () => _showModerationSheet(context, user),
           ),
-        Button(
-          icon: Icons.share,
-          semanticLabel: 'Share profile',
-          onPressed: () {},
-        ),
-        Button(
-          icon: Icons.cast,
-          semanticLabel: 'Cast to device',
-          onPressed: () {},
-        ),
+        Button(icon: Icons.share, onPressed: () {}),
+        Button(icon: Icons.cast, onPressed: () {}),
       ],
     );
   }

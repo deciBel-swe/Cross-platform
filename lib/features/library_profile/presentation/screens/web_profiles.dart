@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/auth_validators.dart';
 import '../providers/web_profiles_order_provider.dart';
 import '../providers/web_profiles_provider.dart';
 import '../utils/web_profile_platform_utils.dart';
@@ -17,7 +17,6 @@ class EditProfileLinkScreen extends ConsumerStatefulWidget {
 
 class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
   final TextEditingController _linkController = TextEditingController();
-  final GlobalKey<FormState> _addLinkFormKey = GlobalKey<FormState>();
 
   String? _pendingDeleteLink;
 
@@ -28,7 +27,8 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
   }
 
   bool _isValidUrl(String link) {
-    return AuthValidators.validateSocialLink(link) == null;
+    final uri = Uri.tryParse(link);
+    return uri != null && uri.hasScheme && uri.hasAuthority;
   }
 
   String _normalizeUrl(String rawLink) {
@@ -46,18 +46,9 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
   }
 
   Future<void> _addLink() async {
-    final normalizedLink = _normalizeUrl(_linkController.text);
+    final link = _normalizeUrl(_linkController.text);
     final notifier = ref.read(webProfilesProvider.notifier);
     final socialLinks = ref.read(webProfilesProvider);
-
-    final validationMessage = AuthValidators.validateSocialLink(normalizedLink);
-
-    if (validationMessage != null) {
-      _addLinkFormKey.currentState?.validate();
-      return;
-    }
-
-    final link = normalizedLink;
 
     if (link.isEmpty) {
       ScaffoldMessenger.of(
@@ -67,7 +58,9 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
     }
 
     if (!_isValidUrl(link)) {
-      _addLinkFormKey.currentState?.validate();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a valid URL')));
       return;
     }
 
@@ -92,7 +85,7 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
     }
 
     final currentLinksCount = socialLinks
-        .nonEmptyPlatforms(includeSupportLink: false)
+        .nonEmptyPlatforms(includeSupportLink: true)
         .length;
 
     if (currentLinksCount >= 3) {
@@ -119,7 +112,6 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
     );
 
     _linkController.clear();
-    _addLinkFormKey.currentState?.reset();
   }
 
   Future<void> _showDeleteConfirmationDialog(String link) async {
@@ -220,35 +212,22 @@ class _EditProfileLinkScreenState extends ConsumerState<EditProfileLinkScreen> {
             style: TextStyle(fontSize: 12, color: Colors.white70),
           ),
           const SizedBox(height: 14),
-          Form(
-            key: _addLinkFormKey,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: TextFormField(
-              controller: _linkController,
-              validator: (value) {
-                final normalized = _normalizeUrl(value ?? '');
-                return AuthValidators.validateSocialLink(normalized);
-              },
-              decoration: const InputDecoration(
-                labelText: 'Link URL',
-                hintText: 'https://example.com',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.url,
+          TextField(
+            controller: _linkController,
+            decoration: const InputDecoration(
+              labelText: 'Link URL',
+              hintText: 'https://example.com',
+              border: OutlineInputBorder(),
             ),
+            keyboardType: TextInputType.url,
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: Semantics(
-              identifier: 'add_weblink_button',
-              button: true,
-              label: 'Add web link',
-              child: OutlinedButton.icon(
-                onPressed: _addLink,
-                icon: const Icon(Icons.add),
-                label: const Text('Add link'),
-              ),
+            child: OutlinedButton.icon(
+              onPressed: _addLink,
+              icon: const Icon(Icons.add),
+              label: const Text('Add link'),
             ),
           ),
           const SizedBox(height: 20),
@@ -292,7 +271,6 @@ class _EditableLinkRow extends ConsumerStatefulWidget {
 
 class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
   late TextEditingController _controller;
-  final GlobalKey<FormState> _editFormKey = GlobalKey<FormState>();
   bool _isEditing = false;
 
   @override
@@ -337,19 +315,8 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
   }
 
   Future<void> _saveInlineEdit() async {
-    final normalizedNewLink = _normalizeUrl(_controller.text);
+    final newLink = _normalizeUrl(_controller.text);
     final notifier = ref.read(webProfilesProvider.notifier);
-
-    final validationMessage = AuthValidators.validateSocialLink(
-      normalizedNewLink,
-    );
-
-    if (validationMessage != null) {
-      _editFormKey.currentState?.validate();
-      return;
-    }
-
-    final newLink = normalizedNewLink;
 
     if (!mounted) return;
     if (newLink.isEmpty) {
@@ -361,7 +328,9 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
 
     if (!mounted) return;
     if (!widget.isValidUrl(newLink)) {
-      _editFormKey.currentState?.validate();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a valid URL')));
       return;
     }
 
@@ -417,95 +386,71 @@ class _EditableLinkRowState extends ConsumerState<_EditableLinkRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      identifier: 'edit_weblink_row_${widget.platform}',
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(width: 22, child: widget.platformIcon),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _isEditing
-                  ? Form(
-                      key: _editFormKey,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      child: TextFormField(
-                        controller: _controller,
-                        autofocus: true,
-                        keyboardType: TextInputType.url,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _saveInlineEdit(),
-                        validator: (value) {
-                          final normalized = _normalizeUrl(value ?? '');
-                          return AuthValidators.validateSocialLink(normalized);
-                        },
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                          hintText: 'https://example.com',
-                        ),
-                      ),
-                    )
-                  : Text(
-                      widget.link,
-                      style: const TextStyle(fontSize: 14),
-                      overflow: TextOverflow.ellipsis,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(width: 22, child: widget.platformIcon),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _isEditing
+                ? TextField(
+                    controller: _controller,
+                    autofocus: true,
+                    keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _saveInlineEdit(),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      isDense: true,
                     ),
-            ),
-            if (!_isEditing)
-              Semantics(
-                identifier: 'edit_weblink_button_${widget.platform}',
-                child: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _isEditing = true;
-                      _controller.text = widget.link;
-                    });
-                  },
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Edit',
-                ),
-              ),
-            if (_isEditing)
-              Semantics(
-                identifier: 'apply_weblink_button_${widget.platform}',
-                child: IconButton(
-                  onPressed: _saveInlineEdit,
-                  icon: const Icon(Icons.check, color: Colors.green),
-                  tooltip: 'Apply',
-                ),
-              ),
-            if (_isEditing)
-              Semantics(
-                identifier: 'cancel_weblink_button_${widget.platform}',
-                child: IconButton(
-                  onPressed: _cancelEdit,
-                  icon: const Icon(Icons.close),
-                  tooltip: 'Cancel',
-                ),
-              ),
-            if (!_isEditing)
-              Semantics(
-                identifier: 'delete_weblink_button_${widget.platform}',
-                child: IconButton(
-                  onPressed: widget.onDelete,
-                  icon: Icon(
-                    Icons.delete_outline,
-                    color: widget.isDeletePending ? Colors.red : null,
+                  )
+                : Text(
+                    widget.link,
+                    style: const TextStyle(fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  tooltip: 'Delete',
-                ),
+          ),
+          if (!_isEditing)
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isEditing = true;
+                  _controller.text = widget.link;
+                });
+              },
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit',
+            ),
+          if (_isEditing)
+            IconButton(
+              onPressed: _saveInlineEdit,
+              icon: const Icon(Icons.check, color: Colors.green),
+              tooltip: 'Apply',
+            ),
+          if (_isEditing)
+            IconButton(
+              onPressed: _cancelEdit,
+              icon: const Icon(Icons.close),
+              tooltip: 'Cancel',
+            ),
+          if (!_isEditing)
+            IconButton(
+              onPressed: widget.onDelete,
+              icon: Icon(
+                Icons.delete_outline,
+                color: widget.isDeletePending ? Colors.red : null,
               ),
-          ],
-        ),
+              tooltip: 'Delete',
+            ),
+        ],
       ),
     );
   }

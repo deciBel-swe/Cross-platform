@@ -10,8 +10,6 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/storage/secure_storage_service.dart';
-import '../../../../core/storage/shared_prefs_service.dart';
-import '../../../offline/data/datasources/offline_local_data_source.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
@@ -22,17 +20,10 @@ import '../models/register_local_request_model.dart';
 @Environment('prod')
 @LazySingleton(as: IAuthRepository)
 class AuthRepository implements IAuthRepository {
-  AuthRepository(
-    this._remoteDataSource,
-    this._secureStorageService,
-    this._sharedPrefsService,
-    this._offlineLocalDataSource,
-  );
+  AuthRepository(this._remoteDataSource, this._secureStorageService);
 
   final IAuthRemoteDataSource _remoteDataSource;
   final SecureStorageService _secureStorageService;
-  final SharedPrefsService _sharedPrefsService;
-  final OfflineLocalDataSource _offlineLocalDataSource;
 
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
@@ -60,9 +51,12 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e) {
+    } catch (e, st) {
       if (kDebugMode) {
-        // Ignore wrapper exception
+        debugPrint(
+          '[AuthRepository] Unexpected error in loginWithEmailPassword: $e',
+        );
+        debugPrint('[AuthRepository] StackTrace: $st');
       }
       return Left(AuthFailure('An unexpected error occurred: $e'));
     }
@@ -100,9 +94,12 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e) {
+    } catch (e, st) {
       if (kDebugMode) {
-        // Ignore wrapper exception
+        debugPrint(
+          '[AuthRepository] Unexpected error in registerWithEmailPassword: $e',
+        );
+        debugPrint('[AuthRepository] StackTrace: $st');
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     }
@@ -112,17 +109,6 @@ class AuthRepository implements IAuthRepository {
   Future<Either<Failure, AuthUser?>> getCurrentUser() async {
     try {
       final isExpired = await _secureStorageService.isAccessTokenExpired();
-      final hasRefreshToken =
-          (await _secureStorageService.getRefreshToken()) != null;
-
-      if (isExpired && hasRefreshToken) {
-        final refreshResult = await refreshToken();
-        return refreshResult.fold((failure) {
-          _offlineLocalDataSource.clearAll();
-          return const Right(null); // If refresh fails, user must log in again
-        }, (user) => Right(user));
-      }
-
       if (isExpired) {
         return const Right(null);
       }
@@ -131,44 +117,6 @@ class AuthRepository implements IAuthRepository {
       return Right(userModel?.toDomain());
     } catch (e) {
       return const Right(null);
-    }
-  }
-
-  @override
-  Future<Either<Failure, AuthUser>> refreshToken() async {
-    try {
-      final refreshToken = await _secureStorageService.getRefreshToken();
-      final accessToken = await _secureStorageService.getAccessToken();
-
-      if (refreshToken == null || accessToken == null) {
-        return const Left(AuthFailure('No tokens available for refresh'));
-      }
-
-      final responseModel = await _remoteDataSource.refreshToken(
-        refreshToken: refreshToken,
-        accessToken: accessToken,
-      );
-
-      await _secureStorageService.saveRefreshTokens(
-        accessToken: responseModel.accessToken,
-        refreshToken: responseModel.refreshToken,
-        expiresIn: responseModel.expiresIn,
-      );
-
-      final userModel = await _secureStorageService.getUser();
-      if (userModel == null) {
-        return const Left(
-          AuthFailure('Token refreshed but no cached user was found'),
-        );
-      }
-
-      return Right(userModel.toDomain());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on AuthException catch (e) {
-      return Left(AuthFailure(e.message));
-    } catch (e) {
-      return Left(AuthFailure('Token refresh failed: $e'));
     }
   }
 
@@ -186,9 +134,10 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e) {
+    } catch (e, st) {
       if (kDebugMode) {
-        // Ignore wrapper exception
+        debugPrint('[AuthRepository] Unexpected error in loginWithGoogle: $e');
+        debugPrint('[AuthRepository] StackTrace: $st');
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     }
@@ -247,65 +196,14 @@ class AuthRepository implements IAuthRepository {
       return Left(ServerFailure(e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } catch (e) {
+    } catch (e, st) {
       if (kDebugMode) {
-        // Ignore wrapper exception
+        debugPrint('[AuthRepository] Unexpected error in logout: $e');
+        debugPrint('[AuthRepository] StackTrace: $st');
       }
       return const Left(AuthFailure('An unexpected error occurred.'));
     } finally {
-      await _offlineLocalDataSource.clearAll();
       await _secureStorageService.clearAll();
-      await _sharedPrefsService.clearAll();
-    }
-  }
-
-  @override
-  Future<Either<Failure, (String, int?)>> resendVerificationCode({
-    required String email,
-  }) async {
-    try {
-      final response = await _remoteDataSource.resendVerification(email);
-      return Right((response.message, response.coolDown));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on AuthException catch (e) {
-      return Left(AuthFailure(e.message));
-    } catch (e) {
-      if (kDebugMode) {
-        // Ignore wrapper exception
-      }
-      return const Left(AuthFailure('An unexpected error occurred.'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, String>> forgotPassword(String email) async {
-    try {
-      final message = await _remoteDataSource.forgotPassword(email);
-      return Right(message);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on AuthException catch (e) {
-      return Left(AuthFailure(e.message));
-    } catch (_) {
-      return const Left(AuthFailure('An unexpected error occurred.'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, String>> resetPassword(
-    String token,
-    String newPassword,
-  ) async {
-    try {
-      final message = await _remoteDataSource.resetPassword(token, newPassword);
-      return Right(message);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on AuthException catch (e) {
-      return Left(AuthFailure(e.message));
-    } catch (_) {
-      return const Left(AuthFailure('An unexpected error occurred.'));
     }
   }
 }

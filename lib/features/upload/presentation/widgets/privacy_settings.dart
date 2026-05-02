@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../library_profile/domain/entities/user_profile.dart'
-    as profile_entities;
-import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../providers/upload_notifier.dart';
 
 /// The privacy settings for the public and private tracks and its saved as preference
@@ -25,16 +22,9 @@ class PrivacySettings extends ConsumerWidget {
     final isLoading = state is AsyncLoading;
     final metadata = state.value!;
 
-    final userProfileAsync = ref.watch(userProfileProvider);
-
     // TODO: In Phase 4, replace this mocked value with the actual user profile provider
-    bool isArtistPro = userProfileAsync.maybeWhen(
-      data: (result) => result.fold(
-        (_) => false,
-        (profile) => profile.tier != profile_entities.UserTier.free,
-      ),
-      orElse: () => false,
-    );
+    // will be ISA: final isArtistPro = ref.watch(currentUserProvider).isPro;
+    bool isArtistPro = true;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
