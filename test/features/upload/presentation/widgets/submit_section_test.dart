@@ -3,10 +3,7 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/core/router/route_paths.dart';
-import 'package:decibel/core/services/waveform_extraction_service.dart';
-import 'package:decibel/core/storage/secure_storage_service.dart';
 import 'package:decibel/core/storage/shared_prefs_service.dart';
-import 'package:decibel/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:decibel/features/library/domain/entities/track_status.dart';
@@ -17,7 +14,6 @@ import 'package:decibel/features/upload/presentation/widgets/submit_section.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -26,13 +22,6 @@ class MockUploadRepository extends Mock implements IUploadRepository {}
 class MockSharedPrefsService extends Mock implements SharedPrefsService {}
 
 class MockGoRouter extends Mock implements GoRouter {}
-
-class MockWaveformExtractionService extends Mock
-    implements WaveformExtractionService {}
-
-class MockSecureStorageService extends Mock implements SecureStorageService {}
-
-class MockAuthRepository extends Mock implements IAuthRepository {}
 
 class FakeTrackUploadMetadata extends Fake implements TrackUploadMetadata {}
 
@@ -51,9 +40,6 @@ class SeededUploadNotifier extends UploadNotifier {
 
 void main() {
   late MockUploadRepository mockRepo;
-  late MockWaveformExtractionService mockWaveformService;
-  late MockSecureStorageService mockSecureStorage;
-  late MockAuthRepository mockAuthRepo;
 
   setUpAll(() {
     registerFallbackValue(FakeTrackUploadMetadata());
@@ -61,27 +47,6 @@ void main() {
 
   setUp(() {
     mockRepo = MockUploadRepository();
-    mockWaveformService = MockWaveformExtractionService();
-    mockSecureStorage = MockSecureStorageService();
-    mockAuthRepo = MockAuthRepository();
-
-    if (!GetIt.I.isRegistered<SecureStorageService>()) {
-      GetIt.I.registerSingleton<SecureStorageService>(mockSecureStorage);
-    }
-    if (!GetIt.I.isRegistered<IAuthRepository>()) {
-      GetIt.I.registerSingleton<IAuthRepository>(mockAuthRepo);
-    }
-
-    when(
-      () => mockWaveformService.extractWaveform(
-        any(),
-        noOfSamples: any(named: 'noOfSamples'),
-      ),
-    ).thenAnswer((_) async => [0.1, 0.5, 0.2]);
-  });
-
-  tearDown(() {
-    GetIt.I.reset();
   });
   testWidgets('uploads track successfully and navigates to library', (
     tester,
@@ -108,7 +73,7 @@ void main() {
       repostCount: 0,
       isLiked: false,
       isReposted: false,
-      trackDurationSeconds: 120, createdAt: DateTime(2026, 1, 1),
+      createdAt: DateTime(2026, 1, 1),
     );
 
     // Tell the repository to return a Success
@@ -120,9 +85,6 @@ void main() {
       ProviderScope(
         overrides: [
           uploadRepositoryProvider.overrideWithValue(mockRepo),
-          waveformExtractionServiceProvider.overrideWithValue(
-            mockWaveformService,
-          ),
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(validState),
           ),
@@ -177,9 +139,6 @@ void main() {
       ProviderScope(
         overrides: [
           uploadRepositoryProvider.overrideWithValue(mockRepo),
-          waveformExtractionServiceProvider.overrideWithValue(
-            mockWaveformService,
-          ),
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(validState),
           ),
@@ -221,9 +180,6 @@ void main() {
       ProviderScope(
         overrides: [
           uploadRepositoryProvider.overrideWithValue(mockRepo),
-          waveformExtractionServiceProvider.overrideWithValue(
-            mockWaveformService,
-          ),
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(fakeStateNoFile),
           ),
@@ -264,9 +220,6 @@ void main() {
       ProviderScope(
         overrides: [
           uploadRepositoryProvider.overrideWithValue(mockRepo),
-          waveformExtractionServiceProvider.overrideWithValue(
-            mockWaveformService,
-          ),
           // Inject the Notifier with the seeded state
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(fakeStateWithFileOnly),
@@ -312,9 +265,6 @@ void main() {
       ProviderScope(
         overrides: [
           uploadRepositoryProvider.overrideWithValue(mockRepo),
-          waveformExtractionServiceProvider.overrideWithValue(
-            mockWaveformService,
-          ),
           uploadNotifierProvider.overrideWith(
             () => SeededUploadNotifier(fakeState),
           ),

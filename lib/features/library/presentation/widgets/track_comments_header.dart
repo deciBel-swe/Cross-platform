@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/track_comment_provider.dart';
+import '../notifiers/track_comment_notifier.dart';
 import '../state/track_comment_state.dart';
 
 class TrackCommentsHeader extends ConsumerWidget {
   const TrackCommentsHeader({
     super.key,
     required this.commentCount,
-    required this.trackId,
+    required this.trackId, // Ensure you pass trackId from TrackCommentsBottomSheet
   });
 
   final int commentCount;
   final int trackId;
 
-  /// Builds the comments header with count and sorting controls.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -25,10 +24,13 @@ class TrackCommentsHeader extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Close Icon
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: const Icon(Icons.close, color: Colors.white, size: 24),
           ),
+
+          // Title
           Text(
             '$commentCount comments',
             style: theme.textTheme.titleMedium?.copyWith(
@@ -36,6 +38,8 @@ class TrackCommentsHeader extends ConsumerWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
+
+          // Sort Button
           GestureDetector(
             onTap: () => _showSortOptions(context, ref, theme, currentSort),
             child: const Icon(Icons.tune, color: Colors.white, size: 24),
@@ -45,14 +49,14 @@ class TrackCommentsHeader extends ConsumerWidget {
     );
   }
 
-  /// Shows the sort option sheet.
   void _showSortOptions(
     BuildContext context,
     WidgetRef ref,
     ThemeData theme,
     CommentSortOption currentSort,
   ) {
-    showModalBottomSheet<void>(
+    // ignore: inference_failure_on_function_invocation
+    showModalBottomSheet(
       context: context,
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
@@ -93,7 +97,6 @@ class TrackCommentsHeader extends ConsumerWidget {
     );
   }
 
-  /// Builds a selectable sort option row.
   Widget _buildSortOptionTile(
     BuildContext context,
     WidgetRef ref, {
@@ -118,7 +121,11 @@ class TrackCommentsHeader extends ConsumerWidget {
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check, size: 16, color: Colors.black),
+              child: const Icon(
+                Icons.check,
+                size: 16,
+                color: Colors.black, // Black tick on white circle
+              ),
             )
           : null,
       onTap: () {

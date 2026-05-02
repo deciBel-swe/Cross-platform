@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../providers/upload_notifier.dart';
-import '../widgets/access_type_selector.dart';
 import '../widgets/files_selection_header.dart';
 import '../widgets/privacy_settings.dart';
 import '../widgets/submit_section.dart';
@@ -47,7 +46,6 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
           onPressed: () => context.pop(),
         ),
@@ -59,40 +57,22 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Semantics(
-                header: true,
-                label: 'Track completion checklist',
-                child: TrackInfoChecklist(metadata: metadata),
-              ),
+              TrackInfoChecklist(metadata: metadata),
               const SizedBox(height: 24),
 
-              Semantics(
-                header: true,
-                label: 'Select your track file',
-                child: const FileSelectionHeader(),
-              ),
+              const FileSelectionHeader(),
               const SizedBox(height: 24),
 
               // The main card containing the metadata and privacy forms
-              Semantics(
-                label: 'Track details and settings',
-                container: true,
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.borderDark),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TrackDetailsForm(),
-
-                      PrivacySettings(),
-                      SizedBox(height: 24),
-                      AccessTypeSelector(),
-                    ],
-                  ),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.borderDark),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [TrackDetailsForm(), PrivacySettings()],
                 ),
               ),
               const SizedBox(height: 32),

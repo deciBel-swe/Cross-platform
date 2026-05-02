@@ -1,11 +1,5 @@
-import 'package:dartz/dartz.dart';
-import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/core/services/picker_service.dart';
 import 'package:decibel/core/storage/shared_prefs_service.dart';
-import 'package:decibel/features/library_profile/domain/entities/user_profile.dart'
-    as profile;
-import 'package:decibel/features/library_profile/presentation/notifiers/user_profile_notifier.dart';
-import 'package:decibel/features/library_profile/presentation/providers/user_profile_provider.dart';
 import 'package:decibel/features/upload/domain/entities/track_upload_metadata.dart';
 import 'package:decibel/features/upload/domain/repositories/i_upload_repository.dart';
 import 'package:decibel/features/upload/presentation/providers/upload_notifier.dart';
@@ -22,28 +16,6 @@ class MockPickerService extends Mock implements IPickerService {}
 class MockUploadRepository extends Mock implements IUploadRepository {}
 
 class FakeTrackUploadMetadata extends Fake implements TrackUploadMetadata {}
-
-class FakeUserProfileNotifier extends UserProfileNotifier {
-  @override
-  Future<Either<Failure, profile.UserProfile>> build() async {
-    return const Right(
-      profile.UserProfile(
-        id: 1,
-        role: 'ARTIST',
-        email: 'artist@example.com',
-        username: 'artist',
-        emailVerified: true,
-        tier: profile.UserTier.artistPro,
-        profileDetails: profile.UserProfileDetails(favoriteGenres: <String>[]),
-        privacySettings: profile.PrivacySettings(
-          isPrivate: false,
-          showHistory: true,
-        ),
-        stats: profile.UserStats(followers: 0, following: 0, tracksCount: 0),
-      ),
-    );
-  }
-}
 
 void main() {
   late MockSharedPrefsService mockPrefs;
@@ -86,7 +58,6 @@ void main() {
         sharedPrefsServiceProvider.overrideWithValue(mockPrefs),
         pickerServiceProvider.overrideWithValue(mockPicker),
         uploadRepositoryProvider.overrideWithValue(mockRepo),
-        userProfileProvider.overrideWith(() => FakeUserProfileNotifier()),
       ],
     );
     addTearDown(container.dispose);
@@ -114,7 +85,6 @@ void main() {
           sharedPrefsServiceProvider.overrideWithValue(mockPrefs),
           pickerServiceProvider.overrideWithValue(mockPicker),
           uploadRepositoryProvider.overrideWithValue(mockRepo),
-          userProfileProvider.overrideWith(() => FakeUserProfileNotifier()),
         ],
       );
       addTearDown(container.dispose);
@@ -149,7 +119,6 @@ void main() {
         sharedPrefsServiceProvider.overrideWithValue(mockPrefs),
         pickerServiceProvider.overrideWithValue(mockPicker),
         uploadRepositoryProvider.overrideWithValue(mockRepo),
-        userProfileProvider.overrideWith(() => FakeUserProfileNotifier()),
       ],
     );
     addTearDown(container.dispose);

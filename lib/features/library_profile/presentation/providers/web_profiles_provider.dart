@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
@@ -19,33 +20,8 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
 
   String getPlatformKey(String link) =>
       WebProfilePlatformUtils.detectPlatform(link);
-
   void setInitialLinks(PublicProfileSocialLinks links) {
     state = links;
-  }
-
-  bool _isValidHttpOrHttpsUrl(String link) {
-    final trimmed = link.trim();
-
-    if (trimmed.isEmpty) {
-      return false;
-    }
-
-    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-      return false;
-    }
-
-    final uri = Uri.tryParse(trimmed);
-    if (uri == null) {
-      return false;
-    }
-
-    if ((uri.scheme != 'http' && uri.scheme != 'https') ||
-        uri.host.trim().isEmpty) {
-      return false;
-    }
-
-    return true;
   }
 
   bool linkAlreadyExists(String link) {
@@ -58,28 +34,16 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
   }
 
   bool platformAlreadyExists(String link) {
-    if (!_isValidHttpOrHttpsUrl(link)) {
-      return false;
-    }
-
     final platform = WebProfilePlatformUtils.detectPlatform(link);
     return state.hasValueForPlatform(platform);
   }
 
   String? getExistingLinkForPlatform(String link) {
-    if (!_isValidHttpOrHttpsUrl(link)) {
-      return null;
-    }
-
     final platform = WebProfilePlatformUtils.detectPlatform(link);
     return state.valueForPlatform(platform);
   }
 
   bool isSamePlatform(String oldLink, String newLink) {
-    if (!_isValidHttpOrHttpsUrl(oldLink) || !_isValidHttpOrHttpsUrl(newLink)) {
-      return false;
-    }
-
     return WebProfilePlatformUtils.detectPlatform(oldLink) ==
         WebProfilePlatformUtils.detectPlatform(newLink);
   }
@@ -87,7 +51,6 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
   bool addLinkLocally(String rawLink) {
     final link = rawLink.trim();
     if (link.isEmpty) return false;
-    if (!_isValidHttpOrHttpsUrl(link)) return false;
 
     final platform = WebProfilePlatformUtils.detectPlatform(link);
     state = state.copyWithPlatform(platform, link);
@@ -99,10 +62,6 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
     final trimmedNew = newLink.trim();
 
     if (trimmedOld.isEmpty || trimmedNew.isEmpty) return false;
-    if (!_isValidHttpOrHttpsUrl(trimmedOld) ||
-        !_isValidHttpOrHttpsUrl(trimmedNew)) {
-      return false;
-    }
 
     final oldPlatform = WebProfilePlatformUtils.detectPlatform(trimmedOld);
     final newPlatform = WebProfilePlatformUtils.detectPlatform(trimmedNew);
@@ -120,7 +79,6 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
   bool deleteLinkLocally(String rawLink) {
     final link = rawLink.trim();
     if (link.isEmpty) return false;
-    if (!_isValidHttpOrHttpsUrl(link)) return false;
 
     final platform = WebProfilePlatformUtils.detectPlatform(link);
     state = state.copyWithPlatform(platform, null);
@@ -130,7 +88,6 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
   Future<bool> saveLink(String rawLink) async {
     final link = rawLink.trim();
     if (link.isEmpty) return false;
-    if (!_isValidHttpOrHttpsUrl(link)) return false;
 
     final platform = WebProfilePlatformUtils.detectPlatform(link);
     return _updateBackendAndState(
@@ -143,10 +100,6 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
     final trimmedNew = newLink.trim();
 
     if (trimmedOld.isEmpty || trimmedNew.isEmpty) return false;
-    if (!_isValidHttpOrHttpsUrl(trimmedOld) ||
-        !_isValidHttpOrHttpsUrl(trimmedNew)) {
-      return false;
-    }
 
     final oldPlatform = WebProfilePlatformUtils.detectPlatform(trimmedOld);
     final newPlatform = WebProfilePlatformUtils.detectPlatform(trimmedNew);
@@ -164,7 +117,6 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
   Future<bool> deleteLink(String rawLink) async {
     final link = rawLink.trim();
     if (link.isEmpty) return false;
-    if (!_isValidHttpOrHttpsUrl(link)) return false;
 
     final platform = WebProfilePlatformUtils.detectPlatform(link);
     return _updateBackendAndState(
@@ -178,6 +130,7 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
     final currentState = state;
     final nextState = applyChanges(currentState);
 
+    // Keep local UI state as the source of truth for this session.
     state = nextState;
 
     final result = await _repository.updateSocialLinks(nextState);
@@ -185,9 +138,13 @@ class WebProfilesNotifier extends Notifier<PublicProfileSocialLinks> {
     result.fold(
       (failure) {
         state = currentState;
+        debugPrint(
+          '[WebProfilesNotifier] Failed to sync social links: $failure',
+        );
       },
       (syncedLinks) {
         state = syncedLinks;
+        debugPrint('[WebProfilesNotifier] Social links synced successfully.');
       },
     );
 

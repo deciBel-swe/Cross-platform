@@ -20,23 +20,16 @@ abstract class TrackRepository {
 
   Future<Either<Failure, Track>> fetchTrackById(int id);
 
-  Future<Either<Failure, int>> resolveTrackIdentifier(String trackIdentifier);
-
   /// Fetches backend processing status (UPLOADING/PROCESSING/FINISHED/FAILED)
   /// used by uploads polling to reflect server-side waveform lifecycle.
   Future<Either<Failure, String>> fetchTrackStatusById(int id);
 
-  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(
-    int id, {
-    String? waveformUrl,
-  });
+  Future<Either<Failure, TrackPeaks>> fetchTrackPeaksById(int id);
 
   Future<Either<Failure, Track>> updateTrackMetadata({
     required int trackId,
     required TrackEditRequest request,
   });
-
-  Future<Either<Failure, bool>> deleteTrack(int trackId);
 
   Future<Either<Failure, bool>> deleteTrackCover(int trackId);
 }

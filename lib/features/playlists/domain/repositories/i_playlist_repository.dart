@@ -17,8 +17,6 @@ abstract class IPlaylistRepository {
   Future<Either<Failure, List<Playlist>>> getUserPlaylists({
     required int page,
     required int size,
-    int? userId,
-    String? username,
   });
 
   /// Fetches the secret link for a specific playlist

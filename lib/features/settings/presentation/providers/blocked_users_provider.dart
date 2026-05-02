@@ -7,9 +7,7 @@ import '../../domain/entities/blocked_user.dart';
 import '../../domain/repositories/blocked_users_repository.dart';
 
 final blockedUsersRepositoryProvider = Provider<BlockedUsersRepository>((ref) {
-  final useMock =
-      dotenv.isInitialized &&
-      dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
+  final useMock = dotenv.isInitialized && dotenv.env['USE_MOCK_SERVICES']?.toLowerCase() == 'true';
 
   if (useMock) {
     return BlockedUsersMockRepository();
@@ -127,7 +125,10 @@ class BlockedUsersListNotifier extends Notifier<BlockedUsersState> {
       );
 
       state = state.copyWith(
-        users: <BlockedUser>[...state.users, ...result.content],
+        users: <BlockedUser>[
+          ...state.users,
+          ...result.content,
+        ],
         isLoadingMore: false,
         currentPage: result.pageNumber,
         hasReachedEnd: result.isLast,
@@ -141,7 +142,9 @@ class BlockedUsersListNotifier extends Notifier<BlockedUsersState> {
     }
   }
 
-  Future<bool> unblockUser({required int userId}) async {
+  Future<bool> unblockUser({
+    required int userId,
+  }) async {
     if (state.isProcessing) {
       return false;
     }
@@ -175,5 +178,5 @@ class BlockedUsersListNotifier extends Notifier<BlockedUsersState> {
 
 final blockedUsersListProvider =
     NotifierProvider<BlockedUsersListNotifier, BlockedUsersState>(
-      BlockedUsersListNotifier.new,
-    );
+  BlockedUsersListNotifier.new,
+);

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -144,7 +143,7 @@ class BlockedUsersScreen extends ConsumerWidget {
                         backgroundImage:
                             (user.avatarUrl != null &&
                                 user.avatarUrl!.trim().isNotEmpty)
-                            ? CachedNetworkImageProvider(user.avatarUrl!)
+                            ? NetworkImage(user.avatarUrl!)
                             : null,
                         child:
                             (user.avatarUrl == null ||

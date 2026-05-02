@@ -164,6 +164,7 @@ class TrackCommentsRemoteDataSource implements ITrackCommentsRemoteDataSource {
         '${ApiConstants.comments}/$commentId',
       );
 
+      // Checking for 204 No Content or 200 OK
       if (response.statusCode == 204 || response.statusCode == 200) {
         return;
       }

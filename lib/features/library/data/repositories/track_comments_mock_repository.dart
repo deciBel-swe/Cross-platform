@@ -10,6 +10,7 @@ import '../../domain/repositories/i_track_comments_repository.dart';
 import '../datasources/track_comments_mock_fixtures.dart';
 import '../models/comment_user_model.dart';
 import '../models/paginated_replies_response_model.dart';
+import '../models/post_comment_response_model.dart';
 
 @Environment('mock')
 @LazySingleton(as: ITrackCommentsRepository)

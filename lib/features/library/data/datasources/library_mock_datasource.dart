@@ -151,22 +151,6 @@ class LibraryMockDatasource {
       LibraryMockFixtures.allTracks[allTracksIndex] = updatedTrack;
     }
   }
-
-  Future<void> deleteTrack(int trackId) async {
-    await Future<void>.delayed(LibraryMockFixtures.mockDelay);
-
-    final trackExists =
-        LibraryMockFixtures.trackMetaDataById.containsKey(trackId) ||
-        LibraryMockFixtures.allTracks.any((item) => item['id'] == trackId);
-
-    if (!trackExists) {
-      throw Exception('Track not found');
-    }
-
-    LibraryMockFixtures.trackMetaDataById.remove(trackId);
-    LibraryMockFixtures.trackPeaksById.remove(trackId);
-    LibraryMockFixtures.allTracks.removeWhere((item) => item['id'] == trackId);
-  }
 }
 
 extension on Iterable<Map<String, dynamic>> {

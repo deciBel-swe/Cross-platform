@@ -25,7 +25,9 @@ class BlockedUsersRepositoryImpl implements BlockedUsersRepository {
   }
 
   @override
-  Future<void> unblockUser({required int userId}) async {
+  Future<void> unblockUser({
+    required int userId,
+  }) async {
     await _remoteDatasource.unblockUser(userId: userId);
   }
 }

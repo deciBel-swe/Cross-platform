@@ -1,31 +1,26 @@
+/// Main application shell — switches between desktop and mobile layouts.
+library;
+
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/library_profile/presentation/providers/track_audio_provider.dart';
-import '../../features/notifications/presentation/providers/device_token_provider.dart';
 import '../../features/player/presentation/widgets/desktop_player_bar.dart';
-import '../../features/player/presentation/widgets/mobile_mini_player.dart';
 import '../theme/app_colors.dart';
-import '../utils/responsive_utils.dart';
 import 'desktop_header.dart';
 import 'desktop_sidebar.dart';
-import 'route_paths.dart';
 
 /// SoundCloud-style shell that wraps tabbed content.
 ///
 /// - **Desktop (≥ 801 px):** sidebar + header + content + player bar.
 /// - **Mobile (< 801 px):** content + bottom navigation bar.
-class MainShell extends ConsumerWidget {
+class MainShell extends StatelessWidget {
   const MainShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = ResponsiveUtils.isDesktop(context);
-
-    ref.watch(syncDeviceTokenProvider);
+  Widget build(BuildContext context) {
+    final isDesktop = _isDesktopLayout(context);
 
     if (isDesktop) {
       return _DesktopShell(navigationShell: navigationShell);
@@ -33,6 +28,14 @@ class MainShell extends ConsumerWidget {
 
     return _MobileShell(navigationShell: navigationShell);
   }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -47,37 +50,35 @@ class _DesktopShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Row(
-          children: [
-            // ---- Sidebar ----
-            DesktopSidebar(
-              currentIndex: navigationShell.currentIndex,
-              onTap: (index) => navigationShell.goBranch(
-                index,
-                initialLocation: index == navigationShell.currentIndex,
-              ),
+      body: Row(
+        children: [
+          // ---- Sidebar ----
+          DesktopSidebar(
+            currentIndex: navigationShell.currentIndex,
+            onTap: (index) => navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
             ),
+          ),
 
-            // ---- Vertical divider ----
-            const VerticalDivider(
-              width: 1,
-              thickness: 0.5,
-              color: AppColors.divider,
-            ),
+          // ---- Vertical divider ----
+          const VerticalDivider(
+            width: 1,
+            thickness: 0.5,
+            color: AppColors.divider,
+          ),
 
-            // ---- Content area ----
-            Expanded(
-              child: Column(
-                children: [
-                  const DesktopHeader(),
-                  Expanded(child: navigationShell),
-                  const DesktopPlayerBar(),
-                ],
-              ),
+          // ---- Content area ----
+          Expanded(
+            child: Column(
+              children: [
+                const DesktopHeader(),
+                Expanded(child: navigationShell),
+                const DesktopPlayerBar(),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -87,62 +88,22 @@ class _DesktopShell extends StatelessWidget {
 // Mobile layout
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _MobileShell extends ConsumerWidget {
+class _MobileShell extends StatelessWidget {
   const _MobileShell({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final location = GoRouterState.of(context).uri.toString();
-    final miniPlayerSuppressed = ref.watch(mobileMiniPlayerSuppressedProvider);
-    final hideMiniPlayer =
-        location == RoutePaths.editProfile ||
-        location.startsWith(RoutePaths.settings) ||
-        (location == RoutePaths.feed && miniPlayerSuppressed) ||
-        // Hide only when on the upload flow (add track/details), not in
-        // the user's uploads list.
-        location.startsWith(RoutePaths.upload) ||
-        location.startsWith(RoutePaths.messages) ||
-        location.startsWith(RoutePaths.chat);
-
-    final miniPlayerVisible = ref.watch(miniPlayerVisibleProvider);
-
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            navigationShell,
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 5,
-              child: AnimatedSlide(
-                // Slide out when either a sheet requests hiding (`miniPlayerVisible`
-                // == false) or when we explicitly want to hide for a route
-                // (e.g. upload flow). This reuses the same animation used by
-                // `TrackDetails.show` which toggles `miniPlayerVisibleProvider`.
-                offset: (miniPlayerVisible && !hideMiniPlayer)
-                    ? Offset.zero
-                    : const Offset(0, 1.5), // slide below the screen
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                child: const MobileMiniPlayer(),
-              ),
-            ),
-          ],
+      body: navigationShell,
+      bottomNavigationBar: _BottomNavBar(
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) => navigationShell.goBranch(
+          index,
+          initialLocation: index == navigationShell.currentIndex,
         ),
       ),
-      bottomNavigationBar: navigationShell.currentIndex == 6
-          ? null
-          : _BottomNavBar(
-              currentIndex: navigationShell.currentIndex,
-              onTap: (index) => navigationShell.goBranch(
-                index,
-                initialLocation: index == navigationShell.currentIndex,
-              ),
-            ),
     );
   }
 }
@@ -155,8 +116,6 @@ class _BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPhoneLandscape = ResponsiveUtils.isPhoneLandscape(context);
-
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -164,7 +123,7 @@ class _BottomNavBar extends StatelessWidget {
       ),
       child: SafeArea(
         child: SizedBox(
-          height: isPhoneLandscape ? 48 : 56,
+          height: 56,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -173,7 +132,6 @@ class _BottomNavBar extends StatelessWidget {
                 activeIcon: Icons.home,
                 label: 'Home',
                 isSelected: currentIndex == 0,
-                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(0),
               ),
               _NavItem(
@@ -181,7 +139,6 @@ class _BottomNavBar extends StatelessWidget {
                 activeIcon: Icons.video_library,
                 label: 'Feed',
                 isSelected: currentIndex == 1,
-                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(1),
               ),
               _NavItem(
@@ -189,7 +146,6 @@ class _BottomNavBar extends StatelessWidget {
                 activeIcon: Icons.search,
                 label: 'Search',
                 isSelected: currentIndex == 2,
-                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(2),
               ),
               _NavItem(
@@ -197,12 +153,10 @@ class _BottomNavBar extends StatelessWidget {
                 activeIcon: Icons.library_books,
                 label: 'Library',
                 isSelected: currentIndex == 3,
-                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(3),
               ),
               _UpgradeNavItem(
                 isSelected: currentIndex == 4,
-                showLabel: !isPhoneLandscape,
                 onTap: () => onTap(4),
               ),
             ],
@@ -220,7 +174,6 @@ class _NavItem extends StatelessWidget {
     required this.activeIcon,
     required this.label,
     required this.isSelected,
-    required this.showLabel,
     required this.onTap,
   });
 
@@ -228,30 +181,22 @@ class _NavItem extends StatelessWidget {
   final IconData activeIcon;
   final String label;
   final bool isSelected;
-  final bool showLabel;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : Colors.white54;
     return Expanded(
-      child: Semantics(
-        button: true,
-        selected: isSelected,
-        label: label,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(isSelected ? activeIcon : icon, color: color, size: 24),
-              if (showLabel) ...[
-                const SizedBox(height: 2),
-                Text(label, style: TextStyle(fontSize: 10, color: color)),
-              ],
-            ],
-          ),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(isSelected ? activeIcon : icon, color: color, size: 24),
+            const SizedBox(height: 2),
+            Text(label, style: TextStyle(fontSize: 10, color: color)),
+          ],
         ),
       ),
     );
@@ -260,46 +205,34 @@ class _NavItem extends StatelessWidget {
 
 /// Upgrade nav item – uses the app icon instead of a Material icon.
 class _UpgradeNavItem extends StatelessWidget {
-  const _UpgradeNavItem({
-    required this.isSelected,
-    required this.showLabel,
-    required this.onTap,
-  });
+  const _UpgradeNavItem({required this.isSelected, required this.onTap});
 
   final bool isSelected;
-  final bool showLabel;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : Colors.white54;
     return Expanded(
-      child: Semantics(
-        button: true,
-        selected: isSelected,
-        label: 'Upgrade',
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Transform.scale(
-                scale: 1.45,
-                child: Image.asset(
-                  'assets/icon/white_app_icon_trans.png',
-                  width: 24,
-                  height: 24,
-                  color: color,
-                  colorBlendMode: BlendMode.srcIn,
-                ),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Transform.scale(
+              scale: 1.45,
+              child: Image.asset(
+                'assets/icon/white_app_icon_trans.png',
+                width: 24,
+                height: 24,
+                color: color,
+                colorBlendMode: BlendMode.srcIn,
               ),
-              if (showLabel) ...[
-                const SizedBox(height: 2),
-                Text('Upgrade', style: TextStyle(fontSize: 10, color: color)),
-              ],
-            ],
-          ),
+            ),
+            const SizedBox(height: 2),
+            Text('Upgrade', style: TextStyle(fontSize: 10, color: color)),
+          ],
         ),
       ),
     );

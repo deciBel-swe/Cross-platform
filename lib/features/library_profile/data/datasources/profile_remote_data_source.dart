@@ -85,11 +85,6 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
       return SocialLinksModel.fromJson(normalizedLinksPayload);
     } on DioException catch (e) {
-      if (_isNetworkError(e)) {
-        throw const NetworkException(
-          'No internet connection. Offline content is still available.',
-        );
-      }
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized to update social links');
       }
@@ -112,11 +107,6 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       );
       return response.statusCode == 200 || response.statusCode == 204;
     } on DioException catch (e) {
-      if (_isNetworkError(e)) {
-        throw const NetworkException(
-          'No internet connection. Offline content is still available.',
-        );
-      }
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized to update profile');
       } else if (e.response?.statusCode == 404) {
@@ -167,9 +157,7 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
           responseData['username'] ?? profileMap['username'],
         ),
         'displayName': _asNullableString(
-          responseData['displayName'] ??
-              profileMap['displayName'] ??
-              profileMap['DisplayName'],
+          responseData['displayName'] ?? profileMap['displayName'] ?? profileMap['DisplayName'],
         ),
         'emailVerified': _asBool(responseData['emailVerified']),
         'tier': _asString(
@@ -194,17 +182,12 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
       return UserProfileModel.fromJson(normalizedResponse);
     } on DioException catch (e) {
-      if (_isNetworkError(e)) {
-        throw const NetworkException(
-          'No internet connection. Offline content is still available.',
-        );
-      }
       if (e.response?.statusCode == 401) {
         throw const AuthException(
           'Unauthorized to fetch profile. Please log in again.',
         );
       } else if (e.response?.statusCode == 404) {
-        throw const NotFoundException('User profile not found.');
+        throw const ServerException('User profile not found.');
       }
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
@@ -238,17 +221,15 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
           responseData['socialLinks'] as Map<String, dynamic>?;
 
       final Map<String, dynamic> normalizedResponse = <String, dynamic>{
-        'id': responseData['id'] ?? profile['id'] ?? 0,
+        'id': responseData['id'] ?? 0,
         'Role': 'USER',
         'email': '',
-        'username': responseData['username'] ?? profile['username'] ?? '',
+        'username': responseData['username'] ?? '',
         'displayName': _asNullableString(
-          responseData['displayName'] ??
-              profile['displayName'] ??
-              profile['DisplayName'],
+          responseData['displayName'] ?? profile['displayName'] ?? profile['DisplayName'],
         ),
         'emailVerified': true,
-        'tier': responseData['tier'] ?? profile['tier'] ?? 'FREE',
+        'tier': responseData['tier'] ?? 'FREE',
         'profile': {
           'bio': profile['bio'],
           'city': profile['Location'] ?? profile['city'],
@@ -260,27 +241,16 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
         'socialLinks': socialLinks,
         'privacySettings': {'isPrivate': false, 'showHistory': true},
         'stats': {
-          'followers': (stats['followersCount'] as num?)?.toInt() ??
-              (profile['followerCount'] as num?)?.toInt() ??
-              0,
-          'following': (stats['followingCount'] as num?)?.toInt() ??
-              (profile['followingCount'] as num?)?.toInt() ??
-              0,
-          'tracksCount': (stats['trackCount'] as num?)?.toInt() ??
-              (profile['trackCount'] as num?)?.toInt() ??
-              0,
+          'followers': (stats['followersCount'] as num?)?.toInt() ?? 0,
+          'following': (stats['followingCount'] as num?)?.toInt() ?? 0,
+          'tracksCount': (stats['trackCount'] as num?)?.toInt() ?? 0,
         },
       };
 
       return UserProfileModel.fromJson(normalizedResponse);
     } on DioException catch (e) {
-      if (_isNetworkError(e)) {
-        throw const NetworkException(
-          'No internet connection. Offline content is still available.',
-        );
-      }
       if (e.response?.statusCode == 404) {
-        throw const NotFoundException('Public profile not found.');
+        throw const ServerException('Public profile not found.');
       }
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
@@ -532,11 +502,6 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
       return response.statusCode == 200 || response.statusCode == 204;
     } on DioException catch (error) {
-      if (_isNetworkError(error)) {
-        throw const NetworkException(
-          'No internet. Image kept locally but not uploaded.',
-        );
-      }
       final responseData = error.response?.data;
       final String? backendMessage = responseData is Map<String, dynamic>
           ? responseData['message'] as String?
@@ -545,14 +510,5 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
     } catch (e) {
       throw ServerException('Unexpected error: $e');
     }
-  }
-
-  bool _isNetworkError(DioException error) {
-    return error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        (error.type == DioExceptionType.unknown &&
-            error.error is SocketException);
   }
 }

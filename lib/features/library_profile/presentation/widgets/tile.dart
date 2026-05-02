@@ -50,25 +50,19 @@ class Tile extends StatelessWidget {
         const SizedBox(width: 16),
         SizedBox(
           height: 32,
-          child: Semantics(
-            button: true,
-            label: '$buttonText $title',
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.surface,
-                foregroundColor: AppColors.textPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                shape: const StadiumBorder(),
-              ),
-              onPressed: onButtonPressed,
-              child: ExcludeSemantics(
-                child: Text(
-                  buttonText,
-                  style: const TextStyle(
-                    fontSize: AppConstants.fontSizeSmall,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+          child: FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.textPrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              shape: const StadiumBorder(),
+            ),
+            onPressed: onButtonPressed,
+            child: Text(
+              buttonText,
+              style: const TextStyle(
+                fontSize: AppConstants.fontSizeSmall,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

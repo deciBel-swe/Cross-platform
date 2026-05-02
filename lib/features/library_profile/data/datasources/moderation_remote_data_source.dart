@@ -23,6 +23,8 @@ class ModerationRemoteDataSource implements IModerationRemoteDataSource {
 
   @override
   Future<void> unblockUser(int userId) async {
-    await _dioClient.delete<void>('/users/$userId/block');
+    await _dioClient.delete<void>(
+      '/users/$userId/block',
+    );
   }
 }

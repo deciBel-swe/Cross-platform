@@ -274,14 +274,12 @@ class _AuthActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ElevatedButton(
           onPressed: onCreateAccount,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
-            minimumSize: const Size(double.infinity, 48),
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             textStyle: TextStyle(fontSize: buttonFontSize),
           ),
@@ -293,7 +291,6 @@ class _AuthActions extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0x4DFFFFFF),
             foregroundColor: Colors.black,
-            minimumSize: const Size(double.infinity, 48),
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
             textStyle: TextStyle(fontSize: buttonFontSize),
           ),

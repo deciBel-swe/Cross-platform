@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
@@ -15,15 +13,10 @@ import '../models/paginated_engagers_model.dart';
 /// Handles fetching public profiles and toggling the follow relationship
 /// between the current user and another user.
 abstract class IFollowRemoteDataSource {
-  /// Fetches a public profile for the given [userIdentifier].
+  /// Fetches a public profile for the given [userId].
   ///
-  /// Supports both numeric ids and usernames through the unified
-  /// [ApiConstants.publicProfile] endpoint helper:
-  /// - Numeric identifier -> `GET /users/{id}`
-  /// - Username identifier -> `GET /users/username/{username}`
-  ///
-  /// Returns a normalized [PublicProfileModel].
-  Future<PublicProfileModel> getPublicProfile(String userIdentifier);
+  /// Calls `GET /users/{userId}` and returns a [PublicProfileModel].
+  Future<PublicProfileModel> getPublicProfile(int userId);
 
   /// Follows the user identified by [userId].
   ///
@@ -56,12 +49,6 @@ abstract class IFollowRemoteDataSource {
     required int page,
     required int size,
   });
-
-  /// Fetches paginated mutual followers (friends) for current user.
-  Future<PaginatedEngagersModel> getFriends({
-    required int page,
-    required int size,
-  });
 }
 
 /// Concrete implementation of [IFollowRemoteDataSource] using [DioClient].
@@ -75,12 +62,11 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
   final DioClient _dioClient;
 
   @override
-  Future<PublicProfileModel> getPublicProfile(String userIdentifier) async {
+  Future<PublicProfileModel> getPublicProfile(int userId) async {
     try {
-      final trimmedIdentifier = userIdentifier.trim();
-      final endpoint = ApiConstants.publicProfile(trimmedIdentifier);
-
-      final response = await _dioClient.get<dynamic>(endpoint);
+      final response = await _dioClient.get<dynamic>(
+        ApiConstants.publicProfile(userId),
+      );
 
       final data = response.data as Map<String, dynamic>?;
       if (data == null) {
@@ -97,7 +83,7 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
       if (e.response?.statusCode == 401) {
         throw const AuthException('Unauthorized. Please log in again.');
       } else if (e.response?.statusCode == 404) {
-        throw const NotFoundException('User not found.');
+        throw const ServerException('User not found.');
       }
       throw ServerException(e.message ?? 'Unknown server error');
     } catch (e) {
@@ -177,18 +163,6 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     required int size,
   }) async {
     return _fetchSuggestedUsers(limit: size);
-  }
-
-  @override
-  Future<PaginatedEngagersModel> getFriends({
-    required int page,
-    required int size,
-  }) async {
-    return _fetchPaginatedUsers(
-      path: '/users/me/friends',
-      page: page,
-      size: size,
-    );
   }
 
   Future<PaginatedEngagersModel> _fetchSuggestedUsers({
@@ -389,14 +363,9 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         false;
 
     return <String, dynamic>{
-      'id': _asInt(profile['id'] ?? payload['id']) ?? 0,
-      'username': (profile['username'] ?? payload['username'] ?? '').toString(),
-      'displayName':
-          (payload['displayName'] ??
-                  profile['displayName'] ??
-                  profile['DisplayName'])
-              ?.toString(),
-      'tier': (profile['tier'] ?? payload['tier'] ?? 'FREE').toString(),
+      'id': _asInt(profile['id']) ?? 0,
+      'username': (profile['username'] ?? '').toString(),
+      'tier': (profile['tier'] ?? 'FREE').toString(),
       'profile': <String, dynamic>{
         'bio': profile['bio']?.toString(),
         'Location': location,
@@ -466,12 +435,9 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
         (profile['username'] ??
                 user['username'] ??
                 user['userName'] ??
+                user['displayName'] ??
                 '')
             .toString();
-    final displayName = (user['displayName'] ??
-            profile['displayName'] ??
-            profile['DisplayName'])
-        ?.toString();
     final avatarUrl =
         (profile['avatarUrl'] ??
                 profile['profilePic'] ??
@@ -503,7 +469,6 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     return <String, dynamic>{
       'id': id,
       'username': username,
-      'displayName': displayName,
       'avatarUrl': avatarUrl,
       'tier': tier,
       'isFollowing': isFollowing,
@@ -526,16 +491,10 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
 
   /// Translates common [DioException] status codes into typed [AppException]s.
   Never _handleDioError(DioException e, String action) {
-    if (_isNetworkError(e)) {
-      throw const NetworkException(
-        'No internet connection. Offline content is still available.',
-      );
-    }
-
     if (e.response?.statusCode == 401) {
       throw const AuthException('Unauthorized. Please log in again.');
     } else if (e.response?.statusCode == 404) {
-      throw const NotFoundException('User not found.');
+      throw const ServerException('User not found.');
     }
 
     final responseData = e.response?.data;
@@ -546,14 +505,5 @@ class FollowRemoteDataSource implements IFollowRemoteDataSource {
     throw ServerException(
       backendMessage ?? e.message ?? 'Failed to $action user',
     );
-  }
-
-  bool _isNetworkError(DioException error) {
-    return error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        (error.type == DioExceptionType.unknown &&
-            error.error is SocketException);
   }
 }

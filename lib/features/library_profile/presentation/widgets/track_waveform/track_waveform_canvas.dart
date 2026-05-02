@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_colors.dart';
 import '../waveform_painter.dart';
 
 class TrackWaveformCanvas extends StatelessWidget {
@@ -17,21 +16,13 @@ class TrackWaveformCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final darkerOrange =
-        Color.lerp(primaryColor, AppColors.borderDark, 0.5) ?? primaryColor;
-
-    final computedDragColor = (dragProgress != null && dragProgress! > progress)
-        ? darkerOrange
-        : Colors.grey;
-
     return CustomPaint(
       painter: WaveformPainter(
         peaks: peaks,
         progress: progress,
         dragProgress: dragProgress,
         playedColor: Theme.of(context).colorScheme.primary,
-        dragColor: computedDragColor,
+        dragColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.15),
         unplayedColor: Theme.of(context).colorScheme.outlineVariant,
         centerLineColor: Theme.of(context).dividerColor.withValues(alpha: 0.2),
       ),

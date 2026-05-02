@@ -7,19 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/utils/responsive_utils.dart';
-import '../../../../core/widgets/auto_scrolling_text.dart';
-import '../../../../core/widgets/decibel_cached_image.dart';
 import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
-import '../../../engagement/presentation/widgets/track_report_bottom_sheet.dart';
-import '../../../library/domain/entities/track.dart';
-import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
-import '../../../library/presentation/widgets/track_more_options_menu.dart';
-import '../../../library_profile/presentation/providers/track_peaks_provider.dart';
 import '../../../library_profile/presentation/widgets/waveform_painter.dart';
-import '../../../player/presentation/widgets/queue_bottom_sheet.dart';
-import '../../domain/entities/feed_item_type.dart';
 import 'mobile_feed_track_card.dart';
 
 /// A single mocked entry in the activity feed.
@@ -41,24 +31,7 @@ class FeedItem extends StatelessWidget {
     required this.commentCount,
     required this.duration,
     required this.waveformPeaks,
-    required this.commentTrack,
-    this.onPlay,
-    this.onAddToPlaylist,
-    this.onAddToQueue,
-    this.onViewQueue,
-    this.onEditTrack,
-    this.onGoToArtist,
-    this.onGoToAlbum,
-    this.onShare,
-    this.onCopyLink,
-    this.onDownload,
-    this.onDeleteTrack,
-    this.onMoreOptions,
-    this.userAvatarUrl,
-    this.coverUrl,
     this.gradientColors,
-    this.feedItemType = FeedItemType.trackPosted,
-    this.playlistData,
   });
 
   final int trackId;
@@ -76,50 +49,19 @@ class FeedItem extends StatelessWidget {
   final int commentCount;
   final String duration;
   final List<double> waveformPeaks;
-  final Track commentTrack;
-  final VoidCallback? onPlay;
-  final VoidCallback? onAddToPlaylist;
-  final VoidCallback? onAddToQueue;
-  final VoidCallback? onViewQueue;
-  final VoidCallback? onEditTrack;
-  final VoidCallback? onGoToArtist;
-  final VoidCallback? onGoToAlbum;
-  final VoidCallback? onShare;
-  final VoidCallback? onCopyLink;
-  final VoidCallback? onDownload;
-  final VoidCallback? onDeleteTrack;
-  final VoidCallback? onMoreOptions;
-  final String? userAvatarUrl;
-  final String? coverUrl;
   final List<Color>? gradientColors;
-  final FeedItemType feedItemType;
-  final Map<String, dynamic>? playlistData;
 
   @override
   Widget build(BuildContext context) {
     final colors =
         gradientColors ??
         const [AppColors.surfaceLight, AppColors.surfaceContainer];
-    final isDesktop = ResponsiveUtils.isDesktop(context);
-
-    // Handle playlist posts separately
-    if (feedItemType == FeedItemType.playlistPosted) {
-      return _PlaylistFeedCard(
-        userName: userName,
-        userAvatarUrl: userAvatarUrl,
-        action: action,
-        timeAgo: timeAgo,
-        playlistData: playlistData,
-        coverUrl: coverUrl,
-        colors: colors,
-      );
-    }
+    final isDesktop = _isDesktopLayout(context);
 
     if (!isDesktop) {
       return _MobileFeedItem(
         trackId: trackId,
         userName: userName,
-        userAvatarUrl: userAvatarUrl,
         action: action,
         trackTitle: trackTitle,
         trackArtist: trackArtist,
@@ -129,140 +71,110 @@ class FeedItem extends StatelessWidget {
         isLiked: isLiked,
         isReposted: isReposted,
         commentCount: commentCount,
-        commentTrack: commentTrack,
         duration: duration,
-        onPlay: onPlay,
-        onAddToPlaylist: onAddToPlaylist,
-        onMoreOptions: onMoreOptions,
-        onViewQueue: onViewQueue,
-        coverUrl: coverUrl,
         gradientColors: colors,
       );
     }
 
-    return Semantics(
-      label: 'Feed item: $trackTitle by $trackArtist',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _Avatar(
-                  colors: colors,
-                  userName: userName,
-                  imageUrl: userAvatarUrl,
-                ),
-                const SizedBox(width: AppDimensions.paddingSm),
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: userName,
-                          style: AppTextStyles.cardTitle,
-                        ),
-                        TextSpan(
-                          text: ' $action $timeAgo',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.paddingMd),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _ArtworkTile(
-                  colors: colors,
-                  title: trackTitle,
-                  imageUrl: coverUrl,
-                  onTap: onPlay,
-                ),
-                const SizedBox(width: AppDimensions.paddingMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _Avatar(colors: colors, userName: userName),
+              const SizedBox(width: AppDimensions.paddingSm),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
                     children: [
-                      Row(
-                        children: [
-                          _PlayButton(onPressed: onPlay),
-                          const SizedBox(width: AppDimensions.paddingMd),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: onPlay,
-                              behavior: HitTestBehavior.opaque,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    trackArtist,
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  AutoScrollingText(
-                                    text: trackTitle,
-                                    style: AppTextStyles.sectionTitle.copyWith(
-                                      fontSize: 33,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          _GenreChip(genre: genre),
-                        ],
-                      ),
-                      const SizedBox(height: AppDimensions.paddingMd),
-                      _WaveformStrip(
-                        trackId: trackId,
-                        fallbackPeaks: waveformPeaks,
-                        duration: duration,
-                      ),
-                      const SizedBox(height: AppDimensions.paddingMd),
-                      _DesktopFeedActions(
-                        trackId: trackId,
-                        initialLikeCount: likeCount,
-                        initialRepostCount: repostCount,
-                        initialIsLiked: isLiked,
-                        initialIsReposted: isReposted,
-                        commentCount: commentCount,
-                        commentTrack: commentTrack,
-                        plays: plays,
-                        onAddToPlaylist: onAddToPlaylist,
-                        onAddToQueue: onAddToQueue,
-                        onEditTrack: onEditTrack,
-                        onGoToArtist: onGoToArtist,
-                        onGoToAlbum: onGoToAlbum,
-                        onShare: onShare,
-                        onCopyLink: onCopyLink,
-                        onDownload: onDownload,
-                        onDeleteTrack: onDeleteTrack,
+                      TextSpan(text: userName, style: AppTextStyles.cardTitle),
+                      TextSpan(
+                        text: ' $action $timeAgo',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.paddingMd),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ArtworkTile(colors: colors, title: trackTitle),
+              const SizedBox(width: AppDimensions.paddingMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const _PlayButton(),
+                        const SizedBox(width: AppDimensions.paddingMd),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                trackArtist,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                trackTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.sectionTitle.copyWith(
+                                  fontSize: 33,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _GenreChip(genre: genre),
+                      ],
+                    ),
+                    const SizedBox(height: AppDimensions.paddingMd),
+                    _WaveformStrip(peaks: waveformPeaks, duration: duration),
+                    const SizedBox(height: AppDimensions.paddingMd),
+                    _DesktopFeedActions(
+                      trackId: trackId,
+                      initialLikeCount: likeCount,
+                      initialRepostCount: repostCount,
+                      initialIsLiked: isLiked,
+                      initialIsReposted: isReposted,
+                      commentCount: commentCount,
+                      plays: plays,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
+}
+
+bool _isDesktopLayout(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  if (mediaQuery == null) {
+    return false;
+  }
+  return mediaQuery.size.width >= 801;
 }
 
 class _MobileFeedItem extends StatelessWidget {
   const _MobileFeedItem({
     required this.trackId,
     required this.userName,
-    this.userAvatarUrl,
     required this.action,
     required this.trackTitle,
     required this.trackArtist,
@@ -272,19 +184,12 @@ class _MobileFeedItem extends StatelessWidget {
     required this.isLiked,
     required this.isReposted,
     required this.commentCount,
-    required this.commentTrack,
     required this.duration,
-    this.onPlay,
-    this.onAddToPlaylist,
-    this.onMoreOptions,
-    this.onViewQueue,
-    this.coverUrl,
     required this.gradientColors,
   });
 
   final int trackId;
   final String userName;
-  final String? userAvatarUrl;
   final String action;
   final String trackTitle;
   final String trackArtist;
@@ -294,180 +199,85 @@ class _MobileFeedItem extends StatelessWidget {
   final bool isLiked;
   final bool isReposted;
   final int commentCount;
-  final Track commentTrack;
   final String duration;
-  final VoidCallback? onPlay;
-  final VoidCallback? onAddToPlaylist;
-  final VoidCallback? onMoreOptions;
-  final VoidCallback? onViewQueue;
-  final String? coverUrl;
   final List<Color> gradientColors;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: '$userName $action $timeAgo',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _MobileAvatar(
-                  imageUrl: userAvatarUrl,
-                  userName: userName,
-                  colors: gradientColors,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(
+                radius: 12,
+                backgroundColor: AppColors.surfaceLight,
+                child: Icon(
+                  Icons.person,
+                  size: 16,
+                  color: AppColors.textSecondary,
                 ),
-                const SizedBox(width: AppDimensions.paddingSm),
-                Expanded(
-                  child: Text(
-                    '$userName $action · $timeAgo',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.headlineMedium.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+              ),
+              const SizedBox(width: AppDimensions.paddingSm),
+              Expanded(
+                child: Text(
+                  '$userName $action · $timeAgo',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.headlineMedium.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.paddingMd),
-            MobileFeedTrackCard(
-              trackId: trackId,
-              title: trackTitle,
-              artist: trackArtist,
-              coverUrl: coverUrl,
-              onPlay: onPlay,
-              onAddToPlaylist: onAddToPlaylist,
-              onMoreOptions: onMoreOptions,
-              gradientColors: gradientColors,
-              likeCount: likeCount,
-              repostCount: repostCount,
-              isLiked: isLiked,
-              isReposted: isReposted,
-              commentCount: commentCount,
-              commentTrack: commentTrack,
-              duration: duration,
-            ),
-          ],
-        ),
+              ),
+              const SizedBox(width: AppDimensions.paddingSm),
+              const Icon(Icons.more_vert, color: AppColors.textSecondary),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.paddingMd),
+          MobileFeedTrackCard(
+            trackId: trackId,
+            title: trackTitle,
+            artist: trackArtist,
+            duration: duration,
+            likeCount: likeCount,
+            repostCount: repostCount,
+            isLiked: isLiked,
+            isReposted: isReposted,
+            commentCount: commentCount,
+            gradientColors: gradientColors,
+          ),
+        ],
       ),
     );
   }
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.colors, required this.userName, this.imageUrl});
+  const _Avatar({required this.colors, required this.userName});
 
   final List<Color> colors;
   final String userName;
-  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
-    final normalizedImageUrl = imageUrl?.trim();
-    if (normalizedImageUrl != null && normalizedImageUrl.isNotEmpty) {
-      return DecibelCachedImage(
-        imageUrl: normalizedImageUrl,
-        width: 40,
-        height: 40,
-        shape: BoxShape.circle,
-        placeholderIcon: Icons.person,
-        errorIcon: Icons.person,
-        iconSize: 18,
-        iconColor: AppColors.textSecondary,
-        placeholder: _AvatarFallback(colors: colors, userName: userName),
-        errorWidget: _AvatarFallback(colors: colors, userName: userName),
-      );
-    }
-
-    return _AvatarFallback(colors: colors, userName: userName);
-  }
-}
-
-class _MobileAvatar extends StatelessWidget {
-  const _MobileAvatar({
-    required this.colors,
-    required this.userName,
-    this.imageUrl,
-  });
-
-  final List<Color> colors;
-  final String userName;
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final normalizedImageUrl = imageUrl?.trim();
-    if (normalizedImageUrl != null && normalizedImageUrl.isNotEmpty) {
-      return DecibelCachedImage(
-        imageUrl: normalizedImageUrl,
-        width: 24,
-        height: 24,
-        shape: BoxShape.circle,
-        placeholderIcon: Icons.person,
-        errorIcon: Icons.person,
-        iconSize: 14,
-        iconColor: AppColors.textSecondary,
-        placeholder: _AvatarFallback(
-          colors: colors,
-          userName: userName,
-          size: 24,
-          fontSize: 10,
-        ),
-        errorWidget: _AvatarFallback(
-          colors: colors,
-          userName: userName,
-          size: 24,
-          fontSize: 10,
-        ),
-      );
-    }
-
-    return _AvatarFallback(
-      colors: colors,
-      userName: userName,
-      size: 24,
-      fontSize: 10,
-    );
-  }
-}
-
-class _AvatarFallback extends StatelessWidget {
-  const _AvatarFallback({
-    required this.colors,
-    required this.userName,
-    this.size = 40,
-    this.fontSize = 14,
-  });
-
-  final List<Color> colors;
-  final String userName;
-  final double size;
-  final double fontSize;
-
-  @override
-  Widget build(BuildContext context) {
-    final initial = userName.trim().isEmpty
-        ? '?'
-        : userName.trim().substring(0, 1).toUpperCase();
-
     return Container(
-      width: size,
-      height: size,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(colors: colors),
       ),
       child: Center(
         child: Text(
-          initial,
+          userName.substring(0, 1).toUpperCase(),
           style: const TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
-          ).copyWith(fontSize: fontSize),
+            fontSize: 14,
+          ),
         ),
       ),
     );
@@ -475,56 +285,13 @@ class _AvatarFallback extends StatelessWidget {
 }
 
 class _ArtworkTile extends StatelessWidget {
-  const _ArtworkTile({
-    required this.colors,
-    required this.title,
-    this.imageUrl,
-    this.onTap,
-  });
-
-  final List<Color> colors;
-  final String title;
-  final String? imageUrl;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final normalizedImageUrl = imageUrl?.trim();
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusSm);
-
-    if (normalizedImageUrl != null && normalizedImageUrl.isNotEmpty) {
-      return GestureDetector(
-        onTap: onTap,
-        child: DecibelCachedImage(
-          imageUrl: normalizedImageUrl,
-          width: 162,
-          height: 162,
-          borderRadius: borderRadius,
-          placeholder: _ArtworkFallback(colors: colors, title: title),
-          errorWidget: _ArtworkFallback(colors: colors, title: title),
-        ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: onTap,
-      child: _ArtworkFallback(colors: colors, title: title),
-    );
-  }
-}
-
-class _ArtworkFallback extends StatelessWidget {
-  const _ArtworkFallback({required this.colors, required this.title});
+  const _ArtworkTile({required this.colors, required this.title});
 
   final List<Color> colors;
   final String title;
 
   @override
   Widget build(BuildContext context) {
-    final initials = title.trim().isEmpty
-        ? '?'
-        : title.trim().substring(0, title.trim().length > 1 ? 2 : 1);
-
     return Container(
       width: 162,
       height: 162,
@@ -538,7 +305,7 @@ class _ArtworkFallback extends StatelessWidget {
       ),
       child: Center(
         child: Text(
-          initials.toUpperCase(),
+          title.substring(0, title.length > 1 ? 2 : 1).toUpperCase(),
           style: AppTextStyles.headlineMedium.copyWith(
             color: AppColors.textPrimary.withValues(alpha: 0.85),
           ),
@@ -548,53 +315,22 @@ class _ArtworkFallback extends StatelessWidget {
   }
 }
 
-class _PlayButton extends StatefulWidget {
-  const _PlayButton({this.onPressed});
-
-  final VoidCallback? onPressed;
-
-  @override
-  State<_PlayButton> createState() => _PlayButtonState();
-}
-
-class _PlayButtonState extends State<_PlayButton> {
-  bool _isHovered = false;
+class _PlayButton extends StatelessWidget {
+  const _PlayButton();
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: Semantics(
-        button: true,
-        label: 'Play track',
-        child: GestureDetector(
-          onTap: widget.onPressed,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _isHovered ? AppColors.primary : AppColors.surfaceVariant,
-              boxShadow: _isHovered
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.4),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                  : [],
-            ),
-            child: Icon(
-              Icons.play_arrow,
-              color: _isHovered ? Colors.white : AppColors.textSecondary,
-              size: 34,
-            ),
-          ),
-        ),
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.surfaceVariant,
+      ),
+      child: const Icon(
+        Icons.play_arrow,
+        color: AppColors.textSecondary,
+        size: 34,
       ),
     );
   }
@@ -607,56 +343,25 @@ class _GenreChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Genre: $genre',
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.paddingSm,
-          vertical: AppDimensions.paddingXs,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Text(
-          '#$genre',
-          style: AppTextStyles.cardTitle.copyWith(fontWeight: FontWeight.w700),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.paddingSm,
+        vertical: AppDimensions.paddingXs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Text(
+        '#$genre',
+        style: AppTextStyles.cardTitle.copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }
 }
 
 class _WaveformStrip extends StatelessWidget {
-  const _WaveformStrip({
-    required this.trackId,
-    required this.fallbackPeaks,
-    required this.duration,
-  });
-
-  final int trackId;
-  final List<double> fallbackPeaks;
-  final String duration;
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, child) {
-        final waveformAsync = ref.watch(trackWaveformDataProvider(trackId));
-        final peaks = waveformAsync.maybeWhen(
-          data: (waveformPeaks) =>
-              waveformPeaks.isEmpty ? fallbackPeaks : waveformPeaks,
-          orElse: () => fallbackPeaks,
-        );
-
-        return _WaveformPaint(peaks: peaks, duration: duration);
-      },
-    );
-  }
-}
-
-class _WaveformPaint extends StatelessWidget {
-  const _WaveformPaint({required this.peaks, required this.duration});
+  const _WaveformStrip({required this.peaks, required this.duration});
 
   final List<double> peaks;
   final String duration;
@@ -695,7 +400,7 @@ class _WaveformPaint extends StatelessWidget {
   }
 }
 
-class _DesktopFeedActions extends ConsumerStatefulWidget {
+class _DesktopFeedActions extends ConsumerWidget {
   const _DesktopFeedActions({
     required this.trackId,
     required this.initialLikeCount,
@@ -703,17 +408,7 @@ class _DesktopFeedActions extends ConsumerStatefulWidget {
     required this.initialIsLiked,
     required this.initialIsReposted,
     required this.commentCount,
-    required this.commentTrack,
     required this.plays,
-    this.onAddToPlaylist,
-    this.onAddToQueue,
-    this.onEditTrack,
-    this.onGoToArtist,
-    this.onGoToAlbum,
-    this.onShare,
-    this.onCopyLink,
-    this.onDownload,
-    this.onDeleteTrack,
   });
 
   final int trackId;
@@ -722,40 +417,7 @@ class _DesktopFeedActions extends ConsumerStatefulWidget {
   final bool initialIsLiked;
   final bool initialIsReposted;
   final int commentCount;
-  final Track commentTrack;
   final String plays;
-  final VoidCallback? onAddToPlaylist;
-  final VoidCallback? onAddToQueue;
-  final VoidCallback? onEditTrack;
-  final VoidCallback? onGoToArtist;
-  final VoidCallback? onGoToAlbum;
-  final VoidCallback? onShare;
-  final VoidCallback? onCopyLink;
-  final VoidCallback? onDownload;
-  final VoidCallback? onDeleteTrack;
-
-  @override
-  ConsumerState<_DesktopFeedActions> createState() =>
-      _DesktopFeedActionsState();
-}
-
-class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
-  late int _currentCommentCount;
-  bool _isCommentHovered = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentCommentCount = widget.commentCount;
-  }
-
-  @override
-  void didUpdateWidget(_DesktopFeedActions oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.commentCount != widget.commentCount) {
-      _currentCommentCount = widget.commentCount;
-    }
-  }
 
   String _formatCount(int number) {
     if (number >= 1000000) {
@@ -767,25 +429,30 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       children: [
         LikeButton(
-          trackId: widget.trackId,
-          isLiked: widget.initialIsLiked,
-          likeCount: widget.initialLikeCount,
+          trackId: trackId,
+          isLiked: initialIsLiked,
+          likeCount: initialLikeCount,
           iconSize: 18,
           fontSize: 13,
         ),
         const SizedBox(width: AppDimensions.paddingSm),
         RepostButton(
-          trackId: widget.trackId,
-          isReposted: widget.initialIsReposted,
-          repostCount: widget.initialRepostCount,
+          trackId: trackId,
+          isReposted: initialIsReposted,
+          repostCount: initialRepostCount,
           iconSize: 18,
           fontSize: 13,
         ),
         const SizedBox(width: AppDimensions.paddingSm),
+        const _IconSquareButton(icon: Icons.ios_share_outlined),
+        const SizedBox(width: AppDimensions.paddingSm),
+        const _IconSquareButton(icon: Icons.content_copy_outlined),
+        const SizedBox(width: AppDimensions.paddingSm),
+        const _IconSquareButton(icon: Icons.more_horiz),
         const Spacer(),
         Icon(
           Icons.play_arrow,
@@ -794,290 +461,44 @@ class _DesktopFeedActionsState extends ConsumerState<_DesktopFeedActions> {
         ),
         const SizedBox(width: AppDimensions.paddingXs),
         Text(
-          widget.plays,
+          plays,
           style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(width: AppDimensions.paddingMd),
-        Semantics(
-          button: true,
-          label: 'View $_currentCommentCount comments',
-          child: GestureDetector(
-            onTap: () async {
-              await TrackCommentsBottomSheet.show(
-                context,
-                trackId: widget.trackId,
-                track: widget.commentTrack,
-              );
-            },
-            behavior: HitTestBehavior.opaque,
-            child: MouseRegion(
-              onEnter: (_) => setState(() => _isCommentHovered = true),
-              onExit: (_) => setState(() => _isCommentHovered = false),
-              cursor: SystemMouseCursors.click,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.mode_comment_outlined,
-                    size: 14,
-                    color: _isCommentHovered
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary.withValues(alpha: 0.8),
-                  ),
-                  const SizedBox(width: AppDimensions.paddingXs),
-                  AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: _isCommentHovered
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
-                    ),
-                    child: Text(_formatCount(_currentCommentCount)),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        Icon(
+          Icons.mode_comment_outlined,
+          size: 14,
+          color: AppColors.textSecondary.withValues(alpha: 0.8),
         ),
-        const SizedBox(width: AppDimensions.paddingSm),
-        _DesktopMoreOptionsButton(
-          trackId: widget.trackId,
-          onAddToPlaylist: widget.onAddToPlaylist,
-          onAddToQueue: widget.onAddToQueue,
-          onEditTrack: widget.onEditTrack,
-          onGoToArtist: widget.onGoToArtist,
-          onGoToAlbum: widget.onGoToAlbum,
-          onShare: widget.onShare,
-          onCopyLink: widget.onCopyLink,
-          onDownload: widget.onDownload,
-          onDeleteTrack: widget.onDeleteTrack,
+        const SizedBox(width: AppDimensions.paddingXs),
+        Text(
+          _formatCount(commentCount),
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
         ),
       ],
     );
   }
 }
 
-class _DesktopMoreOptionsButton extends StatelessWidget {
-  const _DesktopMoreOptionsButton({
-    required this.trackId,
-    this.onAddToPlaylist,
-    this.onAddToQueue,
-    this.onEditTrack,
-    this.onGoToArtist,
-    this.onGoToAlbum,
-    this.onShare,
-    this.onCopyLink,
-    this.onDownload,
-    this.onDeleteTrack,
-  });
+class _IconSquareButton extends StatelessWidget {
+  const _IconSquareButton({required this.icon});
 
-  final int trackId;
-
-  final VoidCallback? onAddToPlaylist;
-  final VoidCallback? onAddToQueue;
-  final VoidCallback? onEditTrack;
-  final VoidCallback? onGoToArtist;
-  final VoidCallback? onGoToAlbum;
-  final VoidCallback? onShare;
-  final VoidCallback? onCopyLink;
-  final VoidCallback? onDownload;
-  final VoidCallback? onDeleteTrack;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (buttonContext) {
-        return IconButton(
-          tooltip: 'More options',
-          onPressed: () async {
-            final option = await showTrackMoreOptionsMenu(
-              context: context,
-              anchorContext: buttonContext,
-              includeEdit: onEditTrack != null,
-              includeDelete: onDeleteTrack != null,
-            );
-            if (option == null || !context.mounted) {
-              return;
-            }
-
-            switch (option) {
-              case TrackMoreOption.report:
-                await TrackReportBottomSheet.show(context, trackId);
-                break;
-
-              case TrackMoreOption.addToPlaylist:
-                onAddToPlaylist?.call();
-                break;
-              case TrackMoreOption.addToQueue:
-                onAddToQueue?.call();
-                break;
-              case TrackMoreOption.viewQueue:
-                QueueBottomSheet.show(context);
-                break;
-              case TrackMoreOption.editTrack:
-                onEditTrack?.call();
-                break;
-              case TrackMoreOption.goToArtist:
-                onGoToArtist?.call();
-                break;
-              case TrackMoreOption.goToAlbum:
-                onGoToAlbum?.call();
-                break;
-              case TrackMoreOption.share:
-                onShare?.call();
-                break;
-              case TrackMoreOption.copyLink:
-                onCopyLink?.call();
-                break;
-              case TrackMoreOption.download:
-                onDownload?.call();
-                break;
-              case TrackMoreOption.deleteTrack:
-                onDeleteTrack?.call();
-                break;
-            }
-          },
-          icon: const Icon(
-            Icons.more_horiz,
-            color: AppColors.textSecondary,
-            size: 20,
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// Widget for displaying playlist posts in the feed.
-class _PlaylistFeedCard extends StatelessWidget {
-  const _PlaylistFeedCard({
-    required this.userName,
-    this.userAvatarUrl,
-    required this.action,
-    required this.timeAgo,
-    this.playlistData,
-    this.coverUrl,
-    required this.colors,
-  });
-
-  final String userName;
-  final String? userAvatarUrl;
-  final String action;
-  final String timeAgo;
-  final Map<String, dynamic>? playlistData;
-  final String? coverUrl;
-  final List<Color> colors;
-
-  @override
-  Widget build(BuildContext context) {
-    final playlistTitle =
-        playlistData?['title'] as String? ?? 'Unknown Playlist';
-    final trackCount = playlistData?['trackCount'] as int? ?? 0;
-    final owner = playlistData?['owner'] as Map<String, dynamic>?;
-    final ownerUsername = owner?['username'] as String? ?? userName;
-    final ownerDisplayName = owner?['displayName'] as String?;
-    final ownerAvatarUrl = owner?['avatarUrl'] as String?;
-
-    return Semantics(
-      label: '$userName $action $timeAgo',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _MobileAvatar(
-                  imageUrl: ownerAvatarUrl ?? userAvatarUrl,
-                  userName: ownerDisplayName ?? ownerUsername,
-                  colors: colors,
-                ),
-                const SizedBox(width: AppDimensions.paddingSm),
-                Expanded(
-                  child: Text(
-                    '$ownerUsername $action · $timeAgo',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.headlineMedium.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.paddingMd),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                onTap: () {
-                  // TODO: Navigate to playlist details
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(AppDimensions.paddingMd),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusSm,
-                        ),
-                        child: coverUrl != null && coverUrl!.isNotEmpty
-                            ? DecibelCachedImage(
-                                imageUrl: coverUrl!,
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                              )
-                            : Container(
-                                width: 80,
-                                height: 80,
-                                color: AppColors.surfaceVariant,
-                                child: const Icon(
-                                  Icons.queue_music_rounded,
-                                  color: AppColors.textMuted,
-                                  size: 32,
-                                ),
-                              ),
-                      ),
-                      const SizedBox(width: AppDimensions.paddingMd),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              playlistTitle,
-                              style: AppTextStyles.titleMedium,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '$trackCount track${trackCount == 1 ? '' : 's'}',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Container(
+      width: 40,
+      height: 34,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
       ),
+      child: Icon(icon, color: AppColors.textSecondary, size: 18),
     );
   }
 }

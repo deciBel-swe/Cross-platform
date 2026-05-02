@@ -1,147 +1,137 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/exceptions.dart';
-import '../../../library/domain/entities/track.dart';
-import '../../../library_profile/domain/repositories/track_repository.dart';
-import '../../../library_profile/presentation/providers/track_repository_provider.dart';
-import '../../../library_profile/presentation/providers/user_profile_provider.dart';
 import '../../domain/models/track_action_data.dart';
 import '../../domain/repositories/track_social_repository.dart';
-import '../notifiers/liked_tracks_notifier.dart';
 import '../providers/track_social_provider.dart';
+import '../states/track_social_state.dart';
 
-class TrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int> {
-  late final ITrackSocialRepository _socialRepository;
-  late final TrackRepository _trackRepository;
-  int _toggleGeneration = 0;
-  Future<void> _toggleQueue = Future<void>.value();
+class TrackSocialNotifier extends Notifier<TrackSocialState> {
+  late final ITrackSocialRepository _repository;
 
   @override
-  FutureOr<TrackSocialData> build(int arg) async {
-    _socialRepository = ref.read(trackSocialRepositoryProvider);
-    _trackRepository = ref.read(trackRepositoryProvider);
-
-    final data = await _fetchTrackSocialData(arg);
-    return data ??
-        const TrackSocialData(
-          isLiked: false,
-          likeCount: 0,
-          isReposted: false,
-          repostCount: 0,
-        );
+  TrackSocialState build() {
+    _repository = ref.read(trackSocialRepositoryProvider);
+    return const TrackSocialState();
   }
 
-  /// Toggle Like/Repost with optimistic UI update.
-  Future<void> toggleAction(SocialActionType actionType) async {
-    // If we haven't fetched yet, we can't reliably toggle
-    final currentData = state.valueOrNull;
-    if (currentData == null) return;
+  void mergeTrack(
+    int trackId, {
+    bool? isLiked,
+    int? likeCount,
+    bool? isReposted,
+    int? repostCount,
+  }) {
+    final trackKey = trackId.toString();
+    final newTrackStates = Map<String, TrackSocialData>.from(state.trackStates);
+    final existing = newTrackStates[trackKey];
 
-    final bool wasActive = actionType == SocialActionType.like
-        ? currentData.isLiked
-        : currentData.isReposted;
-    final int previousCount = actionType == SocialActionType.like
-        ? currentData.likeCount
-        : currentData.repostCount;
-    final int optimisticCount = wasActive
-        ? _clampCount(previousCount - 1)
-        : previousCount + 1;
-    final int generation = ++_toggleGeneration;
-    // 1. Optimistic Update
-    final optimisticData = actionType == SocialActionType.like
-        ? currentData.copyWith(isLiked: !wasActive, likeCount: optimisticCount)
-        : currentData.copyWith(
-            isReposted: !wasActive,
-            repostCount: optimisticCount,
-          );
+    if (existing == null) {
+      newTrackStates[trackKey] = TrackSocialData(
+        isLiked: isLiked ?? false,
+        likeCount: likeCount ?? 0,
+        isReposted: isReposted ?? false,
+        repostCount: repostCount ?? 0,
+      );
+    } else {
+      newTrackStates[trackKey] = existing.copyWith(
+        isLiked: isLiked ?? existing.isLiked,
+        likeCount: likeCount ?? existing.likeCount,
+        isReposted: isReposted ?? existing.isReposted,
+        repostCount: repostCount ?? existing.repostCount,
+      );
+    }
 
-    state = AsyncData(optimisticData);
-
-    final queued = _toggleQueue.then(
-      (_) => _performToggle(
-        actionType: actionType,
-        wasActive: wasActive,
-        currentData: currentData,
-        generation: generation,
-      ),
-    );
-    _toggleQueue = queued.catchError((_) {});
-    await queued;
+    state = state.copyWith(trackStates: newTrackStates);
   }
 
-  TrackSocialData _mapTrackToSocialData(Track track) {
-    return TrackSocialData(
-      isLiked: track.isLiked,
-      likeCount: track.likeCount,
-      isReposted: track.isReposted,
-      repostCount: track.repostCount,
-    );
-  }
-
-  Future<TrackSocialData?> _fetchTrackSocialData(int trackId) async {
-    final result = await _trackRepository.fetchTrackById(trackId);
-    return result.fold((_) => null, _mapTrackToSocialData);
-  }
-
-  int _clampCount(int value) => value < 0 ? 0 : value;
-
-  Future<void> _performToggle({
-    required SocialActionType actionType,
-    required bool wasActive,
-    required TrackSocialData currentData,
-    required int generation,
+  Future<void> toggleAction(
+    int trackId,
+    SocialActionType actionType, {
+    int? initialLikeCount,
+    int? initialRepostCount,
+    bool? initialIsLiked,
+    bool? initialIsReposted,
   }) async {
-    try {
-      if (actionType == SocialActionType.like) {
-        wasActive
-            ? await _socialRepository.unlikeTrack(arg)
-            : await _socialRepository.likeTrack(arg);
-      } else {
-        wasActive
-            ? await _socialRepository.unrepostTrack(arg)
-            : await _socialRepository.repostTrack(arg);
-      }
+    final trackKey = trackId.toString();
+    var trackData = state.trackStates[trackKey];
 
-      if (_toggleGeneration != generation) {
+    if (trackData == null) {
+      if (actionType == SocialActionType.like &&
+          (initialLikeCount == null || initialIsLiked == null)) {
+        return;
+      }
+      if (actionType == SocialActionType.repost &&
+          (initialRepostCount == null || initialIsReposted == null)) {
         return;
       }
 
-      _syncCollections(actionType, wasActive: wasActive);
+      trackData = TrackSocialData(
+        isLiked: initialIsLiked ?? false,
+        likeCount: initialLikeCount ?? 0,
+        isReposted: initialIsReposted ?? false,
+        repostCount: initialRepostCount ?? 0,
+      );
+      state = state.copyWith(
+        trackStates: {...state.trackStates, trackKey: trackData},
+      );
+    }
 
-      final refreshed = await _fetchTrackSocialData(arg);
-      if (refreshed != null && _toggleGeneration == generation) {
-        state = AsyncData(refreshed);
+    final bool wasActive = actionType == SocialActionType.like
+        ? trackData.isLiked
+        : trackData.isReposted;
+    final int previousCount = actionType == SocialActionType.like
+        ? trackData.likeCount
+        : trackData.repostCount;
+
+    final String loadingKey = '${actionType.name}_$trackId';
+
+    _applyStateMutation(
+      trackKey,
+      actionType,
+      isActive: !wasActive,
+      count: wasActive ? previousCount - 1 : previousCount + 1,
+    );
+
+    state = state.copyWith(loadingKeys: {...state.loadingKeys, loadingKey});
+
+    try {
+      if (actionType == SocialActionType.like) {
+        wasActive
+            ? await _repository.unlikeTrack(trackId)
+            : await _repository.likeTrack(trackId);
+      } else {
+        wasActive
+            ? await _repository.unrepostTrack(trackId)
+            : await _repository.repostTrack(trackId);
       }
     } on AppException {
-      if (_toggleGeneration == generation) {
-        state = AsyncData(currentData);
-      }
+      _applyStateMutation(
+        trackKey,
+        actionType,
+        isActive: wasActive,
+        count: previousCount,
+      );
+    } finally {
+      final newLoading = Set<String>.from(state.loadingKeys)
+        ..remove(loadingKey);
+      state = state.copyWith(loadingKeys: newLoading);
     }
   }
 
-  void _syncCollections(
+  void _applyStateMutation(
+    String trackKey,
     SocialActionType actionType, {
-    required bool wasActive,
+    required bool isActive,
+    required int count,
   }) {
-    final isLikeAction = actionType == SocialActionType.like;
-    final collectionProvider = isLikeAction
-        ? likedTracksProvider
-        : repostedTracksProvider;
+    final trackData = state.trackStates[trackKey]!;
+    final newTrackStates = Map<String, TrackSocialData>.from(state.trackStates);
 
-    if (wasActive) {
-      if (ref.exists(collectionProvider)) {
-        ref.read(collectionProvider.notifier).removeTrackLocal(arg);
-      }
-    } else {
-      if (ref.exists(collectionProvider)) {
-        ref.read(collectionProvider.notifier).refreshAll();
-      }
-    }
+    newTrackStates[trackKey] = actionType == SocialActionType.like
+        ? trackData.copyWith(isLiked: isActive, likeCount: count)
+        : trackData.copyWith(isReposted: isActive, repostCount: count);
 
-    if (ref.exists(userProfileProvider)) {
-      ref.read(userProfileProvider.notifier).refreshProfile();
-    }
+    state = state.copyWith(trackStates: newTrackStates);
   }
 }

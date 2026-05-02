@@ -25,93 +25,82 @@ class TrackInfoChecklist extends StatelessWidget {
     final progress = completed / 4.0;
     final theme = Theme.of(context);
 
-    return Semantics(
-      button: true,
-      label: 'View track info completion checklist',
-      onTapHint: 'Open detailed checklist',
-      child: GestureDetector(
-        onTap: () {
-          _showChecklistDetails(
-            context,
-            completed,
-            progress,
-            hasTitle,
-            hasArtwork,
-            hasGenre,
-            hasDescription,
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Track info checklist',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textHint,
-                      ),
+    return GestureDetector(
+      onTap: () {
+        _showChecklistDetails(
+          context,
+          completed,
+          progress,
+          hasTitle,
+          hasArtwork,
+          hasGenre,
+          hasDescription,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Track info checklist',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textHint,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Fans play more when your track info is complete. Tap to learn more.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Fans play more when your track info is complete. Tap to learn more.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Semantics(
-                label: 'Completion progress: $completed of 4 tasks finished',
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.grey[900],
-                        color: AppColors.accentPurple,
-                        strokeWidth: 3,
-                      ),
-                    ),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '$completed',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const TextSpan(
-                            text: '/4',
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+            ),
+            const SizedBox(width: 16),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: CircularProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey[900],
+                    color: AppColors.accentPurple,
+                    strokeWidth: 3,
+                  ),
                 ),
-              ),
-            ],
-          ),
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '$completed',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: '/4',
+                        style: TextStyle(color: Colors.white54, fontSize: 10),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -292,49 +281,46 @@ class _ChecklistItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: '$title: ${isCompleted ? 'Completed' : 'Remaining'}',
-      child: Row(
-        crossAxisAlignment: subtitle != null
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.center,
-        children: [
-          // The Custom Icon (White filled checkmark vs outline)
-          Icon(
-            isCompleted ? Icons.check_circle : Icons.circle_outlined,
-            color: Colors.white,
-            size: 24,
-          ),
-          const SizedBox(width: 12),
+    return Row(
+      crossAxisAlignment: subtitle != null
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
+      children: [
+        // The Custom Icon (White filled checkmark vs outline)
+        Icon(
+          isCompleted ? Icons.check_circle : Icons.circle_outlined,
+          color: Colors.white,
+          size: 24,
+        ),
+        const SizedBox(width: 12),
 
-          // The Text Column
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        // The Text Column
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
                 Text(
-                  title,
+                  subtitle!,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
                   ),
                 ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle!,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
               ],
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

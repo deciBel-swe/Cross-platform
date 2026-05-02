@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/comment.dart';
-import '../providers/track_comment_provider.dart';
+import '../notifiers/track_comment_notifier.dart';
 import 'comment_reply_item.dart';
 
 class CommentRepliesSection extends ConsumerWidget {
@@ -15,25 +15,31 @@ class CommentRepliesSection extends ConsumerWidget {
   final Comment comment;
   final int trackId;
 
-  /// Builds the reply list and pagination controls for a comment.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(trackCommentsProvider(trackId));
-    final notifier = ref.read(trackCommentsProvider(trackId).notifier);
-    final isExpanded = notifier.isRepliesExpanded(comment);
-    final paginatedData = notifier.paginatedRepliesFor(comment);
-    final replies = notifier.repliesFor(comment);
-    final isInitialLoading = notifier.isInitialRepliesLoading(comment);
-    final isPaginating = notifier.isPaginatingReplies(comment);
-    final hasRepliesToFetch = notifier.hasRepliesToFetch(comment);
+    final state = ref.watch(trackCommentsProvider(trackId));
+
+    final isExpanded = state.expandedCommentIds.contains(comment.commentid);
+    final paginatedData = state.repliesByCommentId[comment.commentid];
+    final replies = paginatedData?.content ?? [];
+
+    final isInitialLoading =
+        state.isLoadingReplies && isExpanded && replies.isEmpty;
+    final isPaginating =
+        state.isLoadingReplies && isExpanded && replies.isNotEmpty;
+
+    final displayReplyCount =
+        paginatedData?.totalElements ?? comment.replycount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!isExpanded && hasRepliesToFetch)
+        if (!isExpanded && displayReplyCount > 0)
           _buildActionButton(
-            onTap: () => notifier.loadReplies(comment.commentid, page: 0),
-            label: 'Show replies',
+            onTap: () => ref
+                .read(trackCommentsProvider(trackId).notifier)
+                .loadReplies(comment.commentid, page: 0),
+            label: 'View $displayReplyCount replies',
             showLine: true,
           ),
 
@@ -50,49 +56,54 @@ class CommentRepliesSection extends ConsumerWidget {
             ),
           ),
 
-        if (isExpanded && replies.isNotEmpty) ...[
-          ListView.builder(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: replies.length,
-            itemBuilder: (context, index) =>
-                CommentReplyItem(reply: replies[index]),
-          ),
+        if (isExpanded) ...[
+          if (replies.isNotEmpty)
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: replies.length,
+              itemBuilder: (context, index) =>
+                  CommentReplyItem(reply: replies[index]),
+            ),
 
           if (paginatedData != null && !(paginatedData.isLast ?? true))
-            isPaginating
-                ? const Padding(
-                    padding: EdgeInsets.only(left: 72, top: 12),
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  )
-                : _buildActionButton(
-                    onTap: () {
-                      final nextPage = notifier.nextRepliesPage(comment);
-                      notifier.loadReplies(comment.commentid, page: nextPage);
-                    },
-                    label: 'Show more replies',
-                    showLine: true,
+            if (isPaginating)
+              const Padding(
+                padding: EdgeInsets.only(left: 72, top: 12, bottom: 12),
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.grey,
                   ),
+                ),
+              )
+            else
+              _buildActionButton(
+                onTap: () {
+                  final nextPage = (paginatedData.pageNumber ?? 0) + 1;
+                  ref
+                      .read(trackCommentsProvider(trackId).notifier)
+                      .loadReplies(comment.commentid, page: nextPage);
+                },
+                label: 'View more replies',
+                showLine: true,
+              ),
 
-          _buildActionButton(
-            onTap: () => notifier.collapseReplies(comment.commentid),
-            label: 'Hide replies',
-            showLine: false,
-          ),
+          if (!isInitialLoading)
+            _buildActionButton(
+              onTap: () => ref
+                  .read(trackCommentsProvider(trackId).notifier)
+                  .collapseReplies(comment.commentid),
+              label: 'Hide replies',
+              showLine: false,
+            ),
         ],
       ],
     );
   }
 
-  /// Builds a reply section action row.
   Widget _buildActionButton({
     required VoidCallback onTap,
     required String label,

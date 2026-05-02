@@ -9,7 +9,7 @@ class TrackCommentsState {
     this.selectedTimestampSeconds,
     this.isSubmitting = false,
     this.isLoadingComments = false,
-    this.loadingReplyIds = const {},
+    this.isLoadingReplies = false,
     this.repliesByCommentId = const {},
     this.expandedCommentIds = const {},
     this.deletingCommentId,
@@ -20,13 +20,11 @@ class TrackCommentsState {
     this.replyPrefillText,
   });
 
-  static const Object _unset = Object();
-
   final List<Comment> comments;
   final int? selectedTimestampSeconds;
   final bool isSubmitting;
   final bool isLoadingComments;
-  final Set<int> loadingReplyIds;
+  final bool isLoadingReplies;
   final Map<int, PaginatedReplies> repliesByCommentId;
   final Set<int> expandedCommentIds;
   final int? deletingCommentId;
@@ -38,37 +36,34 @@ class TrackCommentsState {
 
   TrackCommentsState copyWith({
     List<Comment>? comments,
-    Object? selectedTimestampSeconds = _unset,
+    int? selectedTimestampSeconds,
     bool? isSubmitting,
     bool? isLoadingComments,
-    Set<int>? loadingReplyIds,
+    bool? isLoadingReplies,
     Map<int, PaginatedReplies>? repliesByCommentId,
     Set<int>? expandedCommentIds,
-    Object? deletingCommentId = _unset,
+    int? deletingCommentId,
     CommentSortOption? sortOption,
     int? currentCommentsPage,
     bool? isLastCommentsPage,
-    Object? activeReplyCommentId = _unset,
+    int? activeReplyCommentId,
+    String? replyPrefillText,
   }) {
     return TrackCommentsState(
       comments: comments ?? this.comments,
-      selectedTimestampSeconds: identical(selectedTimestampSeconds, _unset)
-          ? this.selectedTimestampSeconds
-          : selectedTimestampSeconds as int?,
+      selectedTimestampSeconds:
+          selectedTimestampSeconds ?? this.selectedTimestampSeconds,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       isLoadingComments: isLoadingComments ?? this.isLoadingComments,
-      loadingReplyIds: loadingReplyIds ?? this.loadingReplyIds,
+      isLoadingReplies: isLoadingReplies ?? this.isLoadingReplies,
       repliesByCommentId: repliesByCommentId ?? this.repliesByCommentId,
       expandedCommentIds: expandedCommentIds ?? this.expandedCommentIds,
-      deletingCommentId: identical(deletingCommentId, _unset)
-          ? this.deletingCommentId
-          : deletingCommentId as int?,
+      deletingCommentId: deletingCommentId ?? this.deletingCommentId,
       sortOption: sortOption ?? this.sortOption,
       currentCommentsPage: currentCommentsPage ?? this.currentCommentsPage,
       isLastCommentsPage: isLastCommentsPage ?? this.isLastCommentsPage,
-      activeReplyCommentId: identical(activeReplyCommentId, _unset)
-          ? this.activeReplyCommentId
-          : activeReplyCommentId as int?,
+      activeReplyCommentId: activeReplyCommentId ?? this.activeReplyCommentId,
+      replyPrefillText: replyPrefillText ?? this.replyPrefillText,
     );
   }
 }
