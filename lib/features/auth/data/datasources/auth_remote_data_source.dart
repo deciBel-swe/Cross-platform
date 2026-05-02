@@ -33,6 +33,7 @@ abstract class IAuthRemoteDataSource {
 
   Future<String> forgotPassword(String email);
   Future<String> resetPassword(String token, String newPassword);
+  Future<String> verifyEmail(String token);
 }
 
 @LazySingleton(as: IAuthRemoteDataSource)
@@ -420,6 +421,43 @@ class AuthRemoteDataSource implements IAuthRemoteDataSource {
     } catch (e) {
       throw AuthException(
         'An unexpected error occurred during password reset: $e',
+      );
+    }
+  }
+
+  @override
+  Future<String> verifyEmail(String token) async {
+    try {
+      final response = await _dioClient.post<dynamic>(
+        ApiConstants.verifyEmailEndpoint,
+        data: {'token': token},
+      );
+
+      if (!_isSuccessfulResponse(response.statusCode)) {
+        throw AuthException(
+          _parseManualError(
+            response.data,
+            fallback: 'Email verification failed.',
+          ),
+        );
+      }
+
+      return _parseMessageResponse(
+        response.data,
+        fallback: 'Email verified successfully.',
+      );
+    } on DioException catch (e) {
+      throw ServerException(
+        _extractDioErrorMessage(
+          e,
+          fallback: 'Email verification failed.',
+        ),
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during email verification: $e',
       );
     }
   }

@@ -308,4 +308,18 @@ class AuthRepository implements IAuthRepository {
       return const Left(AuthFailure('An unexpected error occurred.'));
     }
   }
+
+  @override
+  Future<Either<Failure, String>> verifyEmail(String token) async {
+    try {
+      final message = await _remoteDataSource.verifyEmail(token);
+      return Right(message);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } catch (_) {
+      return const Left(AuthFailure('An unexpected error occurred.'));
+    }
+  }
 }

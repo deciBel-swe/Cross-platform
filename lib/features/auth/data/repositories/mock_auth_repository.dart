@@ -165,4 +165,15 @@ class MockAuthRepository implements IAuthRepository {
 
     return const Right('Password reset completed.');
   }
+
+  @override
+  Future<Either<Failure, String>> verifyEmail(String token) async {
+    await Future<void>.delayed(AuthMockFixtures.delay);
+
+    if (token.isEmpty || token.contains('invalid')) {
+      return const Left(AuthFailure('Invalid or expired verification token.'));
+    }
+
+    return const Right('Email verified successfully.');
+  }
 }

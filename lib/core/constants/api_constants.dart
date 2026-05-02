@@ -56,6 +56,7 @@ class ApiConstants {
   static const String resendVerificationEndpoint = '/auth/resend-verification';
   static const String forgotPasswordEndpoint = '/auth/forgot-password';
   static const String resetPasswordEndpoint = '/auth/reset-password';
+  static const String verifyEmailEndpoint = '/auth/verify-email';
 
   /// Station endpoints are relative to the `/api` base URL.
   static const String genreStationEndpoint = '/stations/genre';
