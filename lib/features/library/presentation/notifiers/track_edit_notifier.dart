@@ -10,6 +10,12 @@ import '../state/track_edit_state.dart';
 
 class TrackEditNotifier
     extends AutoDisposeFamilyAsyncNotifier<TrackEditState, int> {
+  static const _allowedAccessValues = <String>{
+    'PLAYABLE',
+    'PREVIEW',
+    'BLOCKED',
+  };
+
   List<String> _genreSuggestions = [];
 
   List<String> get genreSuggestions => _genreSuggestions;
@@ -30,12 +36,12 @@ class TrackEditNotifier
         (track) => TrackEditState(
           title: track.title,
           genre: track.genre,
-          description: '',
+          description: track.description ?? '',
           tags: track.tags,
           releaseDate: track.releaseDate,
-          isPrivate: false,
+          isPrivate: track.isPrivate,
           currentCoverUrl: track.coverUrl,
-          access: track.access,
+          access: _normalizeAccess(track.access),
         ),
       );
     } on TimeoutException {
@@ -86,7 +92,12 @@ class TrackEditNotifier
   }
 
   void updateAccess(String value) {
-    _updateState((state) => state.copyWith(access: value));
+    final normalized = value.trim().toUpperCase();
+    if (!_allowedAccessValues.contains(normalized)) {
+      return;
+    }
+
+    _updateState((state) => state.copyWith(access: normalized));
   }
 
   void updateTagsFromInput(String value) {
@@ -217,5 +228,14 @@ class TrackEditNotifier
     }
 
     state = AsyncData(update(current));
+  }
+
+  String _normalizeAccess(String value) {
+    final normalized = value.trim().toUpperCase();
+    if (_allowedAccessValues.contains(normalized)) {
+      return normalized;
+    }
+
+    return 'PLAYABLE';
   }
 }

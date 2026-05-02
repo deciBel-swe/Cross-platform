@@ -116,8 +116,11 @@ void main() {
         // Assert
         expect(
           result,
-          const Left(NetworkFailure('Offline and no cached profile found.')),
+          const Left<NetworkFailure, UserProfile>(
+            NetworkFailure('Offline and no cached profile found.'),
+          ),
         );
+        verify(() => mockLocal.getLastUserProfile()).called(1);
       },
     );
   });

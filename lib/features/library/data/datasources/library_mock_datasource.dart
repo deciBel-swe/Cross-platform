@@ -104,7 +104,8 @@ class LibraryMockDatasource {
       ..['genre'] = genre
       ..['description'] = description
       ..['tags'] = tags
-      ..['isPrivate'] = isPrivate;
+      ..['isPrivate'] = isPrivate
+      ..['access'] = access.trim().toUpperCase();
 
     if (releaseDate != null) {
       updatedTrack['releaseDate'] = releaseDate.toIso8601String();

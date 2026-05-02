@@ -183,6 +183,7 @@ class LibraryRemoteDatasource {
         'description': description,
         'tags': tags,
         'isPrivate': isPrivate,
+        'access': access,
         ...?releaseDateValue == null
             ? null
             : <String, dynamic>{'releaseDate': releaseDateValue},

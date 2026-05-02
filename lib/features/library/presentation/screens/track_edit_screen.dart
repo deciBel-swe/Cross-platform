@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/track_access_selector.dart';
 import '../../../library_profile/presentation/providers/track_preview_provider.dart';
 import '../../../library_profile/presentation/providers/uploads_provider.dart';
 import '../../../upload/presentation/providers/upload_notifier.dart';
@@ -44,362 +45,374 @@ class _TrackEditScreenState extends ConsumerState<TrackEditScreen> {
         explicitChildNodes: true,
         label: 'Edit track screen',
         child: editAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Text(
-            'Failed to load track editor.\n$error',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.onPrimary),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Center(
+            child: Text(
+              'Failed to load track editor.\n$error',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.onPrimary),
+            ),
           ),
-        ),
-        data: (state) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _EditFileSelectionHeader(
-                    state: state,
-                    onPickCover: notifier.pickCoverImage,
-                    onRemoveCover: notifier.markCoverForRemoval,
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.borderDark),
-                      borderRadius: BorderRadius.circular(16),
+          data: (state) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _EditFileSelectionHeader(
+                      state: state,
+                      onPickCover: notifier.pickCoverImage,
+                      onRemoveCover: notifier.markCoverForRemoval,
                     ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextFormField(
-                          initialValue: state.title,
-                          onChanged: notifier.updateTitle,
-                          enabled: !state.isSubmitting,
-                          maxLength: 200,
-                          style: const TextStyle(color: AppColors.onPrimary),
-                          decoration: const InputDecoration(
-                            labelText: 'Title *',
-                            labelStyle: TextStyle(color: AppColors.textMuted),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppColors.borderLight,
+                    const SizedBox(height: 24),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.borderDark),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            initialValue: state.title,
+                            onChanged: notifier.updateTitle,
+                            enabled: !state.isSubmitting,
+                            maxLength: 200,
+                            style: const TextStyle(color: AppColors.onPrimary),
+                            decoration: const InputDecoration(
+                              labelText: 'Title *',
+                              labelStyle: TextStyle(color: AppColors.textMuted),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: AppColors.borderLight,
+                                ),
+                              ),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: AppColors.onPrimary,
+                                ),
                               ),
                             ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppColors.onPrimary,
-                              ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Required';
+                              }
+                              if (value.trim().length > 200) {
+                                return 'Title must be less than 200 characters';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Genre *',
+                            style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 12,
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Required';
-                            }
-                            if (value.trim().length > 200) {
-                              return 'Title must be less than 200 characters';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Genre *',
-                          style: TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _buildGenreChip(
-                                context,
-                                'PICK GENRE',
-                                Icons.search,
-                                isSelected: false,
-                                onTap: state.isSubmitting
-                                    ? null
-                                    : () {
-                                        showModalBottomSheet<void>(
-                                          context: context,
-                                          backgroundColor: Colors.transparent,
-                                          isScrollControlled: true,
-                                          builder: (context) =>
-                                              FractionallySizedBox(
-                                                heightFactor: 0.7,
-                                                child: _EditGenreBottomSheet(
-                                                  trackId: widget.trackId,
-                                                ),
-                                              ),
-                                        );
-                                      },
-                              ),
-                              if (state.genre.isNotEmpty &&
-                                  !notifier.genreSuggestions.contains(
-                                    state.genre,
-                                  ))
+                          const SizedBox(height: 8),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
                                 _buildGenreChip(
                                   context,
-                                  state.genre,
-                                  null,
-                                  isSelected: true,
-                                  onTap: () {},
-                                ),
-                              ...notifier.genreSuggestions.map(
-                                (genreName) => _buildGenreChip(
-                                  context,
-                                  genreName,
-                                  null,
-                                  isSelected: state.genre == genreName,
+                                  'PICK GENRE',
+                                  Icons.search,
+                                  isSelected: false,
                                   onTap: state.isSubmitting
                                       ? null
-                                      : () => notifier.updateGenre(genreName),
+                                      : () {
+                                          showModalBottomSheet<void>(
+                                            context: context,
+                                            backgroundColor: Colors.transparent,
+                                            isScrollControlled: true,
+                                            builder: (context) =>
+                                                FractionallySizedBox(
+                                                  heightFactor: 0.7,
+                                                  child: _EditGenreBottomSheet(
+                                                    trackId: widget.trackId,
+                                                  ),
+                                                ),
+                                          );
+                                        },
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(color: AppColors.borderLight, height: 32),
-                        Semantics(
-                          button: true,
-                          enabled: !state.isSubmitting,
-                          label: state.tags.isEmpty
-                              ? 'Add tags'
-                              : 'Edit tags, ${state.tags.join(', ')}',
-                          hint: 'Opens tag editor',
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text(
-                              'Tags',
-                              style: TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 12,
-                              ),
-                            ),
-                            subtitle: Text(
-                              state.tags.isEmpty
-                                  ? 'Add tags to describe track for reachability'
-                                  : state.tags.join(', '),
-                              style: const TextStyle(
-                                color: AppColors.onPrimary,
-                              ),
-                            ),
-                            trailing: const Icon(
-                              Icons.arrow_forward_ios,
-                              color: AppColors.textMuted,
-                              size: 16,
-                            ),
-                            onTap: state.isSubmitting
-                                ? null
-                                : () {
-                                    showModalBottomSheet<void>(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (context) =>
-                                          _EditTagsBottomSheet(
-                                            trackId: widget.trackId,
-                                          ),
-                                    );
-                                  },
-                          ),
-                        ),
-                        const Divider(color: AppColors.borderLight),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          initialValue: state.description,
-                          onChanged: notifier.updateDescription,
-                          enabled: !state.isSubmitting,
-                          maxLines: 4,
-                          maxLength: 2000,
-                          style: const TextStyle(color: AppColors.onPrimary),
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                            labelStyle: TextStyle(color: AppColors.textMuted),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppColors.borderLight,
-                              ),
-                            ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppColors.onPrimary,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Privacy',
-                          style: TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
-                          ),
-                        ),
-                        IgnorePointer(
-                          ignoring: state.isSubmitting,
-                          child: RadioGroup<bool>(
-                            groupValue: state.isPrivate,
-                            onChanged: (val) {
-                              if (val != null) {
-                                notifier.updateIsPrivate(val);
-                              }
-                            },
-                            child: const Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Radio<bool>(value: false),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Public',
-                                            style: TextStyle(
-                                              color: AppColors.onPrimary,
-                                            ),
-                                          ),
-                                          Text(
-                                            'Anyone can find this',
-                                            style: TextStyle(
-                                              color: AppColors.textMuted,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Radio<bool>(value: true),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Unlisted (Private)',
-                                            style: TextStyle(
-                                              color: AppColors.onPrimary,
-                                            ),
-                                          ),
-                                          Text(
-                                            'Anyone with private link can access',
-                                            style: TextStyle(
-                                              color: AppColors.textMuted,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                if (state.genre.isNotEmpty &&
+                                    !notifier.genreSuggestions.contains(
+                                      state.genre,
+                                    ))
+                                  _buildGenreChip(
+                                    context,
+                                    state.genre,
+                                    null,
+                                    isSelected: true,
+                                    onTap: () {},
+                                  ),
+                                ...notifier.genreSuggestions.map(
+                                  (genreName) => _buildGenreChip(
+                                    context,
+                                    genreName,
+                                    null,
+                                    isSelected: state.genre == genreName,
+                                    onTap: state.isSubmitting
+                                        ? null
+                                        : () => notifier.updateGenre(genreName),
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      onPressed: state.isSubmitting
-                          ? null
-                          : () async {
-                              if (!_formKey.currentState!.validate()) {
-                                return;
-                              }
-                              if (state.genre.trim().isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Genre is required'),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              final success = await notifier.submit(
-                                widget.trackId,
-                              );
-                              if (!context.mounted) {
-                                return;
-                              }
-
-                              if (!success) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Failed to update track'),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              ref.invalidate(
-                                trackPreviewProvider(widget.trackId),
-                              );
-                              ref
-                                  .read(uploadsProvider.notifier)
-                                  .refreshTrack(widget.trackId);
-
-                              if (!context.mounted) {
-                                return;
-                              }
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Track updated successfully'),
-                                ),
-                              );
-                              context.pop(true);
-                            },
-                      child: Semantics(
-                        button: true,
-                        enabled: !state.isSubmitting,
-                        label: state.isSubmitting
-                            ? 'Saving track changes'
-                            : 'Save track changes',
-                        child: state.isSubmitting
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'Save',
+                          const Divider(
+                            color: AppColors.borderLight,
+                            height: 32,
+                          ),
+                          Semantics(
+                            button: true,
+                            enabled: !state.isSubmitting,
+                            label: state.tags.isEmpty
+                                ? 'Add tags'
+                                : 'Edit tags, ${state.tags.join(', ')}',
+                            hint: 'Opens tag editor',
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text(
+                                'Tags',
                                 style: TextStyle(
-                                  color: AppColors.onPrimary,
-                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textMuted,
+                                  fontSize: 12,
                                 ),
                               ),
+                              subtitle: Text(
+                                state.tags.isEmpty
+                                    ? 'Add tags to describe track for reachability'
+                                    : state.tags.join(', '),
+                                style: const TextStyle(
+                                  color: AppColors.onPrimary,
+                                ),
+                              ),
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                color: AppColors.textMuted,
+                                size: 16,
+                              ),
+                              onTap: state.isSubmitting
+                                  ? null
+                                  : () {
+                                      showModalBottomSheet<void>(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (context) =>
+                                            _EditTagsBottomSheet(
+                                              trackId: widget.trackId,
+                                            ),
+                                      );
+                                    },
+                            ),
+                          ),
+                          const Divider(color: AppColors.borderLight),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            initialValue: state.description,
+                            onChanged: notifier.updateDescription,
+                            enabled: !state.isSubmitting,
+                            maxLines: 4,
+                            maxLength: 2000,
+                            style: const TextStyle(color: AppColors.onPrimary),
+                            decoration: const InputDecoration(
+                              labelText: 'Description',
+                              labelStyle: TextStyle(color: AppColors.textMuted),
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: AppColors.borderLight,
+                                ),
+                              ),
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: AppColors.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Privacy',
+                            style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 12,
+                            ),
+                          ),
+                          IgnorePointer(
+                            ignoring: state.isSubmitting,
+                            child: RadioGroup<bool>(
+                              groupValue: state.isPrivate,
+                              onChanged: (val) {
+                                if (val != null) {
+                                  notifier.updateIsPrivate(val);
+                                }
+                              },
+                              child: const Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Radio<bool>(value: false),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Public',
+                                              style: TextStyle(
+                                                color: AppColors.onPrimary,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Anyone can find this',
+                                              style: TextStyle(
+                                                color: AppColors.textMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Radio<bool>(value: true),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Unlisted (Private)',
+                                              style: TextStyle(
+                                                color: AppColors.onPrimary,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Anyone with private link can access',
+                                              style: TextStyle(
+                                                color: AppColors.textMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const Divider(color: AppColors.borderLight),
+                          const SizedBox(height: 16),
+                          IgnorePointer(
+                            ignoring: state.isSubmitting,
+                            child: TrackAccessSelector(
+                              selectedAccess: state.access,
+                              onAccessChanged: notifier.updateAccess,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                ],
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        onPressed: state.isSubmitting
+                            ? null
+                            : () async {
+                                if (!_formKey.currentState!.validate()) {
+                                  return;
+                                }
+                                if (state.genre.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Genre is required'),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                final success = await notifier.submit(
+                                  widget.trackId,
+                                );
+                                if (!context.mounted) {
+                                  return;
+                                }
+
+                                if (!success) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Failed to update track'),
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                ref.invalidate(
+                                  trackPreviewProvider(widget.trackId),
+                                );
+                                ref
+                                    .read(uploadsProvider.notifier)
+                                    .refreshTrack(widget.trackId);
+
+                                if (!context.mounted) {
+                                  return;
+                                }
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Track updated successfully'),
+                                  ),
+                                );
+                                context.pop(true);
+                              },
+                        child: Semantics(
+                          button: true,
+                          enabled: !state.isSubmitting,
+                          label: state.isSubmitting
+                              ? 'Saving track changes'
+                              : 'Save track changes',
+                          child: state.isSubmitting
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Save',
+                                  style: TextStyle(
+                                    color: AppColors.onPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
         ),
       ),
     );
@@ -731,25 +744,25 @@ class _EditFileSelectionHeader extends StatelessWidget {
           hint: 'Opens image picker',
           child: GestureDetector(
             onTap: state.isSubmitting ? null : onPickCover,
-          child: Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.borderDark),
-              image: image,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderDark),
+                image: image,
+              ),
+              child: image == null
+                  ? const ExcludeSemantics(
+                      child: Icon(
+                        Icons.camera_alt_outlined,
+                        color: AppColors.textSecondary,
+                        size: 30,
+                      ),
+                    )
+                  : null,
             ),
-            child: image == null
-                ? const ExcludeSemantics(
-                    child: Icon(
-                      Icons.camera_alt_outlined,
-                      color: AppColors.textSecondary,
-                      size: 30,
-                    ),
-                  )
-                : null,
-          ),
           ),
         ),
         const SizedBox(width: 16),
