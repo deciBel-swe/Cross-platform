@@ -24,6 +24,8 @@ class PlaylistSocialRepositoryImpl implements IPlaylistSocialRepository {
         isCurrentlyLiked: isCurrentlyLiked,
       );
       return Right(isLiked);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on NetworkException catch (e) {
@@ -44,6 +46,8 @@ class PlaylistSocialRepositoryImpl implements IPlaylistSocialRepository {
         isCurrentlyReposted: isCurrentlyReposted,
       );
       return Right(isReposted);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on NetworkException catch (e) {
@@ -66,6 +70,8 @@ class PlaylistSocialRepositoryImpl implements IPlaylistSocialRepository {
         size: size,
       );
       return Right(models.map((m) => m.toEntity()).toList());
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on NetworkException catch (e) {
