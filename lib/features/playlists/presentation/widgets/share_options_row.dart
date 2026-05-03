@@ -124,7 +124,7 @@ class _ShareIcon extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.borderDark, width: 1),
                   // ignore: deprecated_member_use
-                  color: AppColors.surfaceVariant.withOpacity(0.3),
+                  color: AppColors.surfaceVariant.withValues(alpha: 0.3),
                 ),
                 child: Icon(icon, color: color, size: 24),
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../domain/entities/feed_track.dart';
 import '../providers/feed_repository_provider.dart';
 
 /// [FeedState] holds the accumulated list of feed tracks plus pagination info.
@@ -12,13 +13,13 @@ class FeedState {
     required this.isLoadingMore,
   });
 
-  final List<dynamic> tracks; // List<FeedTrack>
+  final List<FeedTrack> tracks;
   final int currentPage;
   final bool isLast;
   final bool isLoadingMore;
 
   FeedState copyWith({
-    List<dynamic>? tracks,
+    List<FeedTrack>? tracks,
     int? currentPage,
     bool? isLast,
     bool? isLoadingMore,
@@ -69,7 +70,7 @@ class FeedNotifier extends AsyncNotifier<FeedState> {
     state = await AsyncValue.guard(() => _fetchPage(0));
   }
 
-  Future<FeedState> _fetchPage(int page, {List<dynamic>? existing}) async {
+  Future<FeedState> _fetchPage(int page, {List<FeedTrack>? existing}) async {
     final repo = ref.read(feedRepositoryProvider);
     final result = await repo.getFeed(page: page, size: _pageSize);
 

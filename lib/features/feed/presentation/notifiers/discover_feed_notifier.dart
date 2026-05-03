@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../domain/entities/feed_track.dart';
 import '../providers/feed_repository_provider.dart';
 import 'feed_notifier.dart';
 
@@ -34,7 +35,7 @@ class DiscoverFeedNotifier extends AsyncNotifier<FeedState> {
     state = await AsyncValue.guard(() => _fetchPage(0));
   }
 
-  Future<FeedState> _fetchPage(int page, {List<dynamic>? existing}) async {
+  Future<FeedState> _fetchPage(int page, {List<FeedTrack>? existing}) async {
     final repo = ref.read(feedRepositoryProvider);
 
     final result = await repo.getDiscoverFeed(page: page, size: _pageSize);

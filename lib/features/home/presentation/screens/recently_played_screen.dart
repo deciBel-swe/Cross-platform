@@ -119,14 +119,19 @@ class RecentlyPlayedScreen extends ConsumerWidget {
   }
 }
 
-class _HistoryTrackTile extends StatelessWidget {
+class _HistoryTrackTile extends ConsumerWidget {
   const _HistoryTrackTile({required this.track, required this.onPlay});
 
   final Track track;
   final VoidCallback onPlay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioState = ref.watch(trackAudioProvider);
+    final isPlaying =
+        audioState.isPlaying &&
+        (audioState.preparedTrackId == track.id ||
+            audioState.currentTrack?.id == track.id);
     final artistName = track.artist.displayName?.trim().isNotEmpty == true
         ? track.artist.displayName!
         : track.artist.username;
@@ -139,7 +144,13 @@ class _HistoryTrackTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           excludeFromSemantics: true,
-          onTap: onPlay,
+          onTap: () {
+            if (isPlaying) {
+              ref.read(trackAudioProvider.notifier).pause();
+            } else {
+              onPlay();
+            }
+          },
           child: Opacity(
             opacity: track.isBlocked ? 0.5 : 1.0,
             child: Padding(
@@ -174,12 +185,14 @@ class _HistoryTrackTile extends StatelessWidget {
                     track.isBlocked
                         ? Icons.block_flipped
                         : (track.isPlayable
-                            ? Icons.play_arrow_rounded
+                            ? (isPlaying
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded)
                             : Icons.lock_outline_rounded),
                     color: track.isBlocked
                         ? AppColors.errors
                         : (track.isPlayable
-                            ? AppColors.textPrimary
+                            ? (isPlaying ? AppColors.primary : AppColors.textPrimary)
                             : AppColors.textHint),
                   ),
                 ],

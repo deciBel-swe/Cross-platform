@@ -105,26 +105,24 @@ class _TrackReportBottomSheetState
                 style: AppTextStyles.titleMedium,
               ),
               const SizedBox(height: AppDimensions.paddingMd),
-              RadioGroup<String?>(
-                groupValue: _selectedReason,
-                onChanged: (value) => setState(() => _selectedReason = value),
-                child: Column(
-                  children: _reasons
-                      .map(
-                        (reason) => RadioListTile<String>(
-                          title: Text(
-                            reason,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.white,
-                            ),
+              Column(
+                children: _reasons
+                    .map(
+                      (reason) => RadioListTile<String?>(
+                        title: Text(
+                          reason,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: Colors.white,
                           ),
-                          value: reason,
-                          activeColor: AppColors.primary,
-                          contentPadding: EdgeInsets.zero,
                         ),
-                      )
-                      .toList(),
-                ),
+                        value: reason,
+                        groupValue: _selectedReason,
+                        onChanged: (value) => setState(() => _selectedReason = value),
+                        activeColor: AppColors.primary,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    )
+                    .toList(),
               ),
               const SizedBox(height: AppDimensions.paddingMd),
               TextField(

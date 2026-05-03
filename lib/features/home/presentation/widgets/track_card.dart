@@ -1,19 +1,21 @@
-/// SoundCloud-style square track card with artwork and hover overlay.
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/decibel_cached_image.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 
 /// A square card displaying track artwork, title, and artist.
 ///
 /// Shows a play button overlay on hover (desktop).
-class TrackCard extends StatefulWidget {
+class TrackCard extends ConsumerStatefulWidget {
   const TrackCard({
     super.key,
+    required this.trackId,
     required this.title,
     required this.artist,
     this.imageUrl,
@@ -23,6 +25,7 @@ class TrackCard extends StatefulWidget {
     this.onTap,
   });
 
+  final int trackId;
   final String title;
   final String artist;
 
@@ -36,14 +39,19 @@ class TrackCard extends StatefulWidget {
   final VoidCallback? onTap;
 
   @override
-  State<TrackCard> createState() => _TrackCardState();
+  ConsumerState<TrackCard> createState() => _TrackCardState();
 }
 
-class _TrackCardState extends State<TrackCard> {
+class _TrackCardState extends ConsumerState<TrackCard> {
   bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final audioState = ref.watch(trackAudioProvider);
+    final isPlaying =
+        audioState.isPlaying &&
+        (audioState.preparedTrackId == widget.trackId ||
+            audioState.currentTrack?.id == widget.trackId);
     final colors =
         widget.gradientColors ??
         [AppColors.surfaceLight, AppColors.surfaceContainer];
@@ -59,7 +67,13 @@ class _TrackCardState extends State<TrackCard> {
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
         child: GestureDetector(
-          onTap: widget.onTap,
+          onTap: () {
+            if (isPlaying) {
+              ref.read(trackAudioProvider.notifier).pause();
+            } else {
+              widget.onTap?.call();
+            }
+          },
           child: SizedBox(
             width: AppDimensions.trackCardSize,
             child: Column(
@@ -68,6 +82,7 @@ class _TrackCardState extends State<TrackCard> {
                 // ---- Artwork ----
                 _Artwork(
                   isHovered: _isHovered,
+                  isPlaying: isPlaying,
                   gradientColors: colors,
                   imageUrl: widget.imageUrl,
                   tagLabel: widget.tagLabel,
@@ -113,12 +128,14 @@ class _TrackCardState extends State<TrackCard> {
 class _Artwork extends StatelessWidget {
   const _Artwork({
     required this.isHovered,
+    required this.isPlaying,
     required this.gradientColors,
     this.imageUrl,
     this.tagLabel,
   });
 
   final bool isHovered;
+  final bool isPlaying;
   final List<Color> gradientColors;
   final String? imageUrl;
   final String? tagLabel;
@@ -150,12 +167,12 @@ class _Artwork extends StatelessWidget {
               opacity: isHovered ? 1.0 : 0.0,
               child: Container(
                 color: Colors.black45,
-                child: const Center(
+                child: Center(
                   child: CircleAvatar(
                     radius: 24,
                     backgroundColor: AppColors.primary,
                     child: Icon(
-                      Icons.play_arrow,
+                      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                       color: Colors.white,
                       size: 28,
                     ),
