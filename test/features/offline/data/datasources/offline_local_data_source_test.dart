@@ -36,8 +36,9 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('offline_test');
     
     // Mock path_provider
-    const MethodChannel('plugins.flutter.io/path_provider')
-        .setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async {
       if (methodCall.method == 'getApplicationDocumentsDirectory') {
         return tempDir.path;
       }
@@ -77,7 +78,7 @@ void main() {
     trackDurationSeconds: 180,
   );
 
-  final tPeaksModel = TrackPeaksModel(
+  const tPeaksModel = TrackPeaksModel(
     trackId: 1,
     duration: 180,
     peaks: [10, 50, 90],
@@ -109,9 +110,8 @@ void main() {
       expect(File(expectedPeaksPath).existsSync(), true);
 
       final metaContent = File(expectedMetaPath).readAsStringSync();
-      final metaJson = jsonDecode(metaContent);
-      expect(p.canonicalize(metaJson['trackUrl']), p.canonicalize(expectedDataPath));
-    });
+      final metaJson = jsonDecode(metaContent) as Map<String, dynamic>;
+      expect(p.canonicalize(metaJson['trackUrl'] as String), p.canonicalize(expectedDataPath));    });
 
     test('should continue if peaks fetch fails', () async {
       // arrange
@@ -268,7 +268,7 @@ void main() {
       // assert
       expect(result, isNotNull);
       expect(result!.trackId, 1);
-      expect(result!.peaks, tPeaksModel.peaks);
+      expect(result.peaks, tPeaksModel.peaks);
     });
 
     test('should return null when file does not exist', () async {
@@ -324,7 +324,7 @@ void main() {
       
       final dir = p.join(tempDir.path, 'collections');
       final content = await File('$dir/collection_10.json').readAsString();
-      final json = jsonDecode(content);
+      final json = jsonDecode(content) as Map<String, dynamic>;
       
       // assert
       expect(json['trackIds'], [1, 3]);
@@ -340,7 +340,7 @@ void main() {
       
       final dir = p.join(tempDir.path, 'collections');
       final content = await File('$dir/collection_10.json').readAsString();
-      final json = jsonDecode(content);
+      final json = jsonDecode(content) as Map<String, dynamic>;
       
       // assert
       expect(json['title'], 'Updated Title');

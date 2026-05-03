@@ -21,13 +21,13 @@ void main() {
   late MockPlaylistDetailsNotifier mockDetailsNotifier;
   const playlistId = 456;
 
-  final playlist = Playlist(
+  const playlist = Playlist(
     id: playlistId,
     title: 'Test Playlist',
     type: 'public',
     isPrivate: false,
     isLiked: false,
-    tracks: const [],
+    tracks: [],
     totalDurationSeconds: 0,
     trackCount: 0,
   );
@@ -65,7 +65,7 @@ void main() {
 
     test('toggleLike performs optimistic update and calls repository', () async {
       when(() => mockRepository.toggleLike(playlistId, false))
-          .thenAnswer((_) async => const dartz_either.Right(true));
+          .thenAnswer((_) async => const dartz_either.Right<Failure, bool>(true));
 
       final container = ProviderContainer(
         overrides: [
@@ -87,7 +87,7 @@ void main() {
 
     test('toggleLike reverts on failure', () async {
       when(() => mockRepository.toggleLike(playlistId, false))
-          .thenAnswer((_) async => dartz_either.Left(ServerFailure('error')));
+          .thenAnswer((_) async => const dartz_either.Left<Failure, bool>(ServerFailure('error')));
 
       final container = ProviderContainer(
         overrides: [
@@ -108,7 +108,3 @@ void main() {
   });
 }
 
-class ServerFailure extends Mock implements Failure {
-  final String message;
-  ServerFailure(this.message);
-}

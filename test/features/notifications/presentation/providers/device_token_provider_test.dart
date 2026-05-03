@@ -90,7 +90,7 @@ void main() {
         () => mockNotificationRepository.registerDeviceToken('duplicate-token'),
       );
 
-      foregroundController.add(RemoteMessage(data: {'kind': 'notification'}));
+      foregroundController.add(const RemoteMessage(data: {'kind': 'notification'}));
       await Future<void>.delayed(Duration.zero);
     },
   );

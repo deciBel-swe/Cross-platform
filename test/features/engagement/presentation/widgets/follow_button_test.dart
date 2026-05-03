@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:decibel/features/engagement/presentation/notifiers/follow_notifier.dart';
 import 'package:decibel/features/engagement/presentation/providers/follow_state_provider.dart';
 import 'package:decibel/features/engagement/presentation/widgets/follow_button.dart';
@@ -10,8 +9,8 @@ import 'package:mocktail/mocktail.dart';
 class MockFollowNotifier extends FamilyAsyncNotifier<bool, int>
     with Mock
     implements FollowNotifier {
-  final bool initialState;
   MockFollowNotifier([this.initialState = false]);
+  final bool initialState;
 
   @override
   Future<bool> build(int arg) async => initialState;

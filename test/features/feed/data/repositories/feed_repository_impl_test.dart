@@ -4,6 +4,7 @@ import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/feed/data/datasources/feed_data_datasource.dart';
 import 'package:decibel/features/feed/data/models/paginated_feed_model.dart';
 import 'package:decibel/features/feed/data/repositories/feed_repository_impl.dart';
+import 'package:decibel/features/feed/domain/entities/paginated_feed.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -44,7 +45,7 @@ void main() {
 
       final result = await repository.getFeed(page: 0, size: 20);
 
-      expect(result, equals(const Left(NetworkFailure('No connection'))));
+      expect(result, equals(const Left<Failure, PaginatedFeed>(NetworkFailure('No connection'))));
     });
 
     test('should return ServerFailure when repository throws ServerException', () async {
@@ -53,7 +54,7 @@ void main() {
 
       final result = await repository.getFeed(page: 0, size: 20);
 
-      expect(result, equals(const Left(ServerFailure('Server error'))));
+      expect(result, equals(const Left<Failure, PaginatedFeed>(ServerFailure('Server error'))));
     });
 
     test('should return ServerFailure for any other exception', () async {
@@ -62,7 +63,7 @@ void main() {
 
       final result = await repository.getFeed(page: 0, size: 20);
 
-      expect(result, equals(const Left(ServerFailure('Exception: unknown'))));
+      expect(result, equals(const Left<Failure, PaginatedFeed>(ServerFailure('Exception: unknown'))));
     });
   });
 
@@ -83,7 +84,7 @@ void main() {
 
       final result = await repository.getDiscoverFeed(page: 0, size: 20);
 
-      expect(result, equals(const Left(NetworkFailure('No connection'))));
+      expect(result, equals(const Left<Failure, PaginatedFeed>(NetworkFailure('No connection'))));
     });
 
     test('should return ServerFailure when repository throws ServerException', () async {
@@ -92,7 +93,7 @@ void main() {
 
       final result = await repository.getDiscoverFeed(page: 0, size: 20);
 
-      expect(result, equals(const Left(ServerFailure('Server error'))));
+      expect(result, equals(const Left<Failure, PaginatedFeed>(ServerFailure('Server error'))));
     });
   });
 }

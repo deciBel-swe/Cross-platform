@@ -2,11 +2,11 @@ import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/exceptions.dart';
 import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/engagement/data/datasources/track_social_remote_datasource.dart';
-import 'package:decibel/features/engagement/domain/entities/paginated_engagers.dart';
 import 'package:decibel/features/engagement/data/models/paginated_engagers_model.dart';
 import 'package:decibel/features/engagement/data/models/repost_history_model.dart';
 import 'package:decibel/features/engagement/data/models/track_engager_model.dart';
 import 'package:decibel/features/engagement/data/repositories/track_social_repository_impl.dart';
+import 'package:decibel/features/engagement/domain/entities/paginated_engagers.dart';
 import 'package:decibel/features/library/data/models/artist_model.dart';
 import 'package:decibel/features/library/data/models/paginated_tracks_model.dart';
 import 'package:decibel/features/library/data/models/track_model.dart';
@@ -112,7 +112,7 @@ void main() {
 
   test('getLikedTracks calls datasource with userId when provided', () async {
     when(() => mockDatasource.getLikedTracks(page: 0, size: 20, userId: 123)).thenAnswer(
-      (_) async => PaginatedTracksModel(
+      (_) async => const PaginatedTracksModel(
         content: [],
         pageNumber: 0,
         pageSize: 20,
@@ -129,7 +129,7 @@ void main() {
 
   test('getLikedTracks calls datasource with username when provided', () async {
     when(() => mockDatasource.getLikedTracks(page: 0, size: 20, username: 'user1')).thenAnswer(
-      (_) async => PaginatedTracksModel(
+      (_) async => const PaginatedTracksModel(
         content: [],
         pageNumber: 0,
         pageSize: 20,
@@ -146,7 +146,7 @@ void main() {
 
   test('getRepostedTracks calls datasource with userId when provided', () async {
     when(() => mockDatasource.getRepostedTracks(page: 0, size: 20, userId: 123)).thenAnswer(
-      (_) async => PaginatedTracksModel(
+      (_) async => const PaginatedTracksModel(
         content: [],
         pageNumber: 0,
         pageSize: 20,
@@ -163,7 +163,7 @@ void main() {
 
   test('getRepostedTracks calls datasource with username when provided', () async {
     when(() => mockDatasource.getRepostedTracks(page: 0, size: 20, username: 'user1')).thenAnswer(
-      (_) async => PaginatedTracksModel(
+      (_) async => const PaginatedTracksModel(
         content: [],
         pageNumber: 0,
         pageSize: 20,

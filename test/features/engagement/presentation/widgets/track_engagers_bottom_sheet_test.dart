@@ -16,10 +16,9 @@ import 'package:mocktail/mocktail.dart';
 class MockTrackEngagersNotifier extends FamilyAsyncNotifier<PaginatedEngagers, EngagerParams>
     with Mock
     implements TrackEngagersNotifier {
+  MockTrackEngagersNotifier({this.data, this.completer});
   final PaginatedEngagers? data;
   final Completer<PaginatedEngagers>? completer;
-
-  MockTrackEngagersNotifier({this.data, this.completer});
 
   @override
   Future<PaginatedEngagers> build(EngagerParams arg) async {
@@ -51,8 +50,8 @@ class MockFollowNotifier extends FamilyAsyncNotifier<bool, int>
 class MockAuthNotifier extends AsyncNotifier<AuthState>
     with Mock
     implements AuthNotifier {
-  final AuthState? data;
   MockAuthNotifier({this.data});
+  final AuthState? data;
 
   @override
   FutureOr<AuthState> build() => data ?? const AuthUnauthenticated();

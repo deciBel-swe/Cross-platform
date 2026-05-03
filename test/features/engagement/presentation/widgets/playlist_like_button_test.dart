@@ -14,8 +14,8 @@ class MockPlaylistSocialNotifier
     extends FamilyAsyncNotifier<PlaylistSocialData, int>
     with Mock
     implements PlaylistSocialNotifier {
-  final PlaylistSocialData? data;
   MockPlaylistSocialNotifier({this.data});
+  final PlaylistSocialData? data;
 
   @override
   FutureOr<PlaylistSocialData> build(int arg) {
@@ -28,13 +28,13 @@ class MockPlaylistSocialNotifier
 
 void main() {
   const playlistId = 1;
-  final playlist = Playlist(
+  const playlist = Playlist(
     id: playlistId,
     title: 'Test Playlist',
     type: 'public',
     isPrivate: false,
     isLiked: false,
-    tracks: const [],
+    tracks:  [],
     totalDurationSeconds: 0,
     trackCount: 0,
   );
@@ -53,7 +53,7 @@ void main() {
               ),
             ),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(body: PlaylistLikeButton(playlist: playlist)),
           ),
         ),
@@ -78,7 +78,7 @@ void main() {
               ),
             ),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(body: PlaylistLikeButton(playlist: playlist)),
           ),
         ),

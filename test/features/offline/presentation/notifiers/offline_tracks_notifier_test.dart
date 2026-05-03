@@ -1,11 +1,11 @@
 import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/failures.dart';
-import 'package:decibel/features/offline/domain/repositories/i_offline_repository.dart';
-import 'package:decibel/features/offline/domain/usecases/get_offline_tracks_usecase.dart';
-import 'package:decibel/features/offline/presentation/notifiers/offline_tracks_notifier.dart';
 import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:decibel/features/library/domain/entities/track_status.dart';
+import 'package:decibel/features/offline/domain/repositories/i_offline_repository.dart';
+import 'package:decibel/features/offline/domain/usecases/get_offline_tracks_usecase.dart';
+import 'package:decibel/features/offline/presentation/notifiers/offline_tracks_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -48,7 +48,7 @@ void main() {
           .thenAnswer((_) async => const Right([]));
       final notifier = OfflineTracksNotifier(useCase);
 
-      expect(notifier.debugState, isA<AsyncLoading>());
+      expect(notifier.state, isA<AsyncLoading<List<Track>>>());
     });
 
     // ── loadTracks success ───────────────────────────────────────────────────
@@ -63,7 +63,7 @@ void main() {
 
       await notifier.loadTracks();
 
-      final state = notifier.debugState;
+      final state = notifier.state;
       expect(state.hasValue, true);
       expect(state.value!.length, 2);
       expect(state.value![0].id, 1);
@@ -78,7 +78,7 @@ void main() {
 
       await notifier.loadTracks();
 
-      expect(notifier.debugState.value, isEmpty);
+      expect(notifier.state.value, isEmpty);
     });
 
     // ── loadTracks failure ───────────────────────────────────────────────────
@@ -93,7 +93,7 @@ void main() {
 
       await notifier.loadTracks();
 
-      final state = notifier.debugState;
+      final state = notifier.state;
       expect(state.hasError, true);
       expect(state.error, 'read error');
     });
@@ -124,11 +124,11 @@ void main() {
 
       // Settle first call
       await notifier.loadTracks();
-      expect(notifier.debugState.hasValue, true);
+      expect(notifier.state.hasValue, true);
 
       // Start second call — before awaiting, state should be AsyncLoading
       final secondCall = notifier.loadTracks();
-      expect(notifier.debugState, isA<AsyncLoading>());
+      expect(notifier.state, isA<AsyncLoading<List<Track>>>());
       await secondCall;
     });
   });

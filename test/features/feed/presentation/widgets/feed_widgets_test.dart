@@ -3,24 +3,24 @@ import 'package:decibel/features/engagement/domain/models/track_action_data.dart
 import 'package:decibel/features/engagement/presentation/notifiers/track_action_notifier.dart';
 import 'package:decibel/features/engagement/presentation/providers/track_social_provider.dart';
 import 'package:decibel/features/feed/domain/entities/feed_item_type.dart';
-import 'package:decibel/features/feed/presentation/widgets/feed_item.dart';
-import 'package:decibel/features/feed/presentation/widgets/mobile_feed_track_card.dart';
-import 'package:decibel/features/feed/presentation/widgets/mobile_discover_track_page.dart';
 import 'package:decibel/features/feed/domain/entities/feed_track.dart';
+import 'package:decibel/features/feed/presentation/widgets/feed_item.dart';
+import 'package:decibel/features/feed/presentation/widgets/mobile_discover_track_page.dart';
+import 'package:decibel/features/feed/presentation/widgets/mobile_feed_track_card.dart';
+import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:decibel/features/library/domain/entities/track.dart' as lib_track;
+import 'package:decibel/features/library/domain/entities/track_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:decibel/features/library/domain/entities/artist.dart';
-import 'package:decibel/features/library/domain/entities/track_status.dart';
 
 class MockTrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int>
     with Mock
     implements TrackSocialNotifier {
-  final TrackSocialData initialState;
   MockTrackSocialNotifier(this.initialState);
+  final TrackSocialData initialState;
 
   @override
   FutureOr<TrackSocialData> build(int arg) => initialState;

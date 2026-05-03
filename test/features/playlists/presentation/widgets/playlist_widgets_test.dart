@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:async';
-import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dartz/dartz.dart';
@@ -24,9 +22,8 @@ import 'package:decibel/features/library_profile/presentation/providers/track_re
 import 'package:decibel/features/playlists/domain/entities/playlist.dart';
 import 'package:decibel/features/playlists/domain/entities/playlist_metadata.dart';
 import 'package:decibel/features/playlists/domain/repositories/i_playlist_repository.dart';
-import 'package:decibel/features/playlists/presentation/providers/user_playlists_provider.dart';
 import 'package:decibel/features/playlists/presentation/notifiers/playlist_form_notifier.dart';
-import 'package:decibel/features/playlists/presentation/widgets/create_playlist_bottom_sheet.dart';
+import 'package:decibel/features/playlists/presentation/providers/user_playlists_provider.dart';
 import 'package:decibel/features/playlists/presentation/widgets/delete_playlist_dialog.dart';
 import 'package:decibel/features/playlists/presentation/widgets/playlist_action_buttons.dart';
 import 'package:decibel/features/playlists/presentation/widgets/playlist_details_tab.dart';
@@ -93,21 +90,21 @@ void main() {
 
     when(
       () => playlistRepository.getUserPlaylists(page: 0, size: 20),
-    ).thenAnswer((_) async => Right([_playlist(id: 1, title: 'Focus')]));
+    ).thenAnswer((_) async => Right<Failure, List<Playlist>>([_playlist(id: 1, title: 'Focus')]));
     when(
       () => playlistRepository.getPlaylistDetails(any()),
     ).thenAnswer((invocation) async {
       final playlistId = invocation.positionalArguments.first as int;
-      return Right(_playlist(id: playlistId, title: 'Focus'));
+      return Right<Failure, Playlist>(_playlist(id: playlistId, title: 'Focus'));
     });
     when(
       () => playlistRepository.getPlaylistSecretLink(any()),
-    ).thenAnswer((_) async => const Right('token-123'));
+    ).thenAnswer((_) async => const Right<Failure, String>('token-123'));
     when(
       () => playlistRepository.createPlaylist(any()),
     ).thenAnswer((invocation) async {
       final metadata = invocation.positionalArguments.first as PlaylistMetadata;
-      return Right(
+      return Right<Failure, Playlist>(
         _playlist(
           id: 99,
           title: metadata.title,
@@ -121,7 +118,7 @@ void main() {
     ).thenAnswer((invocation) async {
       final playlistId = invocation.positionalArguments.first as int;
       final metadata = invocation.positionalArguments[1] as PlaylistMetadata;
-      return Right(
+      return Right<Failure, Playlist>(
         _playlist(
           id: playlistId,
           title: metadata.title,
@@ -132,17 +129,17 @@ void main() {
     });
     when(
       () => playlistRepository.deletePlaylist(any()),
-    ).thenAnswer((_) async => const Right(null));
+    ).thenAnswer((_) async => const Right<Failure, void>(null));
 
     when(
       () => playlistSocialRepository.toggleRepost(any(), any()),
-    ).thenAnswer((_) async => const Right(true));
+    ).thenAnswer((_) async => const Right<Failure, bool>(true));
 
     when(
       () => trackRepository.fetchTrackById(any()),
     ).thenAnswer((invocation) async {
       final trackId = invocation.positionalArguments.first as int;
-      return Right(_track(id: trackId, title: 'Track $trackId'));
+      return Right<Failure, Track>(_track(id: trackId, title: 'Track $trackId'));
     });
 
     when(
@@ -383,7 +380,7 @@ void main() {
     tester,
   ) async {
     when(() => playlistRepository.createPlaylist(any())).thenAnswer(
-      (_) async => const Left(ServerFailure('create failed')),
+      (_) async => const Left<Failure, Playlist>(ServerFailure('create failed')),
     );
 
     await tester.pumpWidget(buildApp(const PlaylistActionButtons()));
@@ -476,7 +473,7 @@ void main() {
         ShareOptionsRow(
           onCopyLinkTap: () async {
             copied = true;
-            return const Right('https://example.com/link');
+            return const Right<Failure, String>('https://example.com/link');
           },
         ),
       ),
@@ -494,7 +491,7 @@ void main() {
     await tester.pumpWidget(
       buildApp(
         ShareOptionsRow(
-          onCopyLinkTap: () async => const Left(ServerFailure('link failed')),
+          onCopyLinkTap: () async => const Left<Failure, String>(ServerFailure('link failed')),
         ),
       ),
     );
@@ -614,7 +611,7 @@ void main() {
     );
 
     when(() => playlistRepository.getPlaylistDetails(7)).thenAnswer(
-      (_) async => Right(playlist),
+      (_) async => Right<Failure, Playlist>(playlist),
     );
 
     await tester.tap(find.text('Open options'));
@@ -691,10 +688,10 @@ void main() {
     );
 
     when(() => playlistRepository.getPlaylistDetails(8)).thenAnswer(
-      (_) async => Right(playlist),
+      (_) async => Right<Failure, Playlist>(playlist),
     );
     when(() => playlistSocialRepository.toggleRepost(8, false)).thenAnswer(
-      (_) async => const Right(true),
+      (_) async => const Right<Failure, bool>(true),
     );
 
     await tester.tap(find.text('Open options 2'));
@@ -768,17 +765,5 @@ Track _track({
     isReposted: false,
     createdAt: DateTime(2026, 1, 1),
     trackDurationSeconds: 120,
-  );
-}
-
-Future<File> _temporaryPngFile() async {
-  final file = File(
-    '${Directory.systemTemp.path}/decibel_playlist_cover_${DateTime.now().microsecondsSinceEpoch}.png',
-  );
-
-  return file.writeAsBytes(
-    base64Decode(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO2r8XkAAAAASUVORK5CYII=',
-    ),
   );
 }

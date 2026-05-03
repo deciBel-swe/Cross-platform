@@ -60,7 +60,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
           // Subtle Overlay
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
             ),
           ),
 
@@ -72,11 +72,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 constraints: const BoxConstraints(maxWidth: 400),
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: AppColors.surface.withOpacity(0.9),
+                  color: AppColors.surface.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 30,
                       offset: const Offset(0, 15),
                     ),
@@ -140,7 +140,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.1),
+            color: Colors.green.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -202,7 +202,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.errors.withOpacity(0.1),
+            color: AppColors.errors.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(

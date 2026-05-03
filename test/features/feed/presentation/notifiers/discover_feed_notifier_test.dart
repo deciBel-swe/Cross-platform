@@ -4,7 +4,6 @@ import 'package:decibel/features/feed/domain/entities/feed_track.dart';
 import 'package:decibel/features/feed/domain/entities/paginated_feed.dart';
 import 'package:decibel/features/feed/domain/repositories/i_feed_repository.dart';
 import 'package:decibel/features/feed/presentation/notifiers/discover_feed_notifier.dart';
-import 'package:decibel/features/feed/presentation/notifiers/feed_notifier.dart';
 import 'package:decibel/features/feed/presentation/providers/feed_repository_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -21,8 +21,8 @@ class MockFollowNotifier extends FamilyAsyncNotifier<bool, int>
 }
 
 class MockAuthNotifier extends AsyncNotifier<AuthState> with Mock implements AuthNotifier {
-  final AsyncValue<AuthState> initialState;
   MockAuthNotifier(this.initialState);
+  final AsyncValue<AuthState> initialState;
 
   @override
   FutureOr<AuthState> build() => initialState.value!;
@@ -32,7 +32,7 @@ void main() {
   const userId = 123;
   const otherUserId = 456;
 
-  final testUser = TrackEngager(
+  const testUser = TrackEngager(
     id: otherUserId,
     username: 'otheruser',
     displayName: 'Other User',
@@ -40,7 +40,7 @@ void main() {
     isFollowing: false,
   );
 
-  final emptyPaginated = PaginatedEngagers(
+  const emptyPaginated = PaginatedEngagers(
     content: [],
     pageNumber: 0,
     pageSize: 20,
@@ -49,7 +49,7 @@ void main() {
     isLast: true,
   );
 
-  final singleUserPaginated = PaginatedEngagers(
+  const singleUserPaginated = PaginatedEngagers(
     content: [testUser],
     pageNumber: 0,
     pageSize: 20,

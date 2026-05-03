@@ -3,29 +3,26 @@ import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/auth/domain/entities/auth_state.dart';
 import 'package:decibel/features/auth/domain/entities/auth_user.dart' as auth;
+import 'package:decibel/features/auth/presentation/notifiers/auth_notifier.dart';
 import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
 import 'package:decibel/features/engagement/domain/models/track_action_data.dart';
+import 'package:decibel/features/engagement/presentation/notifiers/track_action_notifier.dart';
 import 'package:decibel/features/engagement/presentation/providers/track_social_provider.dart';
 import 'package:decibel/features/feed/domain/entities/feed_track.dart';
 import 'package:decibel/features/feed/domain/entities/paginated_feed.dart';
 import 'package:decibel/features/feed/domain/repositories/i_feed_repository.dart';
 import 'package:decibel/features/feed/presentation/providers/feed_repository_provider.dart';
-import 'package:decibel/features/feed/presentation/notifiers/feed_notifier.dart';
-import 'package:decibel/features/feed/presentation/notifiers/discover_feed_notifier.dart';
 import 'package:decibel/features/feed/presentation/screens/feed_screen.dart';
-import 'package:decibel/features/library/domain/entities/artist.dart';
-import 'package:decibel/features/library/presentation/state/track_audio_state.dart';
-import 'package:decibel/features/library/presentation/notifiers/track_audio_notifier.dart';
 import 'package:decibel/features/library/domain/entities/track.dart' as library_track;
+import 'package:decibel/features/library/presentation/notifiers/track_audio_notifier.dart';
+import 'package:decibel/features/library/presentation/state/track_audio_state.dart';
 import 'package:decibel/features/library_profile/domain/entities/user_profile.dart' as profile;
+import 'package:decibel/features/library_profile/presentation/notifiers/user_profile_notifier.dart';
 import 'package:decibel/features/library_profile/presentation/providers/track_audio_provider.dart';
 import 'package:decibel/features/library_profile/presentation/providers/user_profile_provider.dart';
-import 'package:decibel/features/library_profile/presentation/notifiers/user_profile_notifier.dart';
-import 'package:decibel/features/auth/presentation/notifiers/auth_notifier.dart';
-import 'package:decibel/features/engagement/presentation/notifiers/track_action_notifier.dart';
-import 'package:decibel/features/offline/presentation/providers/track_download_provider.dart';
-import 'package:decibel/features/offline/presentation/notifiers/track_download_notifier.dart';
 import 'package:decibel/features/offline/domain/usecases/download_track_usecase.dart';
+import 'package:decibel/features/offline/presentation/notifiers/track_download_notifier.dart';
+import 'package:decibel/features/offline/presentation/providers/track_download_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -149,7 +146,7 @@ void main() {
 
     testWidgets('renders empty state when no tracks', (tester) async {
       when(() => mockRepository.getFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(PaginatedFeed(
+          .thenAnswer((_) async => const Right<Failure, PaginatedFeed>(PaginatedFeed(
                 content: [],
                 pageNumber: 0,
                 pageSize: 20,
@@ -159,7 +156,7 @@ void main() {
               )));
       
       when(() => mockRepository.getDiscoverFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(PaginatedFeed(
+          .thenAnswer((_) async => const Right<Failure, PaginatedFeed>(PaginatedFeed(
                 content: [],
                 pageNumber: 0,
                 pageSize: 20,
@@ -187,10 +184,10 @@ void main() {
       );
 
       when(() => mockRepository.getFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(tFeed));
+          .thenAnswer((_) async => Right<Failure, PaginatedFeed>(tFeed));
       
       when(() => mockRepository.getDiscoverFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(PaginatedFeed(
+          .thenAnswer((_) async => const Right<Failure, PaginatedFeed>(PaginatedFeed(
                 content: [],
                 pageNumber: 0,
                 pageSize: 20,
@@ -219,10 +216,10 @@ void main() {
       );
 
       when(() => mockRepository.getFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(tFeed));
+          .thenAnswer((_) async => Right<Failure, PaginatedFeed>(tFeed));
       
       when(() => mockRepository.getDiscoverFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(tFeed));
+          .thenAnswer((_) async => Right<Failure, PaginatedFeed>(tFeed));
 
       await tester.pumpWidget(createWidget());
       await tester.pumpAndSettle();
@@ -242,7 +239,7 @@ void main() {
       await tester.binding.setSurfaceSize(desktopSize);
       
       when(() => mockRepository.getFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(PaginatedFeed(
+          .thenAnswer((_) async => const Right<Failure, PaginatedFeed>(PaginatedFeed(
                 content: [],
                 pageNumber: 0,
                 pageSize: 20,
@@ -252,7 +249,7 @@ void main() {
               )));
       
       when(() => mockRepository.getDiscoverFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(PaginatedFeed(
+          .thenAnswer((_) async => const Right<Failure, PaginatedFeed>(PaginatedFeed(
                 content: [],
                 pageNumber: 0,
                 pageSize: 20,
@@ -281,10 +278,10 @@ void main() {
       );
 
       when(() => mockRepository.getFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(tFeed));
+          .thenAnswer((_) async => Right<Failure, PaginatedFeed>(tFeed));
       
       when(() => mockRepository.getDiscoverFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(tFeed));
+          .thenAnswer((_) async => Right<Failure, PaginatedFeed>(tFeed));
 
       await tester.pumpWidget(createWidget());
       await tester.pumpAndSettle();
@@ -294,12 +291,12 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       
-      verify(() => mockRepository.getFeed(page: 0, size: 20)).called(any());
+      verify(() => mockRepository.getFeed(page: 0, size: 20)).called(any<int>());
     }, skip: true);
 
     testWidgets('renders error state and allows retry', (tester) async {
       when(() => mockRepository.getFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => const Left(ServerFailure('Error')));
+          .thenAnswer((_) async => const Left<Failure, PaginatedFeed>(ServerFailure('Error')));
 
       await tester.pumpWidget(createWidget());
       await tester.pump();
@@ -310,7 +307,7 @@ void main() {
       expect(find.text('Retry'), findsOneWidget);
 
       when(() => mockRepository.getFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => Right(PaginatedFeed(
+          .thenAnswer((_) async => const Right<Failure, PaginatedFeed>(PaginatedFeed(
                 content: [],
                 pageNumber: 0,
                 pageSize: 20,

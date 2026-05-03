@@ -3,8 +3,8 @@ import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:decibel/features/library/domain/entities/track_status.dart';
-import 'package:decibel/features/offline/domain/usecases/download_track_usecase.dart';
 import 'package:decibel/features/offline/domain/repositories/i_offline_repository.dart';
+import 'package:decibel/features/offline/domain/usecases/download_track_usecase.dart';
 import 'package:decibel/features/offline/presentation/notifiers/track_download_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,21 +31,6 @@ Track _makeTrack({int id = 1, String? trackUrl = 'https://example.com/t.mp3'}) =
       trackDurationSeconds: 200,
     );
 
-/// Helper that wires [TrackDownloadNotifier] in a [ProviderContainer]
-/// using a real [DownloadTrackUseCase] backed by [mockRepo].
-ProviderContainer _makeContainer(MockOfflineRepository mockRepo) {
-  final useCase = DownloadTrackUseCase(mockRepo);
-  final provider =
-      StateNotifierProvider<TrackDownloadNotifier, AsyncValue<String?>>((ref) {
-    return TrackDownloadNotifier(useCase);
-  });
-
-  // We expose the provider via a helper so tests can read it.
-  // The container teardown is registered in each test individually.
-  final container = ProviderContainer();
-  container.read(provider); // initialise
-  return container;
-}
 
 void main() {
   late MockOfflineRepository mockRepo;
@@ -60,7 +45,7 @@ void main() {
     test('initial state is AsyncData(null)', () {
       final useCase = DownloadTrackUseCase(mockRepo);
       final notifier = TrackDownloadNotifier(useCase);
-      expect(notifier.debugState, equals(const AsyncData<String?>(null)));
+      expect(notifier.state, equals(const AsyncData<String?>(null)));
     });
 
     test('transitions to AsyncLoading then AsyncData(path) on success', () async {
@@ -77,11 +62,11 @@ void main() {
       // Capture states manually by driving the notifier directly.
       final future = notifier.downloadTrack(tTrack);
       // After calling downloadTrack the notifier sets AsyncLoading synchronously.
-      states.add(notifier.debugState);
+      states.add(notifier.state);
       await future;
-      states.add(notifier.debugState);
+      states.add(notifier.state);
 
-      expect(states[0], isA<AsyncLoading>());
+      expect(states[0], isA<AsyncLoading<String?>>());
       expect(states[1].value, tPath);
     });
 
@@ -97,7 +82,7 @@ void main() {
 
       await notifier.downloadTrack(tTrack);
 
-      final state = notifier.debugState;
+      final state = notifier.state;
       expect(state.hasError, true);
       expect(state.error, 'offline');
     });
@@ -115,7 +100,7 @@ void main() {
 
       await notifier.downloadTrack(tTrack);
 
-      expect(notifier.debugState.error, tMessage);
+      expect(notifier.state.error, tMessage);
     });
 
     test('transitions to AsyncError on CacheFailure', () async {
@@ -131,8 +116,8 @@ void main() {
 
       await notifier.downloadTrack(tTrack);
 
-      expect(notifier.debugState.error, tMessage);
-      expect(notifier.debugState, isA<AsyncError>());
+      expect(notifier.state.error, tMessage);
+      expect(notifier.state, isA<AsyncError<String?>>());
     });
 
     test('resets state to AsyncLoading on every download call', () async {
@@ -145,13 +130,13 @@ void main() {
 
       // First download success
       await notifier.downloadTrack(tTrack);
-      expect(notifier.debugState.hasValue, true);
+      expect(notifier.state.hasValue, true);
 
       // Second download starts
       final second = notifier.downloadTrack(tTrack);
-      expect(notifier.debugState, isA<AsyncLoading>());
+      expect(notifier.state, isA<AsyncLoading<String?>>());
       await second;
-      expect(notifier.debugState.hasValue, true);
+      expect(notifier.state.hasValue, true);
     });
 
     test('multiple sequential downloads update state correctly', () async {
@@ -167,10 +152,10 @@ void main() {
       final notifier = TrackDownloadNotifier(useCase);
 
       await notifier.downloadTrack(track1);
-      expect(notifier.debugState.value, '/path/1.dat');
+      expect(notifier.state.value, '/path/1.dat');
 
       await notifier.downloadTrack(track2);
-      expect(notifier.debugState.value, '/path/2.dat');
+      expect(notifier.state.value, '/path/2.dat');
     });
   });
 }

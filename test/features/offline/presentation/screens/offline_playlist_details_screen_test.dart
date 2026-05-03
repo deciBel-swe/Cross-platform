@@ -1,26 +1,26 @@
 import 'dart:async';
 import 'package:dartz/dartz.dart';
-import 'package:decibel/core/di/injection.dart';
+import 'package:decibel/core/errors/failures.dart';
+import 'package:decibel/features/auth/domain/entities/auth_state.dart';
+import 'package:decibel/features/auth/presentation/notifiers/auth_notifier.dart';
+import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
+import 'package:decibel/features/engagement/domain/models/track_action_data.dart';
+import 'package:decibel/features/engagement/presentation/notifiers/track_action_notifier.dart';
+import 'package:decibel/features/engagement/presentation/providers/track_social_provider.dart';
 import 'package:decibel/features/library/domain/entities/artist.dart';
 import 'package:decibel/features/library/domain/entities/track.dart';
 import 'package:decibel/features/library/domain/entities/track_status.dart';
+import 'package:decibel/features/library/presentation/notifiers/track_audio_notifier.dart';
+import 'package:decibel/features/library/presentation/state/track_audio_state.dart';
+import 'package:decibel/features/library_profile/presentation/providers/track_audio_provider.dart';
 import 'package:decibel/features/offline/data/datasources/offline_local_data_source.dart';
 import 'package:decibel/features/offline/domain/repositories/i_offline_repository.dart';
 import 'package:decibel/features/offline/presentation/screens/offline_playlist_details_screen.dart';
-import 'package:decibel/features/library_profile/presentation/providers/track_audio_provider.dart';
-import 'package:decibel/features/library/presentation/notifiers/track_audio_notifier.dart';
-import 'package:decibel/features/library/presentation/state/track_audio_state.dart';
-import 'package:decibel/features/engagement/presentation/providers/track_social_provider.dart';
-import 'package:decibel/features/auth/presentation/providers/auth_provider.dart';
-import 'package:decibel/features/auth/domain/entities/auth_state.dart';
-import 'package:decibel/features/engagement/domain/models/track_action_data.dart';
-import 'package:decibel/features/engagement/presentation/notifiers/track_action_notifier.dart';
-import 'package:decibel/features/auth/presentation/notifiers/auth_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:get_it/get_it.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockOfflineRepository extends Mock implements IOfflineRepository {}
 
@@ -108,7 +108,7 @@ void main() {
     
     // Default stubs
     when(() => mockRepo.getDownloadedTracks())
-        .thenAnswer((_) async => Right([tTrack1, tTrack2]));
+        .thenAnswer((_) async => Right<Failure, List<Track>>([tTrack1, tTrack2]));
     
     when(() => mockAudioNotifier.playTrack(
       track: any(named: 'track'),
@@ -129,7 +129,7 @@ void main() {
         trackSocialProvider.overrideWith(() => FakeTrackSocialNotifier()),
         authStateProvider.overrideWith(() => FakeAuthNotifier()),
       ],
-      child: MaterialApp(
+      child: const MaterialApp(
         home: OfflinePlaylistDetailsScreen(collection: tCollection),
       ),
     );
@@ -138,8 +138,8 @@ void main() {
   group('OfflinePlaylistDetailsScreen', () {
     testWidgets('renders loading state initially', (tester) async {
       when(() => mockRepo.getDownloadedTracks()).thenAnswer((_) async {
-        await Future.delayed(const Duration(milliseconds: 100));
-        return Right([tTrack1, tTrack2]);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        return Right<Failure, List<Track>>([tTrack1, tTrack2]);
       });
 
       await tester.pumpWidget(createWidget());
@@ -160,7 +160,7 @@ void main() {
 
     testWidgets('renders empty state when no tracks found', (tester) async {
       when(() => mockRepo.getDownloadedTracks())
-          .thenAnswer((_) async => const Right([]));
+          .thenAnswer((_) async => const Right<Failure, List<Track>>([]));
 
       await tester.pumpWidget(createWidget());
       await tester.pumpAndSettle();
@@ -170,7 +170,7 @@ void main() {
 
     testWidgets('shows rename dialog and updates title on success', (tester) async {
       when(() => mockRepo.updateCollectionMetadata(any()))
-          .thenAnswer((_) async => const Right(null));
+          .thenAnswer((_) async => const Right<Failure, void>(null));
 
       await tester.pumpWidget(createWidget());
       await tester.pumpAndSettle();
@@ -194,7 +194,7 @@ void main() {
 
     testWidgets('shows delete confirmation and deletes playlist', (tester) async {
       when(() => mockRepo.deleteCollectionMetadata(any()))
-          .thenAnswer((_) async => const Right(null));
+          .thenAnswer((_) async => const Right<Failure, void>(null));
 
       await tester.pumpWidget(createWidget());
       await tester.pumpAndSettle();
@@ -216,7 +216,7 @@ void main() {
       // We skip it for now to keep the suite green, but it serves as a record of the issue.
       
       when(() => mockRepo.removeTrackFromCollection(any(), any()))
-          .thenAnswer((_) async => const Right(null));
+          .thenAnswer((_) async => const Right<Failure, void>(null));
 
       await tester.pumpWidget(createWidget());
       await tester.pumpAndSettle();

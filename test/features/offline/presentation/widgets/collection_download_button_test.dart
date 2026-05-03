@@ -7,7 +7,6 @@ import 'package:decibel/features/offline/presentation/widgets/collection_downloa
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 
 // ── Fakes / Mocks ─────────────────────────────────────────────────────────────
 

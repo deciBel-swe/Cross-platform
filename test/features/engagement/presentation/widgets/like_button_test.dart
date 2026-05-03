@@ -12,8 +12,8 @@ import 'package:mocktail/mocktail.dart';
 class MockTrackSocialNotifier extends FamilyAsyncNotifier<TrackSocialData, int>
     with Mock
     implements TrackSocialNotifier {
-  final TrackSocialData? data;
   MockTrackSocialNotifier({this.data});
+  final TrackSocialData? data;
 
   @override
   FutureOr<TrackSocialData> build(int arg) {

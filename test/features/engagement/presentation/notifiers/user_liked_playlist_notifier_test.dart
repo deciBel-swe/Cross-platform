@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dartz/dartz.dart' as dartz_either;
+import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/auth/domain/entities/auth_state.dart';
 import 'package:decibel/features/auth/domain/entities/auth_user.dart';
 import 'package:decibel/features/auth/presentation/notifiers/auth_notifier.dart';
@@ -20,8 +21,8 @@ final userLikedPlaylistsProvider =
 );
 
 class MockAuthNotifier extends AsyncNotifier<AuthState> with Mock implements AuthNotifier {
-  final AsyncValue<AuthState> initialState;
   MockAuthNotifier(this.initialState);
+  final AsyncValue<AuthState> initialState;
 
   @override
   FutureOr<AuthState> build() => initialState.value!;
@@ -37,13 +38,13 @@ void main() {
     tier: UserTier.free,
   );
 
-  final playlist = Playlist(
+  const playlist = Playlist(
     id: 1,
     title: 'Liked Playlist',
     type: 'public',
     isPrivate: false,
     isLiked: true,
-    tracks: const [],
+    tracks: [],
     totalDurationSeconds: 0,
     trackCount: 0,
   );
@@ -74,7 +75,7 @@ void main() {
 
     test('build fetches liked playlists if authenticated', () async {
       when(() => mockRepository.getLikedPlaylists(username, page: 0, size: 20))
-          .thenAnswer((_) async => dartz_either.Right([playlist]));
+          .thenAnswer((_) async => const dartz_either.Right<Failure, List<Playlist>>([playlist]));
 
       final container = ProviderContainer(
         overrides: [
@@ -92,7 +93,7 @@ void main() {
 
     test('removePlaylistLocal removes playlist from state', () async {
       when(() => mockRepository.getLikedPlaylists(username, page: 0, size: 20))
-          .thenAnswer((_) async => dartz_either.Right([playlist]));
+          .thenAnswer((_) async => dartz_either.Right<Failure, List<Playlist>>([playlist]));
 
       final container = ProviderContainer(
         overrides: [

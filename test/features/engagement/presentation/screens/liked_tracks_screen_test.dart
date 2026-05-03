@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:decibel/features/engagement/domain/models/track_action_data.dart';
 import 'package:decibel/features/engagement/domain/models/playlist_social_data.dart';
+import 'package:decibel/features/engagement/domain/models/track_action_data.dart';
 import 'package:decibel/features/engagement/presentation/notifiers/liked_tracks_notifier.dart';
 import 'package:decibel/features/engagement/presentation/notifiers/playlist_social_notifier.dart';
 import 'package:decibel/features/engagement/presentation/notifiers/track_action_notifier.dart';
@@ -26,8 +26,8 @@ class MockTrackCollectionNotifier
     extends AutoDisposeFamilyAsyncNotifier<List<Track>, TrackCollectionType>
     with Mock
     implements TrackCollectionNotifier {
-  final List<Track>? initialData;
   MockTrackCollectionNotifier([this.initialData]);
+  final List<Track>? initialData;
 
   @override
   FutureOr<List<Track>> build(TrackCollectionType arg) => initialData ?? [];
@@ -37,8 +37,8 @@ class MockUserLikedPlaylistsNotifier
     extends AutoDisposeAsyncNotifier<List<Playlist>>
     with Mock
     implements UserLikedPlaylistsNotifier {
-  final List<Playlist>? initialData;
   MockUserLikedPlaylistsNotifier([this.initialData]);
+  final List<Playlist>? initialData;
 
   @override
   FutureOr<List<Playlist>> build() => initialData ?? [];
@@ -73,7 +73,7 @@ class MockTrackAudioNotifier extends Notifier<TrackAudioState>
 }
 
 void main() {
-  final testArtist = Artist(
+  const testArtist = Artist(
     id: 1,
     username: 'testartist',
     displayName: 'Test Artist',
@@ -90,18 +90,18 @@ void main() {
     genre: 'Rock',
     tags: const [],
     state: TrackStatus.finished,
-    releaseDate: DateTime.now(),
+    releaseDate: DateTime(2026, 1, 1),
     playCount: 100,
-    createdAt: DateTime.now(),
+    createdAt: DateTime(2026, 1, 1),
   );
 
-  final testPlaylist = Playlist(
+  const testPlaylist = Playlist(
     id: 101,
     title: 'Test Playlist',
     type: 'public',
     isPrivate: false,
     isLiked: true,
-    tracks: const [],
+    tracks: [],
     totalDurationSeconds: 0,
     trackCount: 0,
   );

@@ -11,8 +11,9 @@ import 'package:mocktail/mocktail.dart';
 class MockFollowRepository extends Mock implements FollowRepository {}
 
 class ServerFailure extends Mock implements Failure {
-  final String message;
   ServerFailure(this.message);
+  @override
+  final String message;
 }
 
 void main() {
@@ -37,7 +38,7 @@ void main() {
 
   group('FollowNotifier', () {
     test('build fetches isFollowing status from repository', () async {
-      final profile = PublicProfile(
+      const profile = PublicProfile(
         id: userId,
         username: 'testuser',
         tier: 'FREE',
@@ -48,7 +49,7 @@ void main() {
       );
 
       when(() => mockRepository.getPublicProfile(userId.toString()))
-          .thenAnswer((_) async => dartz_either.Right(profile));
+          .thenAnswer((_) async => const dartz_either.Right(profile));
 
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -60,7 +61,7 @@ void main() {
     });
 
     test('setInitialState updates state if not seeded', () async {
-      final profile = PublicProfile(
+      const profile = PublicProfile(
         id: userId,
         username: 'testuser',
         tier: 'FREE',
@@ -71,7 +72,7 @@ void main() {
       );
 
       when(() => mockRepository.getPublicProfile(userId.toString()))
-          .thenAnswer((_) async => dartz_either.Right(profile));
+          .thenAnswer((_) async => const dartz_either.Right(profile));
 
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -84,7 +85,7 @@ void main() {
     });
 
     test('toggleFollow toggles state and calls repository follow', () async {
-      final profile = PublicProfile(
+      const profile = PublicProfile(
         id: userId,
         username: 'testuser',
         tier: 'FREE',
@@ -95,7 +96,7 @@ void main() {
       );
 
       when(() => mockRepository.getPublicProfile(userId.toString()))
-          .thenAnswer((_) async => dartz_either.Right(profile));
+          .thenAnswer((_) async => const dartz_either.Right(profile));
       when(() => mockRepository.followUser(userId))
           .thenAnswer((_) async => const dartz_either.Right(true));
 
@@ -112,7 +113,7 @@ void main() {
     });
 
     test('toggleFollow reverts state on failure', () async {
-      final profile = PublicProfile(
+      const profile = PublicProfile(
         id: userId,
         username: 'testuser',
         tier: 'FREE',
@@ -123,7 +124,7 @@ void main() {
       );
 
       when(() => mockRepository.getPublicProfile(userId.toString()))
-          .thenAnswer((_) async => dartz_either.Right(profile));
+          .thenAnswer((_) async => const dartz_either.Right(profile));
       when(() => mockRepository.followUser(userId))
           .thenAnswer((_) async => dartz_either.Left(ServerFailure('error')));
 

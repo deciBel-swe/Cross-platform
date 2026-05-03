@@ -100,10 +100,10 @@ void main() {
   group('CollectionDownloadNotifier', () {
     test('initial state is idle with no error', () {
       final notifier = CollectionDownloadNotifier(mockRepo);
-      expect(notifier.debugState.isDownloading, false);
-      expect(notifier.debugState.isDone, false);
-      expect(notifier.debugState.error, isNull);
-      expect(notifier.debugState.progress, 0.0);
+      expect(notifier.state.isDownloading, false);
+      expect(notifier.state.isDone, false);
+      expect(notifier.state.error, isNull);
+      expect(notifier.state.progress, 0.0);
     });
 
     test('download sets isDownloading=true, saves metadata, and resolves to isDone', () async {
@@ -116,14 +116,14 @@ void main() {
       );
 
       // Immediately after calling download, isDownloading should be true
-      expect(notifier.debugState.isDownloading, true);
+      expect(notifier.state.isDownloading, true);
 
       await downloadFuture;
 
-      expect(notifier.debugState.isDownloading, false);
-      expect(notifier.debugState.isDone, true);
-      expect(notifier.debugState.progress, 1.0);
-      expect(notifier.debugState.error, isNull);
+      expect(notifier.state.isDownloading, false);
+      expect(notifier.state.isDone, true);
+      expect(notifier.state.progress, 1.0);
+      expect(notifier.state.error, isNull);
     });
 
     test('calls saveCollectionMetadata before downloadTracks', () async {
@@ -160,9 +160,9 @@ void main() {
       final notifier = CollectionDownloadNotifier(mockRepo);
       await notifier.download(tracks: tracks, collectionInfo: _tCollection);
 
-      expect(notifier.debugState.isDownloading, false);
-      expect(notifier.debugState.isDone, false);
-      expect(notifier.debugState.error, tFailureMessage);
+      expect(notifier.state.isDownloading, false);
+      expect(notifier.state.isDone, false);
+      expect(notifier.state.error, tFailureMessage);
     });
 
     test('ignores second download call while already downloading', () async {

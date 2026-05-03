@@ -62,10 +62,9 @@ void main() {
   group('FeedNotifier', () {
     test('initial state should be AsyncData with empty list on success', () async {
       when(() => mockRepository.getFeed(page: any(named: 'page'), size: any(named: 'size')))
-          .thenAnswer((_) async => const Right(tPaginatedFeed));
+          .thenAnswer((_) async => const Right<Failure, PaginatedFeed>(tPaginatedFeed));
 
       final container = createContainer();
-      final notifier = container.read(feedProvider.notifier);
 
       await container.read(feedProvider.future);
 
@@ -114,7 +113,7 @@ void main() {
 
     test('loadMore should wrap back to page 0 if isLast is true', () async {
       when(() => mockRepository.getFeed(page: 0, size: 20))
-          .thenAnswer((_) async => const Right(tPaginatedFeed));
+          .thenAnswer((_) async => const Right<Failure, PaginatedFeed>(tPaginatedFeed));
 
       final container = createContainer();
       await container.read(feedProvider.future);
@@ -127,7 +126,7 @@ void main() {
 
     test('refresh should reset state to page 0', () async {
       when(() => mockRepository.getFeed(page: 0, size: 20))
-          .thenAnswer((_) async => const Right(tPaginatedFeed));
+          .thenAnswer((_) async => const Right<Failure, PaginatedFeed>(tPaginatedFeed));
 
       final container = createContainer();
       await container.read(feedProvider.future);
@@ -139,7 +138,7 @@ void main() {
 
     test('should handle NetworkFailure gracefully', () async {
       when(() => mockRepository.getFeed(page: 0, size: 20))
-          .thenAnswer((_) async => const Left(NetworkFailure('Offline')));
+          .thenAnswer((_) async => const Left<Failure, PaginatedFeed>(NetworkFailure('Offline')));
 
       final container = createContainer();
       final state = await container.read(feedProvider.future);
