@@ -125,7 +125,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.tap(find.byIcon(Icons.play_arrow_rounded));
       expect(playTapped, isTrue);
     });
   });
