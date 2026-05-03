@@ -299,6 +299,7 @@ class _TrackRailSection extends ConsumerWidget {
               final playableTrack = queue[index];
 
               return TrackCard(
+                trackId: track.id,
                 title: track.title,
                 artist: track.artist.displayName ?? track.artist.username,
                 imageUrl: track.coverUrl,
@@ -455,14 +456,19 @@ class _HotForYouSection extends ConsumerWidget {
   }
 }
 
-class _HotForYouCard extends StatelessWidget {
+class _HotForYouCard extends ConsumerWidget {
   const _HotForYouCard({required this.track, required this.onPlay});
 
   final DiscoveryTrack track;
   final VoidCallback onPlay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioState = ref.watch(trackAudioProvider);
+    final isPlaying =
+        audioState.isPlaying &&
+        (audioState.preparedTrackId == track.id ||
+            audioState.currentTrack?.id == track.id);
     final coverUrl = track.coverUrl?.trim();
     final artistName = track.artist.displayName ?? track.artist.username;
     final likeLine = track.likeCount > 0
@@ -591,9 +597,17 @@ class _HotForYouCard extends StatelessWidget {
                             child: SizedBox.square(
                               dimension: 52,
                               child: IconButton(
-                                onPressed: onPlay,
-                                icon: const Icon(
-                                  Icons.play_arrow_rounded,
+                                onPressed: () {
+                                  if (isPlaying) {
+                                    ref.read(trackAudioProvider.notifier).pause();
+                                  } else {
+                                    onPlay();
+                                  }
+                                },
+                                icon: Icon(
+                                  isPlaying
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
                                   color: AppColors.background,
                                   size: 34,
                                 ),

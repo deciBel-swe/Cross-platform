@@ -1,7 +1,7 @@
 library;
 
 import 'package:flutter/material.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -11,6 +11,7 @@ import '../../../engagement/presentation/widgets/like_button.dart';
 import '../../../engagement/presentation/widgets/repost_button.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_comments_bottom_sheet.dart';
+import '../../../library_profile/presentation/providers/track_audio_provider.dart';
 
 /// Reusable mobile feed track card matching the native-style post layout.
 class MobileFeedTrackCard extends StatelessWidget {
@@ -100,7 +101,10 @@ class MobileFeedTrackCard extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        _CardPlayButton(onPressed: onPlay),
+                        _CardPlayButton(
+                          trackId: trackId,
+                          onPressed: onPlay,
+                        ),
                         const SizedBox(width: AppDimensions.paddingSm),
                         Expanded(
                           child: Column(
@@ -207,29 +211,42 @@ class _GradientCoverFallback extends StatelessWidget {
   }
 }
 
-class _CardPlayButton extends StatefulWidget {
-  const _CardPlayButton({this.onPressed});
+class _CardPlayButton extends ConsumerStatefulWidget {
+  const _CardPlayButton({required this.trackId, this.onPressed});
 
+  final int trackId;
   final VoidCallback? onPressed;
 
   @override
-  State<_CardPlayButton> createState() => _CardPlayButtonState();
+  ConsumerState<_CardPlayButton> createState() => _CardPlayButtonState();
 }
 
-class _CardPlayButtonState extends State<_CardPlayButton> {
+class _CardPlayButtonState extends ConsumerState<_CardPlayButton> {
   bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final audioState = ref.watch(trackAudioProvider);
+    final isCurrentTrack =
+        audioState.preparedTrackId == widget.trackId ||
+        audioState.currentTrack?.id == widget.trackId;
+    final isPlaying = isCurrentTrack && audioState.isPlaying;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
       child: Semantics(
         button: true,
-        label: 'Play track',
+        label: isPlaying ? 'Pause track' : 'Play track',
         child: GestureDetector(
-          onTap: widget.onPressed,
+          onTap: () {
+            if (isPlaying) {
+              ref.read(trackAudioProvider.notifier).pause();
+              return;
+            }
+            widget.onPressed?.call();
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: 52,
@@ -248,7 +265,7 @@ class _CardPlayButtonState extends State<_CardPlayButton> {
                   : [],
             ),
             child: Icon(
-              Icons.play_arrow,
+              isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
               color: _isHovered ? Colors.white : AppColors.textPrimary,
               size: 30,
             ),
