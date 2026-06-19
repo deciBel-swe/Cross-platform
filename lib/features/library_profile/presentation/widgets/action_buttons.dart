@@ -14,29 +14,41 @@ class ActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        IconButton(
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-          onPressed: () {
-            context.push(RoutePaths.editProfile);
-          },
-          color: AppColors.textTertiary,
-          iconSize: 29,
-          icon: const Icon(Icons.edit_outlined),
+        Semantics(
+          identifier: 'edit_profile_button',
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () {
+              context.push(RoutePaths.editProfile);
+            },
+            color: AppColors.textTertiary,
+            iconSize: 29,
+            tooltip: 'Edit profile',
+            icon: const Icon(Icons.edit_outlined),
+          ),
         ),
         const SizedBox(width: 8),
         SocialLinksWidget(socialLinks: socialLinks),
         const Spacer(),
-        IconButton(
-          onPressed: () {},
-          color: AppColors.textTertiary,
-          iconSize: 29,
-          icon: const Icon(Icons.shuffle),
+        Semantics(
+          identifier: 'shuffle_playback_button',
+          child: IconButton(
+            onPressed: () {},
+            color: AppColors.textTertiary,
+            iconSize: 29,
+            tooltip: 'Shuffle playback',
+            icon: const Icon(Icons.shuffle),
+          ),
         ),
-        IconButton(
-          iconSize: 60,
-          onPressed: () {},
-          icon: const Icon(Icons.play_circle_fill),
+        Semantics(
+          identifier: 'play_all_button',
+          child: IconButton(
+            iconSize: 60,
+            onPressed: () {},
+            tooltip: 'Play all',
+            icon: const Icon(Icons.play_circle_fill),
+          ),
         ),
       ],
     );

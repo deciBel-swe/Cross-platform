@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/paginated_engagers.dart';
 import '../../domain/entities/track_engager.dart';
 import '../providers/track_social_provider.dart';
@@ -47,18 +49,34 @@ class TrackEngagersNotifier
             size: _pageSize,
           );
 
-    return result.fold((failure) => throw failure.message, (paginated) {
-      _isLast = paginated.isLast;
-      _items.addAll(paginated.content);
-      return PaginatedEngagers(
-        content: List.from(_items),
-        pageNumber: paginated.pageNumber,
-        pageSize: paginated.pageSize,
-        totalElements: paginated.totalElements,
-        totalPages: paginated.totalPages,
-        isLast: paginated.isLast,
-      );
-    });
+    return result.fold(
+      (failure) {
+        if (failure is NetworkFailure) {
+          _isLast = true;
+          return PaginatedEngagers(
+            content: List<TrackEngager>.from(_items),
+            pageNumber: _currentPage,
+            pageSize: _pageSize,
+            totalElements: _items.length,
+            totalPages: _items.isEmpty ? 0 : 1,
+            isLast: true,
+          );
+        }
+        throw failure;
+      },
+      (paginated) {
+        _isLast = paginated.isLast;
+        _items.addAll(paginated.content);
+        return PaginatedEngagers(
+          content: List.from(_items),
+          pageNumber: paginated.pageNumber,
+          pageSize: paginated.pageSize,
+          totalElements: paginated.totalElements,
+          totalPages: paginated.totalPages,
+          isLast: paginated.isLast,
+        );
+      },
+    );
   }
 }
 

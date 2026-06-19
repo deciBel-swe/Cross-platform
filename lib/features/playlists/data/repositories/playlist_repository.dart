@@ -29,6 +29,8 @@ class PlaylistRepository implements IPlaylistRepository {
       return Right(result.toEntity());
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
+    } on NetworkException catch (error) {
+      return Left(NetworkFailure(error.message));
     } catch (error) {
       return Left(
         ServerFailure('An unexpected error occurred: ${error.toString()}'),
@@ -45,6 +47,8 @@ class PlaylistRepository implements IPlaylistRepository {
       return Right(model.toEntity());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -54,12 +58,23 @@ class PlaylistRepository implements IPlaylistRepository {
   Future<Either<Failure, List<Playlist>>> getUserPlaylists({
     int page = 0,
     int size = 20,
+    int? userId,
+    String? username,
   }) async {
     try {
-      final playlistModels = await _remoteDataSource.getUserPlaylists(
-        page: page,
-        size: size,
-      );
+      final playlistModels = username != null && username.trim().isNotEmpty
+          ? await _remoteDataSource.getUserPlaylists(
+              page: page,
+              size: size,
+              username: username,
+            )
+          : userId != null
+          ? await _remoteDataSource.getUserPlaylists(
+              page: page,
+              size: size,
+              userId: userId,
+            )
+          : await _remoteDataSource.getUserPlaylists(page: page, size: size);
 
       final playlists = playlistModels
           .map((model) => model.toEntity())
@@ -68,6 +83,8 @@ class PlaylistRepository implements IPlaylistRepository {
       return Right(playlists);
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
+    } on NetworkException catch (error) {
+      return Left(NetworkFailure(error.message));
     } catch (error) {
       return Left(ServerFailure('An unexpected error occurred: $error'));
     }
@@ -82,6 +99,7 @@ class PlaylistRepository implements IPlaylistRepository {
         title: metadata.title,
         description: metadata.description,
         isPrivate: metadata.isPrivate,
+        type: "PLAYLIST",
       );
 
       final model = await _remoteDataSource.createPlaylist(
@@ -92,6 +110,8 @@ class PlaylistRepository implements IPlaylistRepository {
       return Right(model.toEntity());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -107,6 +127,7 @@ class PlaylistRepository implements IPlaylistRepository {
         title: metadata.title,
         description: metadata.description,
         isPrivate: metadata.isPrivate,
+        type: "PLAYLIST",
       );
 
       final model = await _remoteDataSource.updatePlaylist(
@@ -117,6 +138,8 @@ class PlaylistRepository implements IPlaylistRepository {
       return Right(model.toEntity());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -129,6 +152,8 @@ class PlaylistRepository implements IPlaylistRepository {
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -144,6 +169,8 @@ class PlaylistRepository implements IPlaylistRepository {
       return Right(secretLink);
     } on ServerException catch (error) {
       return Left(ServerFailure(error.message));
+    } on NetworkException catch (error) {
+      return Left(NetworkFailure(error.message));
     } catch (error) {
       return Left(
         ServerFailure('An unexpected error occurred: ${error.toString()}'),
@@ -161,6 +188,8 @@ class PlaylistRepository implements IPlaylistRepository {
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -176,6 +205,8 @@ class PlaylistRepository implements IPlaylistRepository {
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

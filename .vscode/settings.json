@@ -1,7 +1,6 @@
 {
-  "cSpell.words": [
-    "Synthwave"
-  ],
+  "cSpell.words": ["repost", "Riverpod", "Synthwave"],
   "C_Cpp_Runner.msvcBatchPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Auxiliary/Build/vcvarsall.bat",
-  "dart.flutterSdkPath": ".fvm/versions/3.41.6"
+  "dart.flutterSdkPath": ".fvm/versions/3.41.6",
+  "cmake.sourceDirectory": "C:/SW/project/decible_2/linux"
 }

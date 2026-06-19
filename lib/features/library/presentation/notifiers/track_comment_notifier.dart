@@ -20,23 +20,25 @@ import '../state/track_comment_state.dart';
 /// - Deleting comments
 /// - Filtering active comments based on current playback time
 class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
+  static const deleteUndoDelay = Duration(seconds: 4);
+
   late final int _trackId;
   late final ITrackCommentsRepository _repository;
   final Set<int> _cancelledDeletions = {};
 
+  /// Builds the initial comment state for the requested track.
   @override
   TrackCommentsState build(int trackId) {
     _trackId = trackId;
     _repository = ref.read(commentRepositoryProvider);
 
-    Future.microtask(() => loadComments());
-
+    Future.delayed(Duration.zero, () => loadComments());
     return const TrackCommentsState(
       comments: [],
       isSubmitting: false,
       selectedTimestampSeconds: null,
       isLoadingComments: false,
-      isLoadingReplies: false,
+      loadingReplyIds: {},
       repliesByCommentId: {},
       expandedCommentIds: {},
       deletingCommentId: null,
@@ -46,14 +48,107 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     );
   }
 
+  /// Stores the timestamp that the next top-level comment should use.
   void selectTimestamp(int seconds) {
     state = state.copyWith(selectedTimestampSeconds: seconds);
   }
 
-  /// Fetches comments for the current track from the repository.
-  ///
-  /// Supports pagination using [page] and [size].
-  /// Updates the state with sorted comments (oldest → newest).
+  /// Stores the current playback position as the next comment timestamp.
+  void selectCurrentPlaybackTimestamp() {
+    selectTimestamp(currentPlaybackSecond());
+  }
+
+  /// Returns the current playback position rounded to the nearest second.
+  int currentPlaybackSecond() {
+    final audioState = ref.read(trackAudioProvider);
+    return (audioState.duration.inSeconds * audioState.progress).round();
+  }
+
+  /// Seeks playback to the timestamp attached to [comment].
+  Future<void> seekToComment(Comment comment) async {
+    final timestampSeconds = comment.timestampSeconds ?? 0;
+    await ref
+        .read(trackAudioProvider.notifier)
+        .seek(Duration(seconds: timestampSeconds));
+  }
+
+  /// Returns whether the authenticated user can manage [comment].
+  bool canManageComment(Comment comment) {
+    final authState = ref.read(authStateProvider).value;
+    return authState is AuthAuthenticated &&
+        authState.user.id == comment.user.id;
+  }
+
+  /// Clears reply mode once the input becomes empty.
+  void clearReplyModeIfInputIsEmpty(String text) {
+    if (text.trim().isNotEmpty || state.activeReplyCommentId == null) {
+      return;
+    }
+
+    clearReplyMode();
+  }
+
+  /// Returns comments that should be shown at [currentSecond].
+  List<Comment> activeCommentsForSecond(int currentSecond) {
+    final activeComments = state.comments
+        .where((comment) => comment.timestampSeconds == currentSecond)
+        .toList();
+
+    activeComments.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return activeComments;
+  }
+
+  /// Returns the first active comment at [currentSecond], if any.
+  Comment? activeCommentForSecond(int currentSecond) {
+    final activeComments = activeCommentsForSecond(currentSecond);
+    return activeComments.isEmpty ? null : activeComments.first;
+  }
+
+  /// Returns whether replies are expanded for [comment].
+  bool isRepliesExpanded(Comment comment) {
+    return state.expandedCommentIds.contains(comment.commentid);
+  }
+
+  /// Returns the current paginated replies for [comment].
+  PaginatedReplies? paginatedRepliesFor(Comment comment) {
+    return state.repliesByCommentId[comment.commentid];
+  }
+
+  /// Returns replies already loaded for [comment].
+  List<CommentReply> repliesFor(Comment comment) {
+    return paginatedRepliesFor(comment)?.content ?? const [];
+  }
+
+  /// Returns whether replies are currently loading for [comment].
+  bool isLoadingReplies(Comment comment) {
+    return state.loadingReplyIds.contains(comment.commentid);
+  }
+
+  /// Returns whether the first page of replies is loading for [comment].
+  bool isInitialRepliesLoading(Comment comment) {
+    return isLoadingReplies(comment) &&
+        isRepliesExpanded(comment) &&
+        repliesFor(comment).isEmpty;
+  }
+
+  /// Returns whether another page of replies is loading for [comment].
+  bool isPaginatingReplies(Comment comment) {
+    return isLoadingReplies(comment) &&
+        isRepliesExpanded(comment) &&
+        repliesFor(comment).isNotEmpty;
+  }
+
+  /// Returns whether [comment] has replies available locally or remotely.
+  bool hasRepliesToFetch(Comment comment) {
+    return comment.replycount > 0 || repliesFor(comment).isNotEmpty;
+  }
+
+  /// Returns the next replies page to load for [comment].
+  int nextRepliesPage(Comment comment) {
+    return (paginatedRepliesFor(comment)?.pageNumber ?? 0) + 1;
+  }
+
+  /// Fetches comments and treats everything from the API as a top-level comment.
   Future<void> loadComments({bool loadMore = false, int size = 20}) async {
     if (state.isLoadingComments || (loadMore && state.isLastCommentsPage)) {
       return;
@@ -73,10 +168,20 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
         state = state.copyWith(isLoadingComments: false);
       },
       (paginatedComments) {
+        final topLevelComments = paginatedComments.content.where((c) {
+          if (c.timestampSeconds == null) {
+            return false;
+          }
+          if (c.replyToCommentId != null && c.replyToCommentId != 0) {
+            return false;
+          }
+          return true;
+        }).toList();
+
         final Map<int, Comment> mergedMap = {
           if (loadMore)
             for (var c in state.comments) c.commentid: c,
-          for (var c in paginatedComments.content) c.commentid: c,
+          for (var c in topLevelComments) c.commentid: c,
         };
 
         final mergedList = mergedMap.values.toList();
@@ -92,12 +197,22 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     );
   }
 
-  /// Fetches replies for a specific comment.
+  /// Fetches replies for a specific comment and expands the thread.
   ///
   /// Stores replies in [repliesByCommentId] and marks the comment as expanded
   /// so the UI can display them.
+  /// Fetches replies for a specific comment.
+
   Future<void> loadReplies(int commentId, {int page = 0, int size = 5}) async {
-    state = state.copyWith(isLoadingReplies: true);
+    final loadingExpandedIds = Set<int>.from(state.expandedCommentIds)
+      ..add(commentId);
+    final currentLoadingIds = Set<int>.from(state.loadingReplyIds)
+      ..add(commentId);
+
+    state = state.copyWith(
+      loadingReplyIds: currentLoadingIds,
+      expandedCommentIds: loadingExpandedIds,
+    );
 
     final result = await _repository.getReplies(
       commentId: commentId,
@@ -107,7 +222,15 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
 
     result.fold(
       (failure) {
-        state = state.copyWith(isLoadingReplies: false);
+        final rollbackExpandedIds = Set<int>.from(state.expandedCommentIds)
+          ..remove(commentId);
+        final stopLoadingIds = Set<int>.from(state.loadingReplyIds)
+          ..remove(commentId);
+
+        state = state.copyWith(
+          loadingReplyIds: stopLoadingIds,
+          expandedCommentIds: rollbackExpandedIds,
+        );
       },
       (paginatedReplies) {
         final updatedRepliesMap = Map<int, PaginatedReplies>.from(
@@ -133,13 +256,12 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
           );
         }
 
-        final updatedExpandedIds = Set<int>.from(state.expandedCommentIds)
-          ..add(commentId);
+        final stopLoadingIds = Set<int>.from(state.loadingReplyIds)
+          ..remove(commentId);
 
         state = state.copyWith(
           repliesByCommentId: updatedRepliesMap,
-          expandedCommentIds: updatedExpandedIds,
-          isLoadingReplies: false,
+          loadingReplyIds: stopLoadingIds,
         );
       },
     );
@@ -147,7 +269,6 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
 
   /// Collapses the reply section for a specific comment.
   void collapseReplies(int commentId) {
-    // Remove the comment ID from the set of expanded IDs to hide it in the UI
     final updatedExpandedIds = Set<int>.from(state.expandedCommentIds)
       ..remove(commentId);
 
@@ -201,6 +322,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     });
   }
 
+  /// Cancels a pending deletion and restores [comment].
   void undoDeletion(Comment comment) {
     _cancelledDeletions.add(comment.commentid);
     restoreComment(comment);
@@ -209,19 +331,15 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
   /// Adds a reply to a specific parent comment.
   /// Uses an Optimistic UI approach to show the reply immediately before the server responds.
   Future<void> postReply(int commentId, String body) async {
-    // 1. Validation: Prevent empty replies
     if (body.trim().isEmpty) return;
 
-    // 2. Auth Check: Ensure the user is logged in
     final authState = ref.read(authStateProvider).value;
     if (authState is! AuthAuthenticated) return;
 
     final authUser = authState.user;
 
-    // 3. Generate a temporary ID to identify the optimistic reply in the list
     final tempId = DateTime.now().millisecondsSinceEpoch;
 
-    // 4. Create the temporary Reply object
     final optimisticReply = CommentReply(
       commentId: tempId,
       user: CommentUser(
@@ -233,7 +351,6 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
       createdAt: DateTime.now(),
     );
 
-    // 5. OPTIMISTIC UPDATE: Show the reply in the UI immediately
     final currentState = state.repliesByCommentId[commentId];
     if (currentState != null) {
       final updatedContent = [...currentState.content, optimisticReply];
@@ -241,7 +358,6 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
         state.repliesByCommentId,
       );
 
-      // Recreate PaginatedReplies manually because the entity lacks copyWith
       updatedRepliesMap[commentId] = PaginatedReplies(
         content: updatedContent,
         pageNumber: currentState.pageNumber,
@@ -254,7 +370,6 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
       state = state.copyWith(repliesByCommentId: updatedRepliesMap);
     }
 
-    // 6. API CALL: Send the reply to the backend
     final result = await _repository.postReply(
       commentId: commentId,
       body: body.trim(),
@@ -262,10 +377,8 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
 
     result.fold(
       (failure) {
-        // 7. FAILURE CASE: Remove the optimistic reply from UI (Rollback)
         final latestState = state.repliesByCommentId[commentId];
         if (latestState != null) {
-          // Filter out the reply that matches the tempId
           final rollbackContent = latestState.content
               .where((r) => r.commentId != tempId)
               .toList();
@@ -287,7 +400,6 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
         }
       },
       (serverReply) {
-        // 8. SUCCESS CASE: Replace the temporary reply with the official server response
         final latestState = state.repliesByCommentId[commentId];
         if (latestState != null) {
           final mergedContent = latestState.content
@@ -316,27 +428,20 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
   }
 
   /// Sets the state to "Reply Mode" for a specific comment.
-  /// Prepares the @username string to be shown in the input field.
   void setReplyingTo(Comment comment) {
-    state = state.copyWith(
-      activeReplyCommentId: comment.commentid,
-      replyPrefillText: '@${comment.user.username} ',
-    );
+    state = state.copyWith(activeReplyCommentId: comment.commentid);
 
-    // Automatically expand the replies section so the user sees the thread context
     loadReplies(comment.commentid);
   }
 
   /// Resets the reply context.
-  /// This should be called after a successful post or if the user cancels the reply.
-  // Inside TrackCommentNotifier
   void clearReplyMode() {
     state = TrackCommentsState(
       comments: state.comments,
       selectedTimestampSeconds: state.selectedTimestampSeconds,
       isSubmitting: state.isSubmitting,
       isLoadingComments: state.isLoadingComments,
-      isLoadingReplies: state.isLoadingReplies,
+      loadingReplyIds: state.loadingReplyIds,
       repliesByCommentId: state.repliesByCommentId,
       expandedCommentIds: state.expandedCommentIds,
       deletingCommentId: state.deletingCommentId,
@@ -349,33 +454,19 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
   }
 
   /// Single entry point for the UI to submit text.
-  /// Decides between postComment and postReply based on state.
   Future<void> handleSubmit(String content) async {
     if (content.trim().isEmpty) return;
 
-    // 1. Check if we are in Reply Mode
     if (state.activeReplyCommentId != null) {
       await postReply(state.activeReplyCommentId!, content);
       return;
     }
 
-    // 2. Otherwise, handle as a new top-level comment
-    // We read the audio state directly here to keep logic out of UI
-    final audioState = ref.read(trackAudioProvider);
-    final currentSecond = (audioState.duration.inSeconds * audioState.progress)
-        .round();
-
-    selectTimestamp(currentSecond);
+    selectCurrentPlaybackTimestamp();
     await postComment(content);
   }
 
   /// Posts a new comment with optimistic UI update.
-  ///
-  /// Flow:
-  /// 1. Creates a temporary comment (optimistic)
-  /// 2. Adds it to UI immediately
-  /// 3. Sends request to backend
-  /// 4. Replaces temp comment with server response OR rolls back on failure
   Future<void> postComment(String body) async {
     final selectedTimestamp = state.selectedTimestampSeconds;
     if (body.trim().isEmpty || selectedTimestamp == null) return;
@@ -389,7 +480,6 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     final authUser = authState.user;
     final tempId = DateTime.now().millisecondsSinceEpoch;
 
-    // Use avatarUrl only when non-null and non-empty
     final avatarUrl = authUser.avatarUrl?.isNotEmpty == true
         ? authUser.avatarUrl
         : null;
@@ -435,7 +525,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     );
   }
 
-  /// Restores a deleted comment (Undo feature)
+  /// Restores a deleted comment.
   void restoreComment(Comment comment) {
     if (state.comments.any((c) => c.commentid == comment.commentid)) return;
 
@@ -445,6 +535,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     state = state.copyWith(comments: updatedList);
   }
 
+  /// Applies the selected sort option to the current comment list.
   void changeSortOption(CommentSortOption newOption) {
     if (state.sortOption == newOption) return;
 
@@ -454,6 +545,7 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     state = state.copyWith(sortOption: newOption, comments: sortedList);
   }
 
+  /// Sorts [list] according to [option].
   void _applySorting(List<Comment> list, CommentSortOption option) {
     switch (option) {
       case CommentSortOption.newest:
@@ -471,28 +563,3 @@ class TrackCommentNotifier extends FamilyNotifier<TrackCommentsState, int> {
     }
   }
 }
-
-final trackCommentsProvider =
-    NotifierProvider.family<TrackCommentNotifier, TrackCommentsState, int>(
-      TrackCommentNotifier.new,
-    );
-
-final currentActiveCommentsProvider = Provider.family<List<Comment>, int>((
-  ref,
-  trackId,
-) {
-  final audioState = ref.watch(trackAudioProvider);
-
-  final currentSecond = (audioState.duration.inSeconds * audioState.progress)
-      .round();
-
-  final commentsState = ref.watch(trackCommentsProvider(trackId));
-
-  final activeComments = commentsState.comments
-      .where((c) => c.timestampSeconds == currentSecond)
-      .toList();
-
-  activeComments.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-  return activeComments;
-});

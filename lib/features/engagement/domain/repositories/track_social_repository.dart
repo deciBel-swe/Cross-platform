@@ -3,6 +3,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../library/domain/entities/paginated_tracks.dart';
 import '../entities/paginated_engagers.dart';
+import '../entities/repost_history.dart';
 
 abstract class ITrackSocialRepository {
   Future<void> likeTrack(int trackId);
@@ -15,6 +16,7 @@ abstract class ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   });
 
   /// Fetches reposted tracks for the current user.
@@ -22,6 +24,14 @@ abstract class ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
+  });
+
+  /// Fetches mixed repost history containing tracks and playlists.
+  Future<PaginatedRepostHistory> getRepostHistory(
+    String username, {
+    int page = 0,
+    int size = 20,
   });
 
   /// Fetches a paginated list of users who liked [trackId].
@@ -36,5 +46,12 @@ abstract class ITrackSocialRepository {
     required int trackId,
     required int page,
     required int size,
+  });
+
+  /// Reports a track for moderation.
+  Future<void> reportTrack({
+    required int trackId,
+    required String reason,
+    String? description,
   });
 }

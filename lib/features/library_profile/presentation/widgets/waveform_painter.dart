@@ -138,6 +138,9 @@ class WaveformPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant WaveformPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.peaks != peaks;
+    return oldDelegate.progress != progress ||
+        oldDelegate.peaks != peaks ||
+        oldDelegate.dragProgress != dragProgress ||
+        oldDelegate.dragColor != dragColor;
   }
 }

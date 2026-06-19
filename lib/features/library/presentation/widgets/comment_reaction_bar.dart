@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'reaction_button.dart';
 import 'track_comment_avatar.dart';
 
 class CommentReactionBar extends StatelessWidget {
@@ -19,6 +22,7 @@ class CommentReactionBar extends StatelessWidget {
   final ValueChanged<String>? onSendTap;
   final ValueChanged<String>? onReactionTap;
 
+  /// Builds the compact comment input and quick reactions row.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -72,17 +76,17 @@ class CommentReactionBar extends StatelessWidget {
                           ),
                         ),
                       ] else if (!hasText) ...[
-                        _ReactionButton(
+                        ReactionButton(
                           emoji: '🔥',
                           onTap: () => onReactionTap?.call('🔥'),
                         ),
                         const SizedBox(width: 12),
-                        _ReactionButton(
+                        ReactionButton(
                           emoji: '👏',
                           onTap: () => onReactionTap?.call('👏'),
                         ),
                         const SizedBox(width: 12),
-                        _ReactionButton(
+                        ReactionButton(
                           emoji: '🥺',
                           onTap: () => onReactionTap?.call('🥺'),
                         ),
@@ -122,18 +126,47 @@ class CommentReactionBar extends StatelessWidget {
   }
 }
 
-class _ReactionButton extends StatelessWidget {
+class _ReactionButton extends StatefulWidget {
   const _ReactionButton({required this.emoji, this.onTap});
 
   final String emoji;
   final VoidCallback? onTap;
 
   @override
+  State<_ReactionButton> createState() => _ReactionButtonState();
+}
+
+class _ReactionButtonState extends State<_ReactionButton> {
+  double _scale = 1.0;
+
+  void _handleTap() {
+    HapticFeedback.mediumImpact();
+
+    // Trigger bubbling effect
+    if (mounted) {
+      setState(() => _scale = 1.5);
+    }
+
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        setState(() => _scale = 1.0);
+      }
+    });
+
+    widget.onTap?.call();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: _handleTap,
       behavior: HitTestBehavior.opaque,
-      child: Text(emoji, style: const TextStyle(fontSize: 18)),
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOutBack,
+        child: Text(widget.emoji, style: const TextStyle(fontSize: 18)),
+      ),
     );
   }
 }

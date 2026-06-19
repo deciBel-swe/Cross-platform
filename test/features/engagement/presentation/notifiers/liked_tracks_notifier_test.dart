@@ -25,7 +25,7 @@ Track _track(int id) => Track(
   repostCount: 0,
   isLiked: false,
   isReposted: false,
-  createdAt: DateTime(2026, 1, 1),
+  trackDurationSeconds: 120, createdAt: DateTime(2026, 1, 1),
 );
 
 void main() {

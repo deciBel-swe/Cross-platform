@@ -14,7 +14,7 @@ class PlaylistsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playlistsAsync = ref.watch(userPlaylistsProvider);
+    final playlistsAsync = ref.watch(combinedPlaylistsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -63,22 +63,31 @@ class PlaylistsScreen extends ConsumerWidget {
                     );
                   }
 
-                  return ListView.builder(
-                    itemCount: playlists.length,
-                    itemBuilder: (context, index) {
-                      final playlist = playlists[index];
-                      // Added ValueKey for dynamic lists
-                      return InkWell(
-                        key: ValueKey(playlist.id),
-                        onTap: () {
-                          context.push(
-                            RoutePaths.playlistTracks,
-                            extra: playlist,
-                          );
-                        },
-                        child: PlaylistTile(playlist: playlist),
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      ref.invalidate(userPlaylistsProvider);
+                      // Adding a small delay to show the refresh spinner
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 500),
                       );
                     },
+                    child: ListView.builder(
+                      itemCount: playlists.length,
+                      itemBuilder: (context, index) {
+                        final playlist = playlists[index];
+                        // Added ValueKey for dynamic lists
+                        return InkWell(
+                          key: ValueKey(playlist.id),
+                          onTap: () {
+                            context.push(
+                              RoutePaths.playlistTracks,
+                              extra: playlist,
+                            );
+                          },
+                          child: PlaylistTile(playlist: playlist),
+                        );
+                      },
+                    ),
                   );
                 },
               ),

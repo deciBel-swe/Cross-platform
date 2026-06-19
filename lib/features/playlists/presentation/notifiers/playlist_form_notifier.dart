@@ -156,7 +156,9 @@ class PlaylistFormNotifier
         if (arg == null) {
           ref.invalidate(userPlaylistsProvider);
         } else {
-          ref.read(userPlaylistsProvider.notifier).updatePlaylistMetadataLocally(newPlaylist);
+          ref
+              .read(userPlaylistsProvider.notifier)
+              .updatePlaylistMetadataLocally(newPlaylist);
         }
 
         state = AsyncData(

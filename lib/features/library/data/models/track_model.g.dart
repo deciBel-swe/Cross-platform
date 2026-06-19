@@ -14,7 +14,7 @@ _$TrackModelImpl _$$TrackModelImplFromJson(Map<String, dynamic> json) =>
       trackUrl: json['trackUrl'] as String?,
       coverUrl: json['coverUrl'] as String?,
       waveformUrl: json['waveformUrl'] as String?,
-      genre: json['genre'] as String,
+      genre: json['genre'] as String? ?? '',
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           const <String>[],
@@ -26,6 +26,9 @@ _$TrackModelImpl _$$TrackModelImplFromJson(Map<String, dynamic> json) =>
       isLiked: json['isLiked'] as bool? ?? false,
       isReposted: json['isReposted'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      description: json['description'] as String?,
+      trackDurationSeconds:
+          (json['trackDurationSeconds'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
@@ -46,9 +49,12 @@ Map<String, dynamic> _$$TrackModelImplToJson(_$TrackModelImpl instance) =>
       'isLiked': instance.isLiked,
       'isReposted': instance.isReposted,
       'createdAt': instance.createdAt.toIso8601String(),
+      'description': instance.description,
+      'trackDurationSeconds': instance.trackDurationSeconds,
     };
 
 const _$TrackStatusModelEnumMap = {
   TrackStatusModel.processing: 'PROCESSING',
   TrackStatusModel.finished: 'FINISHED',
+  TrackStatusModel.failed: 'FAILED',
 };

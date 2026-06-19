@@ -202,16 +202,19 @@ class _EditPlaylistScreenState extends ConsumerState<EditPlaylistScreen> {
                                     duration: const Duration(seconds: 5),
                                     behavior: SnackBarBehavior.floating,
                                     content: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
                                           child: TweenAnimationBuilder<int>(
                                             tween: IntTween(begin: 5, end: 0),
-                                            duration: const Duration(seconds: 5),
+                                            duration: const Duration(
+                                              seconds: 5,
+                                            ),
                                             builder: (context, value, child) {
                                               return Text(
                                                 'Changes saved. Undo deletions? ($value)',
-                                                overflow: TextOverflow.ellipsis, 
+                                                overflow: TextOverflow.ellipsis,
                                               );
                                             },
                                           ),
@@ -220,7 +223,11 @@ class _EditPlaylistScreenState extends ConsumerState<EditPlaylistScreen> {
                                           onPressed: () {
                                             messenger.hideCurrentSnackBar();
                                             container
-                                                .read(playlistDetailsProvider(playlistId).notifier)
+                                                .read(
+                                                  playlistDetailsProvider(
+                                                    playlistId,
+                                                  ).notifier,
+                                                )
                                                 .undoDeletions();
                                           },
                                           child: const Text(

@@ -9,11 +9,7 @@ class BlockedUserSummary {
   final String username;
   final String? avatarUrl;
 
-  BlockedUserSummary copyWith({
-    int? id,
-    String? username,
-    String? avatarUrl,
-  }) {
+  BlockedUserSummary copyWith({int? id, String? username, String? avatarUrl}) {
     return BlockedUserSummary(
       id: id ?? this.id,
       username: username ?? this.username,

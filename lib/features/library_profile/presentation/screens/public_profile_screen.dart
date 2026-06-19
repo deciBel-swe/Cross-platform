@@ -6,26 +6,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/subscription_tier_helper.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../engagement/presentation/providers/follow_state_provider.dart';
 import '../../../engagement/presentation/widgets/follow_button.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../playlists/domain/entities/playlist.dart';
+import '../../../playlists/presentation/widgets/playlist_square_card.dart';
 import '../../../settings/presentation/providers/blocked_users_provider.dart';
 import '../../domain/entities/public_profile.dart';
+import '../notifiers/track_notifier.dart';
 import '../providers/block_provider.dart';
 import '../providers/public_profile_provider.dart';
+import '../providers/track_audio_provider.dart';
 import '../widgets/expandable_bio.dart';
+import '../widgets/playlist_tile.dart';
+import '../widgets/pro_badge.dart';
 import '../widgets/social_links_widget.dart';
-import '../widgets/spotlight_section.dart';
 import '../widgets/track_tile.dart';
 
 class PublicProfileScreen extends ConsumerStatefulWidget {
-  const PublicProfileScreen({super.key, required this.userId});
+  const PublicProfileScreen({super.key, required this.userIdentifier});
 
-  final int userId;
+  final String userIdentifier;
 
   @override
   ConsumerState<PublicProfileScreen> createState() =>
@@ -174,16 +181,24 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final profileAsync = ref.watch(publicProfileProvider(widget.userId));
+    final profileAsync = ref.watch(
+      publicProfileProvider(widget.userIdentifier),
+    );
+    final parsedUserId = int.tryParse(widget.userIdentifier);
     final blockedUserIds = ref.watch(blockedUsersProvider);
-    final isBlocked = blockedUserIds.contains(widget.userId);
+    final isBlocked =
+        parsedUserId != null && blockedUserIds.contains(parsedUserId);
 
     ref.listen<Set<int>>(blockedUsersProvider, (previous, next) {
       final previousSet = previous ?? <int>{};
       final nextSet = next;
 
-      final wasBlocked = previousSet.contains(widget.userId);
-      final isNowBlocked = nextSet.contains(widget.userId);
+      if (parsedUserId == null) {
+        return;
+      }
+
+      final wasBlocked = previousSet.contains(parsedUserId);
+      final isNowBlocked = nextSet.contains(parsedUserId);
 
       if (!wasBlocked && isNowBlocked) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -218,7 +233,10 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     AsyncValue<PublicProfile> profileAsync,
     bool isBlocked,
   ) {
-    final username = profileAsync.valueOrNull?.username ?? '';
+    final profile = profileAsync.valueOrNull;
+    final displayTitle = (profile?.displayName?.isNotEmpty == true)
+        ? profile!.displayName!
+        : (profile?.username ?? '');
 
     return AppBar(
       backgroundColor: AppColors.background,
@@ -226,6 +244,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       surfaceTintColor: AppColors.transparent,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_rounded, color: AppColors.onPrimary),
+        tooltip: 'Back',
         onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
       ),
       centerTitle: true,
@@ -235,7 +254,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           milliseconds: AppConstants.appBarAnimationDurationMs,
         ),
         child: Text(
-          username,
+          displayTitle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -247,10 +266,12 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       actions: [
         IconButton(
           icon: const Icon(Icons.share_outlined, color: AppColors.onPrimary),
+          tooltip: 'Share profile',
           onPressed: () {},
         ),
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: AppColors.onPrimary),
+          tooltip: 'More options',
           color: AppColors.surface,
           onSelected: (_) {
             _handleModerationAction(
@@ -285,9 +306,11 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   }
 
   Widget _buildProfileBody(BuildContext context, PublicProfile profile) {
+    final collectionUsername = _collectionUsername(profile);
+
     return RefreshIndicator(
       onRefresh: () async => ref
-          .read(publicProfileProvider(widget.userId).notifier)
+          .read(publicProfileProvider(widget.userIdentifier).notifier)
           .refreshProfile(),
       child: SingleChildScrollView(
         controller: _scrollController,
@@ -297,11 +320,21 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                _CoverPhoto(imageUrl: profile.profile?.coverPhotoUrl),
+                Semantics(
+                  identifier: 'public_profile_cover_photo',
+                  image: true,
+                  label: 'Cover photo',
+                  child: _CoverPhoto(imageUrl: profile.profile?.coverPhotoUrl),
+                ),
                 Positioned(
                   bottom: -40,
                   left: AppConstants.spacingMedium,
-                  child: _Avatar(imageUrl: profile.profile?.avatarUrl),
+                  child: Semantics(
+                    identifier: 'public_profile_avatar',
+                    image: true,
+                    label: 'Profile picture',
+                    child: _Avatar(imageUrl: profile.profile?.avatarUrl),
+                  ),
                 ),
               ],
             ),
@@ -312,38 +345,60 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 children: [
                   const SizedBox(height: AppConstants.spacingMassive),
                   _ProfileHeader(
-                    userId: widget.userId,
+                    userId: profile.id,
+                    userIdentifier: widget.userIdentifier,
                     profile: profile,
                     isActive: _shouldWatchSections,
                     onFollowersTap: () => _openConnections(
-                      RoutePaths.publicProfileFollowers(widget.userId),
+                      RoutePaths.publicProfileFollowers(profile.id.toString()),
                     ),
                     onFollowingTap: () => _openConnections(
-                      RoutePaths.publicProfileFollowing(widget.userId),
+                      RoutePaths.publicProfileFollowing(profile.id.toString()),
                     ),
                   ),
                   const SizedBox(height: AppConstants.spacingSmall),
-                  _ActionRow(userId: widget.userId, profile: profile),
+                  _ActionRow(userId: profile.id, profile: profile),
                   const SizedBox(height: AppConstants.spacingRegular),
-                  const _SectionTitle(title: AppConstants.tracksSectionTitle),
-                  const SizedBox(height: AppConstants.spacingSmall),
-                  TopTracksSection(userId: profile.id),
-                  const SizedBox(height: AppConstants.spacingLarge),
-                  const _SectionTitle(title: 'Likes'),
-                  const SizedBox(height: AppConstants.spacingSmall),
                   _PublicTrackCollectionSection(
+                    title: AppConstants.tracksSectionTitle,
                     tracksAsync: _shouldWatchSections
-                        ? ref.watch(publicLikedTracksProvider(profile.id))
+                        ? ref.watch(userTracksProvider(profile.id))
                         : const AsyncData(<Track>[]),
+                    emptyLabel: 'No tracks uploaded yet',
+                    errorLabel: 'Could not load tracks',
+                  ),
+                  const SizedBox(height: AppConstants.spacingLarge),
+                  _PublicPlaylistCollectionSection(
+                    title: 'Playlists',
+                    playlistsAsync: _shouldWatchSections
+                        ? ref.watch(publicPlaylistsProvider(collectionUsername))
+                        : const AsyncData(<Playlist>[]),
+                    emptyLabel: 'No playlists yet.',
+                    errorLabel: 'Failed to load playlists.',
+                  ),
+                  const SizedBox(height: AppConstants.spacingLarge),
+                  _PublicLikesCollectionSection(
+                    title: 'Likes',
+                    tracksAsync: _shouldWatchSections
+                        ? ref.watch(
+                            publicLikedTracksProvider(collectionUsername),
+                          )
+                        : const AsyncData(<Track>[]),
+                    playlistsAsync: _shouldWatchSections
+                        ? ref.watch(
+                            publicLikedPlaylistsProvider(collectionUsername),
+                          )
+                        : const AsyncData(<Playlist>[]),
                     emptyLabel: 'No likes yet',
                     errorLabel: 'Could not load likes',
                   ),
                   const SizedBox(height: AppConstants.spacingLarge),
-                  const _SectionTitle(title: 'Reposts'),
-                  const SizedBox(height: AppConstants.spacingSmall),
                   _PublicTrackCollectionSection(
+                    title: 'Reposts',
                     tracksAsync: _shouldWatchSections
-                        ? ref.watch(publicRepostedTracksProvider(profile.id))
+                        ? ref.watch(
+                            publicRepostedTracksProvider(collectionUsername),
+                          )
                         : const AsyncData(<Track>[]),
                     emptyLabel: 'No reposts yet',
                     errorLabel: 'Could not load reposts',
@@ -358,6 +413,14 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     );
   }
 
+  String _collectionUsername(PublicProfile profile) {
+    final username = profile.username.trim();
+    if (username.isNotEmpty) {
+      return username;
+    }
+    return widget.userIdentifier.trim();
+  }
+
   Widget _buildErrorView(BuildContext context, Object error) {
     return Center(
       child: Padding(
@@ -367,34 +430,48 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.wifi_off_rounded,
+            Icon(
+              error is NotFoundFailure
+                  ? Icons.person_off_rounded
+                  : error is NetworkFailure
+                  ? Icons.cloud_off_rounded
+                  : Icons.wifi_off_rounded,
               color: AppColors.surface,
               size: AppConstants.errorIconSize,
             ),
             const SizedBox(height: AppConstants.spacingRegular),
-            Text(
-              AppConstants.errorGeneric,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.onPrimary,
-                fontWeight: FontWeight.bold,
+            if (error is! NotFoundFailure && error is! NetworkFailure) ...[
+              Text(
+                AppConstants.errorGeneric,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: AppConstants.spacingSmall),
+              const SizedBox(height: AppConstants.spacingSmall),
+            ],
             Text(
-              error.toString().replaceAll(
-                AppConstants.errorExceptionPrefix,
-                '',
-              ),
+              error is NotFoundFailure
+                  ? '404 | Not Found'
+                  : error is NetworkFailure
+                  ? 'You are offline. Downloads are still available from your library.'
+                  : error.toString().replaceAll(
+                      AppConstants.errorExceptionPrefix,
+                      '',
+                    ),
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.onPrimary,
+                fontSize: error is NotFoundFailure ? 18 : null,
+                fontWeight: error is NotFoundFailure
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
             ),
             const SizedBox(height: AppConstants.spacingExtraLarge),
             ElevatedButton.icon(
               onPressed: () =>
-                  ref.invalidate(publicProfileProvider(widget.userId)),
+                  ref.invalidate(publicProfileProvider(widget.userIdentifier)),
               icon: const Icon(Icons.refresh_rounded),
               label: const Text(AppConstants.tryAgain),
             ),
@@ -478,6 +555,7 @@ class _Avatar extends StatelessWidget {
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.userId,
+    required this.userIdentifier,
     required this.profile,
     required this.isActive,
     required this.onFollowersTap,
@@ -485,6 +563,7 @@ class _ProfileHeader extends StatelessWidget {
   });
 
   final int userId;
+  final String userIdentifier;
   final PublicProfile profile;
   final bool isActive;
   final VoidCallback onFollowersTap;
@@ -504,7 +583,9 @@ class _ProfileHeader extends StatelessWidget {
           );
         }
 
-        final snapshotAsync = ref.watch(publicProfileSnapshotProvider(userId));
+        final snapshotAsync = ref.watch(
+          publicProfileSnapshotProvider(userIdentifier),
+        );
         final snapshot = snapshotAsync.valueOrNull ?? profile;
 
         final followAsync = ref.watch(followStateProvider(userId));
@@ -550,18 +631,35 @@ class _ProfileHeaderContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final isPremium = SubscriptionTierHelper.isPremium(profile.tier);
     final bio = profile.profile?.bio?.trim() ?? '';
     final location = profile.profile?.location?.trim() ?? '';
+
+    final displayTitle =
+        (profile.displayName != null && profile.displayName!.trim().isNotEmpty)
+        ? profile.displayName!
+        : profile.username;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          profile.displayName ?? profile.username,
-          style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.onPrimary,
-          ),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                displayTitle,
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onPrimary,
+                ),
+              ),
+            ),
+
+            if (isPremium) ...[
+              const SizedBox(width: AppConstants.spacingSmall),
+              const ProBadge(),
+            ],
+          ],
         ),
         Text(
           '@${profile.username}',
@@ -624,21 +722,28 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: RichText(
-        text: TextSpan(
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
-          children: [
-            TextSpan(
-              text: '$count ',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+    return Semantics(
+      identifier: 'profile_stat_${label.toLowerCase()}',
+      button: true,
+      label: '$count $label',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: ExcludeSemantics(
+          child: RichText(
+            text: TextSpan(
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+              children: [
+                TextSpan(
+                  text: '$count ',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                TextSpan(text: label),
+              ],
             ),
-            TextSpan(text: label),
-          ],
+          ),
         ),
       ),
     );
@@ -760,80 +865,514 @@ class _UnblockButtonState extends ConsumerState<_UnblockButton> {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    required this.canShowAll,
+    required this.onShowAll,
+  });
 
   final String title;
+  final bool canShowAll;
+  final VoidCallback onShowAll;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-      ),
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+        if (canShowAll)
+          Semantics(
+            identifier: 'profile_section_see_all_${title.toLowerCase().replaceAll(' ', '_')}',
+            button: true,
+            label: 'See all $title',
+            child: TextButton(
+              onPressed: onShowAll,
+              child: const Text(AppConstants.seeAll),
+            ),
+          ),
+      ],
     );
   }
 }
 
-class _PublicTrackCollectionSection extends StatelessWidget {
+class _PublicTrackCollectionSection extends ConsumerStatefulWidget {
   const _PublicTrackCollectionSection({
+    required this.title,
     required this.tracksAsync,
     required this.emptyLabel,
     required this.errorLabel,
   });
 
+  final String title;
   final AsyncValue<List<Track>> tracksAsync;
   final String emptyLabel;
   final String errorLabel;
 
   @override
+  ConsumerState<_PublicTrackCollectionSection> createState() =>
+      _PublicTrackCollectionSectionState();
+}
+
+class _PublicTrackCollectionSectionState
+    extends ConsumerState<_PublicTrackCollectionSection> {
+  static const int _pageSize = 3;
+
+  int _visibleCount = _pageSize;
+
+  @override
+  void didUpdateWidget(covariant _PublicTrackCollectionSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final oldTracks = oldWidget.tracksAsync.valueOrNull;
+    final newTracks = widget.tracksAsync.valueOrNull;
+    if (oldWidget.title != widget.title || !identical(oldTracks, newTracks)) {
+      _visibleCount = _pageSize;
+    }
+  }
+
+  void _showMore(int totalCount) {
+    setState(() {
+      _visibleCount = math.min(_visibleCount + _pageSize, totalCount);
+    });
+  }
+
+  void _showAll(int totalCount) {
+    setState(() => _visibleCount = totalCount);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return tracksAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppConstants.spacingMedium),
-        child: Center(child: CircularProgressIndicator()),
+    final tracks = widget.tracksAsync.valueOrNull ?? const <Track>[];
+    final canShowAll =
+        tracks.length > _pageSize && _visibleCount < tracks.length;
+
+    return Semantics(
+      identifier: 'profile_section_${widget.title.toLowerCase().replaceAll(' ', '_')}',
+      label: '${widget.title} section',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeader(
+            title: widget.title,
+            canShowAll: canShowAll,
+            onShowAll: () => _showAll(tracks.length),
+          ),
+          const SizedBox(height: AppConstants.spacingSmall),
+          widget.tracksAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: AppConstants.spacingMedium,
+              ),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppConstants.spacingSmall,
+              ),
+              child: Text(
+                widget.errorLabel,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            data: _buildTrackList,
+          ),
+        ],
       ),
-      error: (_, _) => Padding(
+    );
+  }
+
+  Widget _buildTrackList(List<Track> tracks) {
+    if (tracks.isEmpty) {
+      return Padding(
         padding: const EdgeInsets.symmetric(
           vertical: AppConstants.spacingSmall,
         ),
         child: Text(
-          errorLabel,
+          widget.emptyLabel,
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
         ),
-      ),
-      data: (tracks) {
-        if (tracks.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppConstants.spacingSmall,
-            ),
-            child: Text(
-              emptyLabel,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-            ),
-          );
-        }
+      );
+    }
 
-        return ListView.builder(
+    final visibleCount = math.min(_visibleCount, tracks.length);
+    final visibleTracks = tracks.take(visibleCount).toList(growable: false);
+    final canShowMore = visibleCount < tracks.length;
+
+    return Column(
+      children: [
+        ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: tracks.length,
+          itemCount: visibleTracks.length,
           itemBuilder: (context, index) {
-            final track = tracks[index];
-            return TrackTile(
-              track: track,
-              onTap: () => context.push(RoutePaths.trackPreview(track.id)),
+            final track = visibleTracks[index];
+            return Semantics(
+              identifier: 'profile_track_tile_${track.id}',
+              button: true,
+              label: 'Play ${track.title} by ${track.artist.username}',
+              child: TrackTile(
+                track: track,
+                onTap: () => ref
+                    .read(trackAudioProvider.notifier)
+                    .playTrack(track: track, queue: tracks),
+              ),
             );
           },
-        );
-      },
+        ),
+        if (canShowMore)
+          Align(
+            alignment: Alignment.center,
+            child: Semantics(
+              identifier: 'profile_section_see_more_${widget.title.toLowerCase().replaceAll(' ', '_')}',
+              button: true,
+              label: 'See more ${widget.title}',
+              child: TextButton.icon(
+                onPressed: () => _showMore(tracks.length),
+                icon: const Icon(Icons.expand_more_rounded),
+                label: const Text('See more'),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _PublicPlaylistCollectionSection extends ConsumerStatefulWidget {
+  const _PublicPlaylistCollectionSection({
+    required this.title,
+    required this.playlistsAsync,
+    required this.emptyLabel,
+    required this.errorLabel,
+  });
+
+  final String title;
+  final AsyncValue<List<Playlist>> playlistsAsync;
+  final String emptyLabel;
+  final String errorLabel;
+
+  @override
+  ConsumerState<_PublicPlaylistCollectionSection> createState() =>
+      _PublicPlaylistCollectionSectionState();
+}
+
+class _PublicPlaylistCollectionSectionState
+    extends ConsumerState<_PublicPlaylistCollectionSection> {
+  static const int _pageSize = 3;
+  int _visibleCount = _pageSize;
+
+  @override
+  void didUpdateWidget(covariant _PublicPlaylistCollectionSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldPlaylists = oldWidget.playlistsAsync.valueOrNull;
+    final newPlaylists = widget.playlistsAsync.valueOrNull;
+    if (oldWidget.title != widget.title ||
+        !identical(oldPlaylists, newPlaylists)) {
+      _visibleCount = _pageSize;
+    }
+  }
+
+  void _showAll(int totalCount) {
+    setState(() => _visibleCount = totalCount);
+  }
+
+  void _showMore(int totalCount) {
+    setState(() {
+      _visibleCount = math.min(_visibleCount + _pageSize, totalCount);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final playlists = widget.playlistsAsync.valueOrNull ?? const <Playlist>[];
+    final canShowAll =
+        playlists.length > _pageSize && _visibleCount < playlists.length;
+
+    return Semantics(
+      identifier: 'profile_section_${widget.title.toLowerCase().replaceAll(' ', '_')}',
+      label: '${widget.title} section',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeader(
+            title: widget.title,
+            canShowAll: canShowAll,
+            onShowAll: () => _showAll(playlists.length),
+          ),
+          const SizedBox(height: AppConstants.spacingSmall),
+          widget.playlistsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: AppConstants.spacingMedium,
+              ),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppConstants.spacingSmall,
+              ),
+              child: Text(
+                widget.errorLabel,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            data: _buildPlaylistList,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaylistList(List<Playlist> playlists) {
+    if (playlists.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppConstants.spacingSmall,
+        ),
+        child: Text(
+          widget.emptyLabel,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    final visibleCount = math.min(_visibleCount, playlists.length);
+    final visiblePlaylists = playlists
+        .take(visibleCount)
+        .toList(growable: false);
+    final canShowMore = visibleCount < playlists.length;
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 184,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: visiblePlaylists.length,
+            separatorBuilder: (context, index) =>
+                const SizedBox(width: AppConstants.spacingSmall),
+            itemBuilder: (context, index) {
+              final playlist = visiblePlaylists[index];
+              return Semantics(
+                identifier: 'profile_playlist_card_${playlist.id}',
+                button: true,
+                label: 'Open playlist ${playlist.title}',
+                child: PlaylistSquareCard(
+                  playlist: playlist,
+                  onTap: () {
+                    context.push(RoutePaths.playlistTracks, extra: playlist);
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        if (canShowMore)
+          Align(
+            alignment: Alignment.center,
+            child: Semantics(
+              identifier: 'profile_section_see_more_${widget.title.toLowerCase().replaceAll(' ', '_')}',
+              button: true,
+              label: 'See more ${widget.title}',
+              child: TextButton.icon(
+                onPressed: () => _showMore(playlists.length),
+                icon: const Icon(Icons.expand_more_rounded),
+                label: const Text('See more'),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _PublicLikesCollectionSection extends ConsumerStatefulWidget {
+  const _PublicLikesCollectionSection({
+    required this.title,
+    required this.tracksAsync,
+    required this.playlistsAsync,
+    required this.emptyLabel,
+    required this.errorLabel,
+  });
+
+  final String title;
+  final AsyncValue<List<Track>> tracksAsync;
+  final AsyncValue<List<Playlist>> playlistsAsync;
+  final String emptyLabel;
+  final String errorLabel;
+
+  @override
+  ConsumerState<_PublicLikesCollectionSection> createState() =>
+      _PublicLikesCollectionSectionState();
+}
+
+class _PublicLikesCollectionSectionState
+    extends ConsumerState<_PublicLikesCollectionSection> {
+  static const int _pageSize = 3;
+  int _visibleCount = _pageSize;
+
+  @override
+  void didUpdateWidget(covariant _PublicLikesCollectionSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldTracks = oldWidget.tracksAsync.valueOrNull;
+    final newTracks = widget.tracksAsync.valueOrNull;
+    final oldPlaylists = oldWidget.playlistsAsync.valueOrNull;
+    final newPlaylists = widget.playlistsAsync.valueOrNull;
+
+    if (oldWidget.title != widget.title ||
+        !identical(oldTracks, newTracks) ||
+        !identical(oldPlaylists, newPlaylists)) {
+      _visibleCount = _pageSize;
+    }
+  }
+
+  void _showMore(int totalCount) {
+    setState(() {
+      _visibleCount = math.min(_visibleCount + _pageSize, totalCount);
+    });
+  }
+
+  void _showAll(int totalCount) {
+    setState(() => _visibleCount = totalCount);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tracks = widget.tracksAsync.valueOrNull ?? const <Track>[];
+    final playlists = widget.playlistsAsync.valueOrNull ?? const <Playlist>[];
+    final combined = [...tracks, ...playlists];
+
+    final canShowAll =
+        combined.length > _pageSize && _visibleCount < combined.length;
+
+    return Semantics(
+      identifier: 'profile_section_${widget.title.toLowerCase().replaceAll(' ', '_')}',
+      label: '${widget.title} section',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeader(
+            title: widget.title,
+            canShowAll: canShowAll,
+            onShowAll: () => _showAll(combined.length),
+          ),
+          const SizedBox(height: AppConstants.spacingSmall),
+          if (widget.tracksAsync.isLoading || widget.playlistsAsync.isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: AppConstants.spacingMedium,
+              ),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (widget.tracksAsync.hasError || widget.playlistsAsync.hasError)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppConstants.spacingSmall,
+              ),
+              child: Text(
+                widget.errorLabel,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            )
+          else
+            _buildCombinedList(combined),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCombinedList(List<Object> items) {
+    if (items.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppConstants.spacingSmall,
+        ),
+        child: Text(
+          widget.emptyLabel,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    final visibleCount = math.min(_visibleCount, items.length);
+    final visibleItems = items.take(visibleCount).toList(growable: false);
+    final canShowMore = visibleCount < items.length;
+
+    return Column(
+      children: [
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: visibleItems.length,
+          itemBuilder: (context, index) {
+            final item = visibleItems[index];
+            if (item is Track) {
+              return Semantics(
+                identifier: 'profile_track_tile_${item.id}',
+                button: true,
+                label: 'Play ${item.title} by ${item.artist.username}',
+                child: TrackTile(
+                  track: item,
+                  onTap: () {
+                    final allTracks = items.whereType<Track>().toList();
+                    ref
+                        .read(trackAudioProvider.notifier)
+                        .playTrack(track: item, queue: allTracks);
+                  },
+                ),
+              );
+            } else if (item is Playlist) {
+              return Semantics(
+                identifier: 'profile_playlist_tile_${item.id}',
+                button: true,
+                label: 'Open playlist ${item.title}',
+                child: PlaylistTile(
+                  playlist: item,
+                  onTap: () {
+                    context.push(RoutePaths.playlistTracks, extra: item);
+                  },
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        if (canShowMore)
+          Align(
+            alignment: Alignment.center,
+            child: Semantics(
+              identifier: 'profile_section_see_more_${widget.title.toLowerCase().replaceAll(' ', '_')}',
+              button: true,
+              label: 'See more ${widget.title}',
+              child: TextButton.icon(
+                onPressed: () => _showMore(items.length),
+                icon: const Icon(Icons.expand_more_rounded),
+                label: const Text('See more'),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:decibel/core/errors/failures.dart';
 import 'package:decibel/features/engagement/domain/entities/paginated_engagers.dart';
+import 'package:decibel/features/engagement/domain/entities/repost_history.dart';
 import 'package:decibel/features/engagement/domain/repositories/track_social_repository.dart';
 import 'package:decibel/features/engagement/presentation/providers/track_social_provider.dart';
 import 'package:decibel/features/library/domain/entities/artist.dart';
@@ -51,6 +52,7 @@ class FakeTrackSocialRepository implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   }) async {
     return const PaginatedTracks(
       content: <Track>[],
@@ -67,9 +69,26 @@ class FakeTrackSocialRepository implements ITrackSocialRepository {
     int page = 0,
     int size = 20,
     int? userId,
+    String? username,
   }) async {
     return const PaginatedTracks(
       content: <Track>[],
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 0,
+      totalPages: 0,
+      isLast: true,
+    );
+  }
+
+  @override
+  Future<PaginatedRepostHistory> getRepostHistory(
+    String username, {
+    int page = 0,
+    int size = 20,
+  }) async {
+    return const PaginatedRepostHistory(
+      content: <RepostHistoryItem>[],
       pageNumber: 0,
       pageSize: 20,
       totalElements: 0,
@@ -125,6 +144,13 @@ class FakeTrackSocialRepository implements ITrackSocialRepository {
       ),
     );
   }
+
+  @override
+  Future<void> reportTrack({
+    required int trackId,
+    required String reason,
+    String? description,
+  }) async {}
 }
 
 void main() {
@@ -142,6 +168,7 @@ void main() {
       repostCount: 0,
       isLiked: false,
       isReposted: false,
+      trackDurationSeconds: 120,
       createdAt: DateTime(2025, 1, 1),
     );
   }

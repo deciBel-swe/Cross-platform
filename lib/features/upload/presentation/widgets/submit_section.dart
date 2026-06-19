@@ -119,19 +119,26 @@ class SubmitSection extends ConsumerWidget {
                 }
               },
         child: isLoading
-            ? const SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(
-                  color: AppColors.onPrimary,
-                  strokeWidth: 2.5,
+            ? Semantics(
+                label: 'Uploading track...',
+                child: const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    color: AppColors.onPrimary,
+                    strokeWidth: 2.5,
+                  ),
                 ),
               )
-            : const Text(
-                'Save',
-                style: TextStyle(
-                  color: AppColors.onPrimary,
-                  fontWeight: FontWeight.bold,
+            : Semantics(
+                button: true,
+                label: 'Save track details',
+                child: const Text(
+                  'Save',
+                  style: TextStyle(
+                    color: AppColors.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
       ),
